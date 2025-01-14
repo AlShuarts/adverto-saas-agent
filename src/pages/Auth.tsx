@@ -61,10 +61,12 @@ const Auth = () => {
     });
 
     // Listen for auth errors
-    const authListener = supabase.auth.onAuthStateChange((event, session) => {
+    const authListener = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "USER_UPDATED" && !session) {
-        const error = new Error("Invalid login credentials");
-        setErrorMessage(getErrorMessage(error as AuthError));
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          setErrorMessage(getErrorMessage(error));
+        }
       }
     });
 
