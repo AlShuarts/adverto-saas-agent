@@ -25,6 +25,27 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate, from]);
 
+  const getErrorMessage = (error: AuthError) => {
+    try {
+      const errorBody = JSON.parse(error.message);
+      if (errorBody.code === "weak_password") {
+        return "Le mot de passe doit contenir au moins 6 caractères.";
+      }
+    } catch {
+      // If error message is not JSON parseable, use the original message
+    }
+    
+    // Default error messages based on error code
+    switch (error.message) {
+      case "User already registered":
+        return "Cette adresse email est déjà utilisée.";
+      case "Invalid login credentials":
+        return "Email ou mot de passe incorrect.";
+      default:
+        return error.message;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-secondary flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8 glass rounded-lg p-8">
