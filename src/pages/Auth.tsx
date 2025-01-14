@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { AuthError } from "@supabase/supabase-js";
@@ -45,7 +46,7 @@ const Auth = () => {
         <SupabaseAuth
           supabaseClient={supabase}
           appearance={{
-            theme: "light",
+            theme: ThemeSupa,
             variables: {
               default: {
                 colors: {
