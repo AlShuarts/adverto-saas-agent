@@ -31,6 +31,9 @@ const Auth = () => {
       if (errorBody.code === "weak_password") {
         return "Le mot de passe doit contenir au moins 6 caractères.";
       }
+      if (errorBody.code === "invalid_credentials") {
+        return "Email ou mot de passe incorrect.";
+      }
     } catch {
       // If error message is not JSON parseable, use the original message
     }
@@ -45,6 +48,31 @@ const Auth = () => {
         return error.message;
     }
   };
+
+  // Add error handling through auth state change
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setErrorMessage("");
+      }
+      if (event === "SIGNED_OUT") {
+        setErrorMessage("");
+      }
+    });
+
+    // Listen for auth errors
+    const authListener = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "USER_UPDATED" && !session) {
+        const error = new Error("Invalid login credentials");
+        setErrorMessage(getErrorMessage(error as AuthError));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      authListener.data.subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-secondary flex items-center justify-center p-4">
