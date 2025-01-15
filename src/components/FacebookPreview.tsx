@@ -61,7 +61,7 @@ export const FacebookPreview = ({
             <div className="flex items-center space-x-2 mb-3">
               <div className="w-10 h-10 bg-blue-600 rounded-full" />
               <div>
-                <p className="font-semibold">Votre Page Facebook</p>
+                <p className="font-semibold text-gray-900">Votre Page Facebook</p>
                 <p className="text-sm text-gray-500">Maintenant</p>
               </div>
             </div>
@@ -71,7 +71,7 @@ export const FacebookPreview = ({
               </div>
             ) : (
               <>
-                <p className="whitespace-pre-line mb-4">{generatedText}</p>
+                <p className="whitespace-pre-line mb-4 text-gray-900">{generatedText}</p>
                 {error && (
                   <p className="text-sm text-red-500 mb-4">{error}</p>
                 )}
