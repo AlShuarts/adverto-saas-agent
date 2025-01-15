@@ -41,12 +41,27 @@ export const CentrisImport = () => {
 
       console.log("Données reçues du scraping:", response);
 
+      // S'assurer que toutes les propriétés requises sont présentes
+      const listingData = {
+        centris_id: response.centris_id,
+        title: response.title,
+        description: response.description || null,
+        price: response.price || null,
+        address: response.address || null,
+        city: response.city || null,
+        postal_code: response.postal_code || null,
+        bedrooms: response.bedrooms || null,
+        bathrooms: response.bathrooms || null,
+        property_type: response.property_type || null,
+        images: response.images || null,
+        user_id: userData.user.id,
+      };
+
+      console.log("Données formatées pour l'insertion:", listingData);
+
       const { error: insertError } = await supabase
         .from("listings")
-        .insert({
-          ...response,
-          user_id: userData.user.id,
-        });
+        .insert(listingData);
 
       if (insertError) {
         console.error("Erreur d'insertion dans la base de données:", insertError);
