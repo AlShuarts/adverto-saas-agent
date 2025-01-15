@@ -4,51 +4,116 @@ import { PricingCard } from "@/components/PricingCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Facebook } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const getProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          navigate("/auth");
-          return;
-        }
+    getProfile();
+  }, []);
 
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+  const getProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
 
-        if (error) {
-          toast({
-            title: "Erreur",
-            description: "Impossible de charger votre profil",
-            variant: "destructive",
-          });
-          return;
-        }
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
-        setProfile(data);
-      } catch (error) {
-        console.error("Error:", error);
+      if (error) {
         toast({
           title: "Erreur",
-          description: "Une erreur est survenue",
+          description: "Impossible de charger votre profil",
           variant: "destructive",
         });
+        return;
       }
-    };
 
-    getProfile();
-  }, [navigate, toast]);
+      setProfile(data);
+    } catch (error) {
+      console.error("Error:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const connectFacebook = async () => {
+    setLoading(true);
+    try {
+      // Initialiser le SDK Facebook
+      await new Promise<void>((resolve) => {
+        window.FB.init({
+          appId: 'VOTRE_APP_ID_FACEBOOK',
+          version: 'v18.0'
+        });
+        resolve();
+      });
+
+      // Demander les permissions nécessaires
+      const response = await new Promise<fb.AuthResponse>((resolve) => {
+        window.FB.login((response) => {
+          resolve(response);
+        }, {
+          scope: 'pages_manage_posts,pages_read_engagement,pages_show_list'
+        });
+      });
+
+      if (response.status === 'connected') {
+        // Récupérer la liste des pages
+        const pages = await new Promise<any>((resolve) => {
+          window.FB.api('/me/accounts', (response) => {
+            resolve(response);
+          });
+        });
+
+        if (pages.data && pages.data.length > 0) {
+          const page = pages.data[0]; // Prendre la première page pour l'exemple
+          
+          // Mettre à jour le profil avec les informations Facebook
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              facebook_page_id: page.id,
+              facebook_access_token: page.access_token
+            })
+            .eq('id', profile.id);
+
+          if (updateError) throw updateError;
+
+          toast({
+            title: "Succès",
+            description: "Votre page Facebook a été connectée avec succès",
+          });
+
+          // Recharger le profil
+          getProfile();
+        }
+      }
+    } catch (error) {
+      console.error('Facebook connection error:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de connecter votre page Facebook",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-secondary">
@@ -75,10 +140,24 @@ const Index = () => {
                 </Button>
               </>
             ) : (
-              <Button size="lg" className="animate-float">
-                Commencer à publier
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="space-y-4">
+                {!profile.facebook_page_id ? (
+                  <Button 
+                    size="lg" 
+                    className="animate-float"
+                    onClick={connectFacebook}
+                    disabled={loading}
+                  >
+                    <Facebook className="mr-2 h-4 w-4" />
+                    {loading ? "Connexion en cours..." : "Connecter ma page Facebook"}
+                  </Button>
+                ) : (
+                  <Button size="lg" className="animate-float">
+                    Commencer à publier
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
