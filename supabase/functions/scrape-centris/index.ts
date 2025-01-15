@@ -27,7 +27,11 @@ serve(async (req) => {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       }
     });
     
@@ -45,7 +49,9 @@ serve(async (req) => {
     const getTextFromSelectors = (selectors: string[]): string => {
       for (const selector of selectors) {
         const element = doc.querySelector(selector);
-        const text = element?.textContent?.trim();
+        if (!element) continue;
+        
+        const text = element.textContent?.trim();
         if (text) {
           console.log(`Found text with selector ${selector}:`, text);
           return text;
@@ -56,12 +62,23 @@ serve(async (req) => {
 
     // Helper function to extract number from text
     const extractNumber = (text: string): number | null => {
-      const match = text.match(/\d+/);
+      const match = text.replace(/\s/g, '').match(/\d+/);
       return match ? parseInt(match[0]) : null;
     };
 
-    // Title selectors
+    // Helper function to clean price
+    const cleanPrice = (text: string): number | null => {
+      const numStr = text.replace(/[^0-9]/g, '');
+      return numStr ? parseInt(numStr) : null;
+    };
+
+    // Title selectors with more variations
     const titleSelectors = [
+      'h1.text-center',
+      'h1.listing-title',
+      'h1[itemprop="name"]',
+      '.property-title h1',
+      '.listing-title',
       '[data-qaid="property-title"]',
       '[data-qaid="property-description-title"]',
       '.property-title',
@@ -69,48 +86,66 @@ serve(async (req) => {
       'h1'
     ];
 
-    // Price selectors
+    // Price selectors with more variations
     const priceSelectors = [
+      '.listing-price',
+      '.property-price',
       '[data-qaid="property-price"]',
       '[data-qaid="price"]',
       '.property-price',
-      '.price'
+      '.price',
+      'span[itemprop="price"]',
+      '.price-container'
     ];
 
-    // Description selectors
+    // Description selectors with more variations
     const descriptionSelectors = [
+      '.description-text',
+      '.listing-description',
       '[data-qaid="property-description"]',
       '[data-qaid="description"]',
       '.property-description',
-      '.description'
+      '.description',
+      '[itemprop="description"]'
     ];
 
-    // Address selectors
+    // Address selectors with more variations
     const addressSelectors = [
+      '.listing-address',
+      '.property-address',
       '[data-qaid="property-address"]',
       '[data-qaid="address"]',
       '.property-address',
-      '.address'
+      '.address',
+      '[itemprop="streetAddress"]'
     ];
 
-    // City selectors
+    // City selectors with more variations
     const citySelectors = [
+      '.listing-city',
+      '.property-city',
       '[data-qaid="property-city"]',
       '[data-qaid="city"]',
       '.property-city',
-      '.city'
+      '.city',
+      '[itemprop="addressLocality"]'
     ];
 
-    // Bedrooms selectors
+    // Bedrooms selectors with more variations
     const bedroomSelectors = [
+      '.listing-bedrooms',
+      '.property-bedrooms',
       '[data-qaid="property-bedrooms"]',
       '[data-qaid="bedrooms"]',
       '.property-bedrooms',
-      '.bedrooms'
+      '.bedrooms',
+      '[itemprop="numberOfRooms"]'
     ];
 
-    // Bathrooms selectors
+    // Bathrooms selectors with more variations
     const bathroomSelectors = [
+      '.listing-bathrooms',
+      '.property-bathrooms',
       '[data-qaid="property-bathrooms"]',
       '[data-qaid="bathrooms"]',
       '.property-bathrooms',
@@ -119,6 +154,8 @@ serve(async (req) => {
 
     // Extract images with more specific selectors
     const imageSelectors = [
+      'img.listing-image',
+      'img.property-image',
       'img[data-qaid="property-photo"]',
       'img[class*="PropertyPhoto"]',
       'img[class*="propertyPhoto"]',
@@ -126,18 +163,46 @@ serve(async (req) => {
       '.photos img',
       '[data-qaid="photos"] img',
       '[class*="gallery"] img',
-      '[class*="carousel"] img'
+      '[class*="carousel"] img',
+      'img[itemprop="image"]'
     ];
 
     const images: string[] = [];
+    const seenUrls = new Set<string>();
+
+    // Function to clean and validate image URL
+    const cleanImageUrl = (url: string): string | null => {
+      if (!url) return null;
+      
+      // Remove any query parameters
+      const baseUrl = url.split('?')[0];
+      
+      // Ensure it's an image URL
+      if (!baseUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) return null;
+      
+      // Ensure it's not a tiny thumbnail
+      if (baseUrl.includes('thumbnail') || baseUrl.includes('small')) return null;
+      
+      return baseUrl;
+    };
+
+    // Extract images from both src and data-src attributes
     for (const selector of imageSelectors) {
       const elements = doc.querySelectorAll(selector);
       elements.forEach((img) => {
-        const src = img.getAttribute("src") || img.getAttribute("data-src");
-        if (src && !src.includes("placeholder") && !images.includes(src)) {
-          console.log('Found image:', src);
-          images.push(src);
-        }
+        const src = img.getAttribute("src");
+        const dataSrc = img.getAttribute("data-src");
+        
+        [src, dataSrc].forEach(url => {
+          if (!url) return;
+          
+          const cleanUrl = cleanImageUrl(url);
+          if (cleanUrl && !seenUrls.has(cleanUrl)) {
+            seenUrls.add(cleanUrl);
+            images.push(cleanUrl);
+            console.log('Found image:', cleanUrl);
+          }
+        });
       });
     }
 
@@ -150,8 +215,8 @@ serve(async (req) => {
     const bedroomsText = getTextFromSelectors(bedroomSelectors);
     const bathroomsText = getTextFromSelectors(bathroomSelectors);
 
-    // Clean up price (remove $ and spaces)
-    const price = priceText ? parseFloat(priceText.replace(/[^0-9.]/g, "")) : null;
+    // Clean up price
+    const price = priceText ? cleanPrice(priceText) : null;
     
     // Extract numbers for bedrooms and bathrooms
     const bedrooms = bedroomsText ? extractNumber(bedroomsText) : null;
@@ -163,11 +228,11 @@ serve(async (req) => {
     const listing = {
       centris_id: centrisId,
       title: title || "Propriété à vendre",
-      description,
+      description: description || null,
       price,
-      address,
-      city,
-      postal_code: null, // We'll extract this from address if needed
+      address: address || null,
+      city: city || null,
+      postal_code: null,
       bedrooms,
       bathrooms,
       property_type: "Résidentiel",
