@@ -16,16 +16,6 @@ serve(async (req) => {
     const { url } = await req.json();
     console.log('Scraping URL:', url);
 
-    if (!url.includes("centris.ca")) {
-      return new Response(
-        JSON.stringify({ error: "URL must be from centris.ca" }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
     const response = await fetch(url);
     const html = await response.text();
     const parser = new DOMParser();
@@ -35,8 +25,6 @@ serve(async (req) => {
       throw new Error("Failed to parse HTML");
     }
 
-    console.log('HTML parsed successfully');
-
     // Extract listing information
     const title = doc.querySelector("h1")?.textContent?.trim() || "";
     const price = doc.querySelector("[data-id='Price']")?.textContent?.trim() || "";
@@ -44,8 +32,6 @@ serve(async (req) => {
     const address = doc.querySelector("[data-id='Address']")?.textContent?.trim() || "";
     const city = doc.querySelector("[data-id='City']")?.textContent?.trim() || "";
     const postalCode = doc.querySelector("[data-id='PostalCode']")?.textContent?.trim() || "";
-    
-    // Extract property details
     const bedrooms = doc.querySelector("[data-id='Bedrooms']")?.textContent?.trim() || "";
     const bathrooms = doc.querySelector("[data-id='Bathrooms']")?.textContent?.trim() || "";
     const propertyType = doc.querySelector("[data-id='PropertyType']")?.textContent?.trim() || "";
@@ -60,7 +46,7 @@ serve(async (req) => {
     // Extract Centris ID from URL
     const centrisId = url.split("/").pop() || "";
 
-    console.log('Data extracted successfully');
+    console.log('Scraped data:', { title, price, address });
 
     const listing = {
       centris_id: centrisId,
@@ -76,14 +62,11 @@ serve(async (req) => {
       images
     };
 
-    return new Response(
-      JSON.stringify(listing),
-      { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
+    return new Response(JSON.stringify(listing), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Scraping error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
