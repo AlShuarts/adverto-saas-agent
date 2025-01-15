@@ -38,7 +38,8 @@ export const FacebookPreview = ({
       } catch (err) {
         console.error('Error generating text:', err);
         setError("Impossible de générer le texte de vente. Le texte par défaut sera utilisé.");
-        setGeneratedText(`${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur ${listing.centris_url}`);
+        const listingUrl = listing.centris_url || `https://www.centris.ca/fr/propriete/${listing.centris_id}`;
+        setGeneratedText(`${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur ${listingUrl}`);
       } finally {
         setIsLoading(false);
       }
