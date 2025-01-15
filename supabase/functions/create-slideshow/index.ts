@@ -13,6 +13,7 @@ serve(async (req) => {
     const { listingId } = await req.json();
     
     if (!listingId) {
+      console.error('No listingId provided');
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -57,6 +58,7 @@ serve(async (req) => {
 
     const images = listing.images || [];
     if (images.length === 0) {
+      console.error('No images found for listing:', listingId);
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -69,13 +71,46 @@ serve(async (req) => {
       );
     }
 
-    // For now, return a mock response with the first image URL
-    // This will be replaced with actual slideshow generation later
+    // Process images
+    const processedImages = [];
+    for (const imageUrl of images) {
+      try {
+        console.log('Processing image:', imageUrl);
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          console.error('Failed to fetch image:', imageUrl, imageResponse.statusText);
+          continue;
+        }
+        processedImages.push(imageUrl);
+        console.log('Successfully processed image:', imageUrl);
+      } catch (error) {
+        console.error('Error processing image:', imageUrl, error);
+        // Continue with other images if one fails
+      }
+    }
+
+    if (processedImages.length === 0) {
+      console.error('No images could be processed for listing:', listingId);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to process any images' 
+        }), 
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Pour l'instant, on retourne la première image comme URL du diaporama
+    // Cela sera remplacé par la génération réelle du diaporama plus tard
+    console.log('Returning first processed image as slideshow URL');
     return new Response(
       JSON.stringify({ 
         success: true,
-        url: images[0],
-        message: 'Mock slideshow response - returning first image URL'
+        url: processedImages[0],
+        message: 'Slideshow preview ready'
       }), 
       { 
         status: 200, 
