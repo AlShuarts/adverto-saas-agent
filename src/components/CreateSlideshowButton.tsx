@@ -3,7 +3,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Player, Composition } from "@remotion/player";
+import { Player } from "@remotion/player";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
