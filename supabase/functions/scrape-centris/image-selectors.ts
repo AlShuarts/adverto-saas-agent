@@ -1,30 +1,20 @@
 export const imageSelectors = [
-  // Images principales
+  // Sélecteurs spécifiques pour les images Centris
+  'img[src*="mspublic.centris.ca/media.ashx"]',
+  'img[data-src*="mspublic.centris.ca/media.ashx"]',
+  '[data-image-url*="mspublic.centris.ca/media.ashx"]',
+  '[data-original*="mspublic.centris.ca/media.ashx"]',
+  
+  // Conteneurs d'images
+  '#divMainPhoto img',
+  '#divPhotos img',
+  '.photo-gallery img',
   '.MainImg img',
-  '#imgBig',
-  '.imgBig',
-  
-  // Galerie et carousel
-  '.Gallery img',
   '.Carousel img',
-  '[data-qaid="photos"] img',
-  '#visite360 img',
-  '.ModalImg img',
-  
-  // Sélecteurs spécifiques Centris
-  'img[data-src*="s3.amazonaws.com/media.centris.ca"]',
-  'img[src*="s3.amazonaws.com/media.centris.ca"]',
-  'img[data-src*="centris.ca/media"]',
-  'img[src*="centris.ca/media"]',
-  'img[src*="centris"]',
-  'img[data-src*="centris"]',
-  
-  // Sélecteurs de classe
-  '.property-photos img',
-  '.listing-photos img',
-  '.centris-photos img',
+  '.Gallery img',
   
   // Attributs spécifiques
   'img[itemprop="image"]',
-  'img[data-qaid="property-photo"]'
+  'img[data-qaid="property-photo"]',
+  '[data-qaid="photos"] img'
 ];

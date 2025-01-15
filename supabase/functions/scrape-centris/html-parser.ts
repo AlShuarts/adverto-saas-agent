@@ -41,19 +41,22 @@ export class HtmlParser {
   private isValidImageUrl(url: string): boolean {
     if (!url) return false;
 
-    // Vérifier si c'est une URL Centris valide
-    const isCentrisUrl = url.includes('centris.ca') || 
-                        url.includes('s3.amazonaws.com/media.centris.ca');
+    // Vérifier si c'est une URL Centris valide avec le bon domaine
+    const isCentrisUrl = url.includes('mspublic.centris.ca/media.ashx');
     
-    // Vérifier si c'est une image (extension)
-    const hasImageExtension = /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
+    // Vérifier les paramètres attendus
+    const hasRequiredParams = url.includes('id=') && 
+                            (url.includes('&t=pi') || url.includes('&t=photo'));
     
-    // Exclure les miniatures
-    const isNotThumbnail = !url.includes('thumbnail') && 
-                          !url.includes('small') && 
-                          !url.includes('icon');
+    return isCentrisUrl && hasRequiredParams;
+  }
 
-    return isCentrisUrl && hasImageExtension && isNotThumbnail;
+  private cleanImageUrl(url: string): string {
+    // Assurer que l'URL a les bons paramètres de taille
+    if (!url.includes('&w=') && !url.includes('&h=')) {
+      url += '&w=640&h=480&sm=c';
+    }
+    return url;
   }
 
   getImageUrls(): string[] {
@@ -62,11 +65,25 @@ export class HtmlParser {
     const imageUrls: string[] = [];
     const seenUrls = new Set<string>();
 
-    // Log the entire HTML for debugging
-    console.log('Full HTML document:', this.doc.documentElement.outerHTML);
+    // Chercher spécifiquement les URLs d'images Centris
+    const scripts = this.doc.getElementsByTagName('script');
+    for (const script of scripts) {
+      const content = script.textContent || '';
+      const matches = content.match(/https:\/\/mspublic\.centris\.ca\/media\.ashx\?[^"'\s]+/g);
+      if (matches) {
+        matches.forEach(url => {
+          if (this.isValidImageUrl(url) && !seenUrls.has(url)) {
+            const cleanedUrl = this.cleanImageUrl(url);
+            seenUrls.add(cleanedUrl);
+            imageUrls.push(cleanedUrl);
+            console.log('Found image URL in script:', cleanedUrl);
+          }
+        });
+      }
+    }
 
+    // Chercher aussi dans les balises img et les attributs data-*
     for (const selector of imageSelectors) {
-      console.log('Trying selector:', selector);
       const elements = this.doc.querySelectorAll(selector);
       console.log(`Found ${elements.length} elements with selector ${selector}`);
       
@@ -75,23 +92,23 @@ export class HtmlParser {
         const dataSrc = img.getAttribute("data-src");
         const srcset = img.getAttribute("srcset");
         
-        console.log('Found image attributes:', { src, dataSrc, srcset });
-        
         [src, dataSrc].forEach(url => {
-          if (url && !seenUrls.has(url) && this.isValidImageUrl(url)) {
-            console.log('Adding new image URL:', url);
-            seenUrls.add(url);
-            imageUrls.push(url);
+          if (url && this.isValidImageUrl(url) && !seenUrls.has(url)) {
+            const cleanedUrl = this.cleanImageUrl(url);
+            seenUrls.add(cleanedUrl);
+            imageUrls.push(cleanedUrl);
+            console.log('Found image URL in img tag:', cleanedUrl);
           }
         });
 
         if (srcset) {
           const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
           srcsetUrls.forEach(url => {
-            if (!seenUrls.has(url) && this.isValidImageUrl(url)) {
-              console.log('Adding srcset URL:', url);
-              seenUrls.add(url);
-              imageUrls.push(url);
+            if (this.isValidImageUrl(url) && !seenUrls.has(url)) {
+              const cleanedUrl = this.cleanImageUrl(url);
+              seenUrls.add(cleanedUrl);
+              imageUrls.push(cleanedUrl);
+              console.log('Found image URL in srcset:', cleanedUrl);
             }
           });
         }
