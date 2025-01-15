@@ -22,6 +22,22 @@ serve(async (req) => {
       throw new Error("Paramètres de page Facebook manquants");
     }
 
+    // Vérifier d'abord la validité du token
+    console.log("Vérification du token Facebook...");
+    const tokenCheckResponse = await fetch(`https://graph.facebook.com/v18.0/me?access_token=${accessToken}`);
+    const tokenCheckText = await tokenCheckResponse.text();
+    
+    try {
+      const tokenCheckData = JSON.parse(tokenCheckText);
+      if (!tokenCheckResponse.ok || tokenCheckData.error) {
+        console.error("Token Facebook invalide:", tokenCheckData);
+        throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
+      }
+    } catch (e) {
+      console.error("Réponse invalide lors de la vérification du token:", tokenCheckText);
+      throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
+    }
+
     // Publier d'abord les images
     const imageIds = [];
     if (images && images.length > 0) {
@@ -47,11 +63,11 @@ serve(async (req) => {
         try {
           responseData = JSON.parse(responseText);
         } catch (e) {
-          console.error("Réponse non-JSON de l'API Facebook:", responseText);
-          throw new Error("Réponse invalide de l'API Facebook lors du téléchargement de l'image");
+          console.error("Réponse HTML reçue de Facebook (possible erreur d'authentification):", responseText);
+          throw new Error("Erreur d'authentification Facebook. Veuillez reconnecter votre page Facebook.");
         }
 
-        if (!response.ok) {
+        if (!response.ok || responseData.error) {
           console.error("Erreur lors du téléchargement de l'image:", responseData);
           throw new Error(responseData.error?.message || "Erreur lors du téléchargement de l'image");
         }
@@ -83,11 +99,11 @@ serve(async (req) => {
     try {
       responseData = JSON.parse(responseText);
     } catch (e) {
-      console.error("Réponse non-JSON de l'API Facebook:", responseText);
-      throw new Error("Réponse invalide de l'API Facebook lors de la publication");
+      console.error("Réponse HTML reçue de Facebook (possible erreur d'authentification):", responseText);
+      throw new Error("Erreur d'authentification Facebook. Veuillez reconnecter votre page Facebook.");
     }
 
-    if (!response.ok) {
+    if (!response.ok || responseData.error) {
       console.error("Erreur lors de la publication:", responseData);
       throw new Error(responseData.error?.message || "Erreur lors de la publication sur Facebook");
     }
