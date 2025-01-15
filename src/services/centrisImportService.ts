@@ -37,6 +37,7 @@ export const importCentrisListing = async (url: string, userId: string) => {
 
   const listingData = {
     centris_id: response.centris_id,
+    centris_url: url, // Ajout de l'URL Centris
     title: response.title,
     description: response.description || null,
     price: formattedPrice,
