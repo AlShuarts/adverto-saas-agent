@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { formatPrice } from "@/utils/priceFormatter";
+import { FacebookPublishButton } from "./FacebookPublishButton";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -41,15 +42,13 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
           <p className="text-sm text-muted-foreground">
             {[listing.address, listing.city].filter(Boolean).join(", ")}
           </p>
-          <div className="flex items-center gap-2 mt-4">
+          <div className="flex flex-col gap-2 mt-4">
             {listing.published_to_facebook ? (
-              <span className="text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded-full">
+              <span className="text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded-full text-center">
                 Publié sur Facebook
               </span>
             ) : (
-              <span className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded-full">
-                Non publié
-              </span>
+              <FacebookPublishButton listing={listing} />
             )}
           </div>
         </div>
