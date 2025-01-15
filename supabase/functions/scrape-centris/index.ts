@@ -16,11 +16,11 @@ serve(async (req) => {
 
   try {
     const { url } = await req.json();
-    console.log('Scraping URL:', url);
+    console.log('URL à scraper:', url);
 
     if (!url.includes("centris.ca")) {
       return new Response(
-        JSON.stringify({ error: "URL must be from centris.ca" }),
+        JSON.stringify({ error: "L'URL doit provenir de centris.ca" }),
         { 
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -31,13 +31,12 @@ serve(async (req) => {
     const response = await fetch(url, { headers: scrapingHeaders });
     
     if (!response.ok) {
-      console.error('Failed to fetch Centris page:', response.status, response.statusText);
-      throw new Error('Failed to fetch Centris page');
+      console.error('Échec de la récupération de la page Centris:', response.status, response.statusText);
+      throw new Error('Échec de la récupération de la page Centris');
     }
 
     const html = await response.text();
-    console.log('HTML content length:', html.length);
-    console.log('First 500 characters of HTML:', html.substring(0, 500));
+    console.log('Longueur du HTML:', html.length);
     
     const parser = new HtmlParser(html);
     const imageProcessor = new ImageProcessor();
@@ -45,21 +44,29 @@ serve(async (req) => {
     const centrisId = url.split("/").pop() || "";
     const listingData = parser.parseListing(centrisId);
     
-    // Process images
+    // Traitement des images
     const imageUrls = parser.getImageUrls();
-    console.log('Found image URLs:', imageUrls);
+    console.log('URLs d\'images trouvées:', imageUrls);
     
     const processedImages: string[] = [];
+    const errors: string[] = [];
     
     for (const imageUrl of imageUrls) {
-      console.log('Processing image URL:', imageUrl);
+      console.log('Traitement de l\'URL d\'image:', imageUrl);
       const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
+      
       if (processedUrl) {
         processedImages.push(processedUrl);
-        console.log('Successfully processed image:', processedUrl);
+        console.log('Image traitée avec succès:', processedUrl);
       } else {
-        console.error('Failed to process image:', error);
+        console.error('Échec du traitement de l\'image:', error);
+        errors.push(`Échec pour ${imageUrl}: ${error}`);
       }
+    }
+
+    if (processedImages.length === 0 && errors.length > 0) {
+      console.error('Aucune image n\'a pu être traitée. Erreurs:', errors);
+      throw new Error('Impossible de traiter les images: ' + errors.join(', '));
     }
 
     const listing: ListingData = {
@@ -67,7 +74,7 @@ serve(async (req) => {
       images: processedImages.length > 0 ? processedImages : null
     };
 
-    console.log('Final listing data:', listing);
+    console.log('Données finales de l\'annonce:', listing);
 
     return new Response(
       JSON.stringify(listing),
@@ -76,7 +83,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Erreur:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

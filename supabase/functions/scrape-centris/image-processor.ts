@@ -11,40 +11,12 @@ export class ImageProcessor {
     );
   }
 
-  private cleanImageUrl(url: string): string | null {
-    if (!url) return null;
-
-    // Remove query parameters but keep the base URL
-    const baseUrl = url.split('?')[0];
-    console.log('Cleaned URL:', baseUrl);
-
-    // Check if it's a valid image URL
-    if (!baseUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-      console.log('Invalid image format:', baseUrl);
-      return null;
-    }
-
-    // Skip thumbnail images
-    if (baseUrl.includes('thumbnail') || baseUrl.includes('small')) {
-      console.log('Skipping thumbnail:', baseUrl);
-      return null;
-    }
-
-    return baseUrl;
-  }
-
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
     try {
-      console.log('Starting to process image:', imageUrl);
-      const cleanUrl = this.cleanImageUrl(imageUrl);
-      
-      if (!cleanUrl) {
-        console.log('Invalid image URL:', imageUrl);
-        return { processedUrl: null, error: 'Invalid image URL' };
-      }
+      console.log('Début du traitement de l\'image:', imageUrl);
 
-      console.log('Fetching image from:', cleanUrl);
-      const imageResponse = await fetch(cleanUrl, {
+      // Télécharger l'image depuis Centris
+      const imageResponse = await fetch(imageUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
@@ -53,52 +25,61 @@ export class ImageProcessor {
           'Pragma': 'no-cache',
           'Sec-Fetch-Dest': 'image',
           'Sec-Fetch-Mode': 'no-cors',
-          'Sec-Fetch-Site': 'cross-site'
+          'Sec-Fetch-Site': 'cross-site',
+          'Referer': 'https://www.centris.ca/'
         }
       });
 
       if (!imageResponse.ok) {
-        console.error('Failed to download image:', imageResponse.status, imageResponse.statusText);
-        return { processedUrl: null, error: 'Failed to download image' };
+        console.error('Échec du téléchargement de l\'image:', imageResponse.status, imageResponse.statusText);
+        return { processedUrl: null, error: `Échec du téléchargement: ${imageResponse.status}` };
       }
 
       const contentType = imageResponse.headers.get('content-type');
-      console.log('Content-Type:', contentType);
+      console.log('Type de contenu:', contentType);
 
       if (!contentType || !contentType.startsWith('image/')) {
-        console.error('Invalid content type:', contentType);
-        return { processedUrl: null, error: 'Invalid content type' };
+        console.error('Type de contenu invalide:', contentType);
+        return { processedUrl: null, error: 'Type de contenu invalide' };
       }
 
       const imageBlob = await imageResponse.blob();
-      console.log('Image blob size:', imageBlob.size);
+      console.log('Taille du blob:', imageBlob.size);
 
-      const fileExt = cleanUrl.split('.').pop()?.toLowerCase() || 'jpg';
+      if (imageBlob.size === 0) {
+        console.error('Image vide reçue');
+        return { processedUrl: null, error: 'Image vide' };
+      }
+
+      // Générer un nom de fichier unique
+      const fileExt = 'jpg'; // Centris utilise toujours des JPG
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      console.log('Generated filename:', fileName);
+      console.log('Nom du fichier généré:', fileName);
 
+      // Upload vers Supabase Storage
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
         .upload(fileName, imageBlob, {
-          contentType: contentType,
+          contentType: 'image/jpeg',
           upsert: false
         });
 
       if (uploadError) {
-        console.error('Failed to upload image:', uploadError);
-        return { processedUrl: null, error: 'Upload failed: ' + uploadError.message };
+        console.error('Erreur lors de l\'upload:', uploadError);
+        return { processedUrl: null, error: 'Upload échoué: ' + uploadError.message };
       }
 
-      console.log('Upload successful:', uploadData);
+      console.log('Upload réussi:', uploadData);
 
+      // Générer l'URL publique
       const { data: { publicUrl } } = this.supabase.storage
         .from('listings-images')
         .getPublicUrl(fileName);
 
-      console.log('Generated public URL:', publicUrl);
+      console.log('URL publique générée:', publicUrl);
       return { processedUrl: publicUrl };
     } catch (error) {
-      console.error('Error processing image:', error);
+      console.error('Erreur lors du traitement de l\'image:', error);
       return { processedUrl: null, error: error.message };
     }
   }
