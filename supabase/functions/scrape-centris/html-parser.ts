@@ -10,6 +10,7 @@ export class HtmlParser {
     if (!this.doc) {
       throw new Error("Failed to parse HTML");
     }
+    console.log('HTML parsed successfully');
   }
 
   private getTextFromSelectors(selectors: string[]): string {
@@ -39,6 +40,7 @@ export class HtmlParser {
   getImageUrls(): string[] {
     console.log('Starting to extract image URLs');
     
+    // Add more specific selectors for Centris images
     const imageSelectors = [
       'img.listing-image',
       'img.property-image',
@@ -51,17 +53,25 @@ export class HtmlParser {
       '[class*="gallery"] img',
       '[class*="carousel"] img',
       'img[itemprop="image"]',
-      // Add more specific selectors for Centris
       '#imgBig',
       '.imgBig',
       '.MainImg',
       '.centris-photo',
       'img[src*="photos-"]',
-      'img[src*="image_"]'
+      'img[src*="image_"]',
+      // Additional Centris-specific selectors
+      '.MainImg img',
+      '#visite360 img',
+      '.ModalImg img',
+      'img[src*="centris"]',
+      'img[data-src*="centris"]'
     ];
 
     const imageUrls: string[] = [];
     const seenUrls = new Set<string>();
+
+    // Log the entire HTML for debugging
+    console.log('Full HTML document:', this.doc.documentElement.outerHTML);
 
     for (const selector of imageSelectors) {
       console.log('Trying selector:', selector);
@@ -71,8 +81,9 @@ export class HtmlParser {
       for (const img of elements) {
         const src = img.getAttribute("src");
         const dataSrc = img.getAttribute("data-src");
+        const srcset = img.getAttribute("srcset");
         
-        console.log('Found image:', { src, dataSrc });
+        console.log('Found image attributes:', { src, dataSrc, srcset });
         
         [src, dataSrc].forEach(url => {
           if (url && !seenUrls.has(url)) {
@@ -81,6 +92,18 @@ export class HtmlParser {
             imageUrls.push(url);
           }
         });
+
+        // Handle srcset if present
+        if (srcset) {
+          const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
+          srcsetUrls.forEach(url => {
+            if (url && !seenUrls.has(url)) {
+              console.log('Adding srcset URL:', url);
+              seenUrls.add(url);
+              imageUrls.push(url);
+            }
+          });
+        }
       }
     }
 

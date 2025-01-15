@@ -27,6 +27,7 @@ serve(async (req) => {
       );
     }
 
+    // Add custom headers to bypass potential restrictions
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -44,6 +45,7 @@ serve(async (req) => {
 
     const html = await response.text();
     console.log('HTML content length:', html.length);
+    console.log('First 500 characters of HTML:', html.substring(0, 500));
     
     const parser = new HtmlParser(html);
     const imageProcessor = new ImageProcessor();
@@ -62,6 +64,7 @@ serve(async (req) => {
       const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
       if (processedUrl) {
         processedImages.push(processedUrl);
+        console.log('Successfully processed image:', processedUrl);
       } else {
         console.error('Failed to process image:', error);
       }
@@ -72,7 +75,7 @@ serve(async (req) => {
       images: processedImages.length > 0 ? processedImages : null
     };
 
-    console.log('Extracted listing:', listing);
+    console.log('Final listing data:', listing);
 
     return new Response(
       JSON.stringify(listing),
