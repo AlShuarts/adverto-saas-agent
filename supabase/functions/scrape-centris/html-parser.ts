@@ -37,6 +37,8 @@ export class HtmlParser {
   }
 
   getImageUrls(): string[] {
+    console.log('Starting to extract image URLs');
+    
     const imageSelectors = [
       'img.listing-image',
       'img.property-image',
@@ -48,20 +50,33 @@ export class HtmlParser {
       '[data-qaid="photos"] img',
       '[class*="gallery"] img',
       '[class*="carousel"] img',
-      'img[itemprop="image"]'
+      'img[itemprop="image"]',
+      // Add more specific selectors for Centris
+      '#imgBig',
+      '.imgBig',
+      '.MainImg',
+      '.centris-photo',
+      'img[src*="photos-"]',
+      'img[src*="image_"]'
     ];
 
     const imageUrls: string[] = [];
     const seenUrls = new Set<string>();
 
     for (const selector of imageSelectors) {
+      console.log('Trying selector:', selector);
       const elements = this.doc.querySelectorAll(selector);
+      console.log(`Found ${elements.length} elements with selector ${selector}`);
+      
       for (const img of elements) {
         const src = img.getAttribute("src");
         const dataSrc = img.getAttribute("data-src");
         
+        console.log('Found image:', { src, dataSrc });
+        
         [src, dataSrc].forEach(url => {
           if (url && !seenUrls.has(url)) {
+            console.log('Adding new image URL:', url);
             seenUrls.add(url);
             imageUrls.push(url);
           }
@@ -69,6 +84,7 @@ export class HtmlParser {
       }
     }
 
+    console.log('Total unique images found:', imageUrls.length);
     return imageUrls;
   }
 
