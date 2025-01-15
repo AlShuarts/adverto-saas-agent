@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { HeroSection } from "@/components/HeroSection";
 import { FeaturesSection } from "@/components/FeaturesSection";
 import { PricingSection } from "@/components/PricingSection";
+import { CentrisImport } from "@/components/CentrisImport";
 
 const Index = () => {
   const { toast } = useToast();
@@ -118,6 +119,12 @@ const Index = () => {
         loading={loading} 
         onConnectFacebook={connectFacebook} 
       />
+      {profile?.facebook_page_id && (
+        <div className="container mx-auto py-8">
+          <h2 className="text-2xl font-bold mb-4 text-center">Importer une annonce Centris</h2>
+          <CentrisImport />
+        </div>
+      )}
       <FeaturesSection />
       <PricingSection />
     </div>
