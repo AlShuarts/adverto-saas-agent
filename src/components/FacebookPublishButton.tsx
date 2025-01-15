@@ -5,6 +5,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { Share } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { FacebookPreview } from "./FacebookPreview";
 
 type FacebookPublishButtonProps = {
   listing: Tables<"listings">;
@@ -12,6 +13,7 @@ type FacebookPublishButtonProps = {
 
 export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) => {
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -78,6 +80,8 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         title: "Succès",
         description: "L'annonce a été publiée sur Facebook",
       });
+      
+      setShowPreview(false);
     } catch (error) {
       console.error("Erreur de publication:", error);
       toast({
@@ -95,15 +99,24 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
   }
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      className="w-full"
-      onClick={publishToFacebook}
-      disabled={isPublishing}
-    >
-      <Share className="w-4 h-4 mr-2" />
-      {isPublishing ? "Publication..." : "Publier sur Facebook"}
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => setShowPreview(true)}
+        disabled={isPublishing}
+      >
+        <Share className="w-4 h-4 mr-2" />
+        Prévisualiser et publier sur Facebook
+      </Button>
+
+      <FacebookPreview
+        listing={listing}
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        onPublish={publishToFacebook}
+      />
+    </>
   );
 };
