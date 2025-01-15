@@ -1,11 +1,13 @@
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 type FacebookPreviewContentProps = {
   isLoading: boolean;
   error: string | null;
   generatedText: string;
   images: string[];
+  onTextChange: (text: string) => void;
 };
 
 export const FacebookPreviewContent = ({
@@ -13,6 +15,7 @@ export const FacebookPreviewContent = ({
   error,
   generatedText,
   images,
+  onTextChange,
 }: FacebookPreviewContentProps) => {
   return (
     <div className="border rounded-lg p-4 bg-white">
@@ -29,7 +32,12 @@ export const FacebookPreviewContent = ({
         </div>
       ) : (
         <>
-          <p className="whitespace-pre-line mb-4 text-gray-900">{generatedText}</p>
+          <Textarea
+            value={generatedText}
+            onChange={(e) => onTextChange(e.target.value)}
+            className="mb-4 min-h-[150px]"
+            placeholder="Entrez votre texte ici..."
+          />
           {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
           {images.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
