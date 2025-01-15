@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { formatPrice } from "@/utils/priceFormatter";
 import { FacebookPublishButton } from "./FacebookPublishButton";
+import { ListingImageCarousel } from "./ListingImageCarousel";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -10,19 +11,7 @@ type ListingCardProps = {
 export const ListingCard = ({ listing }: ListingCardProps) => {
   return (
     <Card className="overflow-hidden h-full">
-      <div className="aspect-video relative overflow-hidden">
-        {listing.images && listing.images.length > 0 ? (
-          <img
-            src={listing.images[0]}
-            alt={listing.title}
-            className="object-cover w-full h-full"
-          />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <span className="text-muted-foreground">Aucune image</span>
-          </div>
-        )}
-      </div>
+      <ListingImageCarousel images={listing.images || []} />
       <CardHeader>
         <CardTitle className="text-lg">{listing.title}</CardTitle>
       </CardHeader>
