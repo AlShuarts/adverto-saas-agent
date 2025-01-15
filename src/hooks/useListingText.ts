@@ -15,11 +15,15 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
       setError(null);
       
       try {
+        // Construire l'URL Centris complète
+        const baseUrl = "https://www.centris.ca/fr/quadruplex~a-vendre~saint-georges";
+        const completeUrl = listing.centris_url || `${baseUrl}/${listing.centris_id}?view=Summary&uc=2`;
+
         const { data, error } = await supabase.functions.invoke('generate-listing-description', {
           body: { 
             listing: {
               ...listing,
-              centris_url: listing.centris_url || `https://www.centris.ca/fr/quadruplex~a-vendre~saint-georges/${listing.centris_id}?view=Summary&uc=2`
+              centris_url: completeUrl
             }
           },
         });
@@ -31,7 +35,8 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
         setError("Impossible de générer le texte de vente. Le texte par défaut sera utilisé.");
         
         // Ensure we use the complete URL in the fallback text as well
-        const completeUrl = listing.centris_url || `https://www.centris.ca/fr/quadruplex~a-vendre~saint-georges/${listing.centris_id}?view=Summary&uc=2`;
+        const baseUrl = "https://www.centris.ca/fr/quadruplex~a-vendre~saint-georges";
+        const completeUrl = listing.centris_url || `${baseUrl}/${listing.centris_id}?view=Summary&uc=2`;
         const fallbackText = `${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur ${completeUrl}`;
         setGeneratedText(fallbackText);
       } finally {
