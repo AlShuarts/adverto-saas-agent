@@ -12,8 +12,11 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Received request:', req.method);
+    
     // Parse request body
     const { listingId } = await req.json();
+    console.log('Received listingId:', listingId);
     
     if (!listingId) {
       console.error('No listingId provided');
@@ -29,14 +32,14 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing request for listing:', listingId);
-
     // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    console.log('Fetching listing data...');
+    
     // Fetch listing
     const { data: listing, error: listingError } = await supabase
       .from('listings')
@@ -74,27 +77,44 @@ serve(async (req) => {
       );
     }
 
-    console.log('Initializing FFmpeg...');
-    const ffmpeg = await initFFmpeg();
+    console.log('Processing', images.length, 'images');
 
-    console.log('Creating slideshow...');
-    const videoBlob = await createSlideshow(ffmpeg, images, listing);
+    try {
+      console.log('Initializing FFmpeg...');
+      const ffmpeg = await initFFmpeg();
 
-    console.log('Uploading slideshow...');
-    const url = await uploadToStorage(videoBlob, listingId);
+      console.log('Creating slideshow...');
+      const videoBlob = await createSlideshow(ffmpeg, images, listing);
 
-    console.log('Slideshow created and uploaded successfully:', url);
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        url,
-        message: 'Slideshow created successfully'
-      }), 
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+      console.log('Uploading slideshow...');
+      const url = await uploadToStorage(videoBlob, listingId);
+
+      console.log('Slideshow created and uploaded successfully:', url);
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          url,
+          message: 'Slideshow created successfully'
+        }), 
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } catch (processingError) {
+      console.error('Error during slideshow creation:', processingError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Error during slideshow creation',
+          details: processingError.message
+        }), 
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
   } catch (error) {
     console.error('Unexpected error:', error);
