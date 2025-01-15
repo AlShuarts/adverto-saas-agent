@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
 import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.12.1';
+import { backgroundMusic } from './background-music.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,10 +23,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch listing images
+    // Fetch listing details
     const { data: listing, error: listingError } = await supabase
       .from('listings')
-      .select('images')
+      .select('*')
       .eq('id', listingId)
       .single();
 
@@ -42,6 +43,10 @@ serve(async (req) => {
     const ffmpeg = new FFmpeg();
     await ffmpeg.load();
 
+    // Write background music to file
+    const musicData = backgroundMusic.split('base64,')[1];
+    await ffmpeg.writeFile('background.mp3', Uint8Array.from(atob(musicData), c => c.charCodeAt(0)));
+
     // Download and process each image
     for (let i = 0; i < images.length; i++) {
       const imageUrl = images[i];
@@ -50,11 +55,26 @@ serve(async (req) => {
       await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
     }
 
-    // Create slideshow video
+    // Create text file with listing information
+    const textContent = `${listing.title}\n${listing.price ? formatPrice(listing.price) : "Prix sur demande"}\n${listing.bedrooms || 0} chambre(s) | ${listing.bathrooms || 0} salle(s) de bain\n${[listing.address, listing.city].filter(Boolean).join(", ")}`;
+    await ffmpeg.writeFile('info.txt', textContent);
+
+    // Create slideshow video with text overlay and background music
     await ffmpeg.exec([
       '-framerate', '1/3',  // Each image shows for 3 seconds
       '-i', 'image%d.jpg',
+      '-i', 'background.mp3',
+      '-filter_complex', `
+        [0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,
+        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:
+        textfile=info.txt:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:
+        boxborderw=5:x=(w-text_w)/2:y=h-text_h-50[v]
+      `,
+      '-map', '[v]',
+      '-map', '1:a',
       '-c:v', 'libx264',
+      '-c:a', 'aac',
+      '-shortest',
       '-r', '30',
       '-pix_fmt', 'yuv420p',
       'output.mp4'
@@ -102,3 +122,13 @@ serve(async (req) => {
     );
   }
 });
+
+// Utility function to format price
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat('fr-CA', {
+    style: 'currency',
+    currency: 'CAD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+}
