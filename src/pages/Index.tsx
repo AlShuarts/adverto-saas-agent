@@ -7,6 +7,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { FeaturesSection } from "@/components/FeaturesSection";
 import { PricingSection } from "@/components/PricingSection";
 import { CentrisImport } from "@/components/CentrisImport";
+import { ListingsList } from "@/components/ListingsList";
 
 const Index = () => {
   const { toast } = useToast();
@@ -120,9 +121,15 @@ const Index = () => {
         onConnectFacebook={connectFacebook} 
       />
       {profile?.facebook_page_id && (
-        <div className="container mx-auto py-8">
-          <h2 className="text-2xl font-bold mb-4 text-center">Importer une annonce Centris</h2>
-          <CentrisImport />
+        <div className="container mx-auto py-8 space-y-12">
+          <div>
+            <h2 className="text-2xl font-bold mb-4 text-center">Importer une annonce Centris</h2>
+            <CentrisImport />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-center">Vos annonces</h2>
+            <ListingsList />
+          </div>
         </div>
       )}
       <FeaturesSection />
