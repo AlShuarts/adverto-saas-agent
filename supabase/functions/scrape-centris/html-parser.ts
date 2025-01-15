@@ -40,26 +40,12 @@ export class HtmlParser {
   getImageUrls(): string[] {
     console.log('Starting to extract image URLs');
     
-    // Add more specific selectors for Centris images
+    // Sélecteurs spécifiques pour les images Centris
     const imageSelectors = [
-      'img.listing-image',
-      'img.property-image',
-      'img[data-qaid="property-photo"]',
-      'img[class*="PropertyPhoto"]',
-      'img[class*="propertyPhoto"]',
-      '.property-photos img',
-      '.photos img',
-      '[data-qaid="photos"] img',
-      '[class*="gallery"] img',
-      '[class*="carousel"] img',
-      'img[itemprop="image"]',
-      '#imgBig',
-      '.imgBig',
-      '.MainImg',
-      '.centris-photo',
-      'img[src*="photos-"]',
-      'img[src*="image_"]',
-      // Additional Centris-specific selectors
+      'img[data-src*="s3.amazonaws.com/media.centris.ca"]',
+      'img[src*="s3.amazonaws.com/media.centris.ca"]',
+      'img[data-src*="centris.ca/media"]',
+      'img[src*="centris.ca/media"]',
       '.MainImg img',
       '#visite360 img',
       '.ModalImg img',
@@ -87,9 +73,12 @@ export class HtmlParser {
         
         [src, dataSrc].forEach(url => {
           if (url && !seenUrls.has(url)) {
-            console.log('Adding new image URL:', url);
-            seenUrls.add(url);
-            imageUrls.push(url);
+            // Vérifier si l'URL est une URL Centris valide
+            if (url.includes('centris.ca') || url.includes('s3.amazonaws.com/media.centris.ca')) {
+              console.log('Adding new image URL:', url);
+              seenUrls.add(url);
+              imageUrls.push(url);
+            }
           }
         });
 
@@ -97,7 +86,7 @@ export class HtmlParser {
         if (srcset) {
           const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
           srcsetUrls.forEach(url => {
-            if (url && !seenUrls.has(url)) {
+            if (url && !seenUrls.has(url) && (url.includes('centris.ca') || url.includes('s3.amazonaws.com/media.centris.ca'))) {
               console.log('Adding srcset URL:', url);
               seenUrls.add(url);
               imageUrls.push(url);
