@@ -10,14 +10,29 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
   try {
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders });
+    }
+
     console.log('Starting slideshow creation...');
-    const { listingId } = await req.json();
+    
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+      console.log('Request body:', body);
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      throw new Error('Invalid request body');
+    }
+    
+    const { listingId } = body;
+    if (!listingId) {
+      throw new Error('listingId is required');
+    }
+    
     console.log('Listing ID:', listingId);
 
     // Initialize Supabase client
@@ -101,8 +116,11 @@ serve(async (req) => {
 
     // Read the output video
     console.log('Reading output video...');
-    const data = await ffmpeg.readFile('output.mp4');
-    const videoBlob = new Blob([data], { type: 'video/mp4' });
+    const outputData = await ffmpeg.readFile('output.mp4');
+    if (!outputData) {
+      throw new Error('Failed to read output video');
+    }
+    const videoBlob = new Blob([outputData], { type: 'video/mp4' });
     console.log('Video read successfully, size:', videoBlob.size);
 
     // Upload to Supabase Storage
@@ -131,7 +149,6 @@ serve(async (req) => {
 
     console.log('Public URL generated:', publicUrl);
 
-    // Make sure to return a proper JSON response
     return new Response(
       JSON.stringify({ 
         success: true,
@@ -140,26 +157,26 @@ serve(async (req) => {
       }),
       {
         headers: { 
-          ...corsHeaders, 
+          ...corsHeaders,
           'Content-Type': 'application/json'
-        },
+        }
       }
     );
 
   } catch (error) {
     console.error('Error in create-slideshow function:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: false,
-        error: error.message,
+        error: error.message || 'An unexpected error occurred',
         details: error.toString()
       }),
       {
         status: 500,
-        headers: { 
-          ...corsHeaders, 
+        headers: {
+          ...corsHeaders,
           'Content-Type': 'application/json'
-        },
+        }
       }
     );
   }

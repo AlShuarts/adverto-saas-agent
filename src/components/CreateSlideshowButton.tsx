@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -15,42 +16,20 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
     setIsLoading(true);
     try {
       console.log('Starting slideshow creation for listing:', listing.id);
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-slideshow`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ listingId: listing.id }),
-        }
-      );
+      
+      const { data, error } = await supabase.functions.invoke('create-slideshow', {
+        body: { listingId: listing.id }
+      });
 
-      // Vérifier d'abord si la réponse est OK
-      if (!response.ok) {
-        console.error('Error response status:', response.status);
-        console.error('Error response status text:', response.statusText);
-        
-        // Essayer de lire le corps de la réponse en tant que texte
-        const errorText = await response.text();
-        console.error('Error response body:', errorText);
-        
-        throw new Error(`Failed to create slideshow: ${response.statusText}`);
+      console.log('Response from create-slideshow:', data);
+
+      if (error) {
+        console.error('Error from create-slideshow:', error);
+        throw error;
       }
 
-      // Essayer de parser la réponse en JSON
-      let data;
-      try {
-        const textResponse = await response.text();
-        console.log('Raw response:', textResponse);
-        data = JSON.parse(textResponse);
-      } catch (parseError) {
-        console.error('Error parsing JSON:', parseError);
-        throw new Error('Invalid response format from server');
-      }
-
-      if (!data.url) {
+      if (!data?.url) {
+        console.error('No URL in response:', data);
         throw new Error('No URL returned from server');
       }
 
