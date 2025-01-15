@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,12 @@ serve(async (req) => {
       throw new Error("Failed to parse HTML");
     }
 
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     // Helper function to try multiple selectors and clean text
     const getTextFromSelectors = (selectors: string[]): string => {
       for (const selector of selectors) {
@@ -72,7 +79,6 @@ serve(async (req) => {
       return numStr ? parseInt(numStr) : null;
     };
 
-    // Title selectors with more variations
     const titleSelectors = [
       'h1.text-center',
       'h1.listing-title',
@@ -152,7 +158,49 @@ serve(async (req) => {
       '.bathrooms'
     ];
 
-    // Extract images with more specific selectors
+    // Function to download and upload image to Supabase Storage
+    async function processImage(imageUrl: string): Promise<string | null> {
+      try {
+        console.log('Processing image:', imageUrl);
+        
+        // Download the image
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          console.error('Failed to download image:', imageUrl);
+          return null;
+        }
+
+        const imageBlob = await imageResponse.blob();
+        const fileExt = imageUrl.split('.').pop()?.toLowerCase() || 'jpg';
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('listings-images')
+          .upload(fileName, imageBlob, {
+            contentType: `image/${fileExt}`,
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('Failed to upload image:', uploadError);
+          return null;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('listings-images')
+          .getPublicUrl(fileName);
+
+        console.log('Image uploaded successfully:', publicUrl);
+        return publicUrl;
+      } catch (error) {
+        console.error('Error processing image:', error);
+        return null;
+      }
+    }
+
+    // Extract and process images
     const imageSelectors = [
       'img.listing-image',
       'img.property-image',
@@ -167,7 +215,7 @@ serve(async (req) => {
       'img[itemprop="image"]'
     ];
 
-    const images: string[] = [];
+    const processedImages: string[] = [];
     const seenUrls = new Set<string>();
 
     // Function to clean and validate image URL
@@ -186,27 +234,30 @@ serve(async (req) => {
       return baseUrl;
     };
 
-    // Extract images from both src and data-src attributes
+    // Process all images
     for (const selector of imageSelectors) {
       const elements = doc.querySelectorAll(selector);
-      elements.forEach((img) => {
+      for (const img of elements) {
         const src = img.getAttribute("src");
         const dataSrc = img.getAttribute("data-src");
         
-        [src, dataSrc].forEach(url => {
-          if (!url) return;
+        for (const url of [src, dataSrc]) {
+          if (!url) continue;
           
           const cleanUrl = cleanImageUrl(url);
           if (cleanUrl && !seenUrls.has(cleanUrl)) {
             seenUrls.add(cleanUrl);
-            images.push(cleanUrl);
-            console.log('Found image:', cleanUrl);
+            const processedUrl = await processImage(cleanUrl);
+            if (processedUrl) {
+              processedImages.push(processedUrl);
+              console.log('Added processed image:', processedUrl);
+            }
           }
-        });
-      });
+        }
+      }
     }
 
-    // Extract data
+    // Extract other data
     const title = getTextFromSelectors(titleSelectors);
     const priceText = getTextFromSelectors(priceSelectors);
     const description = getTextFromSelectors(descriptionSelectors);
@@ -215,14 +266,10 @@ serve(async (req) => {
     const bedroomsText = getTextFromSelectors(bedroomSelectors);
     const bathroomsText = getTextFromSelectors(bathroomSelectors);
 
-    // Clean up price
+    // Clean up data
     const price = priceText ? cleanPrice(priceText) : null;
-    
-    // Extract numbers for bedrooms and bathrooms
     const bedrooms = bedroomsText ? extractNumber(bedroomsText) : null;
     const bathrooms = bathroomsText ? extractNumber(bathroomsText) : null;
-
-    // Extract Centris ID from URL
     const centrisId = url.split("/").pop() || "";
 
     const listing = {
@@ -236,7 +283,7 @@ serve(async (req) => {
       bedrooms,
       bathrooms,
       property_type: "Résidentiel",
-      images: images.length > 0 ? images : null
+      images: processedImages.length > 0 ? processedImages : null
     };
 
     console.log('Extracted listing:', listing);
