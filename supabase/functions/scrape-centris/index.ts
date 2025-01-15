@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -31,9 +30,9 @@ serve(async (req) => {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
     });
+    
     const html = await response.text();
     console.log('HTML content length:', html.length);
-    console.log('First 500 characters of HTML:', html.substring(0, 500));
     
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
@@ -42,169 +41,137 @@ serve(async (req) => {
       throw new Error("Failed to parse HTML");
     }
 
-    console.log('HTML parsed successfully');
+    // Helper function to try multiple selectors and clean text
+    const getTextFromSelectors = (selectors: string[]): string => {
+      for (const selector of selectors) {
+        const element = doc.querySelector(selector);
+        const text = element?.textContent?.trim();
+        if (text) {
+          console.log(`Found text with selector ${selector}:`, text);
+          return text;
+        }
+      }
+      return "";
+    };
 
-    // Extract listing information with multiple fallback selectors
+    // Helper function to extract number from text
+    const extractNumber = (text: string): number | null => {
+      const match = text.match(/\d+/);
+      return match ? parseInt(match[0]) : null;
+    };
+
+    // Title selectors
     const titleSelectors = [
-      ".description-container h1",
-      "h1.headingLarge",
-      ".address-container h1",
-      "[class*='Title']",
-      "[class*='title']",
-      "h1"
+      '[data-qaid="property-title"]',
+      '[data-qaid="property-description-title"]',
+      '.property-title',
+      '.description-title',
+      'h1'
     ];
-    
-    let title = "";
-    for (const selector of titleSelectors) {
-      const element = doc.querySelector(selector);
-      if (element?.textContent?.trim()) {
-        title = element.textContent.trim();
-        console.log('Title found with selector:', selector);
-        break;
-      }
-    }
 
+    // Price selectors
     const priceSelectors = [
-      "[class*='price']",
-      "[class*='Price']",
-      ".price-container",
-      "[data-qaid='price']"
+      '[data-qaid="property-price"]',
+      '[data-qaid="price"]',
+      '.property-price',
+      '.price'
     ];
-    
-    let price = "";
-    for (const selector of priceSelectors) {
-      const element = doc.querySelector(selector);
-      if (element?.textContent?.trim()) {
-        price = element.textContent.trim();
-        console.log('Price found with selector:', selector);
-        break;
-      }
-    }
 
+    // Description selectors
     const descriptionSelectors = [
-      "[class*='description']",
-      ".teaser",
-      "[data-qaid='description']",
-      "#description"
+      '[data-qaid="property-description"]',
+      '[data-qaid="description"]',
+      '.property-description',
+      '.description'
     ];
-    
-    let description = "";
-    for (const selector of descriptionSelectors) {
-      const element = doc.querySelector(selector);
-      if (element?.textContent?.trim()) {
-        description = element.textContent.trim();
-        console.log('Description found with selector:', selector);
-        break;
-      }
-    }
 
+    // Address selectors
     const addressSelectors = [
-      "[class*='address']",
-      ".address-container",
-      "[data-qaid='address']"
+      '[data-qaid="property-address"]',
+      '[data-qaid="address"]',
+      '.property-address',
+      '.address'
     ];
-    
-    let address = "";
-    for (const selector of addressSelectors) {
-      const element = doc.querySelector(selector);
-      if (element?.textContent?.trim()) {
-        address = element.textContent.trim();
-        console.log('Address found with selector:', selector);
-        break;
-      }
-    }
 
+    // City selectors
     const citySelectors = [
-      "[class*='city']",
-      ".city-container",
-      "[data-qaid='city']"
+      '[data-qaid="property-city"]',
+      '[data-qaid="city"]',
+      '.property-city',
+      '.city'
     ];
-    
-    let city = "";
-    for (const selector of citySelectors) {
-      const element = doc.querySelector(selector);
-      if (element?.textContent?.trim()) {
-        city = element.textContent.trim();
-        console.log('City found with selector:', selector);
-        break;
-      }
-    }
 
+    // Bedrooms selectors
     const bedroomSelectors = [
-      "[class*='bedroom']",
-      "[class*='Bedroom']",
-      "[data-qaid='bedrooms']"
+      '[data-qaid="property-bedrooms"]',
+      '[data-qaid="bedrooms"]',
+      '.property-bedrooms',
+      '.bedrooms'
     ];
-    
-    let bedrooms = null;
-    for (const selector of bedroomSelectors) {
-      const element = doc.querySelector(selector);
-      if (element?.textContent?.trim()) {
-        const match = element.textContent.trim().match(/\d+/);
-        if (match) {
-          bedrooms = parseInt(match[0]);
-          console.log('Bedrooms found with selector:', selector);
-          break;
-        }
-      }
-    }
 
+    // Bathrooms selectors
     const bathroomSelectors = [
-      "[class*='bathroom']",
-      "[class*='Bathroom']",
-      "[data-qaid='bathrooms']"
+      '[data-qaid="property-bathrooms"]',
+      '[data-qaid="bathrooms"]',
+      '.property-bathrooms',
+      '.bathrooms'
     ];
-    
-    let bathrooms = null;
-    for (const selector of bathroomSelectors) {
-      const element = doc.querySelector(selector);
-      if (element?.textContent?.trim()) {
-        const match = element.textContent.trim().match(/\d+/);
-        if (match) {
-          bathrooms = parseInt(match[0]);
-          console.log('Bathrooms found with selector:', selector);
-          break;
-        }
-      }
-    }
 
-    // Extract images with more flexible selectors
-    const images: string[] = [];
+    // Extract images with more specific selectors
     const imageSelectors = [
-      "img[class*='photo']",
-      "img[class*='Photo']",
-      ".slider img",
-      "[data-qaid='photos'] img",
-      "[class*='gallery'] img"
+      'img[data-qaid="property-photo"]',
+      'img[class*="PropertyPhoto"]',
+      'img[class*="propertyPhoto"]',
+      '.property-photos img',
+      '.photos img',
+      '[data-qaid="photos"] img',
+      '[class*="gallery"] img',
+      '[class*="carousel"] img'
     ];
-    
+
+    const images: string[] = [];
     for (const selector of imageSelectors) {
       const elements = doc.querySelectorAll(selector);
       elements.forEach((img) => {
-        const src = img.getAttribute("src");
+        const src = img.getAttribute("src") || img.getAttribute("data-src");
         if (src && !src.includes("placeholder") && !images.includes(src)) {
+          console.log('Found image:', src);
           images.push(src);
         }
       });
     }
-    console.log('Number of images found:', images.length);
+
+    // Extract data
+    const title = getTextFromSelectors(titleSelectors);
+    const priceText = getTextFromSelectors(priceSelectors);
+    const description = getTextFromSelectors(descriptionSelectors);
+    const address = getTextFromSelectors(addressSelectors);
+    const city = getTextFromSelectors(citySelectors);
+    const bedroomsText = getTextFromSelectors(bedroomSelectors);
+    const bathroomsText = getTextFromSelectors(bathroomSelectors);
+
+    // Clean up price (remove $ and spaces)
+    const price = priceText ? parseFloat(priceText.replace(/[^0-9.]/g, "")) : null;
+    
+    // Extract numbers for bedrooms and bathrooms
+    const bedrooms = bedroomsText ? extractNumber(bedroomsText) : null;
+    const bathrooms = bathroomsText ? extractNumber(bathroomsText) : null;
 
     // Extract Centris ID from URL
     const centrisId = url.split("/").pop() || "";
-    console.log('Centris ID:', centrisId);
 
     const listing = {
       centris_id: centrisId,
       title: title || "Propriété à vendre",
       description,
-      price: price ? parseFloat(price.replace(/[^0-9.]/g, "")) : null,
+      price,
       address,
       city,
-      postal_code: null, // We'll need to extract this from the address
+      postal_code: null, // We'll extract this from address if needed
       bedrooms,
       bathrooms,
-      property_type: "Résidentiel", // Default value as it's hard to extract consistently
-      images
+      property_type: "Résidentiel",
+      images: images.length > 0 ? images : null
     };
 
     console.log('Extracted listing:', listing);
