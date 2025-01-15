@@ -1,12 +1,14 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
-import { formatPrice } from "@/utils/priceFormatter";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type FacebookPreviewProps = {
   listing: Tables<"listings">;
   isOpen: boolean;
   onClose: () => void;
-  onPublish: () => void;
+  onPublish: (message: string) => void;
 };
 
 export const FacebookPreview = ({
@@ -15,11 +17,38 @@ export const FacebookPreview = ({
   onClose,
   onPublish,
 }: FacebookPreviewProps) => {
-  const message = `${listing.title}\n\n${listing.description || ""}\n\nPrix: ${
-    listing.price
-      ? formatPrice(listing.price)
-      : "Prix sur demande"
-  }\n\n${[listing.address, listing.city].filter(Boolean).join(", ")}`;
+  const [generatedText, setGeneratedText] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const generateText = async () => {
+      if (!isOpen) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-listing-description', {
+          body: { listing },
+        });
+
+        if (error) throw error;
+        setGeneratedText(data.text);
+      } catch (err) {
+        console.error('Error generating text:', err);
+        setError("Impossible de générer le texte de vente. Le texte par défaut sera utilisé.");
+        setGeneratedText(`${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur Centris: https://www.centris.ca/${listing.centris_id}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    generateText();
+  }, [isOpen, listing]);
+
+  // Limit to first 2 images
+  const displayImages = listing.images ? listing.images.slice(0, 2) : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -36,18 +65,29 @@ export const FacebookPreview = ({
                 <p className="text-sm text-gray-500">Maintenant</p>
               </div>
             </div>
-            <p className="whitespace-pre-line mb-4">{message}</p>
-            {listing.images && listing.images.length > 0 && (
-              <div className="grid grid-cols-2 gap-2">
-                {listing.images.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image}
-                    alt={`Image ${index + 1}`}
-                    className="w-full h-48 object-cover rounded"
-                  />
-                ))}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
               </div>
+            ) : (
+              <>
+                <p className="whitespace-pre-line mb-4">{generatedText}</p>
+                {error && (
+                  <p className="text-sm text-red-500 mb-4">{error}</p>
+                )}
+                {displayImages.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {displayImages.map((image, index) => (
+                      <img
+                        key={index}
+                        src={image}
+                        alt={`Image ${index + 1}`}
+                        className="w-full h-48 object-cover rounded"
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
           <div className="flex justify-end space-x-2">
@@ -58,8 +98,9 @@ export const FacebookPreview = ({
               Annuler
             </button>
             <button
-              onClick={onPublish}
+              onClick={() => onPublish(generatedText)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              disabled={isLoading}
             >
               Publier
             </button>

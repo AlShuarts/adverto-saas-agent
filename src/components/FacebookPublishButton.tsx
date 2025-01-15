@@ -17,7 +17,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const publishToFacebook = async () => {
+  const publishToFacebook = async (message: string) => {
     try {
       setIsPublishing(true);
 
@@ -36,14 +36,6 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         return;
       }
 
-      // Créer le message pour Facebook
-      const message = `${listing.title}\n\n${listing.description || ""}\n\nPrix: ${
-        listing.price ? new Intl.NumberFormat("fr-CA", {
-          style: "currency",
-          currency: "CAD",
-        }).format(listing.price) : "Prix sur demande"
-      }\n\n${[listing.address, listing.city].filter(Boolean).join(", ")}`;
-
       // Publier sur Facebook via l'API Edge Function
       const response = await fetch("/api/facebook/publish", {
         method: "POST",
@@ -52,7 +44,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         },
         body: JSON.stringify({
           message,
-          images: listing.images,
+          images: listing.images?.slice(0, 2), // Limit to 2 images
           pageId: profile.facebook_page_id,
           accessToken: profile.facebook_access_token,
         }),
