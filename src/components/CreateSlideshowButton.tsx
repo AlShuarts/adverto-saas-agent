@@ -3,8 +3,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Player } from "@remotion/player";
-import { Sequence } from "@remotion/core";
+import { Player, Composition } from "@remotion/player";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -17,8 +16,9 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
       {images.map((image, index) => {
         console.log(`Rendering image ${index + 1}:`, image);
         return (
-          <Sequence key={index} from={index * 60} durationInFrames={60}>
-            <div style={{ 
+          <div
+            key={index}
+            style={{ 
               position: 'absolute',
               top: 0,
               left: 0,
@@ -27,29 +27,31 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: 'white'
-            }}>
-              <img
-                src={image}
-                style={{
-                  maxWidth: '90%',
-                  maxHeight: '90%',
-                  objectFit: 'contain',
-                }}
-                alt={`Slide ${index + 1}`}
-                onError={(e) => {
-                  console.error(`Error loading image ${index + 1}:`, image, e);
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={(e) => {
-                  console.log(`Image ${index + 1} loaded successfully:`, {
-                    naturalWidth: (e.target as HTMLImageElement).naturalWidth,
-                    naturalHeight: (e.target as HTMLImageElement).naturalHeight,
-                  });
-                }}
-              />
-            </div>
-          </Sequence>
+              backgroundColor: 'white',
+              opacity: index === 0 ? 1 : 0,
+              transition: 'opacity 0.5s ease-in-out'
+            }}
+          >
+            <img
+              src={image}
+              style={{
+                maxWidth: '90%',
+                maxHeight: '90%',
+                objectFit: 'contain',
+              }}
+              alt={`Slide ${index + 1}`}
+              onError={(e) => {
+                console.error(`Error loading image ${index + 1}:`, image, e);
+                e.currentTarget.style.display = 'none';
+              }}
+              onLoad={(e) => {
+                console.log(`Image ${index + 1} loaded successfully:`, {
+                  naturalWidth: (e.target as HTMLImageElement).naturalWidth,
+                  naturalHeight: (e.target as HTMLImageElement).naturalHeight,
+                });
+              }}
+            />
+          </div>
         );
       })}
     </div>
