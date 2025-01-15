@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Player } from "@remotion/player";
-import { AbsoluteFill } from "@remotion/player";
+import { AbsoluteFill } from "@remotion/core";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
