@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Player } from "@remotion/player";
-import { AbsoluteFill } from "@remotion/core";
+import { Sequence, Img } from "@remotion/core";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -12,10 +12,10 @@ type CreateSlideshowButtonProps = {
 
 const SlideShowComposition = ({ images }: { images: string[] }) => {
   return (
-    <AbsoluteFill style={{ backgroundColor: 'white' }}>
+    <div style={{ backgroundColor: 'white', width: '100%', height: '100%' }}>
       {images.map((image, index) => (
-        <AbsoluteFill key={index}>
-          <img
+        <Sequence key={index} from={index * 60} durationInFrames={60}>
+          <Img
             src={image}
             style={{
               width: '100%',
@@ -23,9 +23,9 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
               objectFit: 'cover',
             }}
           />
-        </AbsoluteFill>
+        </Sequence>
       ))}
-    </AbsoluteFill>
+    </div>
   );
 };
 
