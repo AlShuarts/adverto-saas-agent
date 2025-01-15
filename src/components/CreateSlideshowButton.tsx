@@ -14,6 +14,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const handleCreateSlideshow = async () => {
     setIsLoading(true);
     try {
+      console.log('Starting slideshow creation for listing:', listing.id);
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-slideshow`,
         {
@@ -26,11 +27,14 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to create slideshow");
+        console.error('Error response:', data);
+        throw new Error(data.error || 'Failed to create slideshow');
       }
 
-      const { url } = await response.json();
+      console.log('Slideshow created successfully:', data);
 
       toast({
         title: "Succès",
@@ -38,12 +42,12 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       });
 
       // Ouvrir le diaporama dans un nouvel onglet
-      window.open(url, "_blank");
+      window.open(data.url, "_blank");
     } catch (error) {
       console.error("Error creating slideshow:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de créer le diaporama",
+        description: error.message || "Impossible de créer le diaporama",
         variant: "destructive",
       });
     } finally {

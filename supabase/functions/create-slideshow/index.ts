@@ -15,7 +15,9 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting slideshow creation...');
     const { listingId } = await req.json();
+    console.log('Listing ID:', listingId);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -24,52 +26,67 @@ serve(async (req) => {
     );
 
     // Fetch listing details
+    console.log('Fetching listing details...');
     const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('*')
       .eq('id', listingId)
       .single();
 
-    if (listingError || !listing) {
+    if (listingError) {
+      console.error('Error fetching listing:', listingError);
       throw new Error('Listing not found');
     }
+
+    console.log('Listing found:', listing);
 
     const images = listing.images || [];
     if (images.length === 0) {
       throw new Error('No images found for this listing');
     }
 
+    console.log('Number of images:', images.length);
+
     // Initialize FFmpeg
+    console.log('Initializing FFmpeg...');
     const ffmpeg = new FFmpeg();
     await ffmpeg.load();
+    console.log('FFmpeg loaded successfully');
 
     // Write background music to file
+    console.log('Writing background music...');
     const musicData = backgroundMusic.split('base64,')[1];
     await ffmpeg.writeFile('background.mp3', Uint8Array.from(atob(musicData), c => c.charCodeAt(0)));
+    console.log('Background music written successfully');
 
     // Download and process each image
+    console.log('Processing images...');
     for (let i = 0; i < images.length; i++) {
       const imageUrl = images[i];
+      console.log(`Downloading image ${i + 1}/${images.length}: ${imageUrl}`);
       const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download image ${i + 1}: ${imageResponse.statusText}`);
+      }
       const imageData = await imageResponse.arrayBuffer();
       await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
+      console.log(`Image ${i + 1} processed successfully`);
     }
 
     // Create text file with listing information
+    console.log('Creating text overlay...');
     const textContent = `${listing.title}\n${listing.price ? formatPrice(listing.price) : "Prix sur demande"}\n${listing.bedrooms || 0} chambre(s) | ${listing.bathrooms || 0} salle(s) de bain\n${[listing.address, listing.city].filter(Boolean).join(", ")}`;
     await ffmpeg.writeFile('info.txt', textContent);
+    console.log('Text overlay created successfully');
 
     // Create slideshow video with text overlay and background music
+    console.log('Generating video...');
     await ffmpeg.exec([
-      '-framerate', '1/3',  // Each image shows for 3 seconds
+      '-framerate', '1/3',
       '-i', 'image%d.jpg',
       '-i', 'background.mp3',
-      '-filter_complex', `
-        [0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,
-        drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:
-        textfile=info.txt:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:
-        boxborderw=5:x=(w-text_w)/2:y=h-text_h-50[v]
-      `,
+      '-filter_complex',
+      '[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=info.txt:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-text_h-50[v]',
       '-map', '[v]',
       '-map', '1:a',
       '-c:v', 'libx264',
@@ -79,12 +96,16 @@ serve(async (req) => {
       '-pix_fmt', 'yuv420p',
       'output.mp4'
     ]);
+    console.log('Video generated successfully');
 
     // Read the output video
+    console.log('Reading output video...');
     const data = await ffmpeg.readFile('output.mp4');
     const videoBlob = new Blob([data], { type: 'video/mp4' });
+    console.log('Video read successfully, size:', videoBlob.size);
 
     // Upload to Supabase Storage
+    console.log('Uploading to Supabase Storage...');
     const fileName = `slideshow-${listingId}-${Date.now()}.mp4`;
     const { error: uploadError } = await supabase
       .storage
@@ -95,14 +116,19 @@ serve(async (req) => {
       });
 
     if (uploadError) {
+      console.error('Upload error:', uploadError);
       throw uploadError;
     }
+
+    console.log('Video uploaded successfully');
 
     // Get public URL
     const { data: { publicUrl } } = supabase
       .storage
       .from('listings-images')
       .getPublicUrl(fileName);
+
+    console.log('Public URL generated:', publicUrl);
 
     return new Response(
       JSON.stringify({ url: publicUrl }),
@@ -112,9 +138,12 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in create-slideshow function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
