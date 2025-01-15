@@ -24,7 +24,7 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
       } catch (err) {
         console.error('Error generating text:', err);
         setError("Impossible de générer le texte de vente. Le texte par défaut sera utilisé.");
-        const fallbackText = `${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur ${listing.centris_url}`;
+        const fallbackText = `${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur https://www.centris.ca${listing.centris_url}`;
         setGeneratedText(fallbackText);
       } finally {
         setIsLoading(false);
