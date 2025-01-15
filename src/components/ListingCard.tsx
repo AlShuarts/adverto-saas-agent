@@ -3,6 +3,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { formatPrice } from "@/utils/priceFormatter";
 import { FacebookPublishButton } from "./FacebookPublishButton";
 import { ListingImageCarousel } from "./ListingImageCarousel";
+import { CreateSlideshowButton } from "./CreateSlideshowButton";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -39,6 +40,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
             ) : (
               <FacebookPublishButton listing={listing} />
             )}
+            <CreateSlideshowButton listing={listing} />
           </div>
         </div>
       </CardContent>
