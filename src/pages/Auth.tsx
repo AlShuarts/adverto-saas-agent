@@ -17,7 +17,8 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_IN" && session) {
-          navigate(from);
+          // Use the navigate function with the correct path
+          navigate(from, { replace: true });
         }
       }
     );
@@ -51,7 +52,7 @@ const Auth = () => {
 
   // Add error handling through auth state change
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setErrorMessage("");
       }
