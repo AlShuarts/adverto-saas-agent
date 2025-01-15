@@ -1,9 +1,9 @@
-import { createFFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { backgroundMusic } from '../background-music.ts';
 
 export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
-  const ffmpeg = createFFmpeg({
+  const ffmpeg = new FFmpeg({
     log: true,
     corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js'
   });
