@@ -1,1 +1,4 @@
 project_id = "msmuyhmxlrkcjthugcxd"
+
+[functions.scrape-centris]
+verify_jwt = false

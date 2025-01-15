@@ -24,23 +24,16 @@ export const CentrisImport = () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Non authentifié");
 
-      const response = await fetch("/functions/v1/scrape-centris", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ url }),
+      const { data: response, error: functionError } = await supabase.functions.invoke('scrape-centris', {
+        body: { url }
       });
 
-      if (!response.ok) throw new Error("Erreur lors de l'extraction");
-
-      const listing = await response.json();
+      if (functionError) throw functionError;
 
       const { error: insertError } = await supabase
         .from("listings")
         .insert({
-          ...listing,
+          ...response,
           user_id: userData.user.id,
         });
 
