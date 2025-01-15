@@ -57,7 +57,7 @@ const Index = () => {
       // Initialiser le SDK Facebook
       await new Promise<void>((resolve) => {
         window.FB.init({
-          appId: '421478844287454',
+          appId: '3819439438267773', // Mise à jour de l'App ID
           version: 'v18.0'
         });
         resolve();
