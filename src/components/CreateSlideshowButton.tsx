@@ -16,6 +16,15 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
     <div style={{ flex: 1, backgroundColor: 'white', position: 'relative', width: '100%', height: '100%' }}>
       {images.map((image, index) => {
         console.log(`Rendering image ${index + 1}:`, image);
+        
+        // Validate image URL
+        try {
+          new URL(image);
+        } catch (e) {
+          console.error(`Invalid URL for image ${index + 1}:`, image);
+          return null;
+        }
+
         return (
           <Sequence key={index} from={index * 60} durationInFrames={60}>
             <div style={{ 
@@ -26,21 +35,28 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
               height: '100%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              backgroundColor: 'white'
             }}>
               <img
                 src={image}
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
+                  maxWidth: '90%',
+                  maxHeight: '90%',
                   objectFit: 'contain',
                 }}
                 alt={`Slide ${index + 1}`}
                 onError={(e) => {
-                  console.error(`Error loading image ${index + 1}:`, image);
+                  console.error(`Error loading image ${index + 1}:`, image, e);
                   e.currentTarget.style.display = 'none';
                 }}
-                onLoad={() => console.log(`Image ${index + 1} loaded successfully`)}
+                onLoad={(e) => {
+                  console.log(`Image ${index + 1} loaded successfully:`, {
+                    naturalWidth: (e.target as HTMLImageElement).naturalWidth,
+                    naturalHeight: (e.target as HTMLImageElement).naturalHeight,
+                  });
+                }}
+                crossOrigin="anonymous"
               />
             </div>
           </Sequence>
@@ -64,7 +80,27 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       return;
     }
 
-    console.log("Opening slideshow with images:", listing.images);
+    // Validate all image URLs before opening
+    const validImages = listing.images.filter(url => {
+      try {
+        new URL(url);
+        return true;
+      } catch (e) {
+        console.error("Invalid image URL:", url);
+        return false;
+      }
+    });
+
+    if (validImages.length === 0) {
+      toast({
+        title: "Erreur",
+        description: "Aucune image valide trouvée",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log("Opening slideshow with valid images:", validImages);
     setIsOpen(true);
     toast({
       title: "Succès",
