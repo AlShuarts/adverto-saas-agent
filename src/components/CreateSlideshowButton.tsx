@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Player } from "@remotion/player";
-import { Sequence, Img } from "@remotion/core";
+import { Sequence } from "@remotion/core";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -15,13 +15,14 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
     <div style={{ backgroundColor: 'white', width: '100%', height: '100%' }}>
       {images.map((image, index) => (
         <Sequence key={index} from={index * 60} durationInFrames={60}>
-          <Img
+          <img
             src={image}
             style={{
               width: '100%',
               height: '100%',
               objectFit: 'cover',
             }}
+            alt={`Slide ${index + 1}`}
           />
         </Sequence>
       ))}
