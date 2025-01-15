@@ -1,9 +1,55 @@
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { PricingCard } from "@/components/PricingCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Facebook } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const getProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/auth");
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger votre profil",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setProfile(data);
+      } catch (error) {
+        console.error("Error:", error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue",
+          variant: "destructive",
+        });
+      }
+    };
+
+    getProfile();
+  }, [navigate, toast]);
+
   return (
     <div className="min-h-screen bg-secondary">
       <Navbar />
@@ -12,19 +58,28 @@ const Index = () => {
       <section className="pt-32 pb-16 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-            Automatisez vos publicités immobilières sur Facebook
+            {profile ? `Bienvenue ${profile.first_name || ""}` : "Automatisez vos publicités immobilières sur Facebook"}
           </h1>
           <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
             Transformez vos annonces Centris en publicités Facebook attrayantes en quelques clics. Gagnez du temps et augmentez votre visibilité.
           </p>
           <div className="flex justify-center space-x-4">
-            <Button size="lg" className="animate-float">
-              Essayer gratuitement
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button size="lg" variant="outline">
-              Voir la démo
-            </Button>
+            {!profile ? (
+              <>
+                <Button size="lg" className="animate-float" onClick={() => navigate("/auth")}>
+                  Essayer gratuitement
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button size="lg" variant="outline">
+                  Voir la démo
+                </Button>
+              </>
+            ) : (
+              <Button size="lg" className="animate-float">
+                Commencer à publier
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </section>
