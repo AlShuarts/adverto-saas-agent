@@ -37,6 +37,11 @@ serve(async (req) => {
       }
     });
     
+    if (!response.ok) {
+      console.error('Failed to fetch Centris page:', response.status, response.statusText);
+      throw new Error('Failed to fetch Centris page');
+    }
+
     const html = await response.text();
     console.log('HTML content length:', html.length);
     
@@ -48,12 +53,17 @@ serve(async (req) => {
     
     // Process images
     const imageUrls = parser.getImageUrls();
+    console.log('Found image URLs:', imageUrls);
+    
     const processedImages: string[] = [];
     
     for (const imageUrl of imageUrls) {
+      console.log('Processing image URL:', imageUrl);
       const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
       if (processedUrl) {
         processedImages.push(processedUrl);
+      } else {
+        console.error('Failed to process image:', error);
       }
     }
 

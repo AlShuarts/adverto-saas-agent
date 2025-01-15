@@ -25,28 +25,38 @@ export class ImageProcessor {
       const cleanUrl = this.cleanImageUrl(imageUrl);
       
       if (!cleanUrl) {
+        console.log('Invalid image URL:', imageUrl);
         return { processedUrl: null, error: 'Invalid image URL' };
       }
 
       const imageResponse = await fetch(cleanUrl);
       if (!imageResponse.ok) {
+        console.error('Failed to download image:', imageResponse.status, imageResponse.statusText);
         return { processedUrl: null, error: 'Failed to download image' };
+      }
+
+      const contentType = imageResponse.headers.get('content-type');
+      if (!contentType || !contentType.startsWith('image/')) {
+        console.error('Invalid content type:', contentType);
+        return { processedUrl: null, error: 'Invalid content type' };
       }
 
       const imageBlob = await imageResponse.blob();
       const fileExt = cleanUrl.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
+      console.log('Uploading image:', fileName, 'Size:', imageBlob.size, 'Type:', contentType);
+
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
         .upload(fileName, imageBlob, {
-          contentType: `image/${fileExt}`,
+          contentType: contentType,
           upsert: false
         });
 
       if (uploadError) {
         console.error('Failed to upload image:', uploadError);
-        return { processedUrl: null, error: 'Upload failed' };
+        return { processedUrl: null, error: 'Upload failed: ' + uploadError.message };
       }
 
       const { data: { publicUrl } } = this.supabase.storage
