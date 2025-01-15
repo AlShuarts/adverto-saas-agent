@@ -6,7 +6,10 @@ interface Window {
     }) => void;
     login: (
       callback: (response: fb.AuthResponse) => void,
-      params: { scope: string }
+      params: { 
+        scope: string;
+        auth_type?: string;
+      }
     ) => void;
     api: (
       path: string,
