@@ -15,6 +15,7 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           centris_id: string
+          centris_url: string | null
           city: string | null
           created_at: string
           description: string | null
@@ -34,6 +35,7 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           centris_id: string
+          centris_url?: string | null
           city?: string | null
           created_at?: string
           description?: string | null
@@ -53,6 +55,7 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           centris_id?: string
+          centris_url?: string | null
           city?: string | null
           created_at?: string
           description?: string | null
