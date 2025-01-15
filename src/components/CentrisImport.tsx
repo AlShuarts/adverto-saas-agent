@@ -9,6 +9,16 @@ export const CentrisImport = () => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const formatPrice = (price: any): number | null => {
+    if (!price) return null;
+    // Enlever les espaces et le symbole $
+    const cleanPrice = String(price).replace(/[\s$]/g, '');
+    // Convertir en nombre
+    const numericPrice = parseFloat(cleanPrice);
+    // Vérifier si c'est un nombre valide
+    return isNaN(numericPrice) ? null : numericPrice;
+  };
+
   const handleImport = async () => {
     if (!url.includes("centris.ca")) {
       toast({
@@ -46,7 +56,7 @@ export const CentrisImport = () => {
         centris_id: response.centris_id,
         title: response.title,
         description: response.description || null,
-        price: response.price || null,
+        price: formatPrice(response.price),
         address: response.address || null,
         city: response.city || null,
         postal_code: response.postal_code || null,
