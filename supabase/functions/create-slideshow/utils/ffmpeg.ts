@@ -5,14 +5,31 @@ export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
   const ffmpeg = new FFmpeg({
     log: true,
-    corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js'
+    mainName: 'main',
+    corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
+    workerPath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.worker.js'
   });
-  await ffmpeg.load();
-  console.log('FFmpeg loaded successfully');
-  return ffmpeg;
+
+  // @ts-ignore: Deno environment
+  globalThis.Worker = class Worker {
+    constructor(url: string) {
+      console.log('Creating worker for:', url);
+    }
+    postMessage() {}
+    terminate() {}
+  };
+
+  try {
+    await ffmpeg.load();
+    console.log('FFmpeg loaded successfully');
+    return ffmpeg;
+  } catch (error) {
+    console.error('Error loading FFmpeg:', error);
+    throw error;
+  }
 };
 
-export const createSlideshow = async (ffmpeg, images, listing) => {
+export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
   console.log('Starting slideshow creation...');
   
   // Process images
