@@ -11,19 +11,22 @@ type CreateSlideshowButtonProps = {
 };
 
 const SlideShowComposition = ({ images }: { images: string[] }) => {
+  console.log("Rendering slideshow with images:", images);
   return (
-    <div style={{ backgroundColor: 'white', width: '100%', height: '100%' }}>
+    <div style={{ flex: 1, backgroundColor: 'white' }}>
       {images.map((image, index) => (
         <Sequence key={index} from={index * 60} durationInFrames={60}>
-          <img
-            src={image}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-            alt={`Slide ${index + 1}`}
-          />
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src={image}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+              alt={`Slide ${index + 1}`}
+            />
+          </div>
         </Sequence>
       ))}
     </div>
@@ -35,6 +38,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const { toast } = useToast();
 
   const handleCreateSlideshow = () => {
+    console.log("Opening slideshow with images:", listing.images);
     setIsOpen(true);
     toast({
       title: "Succès",
