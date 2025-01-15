@@ -6,12 +6,14 @@ export const ListingsList = () => {
   const { data: listings, isLoading } = useQuery({
     queryKey: ["listings"],
     queryFn: async () => {
+      console.log("Fetching listings...");
       const { data, error } = await supabase
         .from("listings")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      console.log("Fetched listings:", data);
       return data;
     },
   });

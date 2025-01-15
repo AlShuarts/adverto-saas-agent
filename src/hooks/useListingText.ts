@@ -14,6 +14,9 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
       setIsLoading(true);
       setError(null);
       
+      console.log("Listing data:", listing);
+      console.log("Centris URL:", listing.centris_url);
+      
       try {
         const { data, error } = await supabase.functions.invoke('generate-listing-description', {
           body: { listing },
