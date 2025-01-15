@@ -12,10 +12,14 @@ serve(async (req) => {
 
   try {
     const { message, images, pageId, accessToken } = await req.json();
+    console.log("Tentative de publication sur Facebook pour la page:", pageId);
+    console.log("Message à publier:", message);
+    console.log("Nombre d'images à publier:", images?.length);
 
     // Publier d'abord les images
     const imageIds = [];
     for (const imageUrl of images) {
+      console.log("Tentative de téléchargement de l'image:", imageUrl);
       const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}/photos`, {
         method: "POST",
         headers: {
@@ -29,14 +33,18 @@ serve(async (req) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur lors du téléchargement de l'image: ${await response.text()}`);
+        const errorText = await response.text();
+        console.error("Erreur lors du téléchargement de l'image:", errorText);
+        throw new Error(`Erreur lors du téléchargement de l'image: ${errorText}`);
       }
 
       const { id } = await response.json();
+      console.log("Image téléchargée avec succès, ID:", id);
       imageIds.push({ media_fbid: id });
     }
 
     // Créer la publication avec les images
+    console.log("Tentative de création de la publication avec", imageIds.length, "images");
     const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}/feed`, {
       method: "POST",
       headers: {
@@ -50,17 +58,24 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Erreur lors de la publication: ${await response.text()}`);
+      const errorText = await response.text();
+      console.error("Erreur lors de la publication:", errorText);
+      throw new Error(`Erreur lors de la publication: ${errorText}`);
     }
 
     const result = await response.json();
+    console.log("Publication réussie avec l'ID:", result.id);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Erreur:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Erreur détaillée:", error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

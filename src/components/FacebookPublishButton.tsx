@@ -20,6 +20,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
   const publishToFacebook = async (message: string) => {
     try {
       setIsPublishing(true);
+      console.log("Début de la publication sur Facebook");
 
       // Vérifier si l'utilisateur a connecté Facebook
       const { data: profile } = await supabase
@@ -36,6 +37,8 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         return;
       }
 
+      console.log("Profil Facebook trouvé, tentative de publication");
+
       // Publier sur Facebook via l'API Edge Function
       const response = await fetch("/api/facebook/publish", {
         method: "POST",
@@ -50,11 +53,14 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Erreur lors de la publication sur Facebook");
+        console.error("Erreur de publication:", responseData);
+        throw new Error(responseData.details || responseData.error || "Erreur lors de la publication sur Facebook");
       }
 
-      const { id: postId } = await response.json();
+      const { id: postId } = responseData;
 
       // Mettre à jour le statut de publication dans Supabase
       await supabase
@@ -89,10 +95,10 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       
       setShowPreview(false);
     } catch (error) {
-      console.error("Erreur de publication:", error);
+      console.error("Erreur détaillée de publication:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de publier l'annonce sur Facebook",
+        title: "Erreur de publication",
+        description: error.message || "Impossible de publier l'annonce sur Facebook",
         variant: "destructive",
       });
     } finally {
