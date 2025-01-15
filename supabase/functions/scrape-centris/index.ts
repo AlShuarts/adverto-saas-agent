@@ -26,9 +26,14 @@ serve(async (req) => {
       );
     }
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
     const html = await response.text();
     console.log('HTML content length:', html.length);
+    console.log('First 500 characters of HTML:', html.substring(0, 500));
     
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
@@ -39,43 +44,149 @@ serve(async (req) => {
 
     console.log('HTML parsed successfully');
 
-    // Extract listing information with more specific selectors
-    const title = doc.querySelector(".description-container h1")?.textContent?.trim() || 
-                 doc.querySelector("h1.headingLarge")?.textContent?.trim() || "";
-    console.log('Title found:', title);
-
-    const priceElement = doc.querySelector("[class*='price']") || 
-                        doc.querySelector("[class*='Price']");
-    const price = priceElement?.textContent?.trim() || "";
-    console.log('Price found:', price);
-
-    const description = doc.querySelector("[class*='description']")?.textContent?.trim() || 
-                       doc.querySelector(".teaser")?.textContent?.trim() || "";
-    console.log('Description found:', Boolean(description));
-
-    const address = doc.querySelector("[class*='address']")?.textContent?.trim() || "";
-    console.log('Address found:', address);
-
-    const city = doc.querySelector("[class*='city']")?.textContent?.trim() || "";
-    const postalCode = doc.querySelector("[class*='postal']")?.textContent?.trim() || "";
+    // Extract listing information with multiple fallback selectors
+    const titleSelectors = [
+      ".description-container h1",
+      "h1.headingLarge",
+      ".address-container h1",
+      "[class*='Title']",
+      "[class*='title']",
+      "h1"
+    ];
     
-    // Extract property details with flexible selectors
-    const bedroomsText = doc.querySelector("[class*='bedroom']")?.textContent?.trim() || "";
-    const bedrooms = bedroomsText ? parseInt(bedroomsText.match(/\d+/)?.[0] || "0") : null;
+    let title = "";
+    for (const selector of titleSelectors) {
+      const element = doc.querySelector(selector);
+      if (element?.textContent?.trim()) {
+        title = element.textContent.trim();
+        console.log('Title found with selector:', selector);
+        break;
+      }
+    }
+
+    const priceSelectors = [
+      "[class*='price']",
+      "[class*='Price']",
+      ".price-container",
+      "[data-qaid='price']"
+    ];
     
-    const bathroomsText = doc.querySelector("[class*='bathroom']")?.textContent?.trim() || "";
-    const bathrooms = bathroomsText ? parseInt(bathroomsText.match(/\d+/)?.[0] || "0") : null;
+    let price = "";
+    for (const selector of priceSelectors) {
+      const element = doc.querySelector(selector);
+      if (element?.textContent?.trim()) {
+        price = element.textContent.trim();
+        console.log('Price found with selector:', selector);
+        break;
+      }
+    }
+
+    const descriptionSelectors = [
+      "[class*='description']",
+      ".teaser",
+      "[data-qaid='description']",
+      "#description"
+    ];
     
-    const propertyType = doc.querySelector("[class*='category']")?.textContent?.trim() || "";
+    let description = "";
+    for (const selector of descriptionSelectors) {
+      const element = doc.querySelector(selector);
+      if (element?.textContent?.trim()) {
+        description = element.textContent.trim();
+        console.log('Description found with selector:', selector);
+        break;
+      }
+    }
+
+    const addressSelectors = [
+      "[class*='address']",
+      ".address-container",
+      "[data-qaid='address']"
+    ];
+    
+    let address = "";
+    for (const selector of addressSelectors) {
+      const element = doc.querySelector(selector);
+      if (element?.textContent?.trim()) {
+        address = element.textContent.trim();
+        console.log('Address found with selector:', selector);
+        break;
+      }
+    }
+
+    const citySelectors = [
+      "[class*='city']",
+      ".city-container",
+      "[data-qaid='city']"
+    ];
+    
+    let city = "";
+    for (const selector of citySelectors) {
+      const element = doc.querySelector(selector);
+      if (element?.textContent?.trim()) {
+        city = element.textContent.trim();
+        console.log('City found with selector:', selector);
+        break;
+      }
+    }
+
+    const bedroomSelectors = [
+      "[class*='bedroom']",
+      "[class*='Bedroom']",
+      "[data-qaid='bedrooms']"
+    ];
+    
+    let bedrooms = null;
+    for (const selector of bedroomSelectors) {
+      const element = doc.querySelector(selector);
+      if (element?.textContent?.trim()) {
+        const match = element.textContent.trim().match(/\d+/);
+        if (match) {
+          bedrooms = parseInt(match[0]);
+          console.log('Bedrooms found with selector:', selector);
+          break;
+        }
+      }
+    }
+
+    const bathroomSelectors = [
+      "[class*='bathroom']",
+      "[class*='Bathroom']",
+      "[data-qaid='bathrooms']"
+    ];
+    
+    let bathrooms = null;
+    for (const selector of bathroomSelectors) {
+      const element = doc.querySelector(selector);
+      if (element?.textContent?.trim()) {
+        const match = element.textContent.trim().match(/\d+/);
+        if (match) {
+          bathrooms = parseInt(match[0]);
+          console.log('Bathrooms found with selector:', selector);
+          break;
+        }
+      }
+    }
 
     // Extract images with more flexible selectors
     const images: string[] = [];
-    doc.querySelectorAll("img[class*='photo'], img[class*='Photo'], .slider img").forEach((img) => {
-      const src = img.getAttribute("src");
-      if (src && !src.includes("placeholder")) {
-        images.push(src);
-      }
-    });
+    const imageSelectors = [
+      "img[class*='photo']",
+      "img[class*='Photo']",
+      ".slider img",
+      "[data-qaid='photos'] img",
+      "[class*='gallery'] img"
+    ];
+    
+    for (const selector of imageSelectors) {
+      const elements = doc.querySelectorAll(selector);
+      elements.forEach((img) => {
+        const src = img.getAttribute("src");
+        if (src && !src.includes("placeholder") && !images.includes(src)) {
+          images.push(src);
+        }
+      });
+    }
     console.log('Number of images found:', images.length);
 
     // Extract Centris ID from URL
@@ -89,10 +200,10 @@ serve(async (req) => {
       price: price ? parseFloat(price.replace(/[^0-9.]/g, "")) : null,
       address,
       city,
-      postal_code: postalCode,
+      postal_code: null, // We'll need to extract this from the address
       bedrooms,
       bathrooms,
-      property_type: propertyType,
+      property_type: "Résidentiel", // Default value as it's hard to extract consistently
       images
     };
 
