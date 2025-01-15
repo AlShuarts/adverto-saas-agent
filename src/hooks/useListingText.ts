@@ -25,8 +25,8 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
         console.error('Error generating text:', err);
         setError("Impossible de générer le texte de vente. Le texte par défaut sera utilisé.");
         
-        // Utilisation directe de l'URL Centris depuis la base de données
-        const fallbackText = `${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur ${listing.centris_url}`;
+        // Utilisation de l'URL complète de Centris
+        const fallbackText = `${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur ${listing.centris_url || `https://www.centris.ca/fr/propriete/${listing.centris_id}`}`;
         setGeneratedText(fallbackText);
       } finally {
         setIsLoading(false);
