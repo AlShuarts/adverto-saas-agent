@@ -11,12 +11,21 @@ export const CentrisImport = () => {
 
   const formatPrice = (price: any): number | null => {
     if (!price) return null;
-    // Enlever les espaces et le symbole $
-    const cleanPrice = String(price).replace(/[\s$]/g, '');
-    // Convertir en nombre
-    const numericPrice = parseFloat(cleanPrice);
-    // Vérifier si c'est un nombre valide
-    return isNaN(numericPrice) ? null : numericPrice;
+    try {
+      // Enlever les espaces, le symbole $ et les virgules
+      const cleanPrice = String(price).replace(/[\s$,]/g, '');
+      // Convertir en nombre
+      const numericPrice = parseFloat(cleanPrice);
+      // Vérifier si c'est un nombre valide et dans les limites de PostgreSQL
+      if (isNaN(numericPrice) || numericPrice > 9999999999.99 || numericPrice < -9999999999.99) {
+        console.log("Prix invalide ou hors limites:", price, "->", numericPrice);
+        return null;
+      }
+      return numericPrice;
+    } catch (error) {
+      console.error("Erreur lors du formatage du prix:", error);
+      return null;
+    }
   };
 
   const handleImport = async () => {
@@ -51,12 +60,15 @@ export const CentrisImport = () => {
 
       console.log("Données reçues du scraping:", response);
 
+      const formattedPrice = formatPrice(response.price);
+      console.log("Prix formaté:", response.price, "->", formattedPrice);
+
       // S'assurer que toutes les propriétés requises sont présentes
       const listingData = {
         centris_id: response.centris_id,
         title: response.title,
         description: response.description || null,
-        price: formatPrice(response.price),
+        price: formattedPrice,
         address: response.address || null,
         city: response.city || null,
         postal_code: response.postal_code || null,
