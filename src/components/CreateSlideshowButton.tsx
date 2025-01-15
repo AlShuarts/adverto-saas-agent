@@ -17,15 +17,15 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
     try {
       console.log('Starting slideshow creation for listing:', listing.id);
       
-      const { data, error: functionError } = await supabase.functions.invoke('create-slideshow', {
+      const { data, error } = await supabase.functions.invoke('create-slideshow', {
         body: { listingId: listing.id }
       });
 
       console.log('Response from create-slideshow:', data);
 
-      if (functionError) {
-        console.error('Function error:', functionError);
-        throw new Error(functionError.message || 'Error calling create-slideshow function');
+      if (error) {
+        console.error('Function error:', error);
+        throw new Error(error.message || 'Error calling create-slideshow function');
       }
 
       if (!data) {
