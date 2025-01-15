@@ -21,14 +21,25 @@ export const CentrisImport = () => {
 
     setLoading(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw new Error("Erreur d'authentification: " + authError.message);
       if (!userData.user) throw new Error("Non authentifié");
 
+      console.log("Appel de la fonction scrape-centris avec l'URL:", url);
       const { data: response, error: functionError } = await supabase.functions.invoke('scrape-centris', {
         body: { url }
       });
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        console.error("Erreur de la fonction scrape-centris:", functionError);
+        throw new Error("Erreur lors du scraping: " + functionError.message);
+      }
+
+      if (!response) {
+        throw new Error("Aucune donnée reçue du scraping");
+      }
+
+      console.log("Données reçues du scraping:", response);
 
       const { error: insertError } = await supabase
         .from("listings")
@@ -37,7 +48,10 @@ export const CentrisImport = () => {
           user_id: userData.user.id,
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Erreur d'insertion dans la base de données:", insertError);
+        throw new Error("Erreur lors de l'enregistrement: " + insertError.message);
+      }
 
       toast({
         title: "Succès",
@@ -46,10 +60,10 @@ export const CentrisImport = () => {
 
       setUrl("");
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Erreur complète:", error);
       toast({
         title: "Erreur",
-        description: "Impossible d'importer l'annonce",
+        description: error instanceof Error ? error.message : "Impossible d'importer l'annonce",
         variant: "destructive",
       });
     } finally {
