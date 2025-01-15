@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { backgroundMusic } from './background-music.ts';
 import { corsHeaders } from './utils/cors.ts';
 
 serve(async (req) => {
@@ -70,40 +69,13 @@ serve(async (req) => {
       );
     }
 
-    // Process images
-    const processedImages = [];
-    for (const imageUrl of images) {
-      try {
-        const imageResponse = await fetch(imageUrl);
-        if (!imageResponse.ok) {
-          throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
-        }
-        processedImages.push(imageUrl);
-      } catch (error) {
-        console.error('Error processing image:', error);
-        // Continue with other images if one fails
-      }
-    }
-
-    if (processedImages.length === 0) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Failed to process any images' 
-        }), 
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // Mock successful response for testing
+    // For now, return a mock response with the first image URL
+    // This will be replaced with actual slideshow generation later
     return new Response(
       JSON.stringify({ 
         success: true,
-        url: processedImages[0], // Temporary: return first image URL as video URL
-        message: 'Slideshow created successfully (mock response)'
+        url: images[0],
+        message: 'Mock slideshow response - returning first image URL'
       }), 
       { 
         status: 200, 
