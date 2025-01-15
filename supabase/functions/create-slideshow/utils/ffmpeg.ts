@@ -1,14 +1,18 @@
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
+import { createFFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7/dist/deno.js';
+import { backgroundMusic } from '../background-music.ts';
 
 export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
-  const ffmpeg = new FFmpeg();
+  const ffmpeg = createFFmpeg({
+    log: true,
+    corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js'
+  });
   await ffmpeg.load();
   console.log('FFmpeg loaded successfully');
   return ffmpeg;
 };
 
-export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
+export const createSlideshow = async (ffmpeg, images, listing) => {
   console.log('Starting slideshow creation...');
   
   // Process images
