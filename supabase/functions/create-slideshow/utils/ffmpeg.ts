@@ -1,4 +1,4 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
 import { backgroundMusic } from '../background-music.ts';
 
 export const initFFmpeg = async () => {
