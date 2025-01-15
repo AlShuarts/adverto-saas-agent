@@ -17,23 +17,28 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
     try {
       console.log('Starting slideshow creation for listing:', listing.id);
       
-      const { data, error } = await supabase.functions.invoke('create-slideshow', {
+      const { data, error: functionError } = await supabase.functions.invoke('create-slideshow', {
         body: { listingId: listing.id }
       });
 
       console.log('Response from create-slideshow:', data);
 
-      if (error) {
-        console.error('Error from create-slideshow:', error);
-        throw error;
+      if (functionError) {
+        console.error('Function error:', functionError);
+        throw new Error(functionError.message || 'Error calling create-slideshow function');
       }
 
-      if (!data?.success) {
+      if (!data) {
+        console.error('No data returned from function');
+        throw new Error('No response from server');
+      }
+
+      if (!data.success) {
         console.error('Error in response:', data);
-        throw new Error(data?.error || 'Failed to create slideshow');
+        throw new Error(data.error || 'Failed to create slideshow');
       }
 
-      if (!data?.url) {
+      if (!data.url) {
         console.error('No URL in response:', data);
         throw new Error('No URL returned from server');
       }
@@ -45,7 +50,6 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         description: "Le diaporama a été créé avec succès",
       });
 
-      // Ouvrir le diaporama dans un nouvel onglet
       window.open(data.url, "_blank");
     } catch (error) {
       console.error("Error creating slideshow:", error);
