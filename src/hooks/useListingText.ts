@@ -13,8 +13,12 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
       if (listing.centris_url.startsWith('https://www.centris.ca')) {
         return listing.centris_url;
       }
-      // Si l'URL est partielle, la compléter
-      return `https://www.centris.ca${listing.centris_url}`;
+      // Si l'URL commence par /fr/, ajouter le domaine
+      if (listing.centris_url.startsWith('/fr/')) {
+        return `https://www.centris.ca${listing.centris_url}`;
+      }
+      // Si l'URL ne commence pas par /fr/, ajouter le domaine et /fr/
+      return `https://www.centris.ca/fr/${listing.centris_url}`;
     }
     // URL de secours basée sur l'ID
     return `https://www.centris.ca/fr/propriete/${listing.centris_id}`;
@@ -39,6 +43,7 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
         setError("Impossible de générer le texte de vente. Le texte par défaut sera utilisé.");
         
         const centrisUrl = getCentrisUrl(listing);
+        console.log('Generated Centris URL:', centrisUrl); // Pour le débogage
         const fallbackText = `${listing.title}\n\n${listing.description || ""}\n\nPlus de détails sur ${centrisUrl}`;
         setGeneratedText(fallbackText);
       } finally {
