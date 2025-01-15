@@ -1,5 +1,6 @@
 import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 import { ListingData } from './types.ts';
+import { imageSelectors } from './image-selectors.ts';
 
 export class HtmlParser {
   private doc: any;
@@ -37,22 +38,27 @@ export class HtmlParser {
     return numStr ? parseInt(numStr) : null;
   }
 
+  private isValidImageUrl(url: string): boolean {
+    if (!url) return false;
+
+    // Vérifier si c'est une URL Centris valide
+    const isCentrisUrl = url.includes('centris.ca') || 
+                        url.includes('s3.amazonaws.com/media.centris.ca');
+    
+    // Vérifier si c'est une image (extension)
+    const hasImageExtension = /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
+    
+    // Exclure les miniatures
+    const isNotThumbnail = !url.includes('thumbnail') && 
+                          !url.includes('small') && 
+                          !url.includes('icon');
+
+    return isCentrisUrl && hasImageExtension && isNotThumbnail;
+  }
+
   getImageUrls(): string[] {
     console.log('Starting to extract image URLs');
     
-    // Sélecteurs spécifiques pour les images Centris
-    const imageSelectors = [
-      'img[data-src*="s3.amazonaws.com/media.centris.ca"]',
-      'img[src*="s3.amazonaws.com/media.centris.ca"]',
-      'img[data-src*="centris.ca/media"]',
-      'img[src*="centris.ca/media"]',
-      '.MainImg img',
-      '#visite360 img',
-      '.ModalImg img',
-      'img[src*="centris"]',
-      'img[data-src*="centris"]'
-    ];
-
     const imageUrls: string[] = [];
     const seenUrls = new Set<string>();
 
@@ -72,21 +78,17 @@ export class HtmlParser {
         console.log('Found image attributes:', { src, dataSrc, srcset });
         
         [src, dataSrc].forEach(url => {
-          if (url && !seenUrls.has(url)) {
-            // Vérifier si l'URL est une URL Centris valide
-            if (url.includes('centris.ca') || url.includes('s3.amazonaws.com/media.centris.ca')) {
-              console.log('Adding new image URL:', url);
-              seenUrls.add(url);
-              imageUrls.push(url);
-            }
+          if (url && !seenUrls.has(url) && this.isValidImageUrl(url)) {
+            console.log('Adding new image URL:', url);
+            seenUrls.add(url);
+            imageUrls.push(url);
           }
         });
 
-        // Handle srcset if present
         if (srcset) {
           const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
           srcsetUrls.forEach(url => {
-            if (url && !seenUrls.has(url) && (url.includes('centris.ca') || url.includes('s3.amazonaws.com/media.centris.ca'))) {
+            if (!seenUrls.has(url) && this.isValidImageUrl(url)) {
               console.log('Adding srcset URL:', url);
               seenUrls.add(url);
               imageUrls.push(url);
