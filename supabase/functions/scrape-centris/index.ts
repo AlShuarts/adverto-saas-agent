@@ -28,6 +28,8 @@ serve(async (req) => {
 
     const response = await fetch(url);
     const html = await response.text();
+    console.log('HTML content length:', html.length);
+    
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
 
@@ -37,44 +39,64 @@ serve(async (req) => {
 
     console.log('HTML parsed successfully');
 
-    // Extract listing information
-    const title = doc.querySelector("h1")?.textContent?.trim() || "";
-    const price = doc.querySelector("[data-id='Price']")?.textContent?.trim() || "";
-    const description = doc.querySelector("[data-id='Description']")?.textContent?.trim() || "";
-    const address = doc.querySelector("[data-id='Address']")?.textContent?.trim() || "";
-    const city = doc.querySelector("[data-id='City']")?.textContent?.trim() || "";
-    const postalCode = doc.querySelector("[data-id='PostalCode']")?.textContent?.trim() || "";
-    
-    // Extract property details
-    const bedrooms = doc.querySelector("[data-id='Bedrooms']")?.textContent?.trim() || "";
-    const bathrooms = doc.querySelector("[data-id='Bathrooms']")?.textContent?.trim() || "";
-    const propertyType = doc.querySelector("[data-id='PropertyType']")?.textContent?.trim() || "";
+    // Extract listing information with more specific selectors
+    const title = doc.querySelector(".description-container h1")?.textContent?.trim() || 
+                 doc.querySelector("h1.headingLarge")?.textContent?.trim() || "";
+    console.log('Title found:', title);
 
-    // Extract images
+    const priceElement = doc.querySelector("[class*='price']") || 
+                        doc.querySelector("[class*='Price']");
+    const price = priceElement?.textContent?.trim() || "";
+    console.log('Price found:', price);
+
+    const description = doc.querySelector("[class*='description']")?.textContent?.trim() || 
+                       doc.querySelector(".teaser")?.textContent?.trim() || "";
+    console.log('Description found:', Boolean(description));
+
+    const address = doc.querySelector("[class*='address']")?.textContent?.trim() || "";
+    console.log('Address found:', address);
+
+    const city = doc.querySelector("[class*='city']")?.textContent?.trim() || "";
+    const postalCode = doc.querySelector("[class*='postal']")?.textContent?.trim() || "";
+    
+    // Extract property details with flexible selectors
+    const bedroomsText = doc.querySelector("[class*='bedroom']")?.textContent?.trim() || "";
+    const bedrooms = bedroomsText ? parseInt(bedroomsText.match(/\d+/)?.[0] || "0") : null;
+    
+    const bathroomsText = doc.querySelector("[class*='bathroom']")?.textContent?.trim() || "";
+    const bathrooms = bathroomsText ? parseInt(bathroomsText.match(/\d+/)?.[0] || "0") : null;
+    
+    const propertyType = doc.querySelector("[class*='category']")?.textContent?.trim() || "";
+
+    // Extract images with more flexible selectors
     const images: string[] = [];
-    doc.querySelectorAll("[data-id='Photos'] img").forEach((img) => {
+    doc.querySelectorAll("img[class*='photo'], img[class*='Photo'], .slider img").forEach((img) => {
       const src = img.getAttribute("src");
-      if (src) images.push(src);
+      if (src && !src.includes("placeholder")) {
+        images.push(src);
+      }
     });
+    console.log('Number of images found:', images.length);
 
     // Extract Centris ID from URL
     const centrisId = url.split("/").pop() || "";
-
-    console.log('Data extracted successfully');
+    console.log('Centris ID:', centrisId);
 
     const listing = {
       centris_id: centrisId,
-      title,
+      title: title || "Propriété à vendre",
       description,
-      price: parseFloat(price.replace(/[^0-9.]/g, "")),
+      price: price ? parseFloat(price.replace(/[^0-9.]/g, "")) : null,
       address,
       city,
       postal_code: postalCode,
-      bedrooms: parseInt(bedrooms) || null,
-      bathrooms: parseInt(bathrooms) || null,
+      bedrooms,
+      bathrooms,
       property_type: propertyType,
       images
     };
+
+    console.log('Extracted listing:', listing);
 
     return new Response(
       JSON.stringify(listing),
