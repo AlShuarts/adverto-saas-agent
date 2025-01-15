@@ -74,14 +74,21 @@ serve(async (req) => {
       );
     }
 
-    // Pour l'instant, on retourne la première image comme URL du diaporama
-    // Cela sera remplacé par la génération réelle du diaporama plus tard
-    console.log('Returning first processed image as slideshow URL');
+    console.log('Initializing FFmpeg...');
+    const ffmpeg = await initFFmpeg();
+
+    console.log('Creating slideshow...');
+    const videoBlob = await createSlideshow(ffmpeg, images, listing);
+
+    console.log('Uploading slideshow...');
+    const url = await uploadToStorage(videoBlob, listingId);
+
+    console.log('Slideshow created and uploaded successfully:', url);
     return new Response(
       JSON.stringify({ 
         success: true,
-        url: images[0],
-        message: 'Slideshow preview ready'
+        url,
+        message: 'Slideshow created successfully'
       }), 
       { 
         status: 200, 

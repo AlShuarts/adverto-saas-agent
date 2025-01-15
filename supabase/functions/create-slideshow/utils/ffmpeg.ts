@@ -27,6 +27,9 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
   const textContent = `${listing.title}\n${listing.price ? formatPrice(listing.price) : "Prix sur demande"}\n${listing.bedrooms || 0} chambre(s) | ${listing.bathrooms || 0} salle(s) de bain\n${[listing.address, listing.city].filter(Boolean).join(", ")}`;
   await ffmpeg.writeFile('info.txt', textContent);
 
+  // Write background music
+  await ffmpeg.writeFile('background.mp3', backgroundMusic);
+
   // Generate video
   await ffmpeg.exec([
     '-framerate', '1/3',
