@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { corsHeaders } from './utils/cors.ts';
+import { initFFmpeg, createSlideshow } from './utils/ffmpeg.ts';
+import { uploadToStorage } from './utils/storage.ts';
+import { backgroundMusic } from './background-music.ts';
 
 serve(async (req) => {
   // Handle CORS
@@ -103,21 +106,47 @@ serve(async (req) => {
       );
     }
 
-    // Pour l'instant, on retourne la première image comme URL du diaporama
-    // Cela sera remplacé par la génération réelle du diaporama plus tard
-    console.log('Returning first processed image as slideshow URL');
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        url: processedImages[0],
-        message: 'Slideshow preview ready'
-      }), 
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-
+    try {
+      console.log('Initializing FFmpeg...');
+      const ffmpeg = await initFFmpeg();
+      
+      // Write background music
+      console.log('Writing background music...');
+      await ffmpeg.writeFile('background.mp3', backgroundMusic);
+      
+      console.log('Creating slideshow...');
+      const videoBlob = await createSlideshow(ffmpeg, processedImages, listing);
+      
+      console.log('Uploading to storage...');
+      const videoUrl = await uploadToStorage(videoBlob, listingId);
+      
+      console.log('Slideshow created and uploaded successfully:', videoUrl);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          url: videoUrl,
+          message: 'Slideshow created successfully'
+        }), 
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } catch (error) {
+      console.error('Error during slideshow creation:', error);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to create slideshow',
+          details: error.message 
+        }), 
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(
