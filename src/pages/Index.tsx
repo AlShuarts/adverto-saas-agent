@@ -56,6 +56,19 @@ const Index = () => {
   const connectFacebook = async () => {
     setLoading(true);
     try {
+      // Réinitialiser d'abord les informations Facebook dans le profil
+      if (profile.facebook_page_id) {
+        const { error: resetError } = await supabase
+          .from('profiles')
+          .update({
+            facebook_page_id: null,
+            facebook_access_token: null
+          })
+          .eq('id', profile.id);
+
+        if (resetError) throw resetError;
+      }
+
       await new Promise<void>((resolve) => {
         window.FB.init({
           appId: '3819439438267773',
@@ -68,7 +81,8 @@ const Index = () => {
         window.FB.login((response) => {
           resolve(response);
         }, {
-          scope: 'pages_manage_posts,pages_read_engagement,pages_show_list'
+          scope: 'pages_manage_posts,pages_read_engagement,pages_show_list',
+          auth_type: 'reauthorize' // Force la réautorisation
         });
       });
 
@@ -94,7 +108,7 @@ const Index = () => {
 
           toast({
             title: "Succès",
-            description: "Votre page Facebook a été connectée avec succès",
+            description: "Votre page Facebook a été reconnectée avec succès",
           });
 
           getProfile();

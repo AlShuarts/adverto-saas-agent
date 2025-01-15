@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Facebook } from "lucide-react";
+import { ArrowRight, Facebook, RefreshCw } from "lucide-react";
 
 interface HeroSectionProps {
   profile: any;
@@ -44,10 +44,24 @@ export const HeroSection = ({ profile, loading, onConnectFacebook }: HeroSection
                   {loading ? "Connexion en cours..." : "Connecter ma page Facebook"}
                 </Button>
               ) : (
-                <Button size="lg" className="animate-float">
-                  Commencer à publier
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <div className="space-y-4">
+                  <Button size="lg" className="animate-float">
+                    Commencer à publier
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={onConnectFacebook}
+                      disabled={loading}
+                      className="mt-2"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      {loading ? "Reconnexion en cours..." : "Reconnecter Facebook"}
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
           )}
