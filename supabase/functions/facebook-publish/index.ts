@@ -6,16 +6,23 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("Fonction Facebook-publish appelée");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Requête OPTIONS reçue");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("Début du traitement de la requête");
     const { message, images, pageId, accessToken } = await req.json();
-    console.log("Tentative de publication sur Facebook pour la page:", pageId);
-    console.log("Message à publier:", message);
-    console.log("Nombre d'images à publier:", images?.length);
+    console.log("Données reçues:", { 
+      messageLength: message?.length,
+      imagesCount: images?.length,
+      pageId: pageId ? "présent" : "manquant",
+      accessToken: accessToken ? "présent" : "manquant"
+    });
 
     if (!pageId || !accessToken) {
       console.error("Paramètres manquants:", { pageId: !!pageId, accessToken: !!accessToken });
@@ -36,6 +43,7 @@ serve(async (req) => {
     // Publier d'abord les images
     const imageIds = [];
     if (images && images.length > 0) {
+      console.log(`Début du téléchargement de ${images.length} image(s)`);
       for (const imageUrl of images) {
         if (!imageUrl) continue;
         
@@ -76,6 +84,12 @@ serve(async (req) => {
       access_token: accessToken,
       ...(imageIds.length > 0 && { attached_media: imageIds }),
     };
+
+    console.log("Données de la publication:", {
+      messageLength: message?.length,
+      hasAttachedMedia: imageIds.length > 0,
+      numberOfImages: imageIds.length
+    });
 
     const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}/feed`, {
       method: "POST",

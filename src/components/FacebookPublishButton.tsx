@@ -23,10 +23,20 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       console.log("Début de la publication sur Facebook");
 
       // Vérifier si l'utilisateur a connecté Facebook
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("facebook_page_id, facebook_access_token")
         .single();
+
+      if (profileError) {
+        console.error("Erreur lors de la récupération du profil:", profileError);
+        throw new Error("Impossible de récupérer les informations de votre profil");
+      }
+
+      console.log("Profil récupéré:", {
+        hasPageId: !!profile?.facebook_page_id,
+        hasToken: !!profile?.facebook_access_token
+      });
 
       if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
         toast({
@@ -37,39 +47,38 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         return;
       }
 
-      console.log("Profil Facebook trouvé, tentative de publication");
-
-      // Publier sur Facebook via l'API Edge Function
-      const response = await fetch("/api/facebook/publish", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      console.log("Tentative d'appel de la fonction facebook-publish");
+      const { data: responseData, error: functionError } = await supabase.functions.invoke("facebook-publish", {
+        body: {
           message,
           images: listing.images?.slice(0, 2), // Limit to 2 images
           pageId: profile.facebook_page_id,
           accessToken: profile.facebook_access_token,
-        }),
+        },
       });
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        console.error("Erreur de publication:", responseData);
-        throw new Error(responseData.details || responseData.error || "Erreur lors de la publication sur Facebook");
+      if (functionError) {
+        console.error("Erreur lors de l'appel de la fonction:", functionError);
+        throw new Error(functionError.message || "Erreur lors de la publication sur Facebook");
       }
 
-      const { id: postId } = responseData;
+      console.log("Réponse de la fonction:", responseData);
 
-      // Mettre à jour le statut de publication dans Supabase
-      await supabase
+      if (!responseData?.id) {
+        throw new Error("Aucun ID de publication reçu");
+      }
+
+      const { error: updateError } = await supabase
         .from("listings")
         .update({
           published_to_facebook: true,
-          facebook_post_id: postId,
+          facebook_post_id: responseData.id,
         })
         .eq("id", listing.id);
+
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du statut:", updateError);
+      }
 
       // Rafraîchir les données
       queryClient.invalidateQueries({ queryKey: ["listings"] });
@@ -81,7 +90,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
           <div className="flex flex-col gap-2">
             <p>Votre annonce a été publiée sur Facebook avec succès.</p>
             <a
-              href={`https://facebook.com/${postId}`}
+              href={`https://facebook.com/${responseData.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-primary hover:underline"
