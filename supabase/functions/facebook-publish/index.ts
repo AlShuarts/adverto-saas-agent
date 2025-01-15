@@ -22,24 +22,14 @@ serve(async (req) => {
       throw new Error("Paramètres de page Facebook manquants");
     }
 
-    // Vérifier d'abord la validité du token
-    console.log("Vérification du token Facebook...");
-    const debugTokenResponse = await fetch(
-      `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${accessToken}`
+    // Vérifier d'abord la validité du token de la page
+    console.log("Vérification du token de la page Facebook...");
+    const pageTokenCheckResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${pageId}?fields=access_token&access_token=${accessToken}`
     );
     
-    const debugTokenText = await debugTokenResponse.text();
-    let debugTokenData;
-    
-    try {
-      debugTokenData = JSON.parse(debugTokenText);
-    } catch (e) {
-      console.error("Réponse invalide lors de la vérification du token:", debugTokenText);
-      throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
-    }
-
-    if (!debugTokenResponse.ok || debugTokenData.error || !debugTokenData.data?.is_valid) {
-      console.error("Token Facebook invalide:", debugTokenData);
+    if (!pageTokenCheckResponse.ok) {
+      console.error("Erreur lors de la vérification du token de la page:", await pageTokenCheckResponse.text());
       throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
     }
 
@@ -62,18 +52,15 @@ serve(async (req) => {
           }),
         });
 
-        const responseText = await response.text();
-        let responseData;
-        
-        try {
-          responseData = JSON.parse(responseText);
-        } catch (e) {
-          console.error("Erreur lors du téléchargement de l'image. Réponse:", responseText);
-          throw new Error("Erreur lors du téléchargement de l'image sur Facebook. Veuillez reconnecter votre page Facebook.");
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Erreur lors du téléchargement de l'image. Réponse:", errorText);
+          throw new Error("Erreur lors du téléchargement de l'image sur Facebook. Veuillez réessayer.");
         }
 
-        if (!response.ok || responseData.error) {
-          console.error("Erreur lors du téléchargement de l'image:", responseData);
+        const responseData = await response.json();
+        if (responseData.error) {
+          console.error("Erreur lors du téléchargement de l'image:", responseData.error);
           throw new Error(responseData.error?.message || "Erreur lors du téléchargement de l'image");
         }
 
@@ -98,18 +85,15 @@ serve(async (req) => {
       body: JSON.stringify(postData),
     });
 
-    const responseText = await response.text();
-    let responseData;
-    
-    try {
-      responseData = JSON.parse(responseText);
-    } catch (e) {
-      console.error("Erreur lors de la publication. Réponse:", responseText);
-      throw new Error("Erreur lors de la publication sur Facebook. Veuillez reconnecter votre page Facebook.");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Erreur lors de la publication. Réponse:", errorText);
+      throw new Error("Erreur lors de la publication sur Facebook. Veuillez réessayer.");
     }
 
-    if (!response.ok || responseData.error) {
-      console.error("Erreur lors de la publication:", responseData);
+    const responseData = await response.json();
+    if (responseData.error) {
+      console.error("Erreur lors de la publication:", responseData.error);
       throw new Error(responseData.error?.message || "Erreur lors de la publication sur Facebook");
     }
 
