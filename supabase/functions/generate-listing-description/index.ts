@@ -31,7 +31,7 @@ serve(async (req) => {
     3. Inclure le prix et l'adresse
     4. Ne pas dépasser 300 caractères
     5. Inclure des émojis pertinents
-    6. Terminer par "Plus de détails sur Centris: https://www.centris.ca/${listing.centris_id}"`;
+    6. Terminer par "Plus de détails sur ${listing.centris_url}"`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -40,7 +40,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           { role: 'system', content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs.' },
           { role: 'user', content: prompt }
