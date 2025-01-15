@@ -27,11 +27,31 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         }
       );
 
-      const data = await response.json();
-
+      // Vérifier d'abord si la réponse est OK
       if (!response.ok) {
-        console.error('Error response:', data);
-        throw new Error(data.error || 'Failed to create slideshow');
+        console.error('Error response status:', response.status);
+        console.error('Error response status text:', response.statusText);
+        
+        // Essayer de lire le corps de la réponse en tant que texte
+        const errorText = await response.text();
+        console.error('Error response body:', errorText);
+        
+        throw new Error(`Failed to create slideshow: ${response.statusText}`);
+      }
+
+      // Essayer de parser la réponse en JSON
+      let data;
+      try {
+        const textResponse = await response.text();
+        console.log('Raw response:', textResponse);
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        console.error('Error parsing JSON:', parseError);
+        throw new Error('Invalid response format from server');
+      }
+
+      if (!data.url) {
+        throw new Error('No URL returned from server');
       }
 
       console.log('Slideshow created successfully:', data);
