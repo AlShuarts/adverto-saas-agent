@@ -25,12 +25,30 @@ serve(async (req) => {
       console.log('Request body:', body);
     } catch (error) {
       console.error('Error parsing request body:', error);
-      throw new Error('Invalid request body');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Invalid request body' 
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
     
     const { listingId } = body;
     if (!listingId) {
-      throw new Error('listingId is required');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'listingId is required' 
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
     
     console.log('Listing ID:', listingId);
@@ -51,14 +69,33 @@ serve(async (req) => {
 
     if (listingError) {
       console.error('Error fetching listing:', listingError);
-      throw new Error('Listing not found');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Listing not found',
+          details: listingError 
+        }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     console.log('Listing found:', listing);
 
     const images = listing.images || [];
     if (images.length === 0) {
-      throw new Error('No images found for this listing');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'No images found for this listing' 
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     console.log('Number of images:', images.length);
@@ -82,7 +119,16 @@ serve(async (req) => {
       console.log(`Downloading image ${i + 1}/${images.length}: ${imageUrl}`);
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
-        throw new Error(`Failed to download image ${i + 1}: ${imageResponse.statusText}`);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Failed to download image ${i + 1}: ${imageResponse.statusText}` 
+          }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
       }
       const imageData = await imageResponse.arrayBuffer();
       await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
@@ -118,7 +164,16 @@ serve(async (req) => {
     console.log('Reading output video...');
     const outputData = await ffmpeg.readFile('output.mp4');
     if (!outputData) {
-      throw new Error('Failed to read output video');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to read output video' 
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
     const videoBlob = new Blob([outputData], { type: 'video/mp4' });
     console.log('Video read successfully, size:', videoBlob.size);
@@ -136,7 +191,17 @@ serve(async (req) => {
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      throw uploadError;
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to upload video',
+          details: uploadError 
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     console.log('Video uploaded successfully');
@@ -156,6 +221,7 @@ serve(async (req) => {
         message: 'Slideshow created successfully'
       }),
       {
+        status: 200,
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json'

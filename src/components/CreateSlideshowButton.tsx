@@ -28,6 +28,11 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         throw error;
       }
 
+      if (!data?.success) {
+        console.error('Error in response:', data);
+        throw new Error(data?.error || 'Failed to create slideshow');
+      }
+
       if (!data?.url) {
         console.error('No URL in response:', data);
         throw new Error('No URL returned from server');
