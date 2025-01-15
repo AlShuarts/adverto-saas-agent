@@ -9,6 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      listings: {
+        Row: {
+          address: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          centris_id: string
+          city: string | null
+          created_at: string
+          description: string | null
+          facebook_post_id: string | null
+          id: string
+          images: string[] | null
+          postal_code: string | null
+          price: number | null
+          property_type: string | null
+          published_to_facebook: boolean | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          centris_id: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          images?: string[] | null
+          postal_code?: string | null
+          price?: number | null
+          property_type?: string | null
+          published_to_facebook?: boolean | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          centris_id?: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          facebook_post_id?: string | null
+          id?: string
+          images?: string[] | null
+          postal_code?: string | null
+          price?: number | null
+          property_type?: string | null
+          published_to_facebook?: boolean | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_name: string | null
