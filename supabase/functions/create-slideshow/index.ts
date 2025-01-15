@@ -10,6 +10,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -130,10 +131,18 @@ serve(async (req) => {
 
     console.log('Public URL generated:', publicUrl);
 
+    // Make sure to return a proper JSON response
     return new Response(
-      JSON.stringify({ url: publicUrl }),
+      JSON.stringify({ 
+        success: true,
+        url: publicUrl,
+        message: 'Slideshow created successfully'
+      }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
       }
     );
 
@@ -141,12 +150,16 @@ serve(async (req) => {
     console.error('Error in create-slideshow function:', error);
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: error.message,
         details: error.toString()
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
       }
     );
   }
