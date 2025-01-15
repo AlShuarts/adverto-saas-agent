@@ -14,27 +14,38 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
   console.log("Rendering slideshow with images:", images);
   return (
     <div style={{ flex: 1, backgroundColor: 'white', position: 'relative', width: '100%', height: '100%' }}>
-      {images.map((image, index) => (
-        <Sequence key={index} from={index * 60} durationInFrames={60}>
-          <div style={{ 
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-          }}>
-            <img
-              src={image}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-              }}
-              alt={`Slide ${index + 1}`}
-            />
-          </div>
-        </Sequence>
-      ))}
+      {images.map((image, index) => {
+        console.log(`Rendering image ${index + 1}:`, image);
+        return (
+          <Sequence key={index} from={index * 60} durationInFrames={60}>
+            <div style={{ 
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <img
+                src={image}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                }}
+                alt={`Slide ${index + 1}`}
+                onError={(e) => {
+                  console.error(`Error loading image ${index + 1}:`, image);
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => console.log(`Image ${index + 1} loaded successfully`)}
+              />
+            </div>
+          </Sequence>
+        );
+      })}
     </div>
   );
 };
@@ -44,6 +55,15 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const { toast } = useToast();
 
   const handleCreateSlideshow = () => {
+    if (!listing.images || listing.images.length === 0) {
+      toast({
+        title: "Erreur",
+        description: "Aucune image disponible pour le diaporama",
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log("Opening slideshow with images:", listing.images);
     setIsOpen(true);
     toast({
