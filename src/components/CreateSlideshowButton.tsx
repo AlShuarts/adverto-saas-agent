@@ -2,65 +2,43 @@ import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Player } from "@remotion/player";
+import { AbsoluteFill } from "@remotion/player";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
 };
 
+const SlideShowComposition = ({ images }: { images: string[] }) => {
+  return (
+    <AbsoluteFill style={{ backgroundColor: 'white' }}>
+      {images.map((image, index) => (
+        <AbsoluteFill key={index}>
+          <img
+            src={image}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        </AbsoluteFill>
+      ))}
+    </AbsoluteFill>
+  );
+};
+
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleCreateSlideshow = async () => {
-    setIsLoading(true);
-    try {
-      console.log('Starting slideshow creation for listing:', listing.id);
-      
-      const { data, error } = await supabase.functions.invoke('create-slideshow', {
-        body: { listingId: listing.id }
-      });
-
-      console.log('Response from create-slideshow:', data);
-
-      if (error) {
-        console.error('Function error:', error);
-        throw new Error(error.message || 'Error calling create-slideshow function');
-      }
-
-      if (!data) {
-        console.error('No data returned from function');
-        throw new Error('No response from server');
-      }
-
-      if (!data.success) {
-        console.error('Error in response:', data);
-        throw new Error(data.error || 'Failed to create slideshow');
-      }
-
-      if (!data.url) {
-        console.error('No URL in response:', data);
-        throw new Error('No URL returned from server');
-      }
-
-      console.log('Slideshow created successfully:', data);
-
-      toast({
-        title: "Succès",
-        description: "Le diaporama a été créé avec succès",
-      });
-
-      window.open(data.url, "_blank");
-    } catch (error) {
-      console.error("Error creating slideshow:", error);
-      toast({
-        title: "Erreur",
-        description: error.message || "Impossible de créer le diaporama",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCreateSlideshow = () => {
+    setIsOpen(true);
+    toast({
+      title: "Succès",
+      description: "Le diaporama a été créé avec succès",
+    });
   };
 
   if (!listing.images || listing.images.length === 0) {
@@ -68,13 +46,36 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   }
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleCreateSlideshow}
-      disabled={isLoading}
-    >
-      {isLoading ? "Création..." : "Créer un diaporama"}
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleCreateSlideshow}
+      >
+        Créer un diaporama
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-4xl">
+          <div className="aspect-video w-full">
+            <Player
+              component={SlideShowComposition}
+              inputProps={{ images: listing.images }}
+              durationInFrames={listing.images.length * 60}
+              fps={30}
+              compositionWidth={1920}
+              compositionHeight={1080}
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+              controls
+              autoPlay
+              loop
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
