@@ -16,15 +16,6 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
     <div style={{ flex: 1, backgroundColor: 'white', position: 'relative', width: '100%', height: '100%' }}>
       {images.map((image, index) => {
         console.log(`Rendering image ${index + 1}:`, image);
-        
-        // Validate image URL
-        try {
-          new URL(image);
-        } catch (e) {
-          console.error(`Invalid URL for image ${index + 1}:`, image);
-          return null;
-        }
-
         return (
           <Sequence key={index} from={index * 60} durationInFrames={60}>
             <div style={{ 
@@ -56,7 +47,6 @@ const SlideShowComposition = ({ images }: { images: string[] }) => {
                     naturalHeight: (e.target as HTMLImageElement).naturalHeight,
                   });
                 }}
-                crossOrigin="anonymous"
               />
             </div>
           </Sequence>
@@ -80,27 +70,6 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       return;
     }
 
-    // Validate all image URLs before opening
-    const validImages = listing.images.filter(url => {
-      try {
-        new URL(url);
-        return true;
-      } catch (e) {
-        console.error("Invalid image URL:", url);
-        return false;
-      }
-    });
-
-    if (validImages.length === 0) {
-      toast({
-        title: "Erreur",
-        description: "Aucune image valide trouvée",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    console.log("Opening slideshow with valid images:", validImages);
     setIsOpen(true);
     toast({
       title: "Succès",
