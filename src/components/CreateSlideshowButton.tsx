@@ -13,16 +13,22 @@ type CreateSlideshowButtonProps = {
 const SlideShowComposition = ({ images }: { images: string[] }) => {
   console.log("Rendering slideshow with images:", images);
   return (
-    <div style={{ flex: 1, backgroundColor: 'white' }}>
+    <div style={{ flex: 1, backgroundColor: 'white', position: 'relative', width: '100%', height: '100%' }}>
       {images.map((image, index) => (
         <Sequence key={index} from={index * 60} durationInFrames={60}>
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+          }}>
             <img
               src={image}
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
+                objectFit: 'contain',
               }}
               alt={`Slide ${index + 1}`}
             />
