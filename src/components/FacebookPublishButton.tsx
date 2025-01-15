@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { Share } from "lucide-react";
+import { Share, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FacebookPreview } from "./FacebookPreview";
@@ -68,9 +68,23 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       // Rafraîchir les données
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
+      // Afficher la confirmation avec le lien vers la publication
       toast({
-        title: "Succès",
-        description: "L'annonce a été publiée sur Facebook",
+        title: "Publication réussie ! 🎉",
+        description: (
+          <div className="flex flex-col gap-2">
+            <p>Votre annonce a été publiée sur Facebook avec succès.</p>
+            <a
+              href={`https://facebook.com/${postId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-primary hover:underline"
+            >
+              Voir la publication <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        ),
+        duration: 5000,
       });
       
       setShowPreview(false);
