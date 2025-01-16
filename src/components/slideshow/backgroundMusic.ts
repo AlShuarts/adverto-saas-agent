@@ -23,11 +23,3 @@ export const getBackgroundMusics = async (): Promise<BackgroundMusic[]> => {
     url: supabase.storage.from('background-music').getPublicUrl(file.name).data.publicUrl
   }));
 };
-
-export const getRandomBackgroundMusic = async (): Promise<BackgroundMusic | null> => {
-  const musics = await getBackgroundMusics();
-  if (musics.length === 0) return null;
-  
-  const randomIndex = Math.floor(Math.random() * musics.length);
-  return musics[randomIndex];
-};

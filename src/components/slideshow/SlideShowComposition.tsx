@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
-import { getRandomBackgroundMusic } from "./backgroundMusic";
 import { useToast } from "@/hooks/use-toast";
 
 type SlideShowCompositionProps = {
   images: string[];
+  musicUrl?: string;
 };
 
-export const SlideShowComposition = ({ images }: SlideShowCompositionProps) => {
+export const SlideShowComposition = ({ images, musicUrl }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [audio] = useState(new Audio());
   const { toast } = useToast();
@@ -15,16 +15,15 @@ export const SlideShowComposition = ({ images }: SlideShowCompositionProps) => {
   useEffect(() => {
     const setupAudio = async () => {
       try {
-        const music = await getRandomBackgroundMusic();
-        if (music) {
-          audio.src = music.url;
+        if (musicUrl) {
+          audio.src = musicUrl;
           audio.loop = true;
           audio.volume = 0.3;
           await audio.play();
         } else {
           toast({
             title: "Attention",
-            description: "Aucune musique de fond n'est disponible",
+            description: "Aucune musique de fond n'est sélectionnée",
             variant: "destructive",
           });
         }
@@ -49,7 +48,7 @@ export const SlideShowComposition = ({ images }: SlideShowCompositionProps) => {
       audio.pause();
       audio.currentTime = 0;
     };
-  }, [images.length, audio]);
+  }, [images.length, audio, musicUrl, toast]);
 
   return (
     <div style={{ flex: 1, backgroundColor: 'black', position: 'relative', width: '100%', height: '100%' }}>
