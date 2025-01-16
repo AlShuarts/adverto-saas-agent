@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 import { getRandomBackgroundMusic } from "./backgroundMusic";
+import { useToast } from "@/hooks/use-toast";
 
 type SlideShowCompositionProps = {
   images: string[];
@@ -8,13 +9,36 @@ type SlideShowCompositionProps = {
 
 export const SlideShowComposition = ({ images }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [audio] = useState(() => new Audio(getRandomBackgroundMusic().data));
+  const [audio] = useState(new Audio());
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Configurer l'audio
-    audio.loop = true;
-    audio.volume = 0.3;
-    audio.play().catch(console.error);
+    const setupAudio = async () => {
+      try {
+        const music = await getRandomBackgroundMusic();
+        if (music) {
+          audio.src = music.url;
+          audio.loop = true;
+          audio.volume = 0.3;
+          await audio.play();
+        } else {
+          toast({
+            title: "Attention",
+            description: "Aucune musique de fond n'est disponible",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error playing background music:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de jouer la musique de fond",
+          variant: "destructive",
+        });
+      }
+    };
+
+    setupAudio();
 
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
