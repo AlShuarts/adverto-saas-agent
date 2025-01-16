@@ -20,7 +20,6 @@ export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps
         opacity: index === currentIndex ? 1 : 0,
         transition: 'opacity 1.5s ease-in-out'
       }}
-      className="animate-float"
     >
       <img
         src={`${src}?w=1920&h=1080&fit=cover`}
@@ -29,6 +28,7 @@ export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps
           height: '100%',
           objectFit: 'cover',
         }}
+        className="animate-float"
         alt={`Slide ${index + 1}`}
         onError={(e) => {
           console.error(`Error loading image ${index + 1}:`, src, e);
