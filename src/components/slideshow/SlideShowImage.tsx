@@ -22,10 +22,10 @@ export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps
       }}
     >
       <img
-        src={src}
+        src={`${src}?w=1920&h=1080&fit=crop`}
         style={{
-          maxWidth: '90%',
-          maxHeight: '90%',
+          width: '100%',
+          height: '100%',
           objectFit: 'contain',
         }}
         alt={`Slide ${index + 1}`}
