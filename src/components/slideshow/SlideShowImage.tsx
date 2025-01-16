@@ -18,7 +18,7 @@ export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps
         justifyContent: 'center',
         backgroundColor: 'black',
         opacity: index === currentIndex ? 1 : 0,
-        transition: 'opacity 0.5s ease-in-out'
+        transition: 'opacity 1.5s ease-in-out'
       }}
       className="animate-float"
     >

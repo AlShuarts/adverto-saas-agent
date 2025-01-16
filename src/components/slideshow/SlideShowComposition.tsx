@@ -11,7 +11,7 @@ export const SlideShowComposition = ({ images }: SlideShowCompositionProps) => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 3000);
+    }, 5000); // Changed from 3000 to 5000 for slower transitions
 
     return () => clearInterval(timer);
   }, [images.length]);
