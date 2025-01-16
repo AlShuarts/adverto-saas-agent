@@ -17,7 +17,7 @@ export const SlideShowComposition = ({ images }: SlideShowCompositionProps) => {
   }, [images.length]);
 
   return (
-    <div style={{ flex: 1, backgroundColor: 'white', position: 'relative', width: '100%', height: '100%' }}>
+    <div style={{ flex: 1, backgroundColor: 'black', position: 'relative', width: '100%', height: '100%' }}>
       {images.map((image, index) => (
         <SlideShowImage
           key={index}

@@ -16,17 +16,18 @@ export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'white',
+        backgroundColor: 'black',
         opacity: index === currentIndex ? 1 : 0,
         transition: 'opacity 0.5s ease-in-out'
       }}
+      className="animate-float"
     >
       <img
-        src={`${src}?w=1920&h=1080&fit=crop`}
+        src={`${src}?w=1920&h=1080&fit=cover`}
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'contain',
+          objectFit: 'cover',
         }}
         alt={`Slide ${index + 1}`}
         onError={(e) => {
