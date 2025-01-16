@@ -45,7 +45,7 @@ export const HeroSection = ({ profile, loading, onConnectFacebook }: HeroSection
                 </Button>
               ) : (
                 <div className="space-y-4">
-                  <Button size="lg" className="animate-float">
+                  <Button size="lg">
                     Commencer à publier
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
