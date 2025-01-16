@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
-import { backgroundMusic } from "../../../supabase/functions/create-slideshow/background-music";
 
 type SlideShowCompositionProps = {
   images: string[];
@@ -8,7 +7,7 @@ type SlideShowCompositionProps = {
 
 export const SlideShowComposition = ({ images }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [audio] = useState(new Audio(backgroundMusic));
+  const [audio] = useState(new Audio("/background-music.mp3"));
 
   useEffect(() => {
     const timer = setInterval(() => {
