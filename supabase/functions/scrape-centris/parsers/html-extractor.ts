@@ -12,23 +12,23 @@ export class HtmlExtractor {
     const imageUrls = new Set<string>();
     
     try {
-      // Trouver le conteneur principal du visualiseur de photos avec l'attribut show
-      const photoViewer = this.doc.querySelector('.photoViewer.photoViewerOnPage[show]');
+      // Trouver le conteneur principal du visualiseur de photos
+      const photoViewer = this.doc.querySelector('.photoViewer.photoViewerOnPage');
       if (photoViewer) {
-        console.log('PhotoViewer avec attribut show trouvé');
+        console.log('PhotoViewer trouvé');
         
-        // Chercher dans la galerie avec l'attribut ondragstart
-        const gallery = photoViewer.querySelector('.gallery[ondragstart]');
+        // Chercher dans la galerie
+        const gallery = photoViewer.querySelector('.gallery');
         if (gallery) {
-          console.log('Gallery avec ondragstart trouvée');
+          console.log('Gallery trouvée');
           
-          // Chercher toutes les images dans les wrappers avec style height
-          const imageWrappers = gallery.querySelectorAll('.image-wrapper[style*="height"]');
-          console.log(`Nombre d'image-wrappers avec style height trouvés: ${imageWrappers.length}`);
+          // Chercher toutes les images dans les wrappers
+          const imageWrappers = gallery.querySelectorAll('.image-wrapper');
+          console.log(`Nombre d'image-wrappers trouvés: ${imageWrappers.length}`);
           
           imageWrappers.forEach((wrapper: Element, index: number) => {
-            // Chercher l'image avec id fullImg et src
-            const fullImg = wrapper.querySelector('img#fullImg[src]');
+            // Chercher l'image avec id fullImg
+            const fullImg = wrapper.querySelector('img#fullImg');
             if (fullImg) {
               const src = fullImg.getAttribute('src');
               console.log(`Image ${index + 1} trouvée avec src:`, src);
@@ -45,10 +45,10 @@ export class HtmlExtractor {
             }
           });
         } else {
-          console.log('Gallery avec ondragstart non trouvée');
+          console.log('Gallery non trouvée');
         }
       } else {
-        console.log('PhotoViewer avec attribut show non trouvé');
+        console.log('PhotoViewer non trouvé');
       }
     } catch (error) {
       console.error('Erreur lors de l\'extraction depuis PhotoViewer:', error);
