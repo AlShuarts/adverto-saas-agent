@@ -70,11 +70,12 @@ serve(async (req) => {
     const imageUrls = parser.getImageUrls();
     console.log('URLs d\'images trouvées:', imageUrls);
     
-    const processedImages: string[] = [];
-    
     if (imageUrls.length === 0) {
       console.error('Aucune image trouvée dans le HTML');
+      throw new Error("Aucune image n'a été trouvée dans l'annonce");
     }
+    
+    const processedImages: string[] = [];
     
     for (const imageUrl of imageUrls) {
       console.log('Traitement de l\'URL d\'image:', imageUrl);
@@ -88,9 +89,13 @@ serve(async (req) => {
       }
     }
 
+    if (processedImages.length === 0) {
+      throw new Error("Impossible de traiter les images de l'annonce");
+    }
+
     const listing: ListingData = {
       ...listingData,
-      images: processedImages.length > 0 ? processedImages : null
+      images: processedImages
     };
 
     console.log('Données finales de l\'annonce:', listing);

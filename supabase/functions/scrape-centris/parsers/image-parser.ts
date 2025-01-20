@@ -66,7 +66,18 @@ export class ImageParser {
       '.carousel-item img',
       '.property-thumbnail img',
       '.property-image img',
-      '.listing-image img'
+      '.listing-image img',
+      // Nouveaux sélecteurs plus spécifiques
+      '#divMainPhoto img[src*="media.ashx"]',
+      '#divMainPhoto img[data-src*="media.ashx"]',
+      '.carouselbox img[src*="media.ashx"]',
+      '.carouselbox img[data-src*="media.ashx"]',
+      'img[src*="mspublic.centris.ca"]',
+      'img[data-src*="mspublic.centris.ca"]',
+      // Sélecteurs pour les conteneurs d'images
+      '.imgCarouselbox img',
+      '.imgGallery img',
+      '.property-media img'
     ];
     
     for (const selector of selectors) {
@@ -77,6 +88,7 @@ export class ImageParser {
         const src = img.getAttribute("src");
         const dataSrc = img.getAttribute("data-src");
         const dataOriginal = img.getAttribute("data-original");
+        const srcset = img.getAttribute("srcset");
         
         [src, dataSrc, dataOriginal].forEach(url => {
           if (url && this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
@@ -86,6 +98,19 @@ export class ImageParser {
             console.log('Image trouvée et nettoyée:', cleanedUrl);
           }
         });
+
+        // Traitement du srcset si présent
+        if (srcset) {
+          const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
+          srcsetUrls.forEach(url => {
+            if (this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
+              const cleanedUrl = this.cleanImageUrl(url);
+              this.seenUrls.add(cleanedUrl);
+              imageUrls.push(cleanedUrl);
+              console.log('Image trouvée dans srcset et nettoyée:', cleanedUrl);
+            }
+          });
+        }
       }
     }
 
