@@ -91,19 +91,15 @@ serve(async (req) => {
     }
     
     const processedImages: string[] = [];
-    let processedCount = 0;
     let errorCount = 0;
     
     for (const imageUrl of imageUrls) {
-      if (processedCount >= 3) break; // Limiter à 3 images pour commencer
-      
       try {
-        console.log(`Traitement de l'image ${processedCount + 1}/${imageUrls.length}:`, imageUrl);
+        console.log(`Traitement de l'image ${processedImages.length + 1}/${imageUrls.length}:`, imageUrl);
         const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
         
         if (processedUrl) {
           processedImages.push(processedUrl);
-          processedCount++;
           console.log('Image traitée avec succès:', processedUrl);
         } else {
           console.error('Échec du traitement de l\'image:', error);
