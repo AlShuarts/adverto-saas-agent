@@ -21,6 +21,8 @@ export const SlideShowImage = ({ src, index, currentIndex, isPlaying }: SlideSho
         opacity: index === currentIndex ? 1 : 0,
         transition: 'opacity 1.5s ease-in-out',
         willChange: 'opacity',
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
       }}
     >
       <img
@@ -47,9 +49,11 @@ export const SlideShowImage = ({ src, index, currentIndex, isPlaying }: SlideSho
           e.currentTarget.style.display = 'none';
         }}
         onLoad={(e) => {
+          const img = e.target as HTMLImageElement;
+          img.style.visibility = 'visible';
           console.log(`Image ${index + 1} loaded successfully:`, {
-            naturalWidth: (e.target as HTMLImageElement).naturalWidth,
-            naturalHeight: (e.target as HTMLImageElement).naturalHeight,
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
           });
         }}
       />

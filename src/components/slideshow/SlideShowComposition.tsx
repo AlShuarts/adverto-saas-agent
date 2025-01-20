@@ -14,17 +14,25 @@ export const SlideShowComposition = ({
 }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Précharger toutes les images
+  // Précharger toutes les images avec une meilleure gestion de la qualité
   useEffect(() => {
     const preloadImages = async () => {
+      setIsLoading(true);
       const promises = images.map((src) => {
         return new Promise<string>((resolve, reject) => {
           const img = new Image();
           img.src = src;
+          // Force le chargement complet de l'image avant de continuer
+          img.decode = () => {
+            console.log(`Image décodée avec succès: ${src}`);
+            resolve(src);
+          };
           img.onload = () => {
             console.log(`Image préchargée avec succès: ${src}`);
-            resolve(src);
+            // Attendre un court instant pour s'assurer que l'image est complètement chargée
+            setTimeout(() => resolve(src), 100);
           };
           img.onerror = () => {
             console.error(`Erreur lors du préchargement de l'image: ${src}`);
@@ -36,9 +44,11 @@ export const SlideShowComposition = ({
       try {
         const loaded = await Promise.all(promises);
         setLoadedImages(loaded);
-        console.log('Toutes les images ont été préchargées');
+        setIsLoading(false);
+        console.log('Toutes les images ont été préchargées et décodées');
       } catch (error) {
         console.error('Erreur lors du préchargement des images:', error);
+        setIsLoading(false);
       }
     };
 
@@ -48,7 +58,7 @@ export const SlideShowComposition = ({
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
 
-    if (isPlaying && loadedImages.length === images.length) {
+    if (isPlaying && !isLoading && loadedImages.length === images.length) {
       console.log('Starting slideshow interval in composition');
       interval = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -61,9 +71,9 @@ export const SlideShowComposition = ({
         clearInterval(interval);
       }
     };
-  }, [isPlaying, images.length, loadedImages.length]);
+  }, [isPlaying, images.length, loadedImages.length, isLoading]);
 
-  if (loadedImages.length !== images.length) {
+  if (isLoading || loadedImages.length !== images.length) {
     return (
       <div className="relative w-full h-full bg-black flex items-center justify-center">
         <div className="text-white">Chargement des images...</div>
@@ -75,7 +85,7 @@ export const SlideShowComposition = ({
     <div className="relative w-full h-full bg-black overflow-hidden">
       {images.map((image, index) => (
         <SlideShowImage
-          key={index}
+          key={image}
           src={image}
           index={index}
           currentIndex={currentIndex}
