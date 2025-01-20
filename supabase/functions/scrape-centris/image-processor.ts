@@ -1,5 +1,5 @@
-import { ImageProcessingResult } from './types.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { ImageProcessingResult } from './types.ts';
 
 export class ImageProcessor {
   private supabase;
@@ -16,7 +16,6 @@ export class ImageProcessor {
   }
 
   private cleanImageUrl(url: string): string {
-    // Assurer une taille d'image consistante
     return url.includes('&w=') ? url : `${url}&w=1024&h=768&sm=c`;
   }
 
@@ -31,17 +30,13 @@ export class ImageProcessor {
       const cleanedUrl = this.cleanImageUrl(imageUrl);
       console.log('URL nettoyée:', cleanedUrl);
 
-      const headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer': 'https://www.centris.ca/',
-        'Origin': 'https://www.centris.ca'
-      };
-
       const response = await fetch(cleanedUrl, {
-        headers,
-        redirect: 'follow'
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+          'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+          'Referer': 'https://www.centris.ca/',
+        }
       });
 
       if (!response.ok) {
@@ -55,9 +50,8 @@ export class ImageProcessor {
         return { processedUrl: null, error: 'Image vide' };
       }
 
-      // Générer un nom de fichier unique
-      const fileExt = 'jpg';
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.jpg`;
+      console.log('Nom du fichier généré:', fileName);
 
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
