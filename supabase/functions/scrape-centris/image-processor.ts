@@ -12,7 +12,12 @@ export class ImageProcessor {
   }
 
   private isValidImageUrl(url: string): boolean {
-    return url.includes('mspublic.centris.ca/media.ashx');
+    // Assouplir la validation pour accepter plus de formats d'URLs
+    return url.includes('centris.ca') && (
+      url.includes('media.ashx') || 
+      url.includes('photos') || 
+      url.includes('images')
+    );
   }
 
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
@@ -32,16 +37,26 @@ export class ImageProcessor {
         'Referer': 'https://www.centris.ca/',
         'Origin': 'https://www.centris.ca',
         'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
+        'Pragma': 'no-cache',
+        'Sec-Fetch-Dest': 'image',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'same-site'
       };
 
-      // Téléchargement de l'image avec gestion des erreurs HTTP
-      const imageResponse = await fetch(imageUrl, { headers });
+      // Téléchargement de l'image avec gestion des erreurs HTTP et timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      const imageResponse = await fetch(imageUrl, { 
+        headers,
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeout));
 
       if (!imageResponse.ok) {
         console.error('Erreur HTTP lors du téléchargement:', {
           status: imageResponse.status,
-          statusText: imageResponse.statusText
+          statusText: imageResponse.statusText,
+          url: imageResponse.url
         });
         return { 
           processedUrl: null, 

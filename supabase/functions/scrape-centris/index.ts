@@ -29,12 +29,22 @@ serve(async (req) => {
       );
     }
 
+    // Configuration améliorée des headers
     const headers = {
       ...scrapingHeaders,
       'Referer': 'https://www.centris.ca/',
       'Origin': 'https://www.centris.ca',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-User': '?1',
+      'Upgrade-Insecure-Requests': '1',
     };
-
+    
     console.log('Headers de la requête:', headers);
     
     // Ajouter un délai aléatoire pour éviter la détection
@@ -42,13 +52,15 @@ serve(async (req) => {
     
     const response = await fetch(url, { 
       headers,
-      redirect: 'follow'
+      redirect: 'follow',
+      credentials: 'omit'
     });
     
     if (!response.ok) {
       console.error('Échec de la récupération de la page Centris:', {
         status: response.status,
-        statusText: response.statusText
+        statusText: response.statusText,
+        url: response.url
       });
       throw new Error(`Échec de la récupération de la page Centris: ${response.status} ${response.statusText}`);
     }
@@ -80,23 +92,34 @@ serve(async (req) => {
     
     const processedImages: string[] = [];
     let processedCount = 0;
+    let errorCount = 0;
     
     for (const imageUrl of imageUrls) {
       if (processedCount >= 3) break; // Limiter à 3 images pour commencer
       
-      console.log(`Traitement de l'image ${processedCount + 1}/${imageUrls.length}:`, imageUrl);
-      const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
-      
-      if (processedUrl) {
-        processedImages.push(processedUrl);
-        processedCount++;
-        console.log('Image traitée avec succès:', processedUrl);
-      } else {
-        console.error('Échec du traitement de l\'image:', error);
+      try {
+        console.log(`Traitement de l'image ${processedCount + 1}/${imageUrls.length}:`, imageUrl);
+        const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
+        
+        if (processedUrl) {
+          processedImages.push(processedUrl);
+          processedCount++;
+          console.log('Image traitée avec succès:', processedUrl);
+        } else {
+          console.error('Échec du traitement de l\'image:', error);
+          errorCount++;
+        }
+      } catch (error) {
+        console.error('Erreur lors du traitement de l\'image:', error);
+        errorCount++;
       }
+      
+      // Petit délai entre chaque traitement d'image
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     if (processedImages.length === 0) {
+      console.error(`Toutes les tentatives de traitement d'images ont échoué (${errorCount} erreurs)`);
       throw new Error("Impossible de traiter les images de l'annonce. Veuillez réessayer.");
     }
 
