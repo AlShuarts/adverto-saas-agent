@@ -9,22 +9,30 @@ export class ImageParser {
 
   private isValidImageUrl(url: string): boolean {
     if (!url) return false;
-    return url.includes('mspublic.centris.ca/media.ashx');
+    return url.includes('mspublic.centris.ca/media.ashx') || url.includes('centris.ca');
   }
 
   private cleanImageUrl(url: string): string {
     try {
+      console.log('Nettoyage de l\'URL:', url);
+      
+      // Si l'URL ne contient pas media.ashx, la retourner telle quelle
+      if (!url.includes('media.ashx')) {
+        console.log('URL sans media.ashx, retournée telle quelle:', url);
+        return url;
+      }
+
       const originalUrl = new URL(url);
       const params = new URLSearchParams(originalUrl.search);
       
-      // Garder uniquement l'ID de l'image
+      // Récupérer l'ID de l'image
       const imageId = params.get('id');
       if (!imageId) {
         console.error('Pas d\'ID d\'image trouvé dans l\'URL:', url);
         return url;
       }
 
-      // Construire une nouvelle URL avec les paramètres optimaux
+      // Construire une nouvelle URL optimisée
       const newParams = new URLSearchParams();
       newParams.set('id', imageId);
       newParams.set('t', 'photo');
@@ -47,7 +55,7 @@ export class ImageParser {
     
     for (const script of scripts) {
       const content = script.textContent || '';
-      const matches = content.match(/https:\/\/mspublic\.centris\.ca\/media\.ashx\?[^"'\s]+/g);
+      const matches = content.match(/https:\/\/[^"'\s]*?centris\.ca[^"'\s]*/g);
       if (matches) {
         matches.forEach(url => {
           if (this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
@@ -66,17 +74,15 @@ export class ImageParser {
   private extractFromImageTags(): string[] {
     const imageUrls: string[] = [];
     const selectors = [
-      'img[src*="mspublic.centris.ca"]',
-      'img[data-src*="mspublic.centris.ca"]',
-      'img[srcset*="mspublic.centris.ca"]',
+      'img[src*="centris.ca"]',
+      'img[data-src*="centris.ca"]',
+      'img[srcset*="centris.ca"]',
       '.MainImg img',
       '#divMainPhoto img',
       '.photo-gallery img',
       '.carouselbox img',
       '.carousel-item img',
-      '.property-thumbnail img',
-      '.property-image img',
-      '.listing-image img'
+      '.property-thumbnail img'
     ];
     
     for (const selector of selectors) {
