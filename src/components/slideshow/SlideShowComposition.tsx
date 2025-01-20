@@ -20,7 +20,7 @@ export const SlideShowComposition = ({
   const intervalRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  // Gestion immédiate du volume
+  // Mise à jour immédiate du volume avec synchronisation mute
   const updateVolume = () => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -29,21 +29,22 @@ export const SlideShowComposition = ({
     }
   };
 
-  // Gérer la lecture/pause de la musique avec gestion d'erreurs robuste
+  // Gestion robuste de la lecture/pause audio
   const handlePlayback = async () => {
     if (!audioRef.current) return;
 
     try {
       if (isPlaying) {
+        // Tentative de lecture avec gestion des erreurs
         await audioRef.current.play();
       } else {
         audioRef.current.pause();
       }
     } catch (error) {
-      console.error('Error managing audio playback:', error);
+      console.error('Erreur de lecture audio:', error);
       toast({
         title: "Erreur audio",
-        description: "Impossible de contrôler la lecture audio",
+        description: "Impossible de lire l'audio",
         variant: "destructive",
       });
     }
@@ -59,14 +60,20 @@ export const SlideShowComposition = ({
     updateVolume();
   }, [volume]);
 
-  // Gérer le changement d'image avec pause robuste
+  // Gestion du changement d'image avec nettoyage robuste
   useEffect(() => {
+    // Nettoyer l'intervalle existant avant d'en créer un nouveau
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
       }, 5000);
     }
 
+    // Nettoyage lors du démontage ou changement d'état
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -74,28 +81,31 @@ export const SlideShowComposition = ({
     };
   }, [isPlaying, images.length]);
 
-  // Initialiser l'audio avec gestion d'erreurs
+  // Initialisation et nettoyage de l'audio
   useEffect(() => {
     if (audioRef.current && musicUrl) {
       audioRef.current.src = musicUrl;
       audioRef.current.loop = true;
       
-      // Configurer les gestionnaires d'événements audio
-      audioRef.current.addEventListener('error', (e) => {
-        console.error('Audio error:', e);
+      // Gestionnaire d'erreurs audio
+      const handleError = (e: Event) => {
+        console.error('Erreur audio:', e);
         toast({
           title: "Erreur audio",
           description: "Erreur lors du chargement de l'audio",
           variant: "destructive",
         });
-      });
+      };
 
-      // Nettoyer les gestionnaires d'événements
+      audioRef.current.addEventListener('error', handleError);
+
+      // Nettoyage complet
       return () => {
         if (audioRef.current) {
+          audioRef.current.removeEventListener('error', handleError);
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
-          audioRef.current.removeEventListener('error', () => {});
+          audioRef.current.src = '';
         }
       };
     }
