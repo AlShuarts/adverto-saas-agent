@@ -32,15 +32,12 @@ export const importCentrisListing = async (url: string, userId: string) => {
 
   console.log("Données reçues du scraping:", response);
 
-  const formattedPrice = formatPrice(response.price);
-  console.log("Prix formaté:", response.price, "->", formattedPrice);
-
   const listingData = {
     centris_id: response.centris_id,
-    centris_url: url, // Ajout de l'URL Centris
+    centris_url: url,
     title: response.title,
     description: response.description || null,
-    price: formattedPrice,
+    price: response.price ? Number(response.price) : null,
     address: response.address || null,
     city: response.city || null,
     postal_code: response.postal_code || null,

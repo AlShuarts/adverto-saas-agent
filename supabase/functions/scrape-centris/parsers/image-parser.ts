@@ -39,38 +39,19 @@ export class ImageParser {
     }
   }
 
-  private extractFromScript(): string[] {
+  getImageUrls(): string[] {
+    console.log('Début de l\'extraction des images');
     const imageUrls: string[] = [];
-    const scripts = this.doc.getElementsByTagName('script');
     
-    for (const script of scripts) {
-      const content = script.textContent || '';
-      const matches = content.match(/https:\/\/mspublic\.centris\.ca\/media\.ashx\?[^"'\s]+/g);
-      if (matches) {
-        matches.forEach(url => {
-          if (this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
-            const cleanedUrl = this.cleanImageUrl(url);
-            this.seenUrls.add(cleanedUrl);
-            imageUrls.push(cleanedUrl);
-            console.log('Image trouvée dans le script:', cleanedUrl);
-          }
-        });
-      }
-    }
-    
-    return imageUrls;
-  }
-
-  private extractFromImageTags(): string[] {
-    const imageUrls: string[] = [];
+    // Recherche dans les balises img
     const selectors = [
-      'img[src*="mspublic.centris.ca"]',
-      'img[data-src*="mspublic.centris.ca"]',
+      'img[src*="centris.ca"]',
+      'img[data-src*="centris.ca"]',
+      '.MainImg img',
+      '#divMainPhoto img',
       '.photo-gallery img',
       '.carouselbox img',
-      '.carousel-item img',
-      '.MainImg img',
-      '#divMainPhoto img'
+      '.carousel-item img'
     ];
     
     for (const selector of selectors) {
@@ -86,27 +67,30 @@ export class ImageParser {
             const cleanedUrl = this.cleanImageUrl(url);
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
-            console.log('Image trouvée dans une balise img:', cleanedUrl);
+            console.log('Image trouvée:', cleanedUrl);
+          }
+        });
+      }
+    }
+
+    // Recherche dans les scripts
+    const scripts = this.doc.getElementsByTagName('script');
+    for (const script of scripts) {
+      const content = script.textContent || '';
+      const matches = content.match(/https:\/\/mspublic\.centris\.ca\/media\.ashx\?[^"'\s]+/g);
+      if (matches) {
+        matches.forEach(url => {
+          if (this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
+            const cleanedUrl = this.cleanImageUrl(url);
+            this.seenUrls.add(cleanedUrl);
+            imageUrls.push(cleanedUrl);
+            console.log('Image trouvée dans le script:', cleanedUrl);
           }
         });
       }
     }
     
-    return imageUrls;
-  }
-
-  getImageUrls(): string[] {
-    console.log('Début de l\'extraction des images');
-    
-    const scriptUrls = this.extractFromScript();
-    console.log(`${scriptUrls.length} images trouvées dans les scripts`);
-    
-    const imageTagUrls = this.extractFromImageTags();
-    console.log(`${imageTagUrls.length} images trouvées dans les balises img`);
-    
-    const allUrls = [...new Set([...scriptUrls, ...imageTagUrls])];
-    console.log(`Total d'images uniques trouvées: ${allUrls.length}`);
-    
-    return allUrls;
+    console.log(`Total d'images uniques trouvées: ${imageUrls.length}`);
+    return [...new Set(imageUrls)];
   }
 }
