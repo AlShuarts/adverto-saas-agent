@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -13,9 +13,16 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(1);
 
-  const togglePlay = useCallback(() => {
-    setIsPlaying(prev => !prev);
+  // Reset play state when component mounts or unmounts
+  useEffect(() => {
+    setIsPlaying(true);
+    return () => setIsPlaying(false);
   }, []);
+
+  const togglePlay = useCallback(() => {
+    console.log('Toggling play state from:', isPlaying, 'to:', !isPlaying);
+    setIsPlaying(prev => !prev);
+  }, [isPlaying]);
 
   const toggleMute = useCallback(() => {
     setVolume(prev => prev === 0 ? 1 : 0);
