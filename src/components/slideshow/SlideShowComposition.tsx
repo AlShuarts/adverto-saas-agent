@@ -24,16 +24,23 @@ export const SlideShowComposition = ({
         return new Promise<string>((resolve, reject) => {
           const img = new Image();
           img.src = src;
-          // Force le chargement complet de l'image avant de continuer
-          img.decode = () => {
-            console.log(`Image décodée avec succès: ${src}`);
-            resolve(src);
-          };
+          
+          // Utiliser la méthode decode() native qui retourne une Promise
+          img.decode()
+            .then(() => {
+              console.log(`Image décodée avec succès: ${src}`);
+              // Attendre un court instant pour s'assurer que l'image est complètement chargée
+              setTimeout(() => resolve(src), 100);
+            })
+            .catch(() => {
+              console.error(`Erreur lors du décodage de l'image: ${src}`);
+              reject(src);
+            });
+
           img.onload = () => {
             console.log(`Image préchargée avec succès: ${src}`);
-            // Attendre un court instant pour s'assurer que l'image est complètement chargée
-            setTimeout(() => resolve(src), 100);
           };
+
           img.onerror = () => {
             console.error(`Erreur lors du préchargement de l'image: ${src}`);
             reject(src);
