@@ -19,7 +19,7 @@ export const SlideShowComposition = ({
   useEffect(() => {
     const preloadImages = async () => {
       const promises = images.map((src) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
           const img = new Image();
           img.src = src;
           img.onload = () => {
