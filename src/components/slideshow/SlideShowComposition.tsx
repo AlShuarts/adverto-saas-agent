@@ -17,7 +17,6 @@ export const SlideShowComposition = ({
 }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
   // Gérer la lecture/pause de la musique
@@ -47,22 +46,17 @@ export const SlideShowComposition = ({
 
   // Gérer le changement d'image avec pause
   useEffect(() => {
-    // Nettoyer l'intervalle existant
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+    let timer: NodeJS.Timeout | null = null;
 
-    // Créer un nouvel intervalle seulement si isPlaying est true
     if (isPlaying) {
-      intervalRef.current = setInterval(() => {
+      timer = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
       }, 5000);
     }
 
-    // Cleanup function
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (timer) {
+        clearInterval(timer);
       }
     };
   }, [isPlaying, images.length]);
