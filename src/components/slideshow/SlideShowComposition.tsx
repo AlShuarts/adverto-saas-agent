@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 import { useToast } from "@/hooks/use-toast";
+import { continueRender, delayRender } from "@remotion/player";
 
 type SlideShowCompositionProps = {
   images: string[];
@@ -10,32 +11,29 @@ type SlideShowCompositionProps = {
 export const SlideShowComposition = ({ images, musicUrl }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [audio] = useState(new Audio());
+  const [handle] = useState(() => delayRender());
   const { toast } = useToast();
 
-  useEffect(() => {
-    const setupAudio = async () => {
-      try {
-        if (musicUrl) {
-          audio.src = musicUrl;
-          audio.loop = true;
-          await audio.play();
-        } else {
-          toast({
-            title: "Attention",
-            description: "Aucune musique de fond n'est sélectionnée",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error('Error playing background music:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de jouer la musique de fond",
-          variant: "destructive",
-        });
+  const setupAudio = useCallback(async () => {
+    try {
+      if (musicUrl) {
+        audio.src = musicUrl;
+        audio.loop = true;
+        await audio.play();
       }
-    };
+    } catch (error) {
+      console.error('Error playing background music:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de jouer la musique de fond",
+        variant: "destructive",
+      });
+    } finally {
+      continueRender(handle);
+    }
+  }, [audio, musicUrl, toast, handle]);
 
+  useEffect(() => {
     setupAudio();
 
     const timer = setInterval(() => {
@@ -47,7 +45,7 @@ export const SlideShowComposition = ({ images, musicUrl }: SlideShowCompositionP
       audio.pause();
       audio.currentTime = 0;
     };
-  }, [images.length, audio, musicUrl, toast]);
+  }, [images.length, audio, setupAudio]);
 
   return (
     <div style={{ flex: 1, backgroundColor: 'black', position: 'relative', width: '100%', height: '100%' }}>
