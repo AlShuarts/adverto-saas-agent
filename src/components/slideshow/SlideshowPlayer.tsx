@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { useSlideshow } from "@/hooks/useSlideshow";
 
 type SlideshowPlayerProps = {
   images: string[];
@@ -10,21 +11,25 @@ type SlideshowPlayerProps = {
 };
 
 export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [volume, setVolume] = useState(1);
+  const {
+    isPlaying,
+    volume,
+    setIsPlaying,
+    setVolume
+  } = useSlideshow(images, musicUrl);
 
   const togglePlay = useCallback(() => {
     console.log('Toggling play state from:', isPlaying, 'to:', !isPlaying);
-    setIsPlaying(prev => !prev);
-  }, [isPlaying]);
+    setIsPlaying(!isPlaying);
+  }, [isPlaying, setIsPlaying]);
 
   const toggleMute = useCallback(() => {
     setVolume(prev => prev === 0 ? 1 : 0);
-  }, []);
+  }, [setVolume]);
 
   const handleVolumeChange = useCallback((value: number[]) => {
     setVolume(value[0]);
-  }, []);
+  }, [setVolume]);
 
   if (!musicUrl) {
     return null;
