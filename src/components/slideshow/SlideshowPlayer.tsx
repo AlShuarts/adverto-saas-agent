@@ -12,11 +12,15 @@ type SlideshowPlayerProps = {
 export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(1);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Reset play state when component mounts or unmounts
+  // Gestion du montage/démontage
   useEffect(() => {
-    setIsPlaying(true);
-    return () => setIsPlaying(false);
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+      setIsPlaying(false);
+    };
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -32,12 +36,17 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
     setVolume(value[0]);
   }, []);
 
+  // Ne rendre le composant que s'il est monté et qu'il y a une URL de musique
+  if (!isMounted || !musicUrl) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
       <div className="aspect-video w-full relative bg-black">
         <SlideShowComposition
           images={images}
-          musicUrl={musicUrl || undefined}
+          musicUrl={musicUrl}
           isPlaying={isPlaying}
           volume={volume}
         />
