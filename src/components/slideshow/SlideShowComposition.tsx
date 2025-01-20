@@ -1,44 +1,78 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 import { useToast } from "@/hooks/use-toast";
 
 type SlideShowCompositionProps = {
   images: string[];
   musicUrl?: string;
+  isPlaying?: boolean;
+  volume?: number;
 };
 
-export const SlideShowComposition = ({ images, musicUrl }: SlideShowCompositionProps) => {
+export const SlideShowComposition = ({ 
+  images, 
+  musicUrl,
+  isPlaying = true,
+  volume = 1
+}: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [audio] = useState(new Audio());
+  const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
+  // Gérer la lecture/pause
   useEffect(() => {
-    if (musicUrl) {
-      audio.src = musicUrl;
-      audio.loop = true;
-      audio.play().catch((error) => {
-        console.error('Error playing background music:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de jouer la musique de fond",
-          variant: "destructive",
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch((error) => {
+          console.error('Error playing background music:', error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de jouer la musique de fond",
+            variant: "destructive",
+          });
         });
-      });
+      } else {
+        audioRef.current.pause();
+      }
     }
+  }, [isPlaying, toast]);
+
+  // Gérer le volume
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  // Gérer le changement d'image
+  useEffect(() => {
+    if (!isPlaying) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 5000);
 
+    return () => clearInterval(timer);
+  }, [images.length, isPlaying]);
+
+  // Initialiser l'audio
+  useEffect(() => {
+    if (audioRef.current && musicUrl) {
+      audioRef.current.src = musicUrl;
+      audioRef.current.loop = true;
+    }
+
     return () => {
-      clearInterval(timer);
-      audio.pause();
-      audio.currentTime = 0;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
     };
-  }, [images.length, audio, musicUrl, toast]);
+  }, [musicUrl]);
 
   return (
     <div style={{ flex: 1, backgroundColor: 'black', position: 'relative', width: '100%', height: '100%' }}>
+      <audio ref={audioRef} />
       {images.map((image, index) => (
         <SlideShowImage
           key={index}
