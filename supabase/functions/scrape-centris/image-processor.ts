@@ -18,34 +18,15 @@ export class ImageProcessor {
   private cleanImageUrl(url: string): string {
     // Paramètres pour obtenir la meilleure qualité possible
     const params = new URLSearchParams({
-      w: '4096',          // Largeur maximale
-      h: '3072',          // Hauteur maximale
-      sm: 'both',         // Scale mode: both pour conserver les proportions
-      q: '100',           // Qualité maximale
-      mt: 'true',         // Maintenir la transparence si présente
-      watermark: 'false'  // Désactiver le filigrane
+      id: url.split('id=')[1]?.split('&')[0] || '', // Extraire l'ID de l'image
+      t: 'pi', // Type: photo
+      w: '4096', // Largeur maximale
+      h: '3072', // Hauteur maximale
+      sm: 'both', // Scale mode: both pour conserver les proportions
+      q: '100', // Qualité maximale
     });
 
-    // Si l'URL contient déjà des paramètres, on les remplace
-    const baseUrl = url.split('?')[0];
-    return `${baseUrl}?${params.toString()}`;
-  }
-
-  private async getImageDimensions(blob: Blob): Promise<{ width: number; height: number }> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(blob);
-      
-      img.onload = () => {
-        URL.revokeObjectURL(img.src);
-        resolve({ width: img.width, height: img.height });
-      };
-      
-      img.onerror = () => {
-        URL.revokeObjectURL(img.src);
-        reject(new Error("Impossible de lire les dimensions de l'image"));
-      };
-    });
+    return `https://mspublic.centris.ca/media.ashx?${params.toString()}`;
   }
 
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
@@ -58,14 +39,13 @@ export class ImageProcessor {
       }
 
       const cleanedUrl = this.cleanImageUrl(imageUrl);
-      console.log('URL nettoyée avec paramètres de qualité:', cleanedUrl);
+      console.log('URL nettoyée:', cleanedUrl);
 
       const response = await fetch(cleanedUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/*,*/*;q=0.9',  // Accepte tous les types d'images en priorité
+          'Accept': 'image/webp,image/jpeg,image/png,image/*,*/*;q=0.8',
           'Accept-Encoding': 'gzip, deflate, br',
-          'Cache-Control': 'no-cache',
           'Referer': 'https://www.centris.ca/',
         }
       });
@@ -81,27 +61,24 @@ export class ImageProcessor {
         return { processedUrl: null, error: 'Image vide' };
       }
 
-      // Logs détaillés sur l'image téléchargée
-      console.log('Informations sur l\'image téléchargée:');
+      console.log('Informations sur l\'image:');
       console.log('- Taille:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
-      console.log('- Type MIME:', blob.type);
+      console.log('- Type:', blob.type);
 
-      // Vérification de la taille minimale attendue (au moins 1 MB pour une image HD)
-      if (blob.size < 1024 * 1024) {
-        console.warn('⚠️ Attention: Image de petite taille détectée');
+      if (blob.size < 100 * 1024) { // Moins de 100KB
+        console.warn('⚠️ Image trop petite détectée');
+        return { processedUrl: null, error: 'Image trop petite' };
       }
 
-      // Conserver l'extension originale de l'image
       const fileExt = blob.type.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      console.log('Nom du fichier généré:', fileName);
+      console.log('Nom du fichier:', fileName);
 
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
         .upload(fileName, blob, {
           contentType: blob.type,
-          duplex: 'half',
-          cacheControl: '31536000', // Cache d'un an pour les images statiques
+          cacheControl: '31536000',
           upsert: false
         });
 
