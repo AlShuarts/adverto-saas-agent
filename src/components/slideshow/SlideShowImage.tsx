@@ -19,7 +19,8 @@ export const SlideShowImage = ({ src, index, currentIndex, isPlaying }: SlideSho
         justifyContent: 'center',
         backgroundColor: 'black',
         opacity: index === currentIndex ? 1 : 0,
-        transition: 'opacity 1.5s ease-in-out'
+        transition: 'opacity 1.5s ease-in-out',
+        willChange: 'opacity',
       }}
     >
       <img
@@ -34,7 +35,8 @@ export const SlideShowImage = ({ src, index, currentIndex, isPlaying }: SlideSho
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
           transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)'
+          WebkitTransform: 'translateZ(0)',
+          willChange: 'transform',
         }}
         className={isPlaying ? "animate-float" : ""}
         alt={`Slide ${index + 1}`}
