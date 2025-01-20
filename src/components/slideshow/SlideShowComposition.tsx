@@ -24,7 +24,6 @@ export const SlideShowComposition = ({
   const updateVolume = () => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
-      // Synchroniser l'état muet avec le volume
       audioRef.current.muted = volume === 0;
     }
   };
