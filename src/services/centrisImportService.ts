@@ -50,7 +50,7 @@ export const importCentrisListing = async (url: string, userId: string) => {
     bedrooms: response.bedrooms || null,
     bathrooms: response.bathrooms || null,
     property_type: response.property_type || null,
-    images: response.images || null,
+    images: response.original_images || response.images || null, // Utiliser les URLs originales
     user_id: userId,
   };
 

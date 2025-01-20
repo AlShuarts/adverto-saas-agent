@@ -30,17 +30,19 @@ export class ImageParser {
         const urlObj = new URL(url);
         const id = urlObj.searchParams.get('id');
         if (id && id.length === 32) {
-          console.log('URL already in correct format:', url);
-          return url;
+          // Modifier l'URL pour obtenir l'image en haute qualité
+          const highQualityUrl = `https://mspublic.centris.ca/media.ashx?id=${id}&t=pi&sm=h&w=1920&h=1080`;
+          console.log('High quality URL:', highQualityUrl);
+          return highQualityUrl;
         }
       }
 
       // Recherche d'un ID de 32 caractères hexadécimaux
       const matches = url.match(/[A-F0-9]{32}/i);
       if (matches && matches[0]) {
-        const cleanedUrl = `https://mspublic.centris.ca/media.ashx?id=${matches[0]}&t=pi&f=I`;
-        console.log('Cleaned URL:', cleanedUrl);
-        return cleanedUrl;
+        const highQualityUrl = `https://mspublic.centris.ca/media.ashx?id=${matches[0]}&t=pi&sm=h&w=1920&h=1080`;
+        console.log('High quality URL:', highQualityUrl);
+        return highQualityUrl;
       }
 
       // Si aucun ID n'est trouvé mais que l'URL semble valide
