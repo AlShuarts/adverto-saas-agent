@@ -46,18 +46,16 @@ export const SlideShowComposition = ({
 
   // Gérer le changement d'image avec pause
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-
-    if (isPlaying) {
-      timer = setInterval(() => {
+    const changeImage = () => {
+      if (isPlaying) {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 5000);
-    }
+      }
+    };
+
+    const timer = setInterval(changeImage, 5000);
 
     return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
+      clearInterval(timer);
     };
   }, [isPlaying, images.length]);
 

@@ -31,23 +31,12 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="aspect-video w-full relative">
-        <Player
-          component={SlideShowComposition}
-          inputProps={{ 
-            images,
-            musicUrl: musicUrl || undefined,
-            isPlaying,
-            volume: isMuted ? 0 : volume
-          }}
-          durationInFrames={images.length * 60}
-          fps={30}
-          compositionWidth={1920}
-          compositionHeight={1080}
-          style={{
-            width: '100%',
-            height: '100%',
-          }}
+      <div className="aspect-video w-full relative bg-black">
+        <SlideShowComposition
+          images={images}
+          musicUrl={musicUrl || undefined}
+          isPlaying={isPlaying}
+          volume={isMuted ? 0 : volume}
         />
       </div>
       
