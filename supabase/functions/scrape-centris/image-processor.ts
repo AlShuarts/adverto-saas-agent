@@ -19,31 +19,46 @@ export class ImageProcessor {
       const enhancedImageUrl = this.enhanceImageQuality(imageUrl);
       console.log('URL améliorée:', enhancedImageUrl);
 
-      // Télécharger l'image depuis Centris
+      // Headers spécifiques pour Centris
+      const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Fetch-Dest': 'image',
+        'Sec-Fetch-Mode': 'no-cors',
+        'Sec-Fetch-Site': 'cross-site',
+        'Referer': 'https://www.centris.ca/',
+        'Origin': 'https://www.centris.ca'
+      };
+
+      // Télécharger l'image depuis Centris avec un timeout plus long
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+
       const imageResponse = await fetch(enhancedImageUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Sec-Fetch-Dest': 'image',
-          'Sec-Fetch-Mode': 'no-cors',
-          'Sec-Fetch-Site': 'cross-site',
-          'Referer': 'https://www.centris.ca/'
-        }
+        headers,
+        signal: controller.signal
       });
 
+      clearTimeout(timeout);
+
       if (!imageResponse.ok) {
-        console.error('Échec du téléchargement de l\'image:', imageResponse.status, imageResponse.statusText);
+        console.error('Échec du téléchargement de l\'image:', {
+          status: imageResponse.status,
+          statusText: imageResponse.statusText,
+          headers: Object.fromEntries(imageResponse.headers.entries())
+        });
         return { processedUrl: null, error: `Échec du téléchargement: ${imageResponse.status}` };
       }
 
       const contentType = imageResponse.headers.get('content-type');
       console.log('Type de contenu:', contentType);
 
-      if (!contentType || !contentType.startsWith('image/')) {
-        console.error('Type de contenu invalide:', contentType);
+      // Vérification plus souple du type de contenu
+      if (!contentType || (!contentType.includes('image/'))) {
+        console.error('Type de contenu reçu:', contentType);
         return { processedUrl: null, error: 'Type de contenu invalide' };
       }
 
@@ -56,11 +71,11 @@ export class ImageProcessor {
       }
 
       // Générer un nom de fichier unique
-      const fileExt = 'jpg'; // Centris utilise toujours des JPG
+      const fileExt = 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       console.log('Nom du fichier généré:', fileName);
 
-      // Upload vers Supabase Storage avec une meilleure qualité
+      // Upload vers Supabase Storage
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
         .upload(fileName, imageBlob, {
