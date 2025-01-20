@@ -8,6 +8,48 @@ export class HtmlExtractor {
     this.doc = doc;
   }
 
+  private extractFromPhotoViewer(): Set<string> {
+    const imageUrls = new Set<string>();
+    
+    try {
+      // Trouver le conteneur principal du visualiseur de photos
+      const photoViewer = this.doc.querySelector('.photoViewer.photoViewerOnPage');
+      if (photoViewer) {
+        console.log('PhotoViewer trouvé');
+        
+        // Chercher dans la galerie
+        const gallery = photoViewer.querySelector('.gallery');
+        if (gallery) {
+          console.log('Gallery trouvée');
+          
+          // Chercher toutes les images dans les wrappers
+          const imageWrappers = gallery.querySelectorAll('.image-wrapper');
+          console.log(`Nombre d'image-wrappers trouvés: ${imageWrappers.length}`);
+          
+          imageWrappers.forEach((wrapper: Element) => {
+            const fullImg = wrapper.querySelector('img#fullImg');
+            if (fullImg) {
+              const src = fullImg.getAttribute('src');
+              if (src && UrlValidator.isValid(src)) {
+                const cleanedUrl = UrlGenerator.cleanImageUrl(src);
+                if (cleanedUrl) {
+                  imageUrls.add(cleanedUrl);
+                  console.log('Image trouvée dans PhotoViewer:', cleanedUrl);
+                }
+              }
+            }
+          });
+        }
+      } else {
+        console.log('PhotoViewer non trouvé, utilisation des méthodes alternatives');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'extraction depuis PhotoViewer:', error);
+    }
+
+    return imageUrls;
+  }
+
   private extractFromHtmlContent(): Set<string> {
     const imageUrls = new Set<string>();
     const htmlContent = this.doc.documentElement.innerHTML;
@@ -63,11 +105,21 @@ export class HtmlExtractor {
   extract(): string[] {
     console.log('Démarrage de l\'extraction des images');
     
-    const allUrls = new Set<string>([
-      ...this.extractFromHtmlContent(),
-      ...this.extractFromImageElements(),
-      ...this.extractFromCentrisIds()
-    ]);
+    // Commencer par la méthode spécifique du PhotoViewer
+    const photoViewerUrls = this.extractFromPhotoViewer();
+    console.log(`URLs trouvées dans PhotoViewer: ${photoViewerUrls.size}`);
+    
+    // Si aucune image n'est trouvée dans le PhotoViewer, utiliser les méthodes alternatives
+    let allUrls: Set<string>;
+    if (photoViewerUrls.size > 0) {
+      allUrls = photoViewerUrls;
+    } else {
+      allUrls = new Set<string>([
+        ...this.extractFromHtmlContent(),
+        ...this.extractFromImageElements(),
+        ...this.extractFromCentrisIds()
+      ]);
+    }
 
     const uniqueUrls = [...allUrls];
     console.log(`URLs d'images uniques trouvées: ${uniqueUrls.length}`);
