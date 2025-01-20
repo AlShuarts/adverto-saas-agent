@@ -12,59 +12,82 @@ export class HtmlExtractor {
     const imageUrls = new Set<string>();
     
     try {
-      // Recherche dans le conteneur principal des photos
-      const photoViewers = this.doc.querySelectorAll('.photoViewer, .photoViewerOnPage, #divMainPhoto');
-      console.log(`Nombre de photoViewers trouvés: ${photoViewers.length}`);
+      console.log('Début de l\'extraction des images du PhotoViewer');
       
-      photoViewers.forEach((viewer) => {
-        // Recherche de l'image principale
-        const mainImages = viewer.querySelectorAll('img#fullImg, img.mainImg, .MainPhoto img');
-        console.log(`Nombre d'images principales trouvées: ${mainImages.length}`);
+      // Recherche dans tous les conteneurs possibles d'images
+      const containers = [
+        '.MainImg',
+        '.MainPhoto',
+        '.PropertyPhoto',
+        '.PropertyGallery',
+        '.ImageGallery',
+        '.Slideshow',
+        '.carouselbox',
+        '.carousel-item',
+        '#divMainPhoto',
+        '.photoViewer',
+        '.photoViewerOnPage'
+      ];
+      
+      containers.forEach(selector => {
+        const elements = this.doc.querySelectorAll(selector);
+        console.log(`Recherche dans ${selector}: ${elements.length} éléments trouvés`);
         
-        mainImages.forEach((img: Element) => {
-          const src = img.getAttribute('src');
-          const dataSrc = img.getAttribute('data-src');
-          console.log('Image source trouvée:', src || dataSrc);
+        elements.forEach((container) => {
+          // Recherche des images dans le conteneur
+          const images = container.querySelectorAll('img');
+          console.log(`${images.length} images trouvées dans ${selector}`);
           
-          if (src && UrlValidator.isValid(src)) {
-            const cleanedUrl = UrlGenerator.cleanImageUrl(src);
-            if (cleanedUrl) imageUrls.add(cleanedUrl);
-          }
-          if (dataSrc && UrlValidator.isValid(dataSrc)) {
-            const cleanedUrl = UrlGenerator.cleanImageUrl(dataSrc);
-            if (cleanedUrl) imageUrls.add(cleanedUrl);
-          }
-        });
-
-        // Recherche dans la galerie de miniatures
-        const thumbnails = viewer.querySelectorAll('.thumbPhoto, .Thumbnail img, .thumbnail img');
-        console.log(`Nombre de miniatures trouvées: ${thumbnails.length}`);
-        
-        thumbnails.forEach((thumb: Element) => {
-          const src = thumb.getAttribute('src');
-          const dataSrc = thumb.getAttribute('data-src');
-          const onclick = thumb.getAttribute('onclick');
-          
-          if (onclick) {
-            const match = onclick.match(/showPhoto\('([^']+)'/);
-            if (match && match[1]) {
-              const imageId = match[1];
-              const highQualityUrl = UrlGenerator.createHighQualityUrl(imageId);
-              imageUrls.add(highQualityUrl);
-              console.log('URL haute qualité générée depuis onclick:', highQualityUrl);
+          images.forEach((img: Element) => {
+            const src = img.getAttribute('src');
+            const dataSrc = img.getAttribute('data-src');
+            const dataOriginal = img.getAttribute('data-original');
+            
+            if (src) {
+              console.log('Image source trouvée:', src);
+              if (UrlValidator.isValid(src)) {
+                const cleanedUrl = UrlGenerator.cleanImageUrl(src);
+                if (cleanedUrl) imageUrls.add(cleanedUrl);
+              }
             }
-          }
-          
-          if (src && UrlValidator.isValid(src)) {
-            const cleanedUrl = UrlGenerator.cleanImageUrl(src);
-            if (cleanedUrl) imageUrls.add(cleanedUrl);
-          }
-          if (dataSrc && UrlValidator.isValid(dataSrc)) {
-            const cleanedUrl = UrlGenerator.cleanImageUrl(dataSrc);
-            if (cleanedUrl) imageUrls.add(cleanedUrl);
-          }
+            
+            if (dataSrc) {
+              console.log('Data-src trouvé:', dataSrc);
+              if (UrlValidator.isValid(dataSrc)) {
+                const cleanedUrl = UrlGenerator.cleanImageUrl(dataSrc);
+                if (cleanedUrl) imageUrls.add(cleanedUrl);
+              }
+            }
+            
+            if (dataOriginal) {
+              console.log('Data-original trouvé:', dataOriginal);
+              if (UrlValidator.isValid(dataOriginal)) {
+                const cleanedUrl = UrlGenerator.cleanImageUrl(dataOriginal);
+                if (cleanedUrl) imageUrls.add(cleanedUrl);
+              }
+            }
+          });
         });
       });
+
+      // Recherche spécifique des miniatures
+      const thumbnails = this.doc.querySelectorAll('.thumbPhoto, .Thumbnail img, .thumbnail img');
+      console.log(`${thumbnails.length} miniatures trouvées`);
+      
+      thumbnails.forEach((thumb: Element) => {
+        const onclick = thumb.getAttribute('onclick');
+        if (onclick) {
+          const match = onclick.match(/showPhoto\('([^']+)'/);
+          if (match && match[1]) {
+            const imageId = match[1];
+            const highQualityUrl = UrlGenerator.createHighQualityUrl(imageId);
+            imageUrls.add(highQualityUrl);
+            console.log('URL haute qualité générée depuis onclick:', highQualityUrl);
+          }
+        }
+      });
+
+      console.log(`Total d'URLs uniques trouvées: ${imageUrls.size}`);
     } catch (error) {
       console.error('Erreur lors de l\'extraction depuis PhotoViewer:', error);
     }
@@ -76,25 +99,47 @@ export class HtmlExtractor {
     const imageUrls = new Set<string>();
     
     try {
+      console.log('Début de l\'extraction des images de la galerie');
+      
       // Recherche dans toutes les galeries possibles
-      const galleries = this.doc.querySelectorAll('.Gallery, .PropertyGallery, .ImageGallery, .gallery');
-      console.log(`Nombre de galeries trouvées: ${galleries.length}`);
+      const galleries = this.doc.querySelectorAll([
+        '.Gallery',
+        '.PropertyGallery',
+        '.ImageGallery',
+        '.gallery',
+        '.image-gallery',
+        '.photo-gallery'
+      ].join(', '));
+      
+      console.log(`${galleries.length} galeries trouvées`);
       
       galleries.forEach((gallery) => {
         const images = gallery.querySelectorAll('img');
-        console.log(`Nombre d'images trouvées dans la galerie: ${images.length}`);
+        console.log(`${images.length} images trouvées dans la galerie`);
         
         images.forEach((img: Element) => {
           const src = img.getAttribute('src');
           const dataSrc = img.getAttribute('data-src');
+          const srcset = img.getAttribute('srcset');
           
           if (src && UrlValidator.isValid(src)) {
             const cleanedUrl = UrlGenerator.cleanImageUrl(src);
             if (cleanedUrl) imageUrls.add(cleanedUrl);
           }
+          
           if (dataSrc && UrlValidator.isValid(dataSrc)) {
             const cleanedUrl = UrlGenerator.cleanImageUrl(dataSrc);
             if (cleanedUrl) imageUrls.add(cleanedUrl);
+          }
+          
+          if (srcset) {
+            const urls = srcset.split(',')
+              .map(s => s.trim().split(' ')[0])
+              .filter(url => UrlValidator.isValid(url))
+              .map(url => UrlGenerator.cleanImageUrl(url))
+              .filter((url): url is string => url !== null);
+            
+            urls.forEach(url => imageUrls.add(url));
           }
         });
       });
