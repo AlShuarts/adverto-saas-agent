@@ -40,6 +40,7 @@ export const SlideShowComposition = ({
           src={image}
           index={index}
           currentIndex={currentIndex}
+          isPlaying={isPlaying}
         />
       ))}
     </div>

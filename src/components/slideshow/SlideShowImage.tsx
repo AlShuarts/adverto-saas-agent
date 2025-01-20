@@ -2,9 +2,10 @@ type SlideShowImageProps = {
   src: string;
   index: number;
   currentIndex: number;
+  isPlaying: boolean;
 };
 
-export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps) => {
+export const SlideShowImage = ({ src, index, currentIndex, isPlaying }: SlideShowImageProps) => {
   return (
     <div
       style={{ 
@@ -30,7 +31,7 @@ export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps
           maxWidth: '100%',
           maxHeight: '100%'
         }}
-        className="animate-float"
+        className={isPlaying ? "animate-float" : ""}
         alt={`Slide ${index + 1}`}
         onError={(e) => {
           console.error(`Error loading image ${index + 1}:`, src, e);
