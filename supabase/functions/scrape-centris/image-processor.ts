@@ -16,8 +16,36 @@ export class ImageProcessor {
   }
 
   private cleanImageUrl(url: string): string {
-    // Demander une image de très haute qualité (4096x3072)
-    return url.includes('&w=') ? url : `${url}&w=4096&h=3072&sm=c`;
+    // Paramètres pour obtenir la meilleure qualité possible
+    const params = new URLSearchParams({
+      w: '4096',          // Largeur maximale
+      h: '3072',          // Hauteur maximale
+      sm: 'both',         // Scale mode: both pour conserver les proportions
+      q: '100',           // Qualité maximale
+      mt: 'true',         // Maintenir la transparence si présente
+      watermark: 'false'  // Désactiver le filigrane
+    });
+
+    // Si l'URL contient déjà des paramètres, on les remplace
+    const baseUrl = url.split('?')[0];
+    return `${baseUrl}?${params.toString()}`;
+  }
+
+  private async getImageDimensions(blob: Blob): Promise<{ width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(blob);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        resolve({ width: img.width, height: img.height });
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        reject(new Error("Impossible de lire les dimensions de l'image"));
+      };
+    });
   }
 
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
@@ -25,16 +53,19 @@ export class ImageProcessor {
       console.log('Traitement de l\'image:', imageUrl);
 
       if (!this.isValidImageUrl(imageUrl)) {
+        console.error('URL invalide:', imageUrl);
         return { processedUrl: null, error: 'URL invalide' };
       }
 
       const cleanedUrl = this.cleanImageUrl(imageUrl);
-      console.log('URL nettoyée:', cleanedUrl);
+      console.log('URL nettoyée avec paramètres de qualité:', cleanedUrl);
 
       const response = await fetch(cleanedUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': '*/*',
+          'Accept': 'image/*,*/*;q=0.9',  // Accepte tous les types d'images en priorité
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'no-cache',
           'Referer': 'https://www.centris.ca/',
         }
       });
@@ -50,8 +81,15 @@ export class ImageProcessor {
         return { processedUrl: null, error: 'Image vide' };
       }
 
-      console.log('Taille de l\'image téléchargée:', blob.size, 'bytes');
-      console.log('Type MIME de l\'image:', blob.type);
+      // Logs détaillés sur l'image téléchargée
+      console.log('Informations sur l\'image téléchargée:');
+      console.log('- Taille:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
+      console.log('- Type MIME:', blob.type);
+
+      // Vérification de la taille minimale attendue (au moins 1 MB pour une image HD)
+      if (blob.size < 1024 * 1024) {
+        console.warn('⚠️ Attention: Image de petite taille détectée');
+      }
 
       // Conserver l'extension originale de l'image
       const fileExt = blob.type.split('/')[1] || 'jpg';
@@ -63,7 +101,7 @@ export class ImageProcessor {
         .upload(fileName, blob, {
           contentType: blob.type,
           duplex: 'half',
-          cacheControl: '3600',
+          cacheControl: '31536000', // Cache d'un an pour les images statiques
           upsert: false
         });
 
