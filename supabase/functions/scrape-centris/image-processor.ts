@@ -16,7 +16,8 @@ export class ImageProcessor {
   }
 
   private cleanImageUrl(url: string): string {
-    return url.includes('&w=') ? url : `${url}&w=1024&h=768&sm=c`;
+    // Demander une image de haute qualité (2048x1536)
+    return url.includes('&w=') ? url : `${url}&w=2048&h=1536&sm=c`;
   }
 
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
