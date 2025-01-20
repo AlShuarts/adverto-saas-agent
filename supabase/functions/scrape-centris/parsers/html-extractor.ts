@@ -12,45 +12,59 @@ export class HtmlExtractor {
     const imageUrls = new Set<string>();
     
     try {
-      // Trouver le conteneur principal du visualiseur de photos
-      const photoViewer = this.doc.querySelector('#divMainPhoto');
-      if (photoViewer) {
-        console.log('PhotoViewer trouvé');
+      // Recherche dans le conteneur principal des photos
+      const photoViewers = this.doc.querySelectorAll('.photoViewer, .photoViewerOnPage, #divMainPhoto');
+      console.log(`Nombre de photoViewers trouvés: ${photoViewers.length}`);
+      
+      photoViewers.forEach((viewer) => {
+        // Recherche de l'image principale
+        const mainImages = viewer.querySelectorAll('img#fullImg, img.mainImg, .MainPhoto img');
+        console.log(`Nombre d'images principales trouvées: ${mainImages.length}`);
         
-        // Chercher l'image principale
-        const fullImg = photoViewer.querySelector('img#fullImg');
-        if (fullImg) {
-          const src = fullImg.getAttribute('src');
-          console.log('Image principale trouvée avec src:', src);
+        mainImages.forEach((img: Element) => {
+          const src = img.getAttribute('src');
+          const dataSrc = img.getAttribute('data-src');
+          console.log('Image source trouvée:', src || dataSrc);
           
           if (src && UrlValidator.isValid(src)) {
             const cleanedUrl = UrlGenerator.cleanImageUrl(src);
-            if (cleanedUrl) {
-              imageUrls.add(cleanedUrl);
-              console.log('URL nettoyée ajoutée:', cleanedUrl);
-            }
+            if (cleanedUrl) imageUrls.add(cleanedUrl);
           }
-        }
+          if (dataSrc && UrlValidator.isValid(dataSrc)) {
+            const cleanedUrl = UrlGenerator.cleanImageUrl(dataSrc);
+            if (cleanedUrl) imageUrls.add(cleanedUrl);
+          }
+        });
 
-        // Chercher les miniatures pour obtenir tous les IDs d'images
-        const thumbnails = this.doc.querySelectorAll('.thumbPhoto');
+        // Recherche dans la galerie de miniatures
+        const thumbnails = viewer.querySelectorAll('.thumbPhoto, .Thumbnail img, .thumbnail img');
         console.log(`Nombre de miniatures trouvées: ${thumbnails.length}`);
         
         thumbnails.forEach((thumb: Element) => {
+          const src = thumb.getAttribute('src');
+          const dataSrc = thumb.getAttribute('data-src');
           const onclick = thumb.getAttribute('onclick');
+          
           if (onclick) {
             const match = onclick.match(/showPhoto\('([^']+)'/);
             if (match && match[1]) {
               const imageId = match[1];
               const highQualityUrl = UrlGenerator.createHighQualityUrl(imageId);
               imageUrls.add(highQualityUrl);
-              console.log('URL haute qualité générée depuis miniature:', highQualityUrl);
+              console.log('URL haute qualité générée depuis onclick:', highQualityUrl);
             }
           }
+          
+          if (src && UrlValidator.isValid(src)) {
+            const cleanedUrl = UrlGenerator.cleanImageUrl(src);
+            if (cleanedUrl) imageUrls.add(cleanedUrl);
+          }
+          if (dataSrc && UrlValidator.isValid(dataSrc)) {
+            const cleanedUrl = UrlGenerator.cleanImageUrl(dataSrc);
+            if (cleanedUrl) imageUrls.add(cleanedUrl);
+          }
         });
-      } else {
-        console.log('PhotoViewer non trouvé');
-      }
+      });
     } catch (error) {
       console.error('Erreur lors de l\'extraction depuis PhotoViewer:', error);
     }
@@ -58,18 +72,34 @@ export class HtmlExtractor {
     return imageUrls;
   }
 
-  private extractFromHtmlContent(): Set<string> {
+  private extractFromGallery(): Set<string> {
     const imageUrls = new Set<string>();
-    const htmlContent = this.doc.documentElement.innerHTML;
     
-    // Rechercher tous les IDs d'images Centris
-    const idRegex = /showPhoto\('([A-F0-9]{32})'\)/g;
-    let match;
-    while ((match = idRegex.exec(htmlContent)) !== null) {
-      const imageId = match[1];
-      const url = UrlGenerator.createHighQualityUrl(imageId);
-      imageUrls.add(url);
-      console.log('ID d\'image trouvé dans le HTML:', imageId);
+    try {
+      // Recherche dans toutes les galeries possibles
+      const galleries = this.doc.querySelectorAll('.Gallery, .PropertyGallery, .ImageGallery, .gallery');
+      console.log(`Nombre de galeries trouvées: ${galleries.length}`);
+      
+      galleries.forEach((gallery) => {
+        const images = gallery.querySelectorAll('img');
+        console.log(`Nombre d'images trouvées dans la galerie: ${images.length}`);
+        
+        images.forEach((img: Element) => {
+          const src = img.getAttribute('src');
+          const dataSrc = img.getAttribute('data-src');
+          
+          if (src && UrlValidator.isValid(src)) {
+            const cleanedUrl = UrlGenerator.cleanImageUrl(src);
+            if (cleanedUrl) imageUrls.add(cleanedUrl);
+          }
+          if (dataSrc && UrlValidator.isValid(dataSrc)) {
+            const cleanedUrl = UrlGenerator.cleanImageUrl(dataSrc);
+            if (cleanedUrl) imageUrls.add(cleanedUrl);
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'extraction depuis la galerie:', error);
     }
 
     return imageUrls;
@@ -78,24 +108,19 @@ export class HtmlExtractor {
   extract(): string[] {
     console.log('Démarrage de l\'extraction des images');
     
-    // Commencer par la méthode spécifique du PhotoViewer
+    // Commencer par la méthode du PhotoViewer
     const photoViewerUrls = this.extractFromPhotoViewer();
     console.log(`URLs trouvées dans PhotoViewer: ${photoViewerUrls.size}`);
     
-    // Si aucune image n'est trouvée dans le PhotoViewer, utiliser les méthodes alternatives
-    let allUrls: Set<string>;
-    if (photoViewerUrls.size > 0) {
-      allUrls = photoViewerUrls;
-      console.log('Utilisation des URLs du PhotoViewer');
-    } else {
-      console.log('Aucune URL trouvée dans PhotoViewer, utilisation des méthodes alternatives');
-      allUrls = new Set<string>([
-        ...this.extractFromHtmlContent()
-      ]);
-    }
-
+    // Si aucune image n'est trouvée dans le PhotoViewer, essayer la galerie
+    const galleryUrls = this.extractFromGallery();
+    console.log(`URLs trouvées dans la galerie: ${galleryUrls.size}`);
+    
+    // Combiner toutes les URLs uniques
+    const allUrls = new Set([...photoViewerUrls, ...galleryUrls]);
+    
     const uniqueUrls = [...allUrls];
-    console.log(`URLs d'images uniques trouvées: ${uniqueUrls.length}`);
+    console.log(`Nombre total d'URLs d'images uniques trouvées: ${uniqueUrls.length}`);
     console.log('URLs des images:', uniqueUrls);
     
     return uniqueUrls;
