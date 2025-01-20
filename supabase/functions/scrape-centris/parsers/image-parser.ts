@@ -13,7 +13,8 @@ export class ImageParser {
       console.log('URL invalide (vide)');
       return false;
     }
-    const isValid = url.includes('mspublic.centris.ca/media.ashx');
+    // Assouplir la validation pour accepter plus de formats d'URLs
+    const isValid = url.includes('centris.ca') && url.includes('media');
     console.log(`Validation URL: ${url} -> ${isValid}`);
     return isValid;
   }
@@ -22,6 +23,11 @@ export class ImageParser {
     try {
       console.log('Nettoyage de l\'URL:', url);
       
+      // Si l'URL ne contient pas media.ashx, on la retourne telle quelle
+      if (!url.includes('media.ashx')) {
+        return url;
+      }
+
       const originalUrl = new URL(url);
       const params = new URLSearchParams(originalUrl.search);
       
@@ -35,11 +41,10 @@ export class ImageParser {
       const newParams = new URLSearchParams();
       newParams.set('id', imageId);
       newParams.set('t', 'photo');
-      newParams.set('sm', 'c'); // Mode de redimensionnement
-      newParams.set('w', '4096'); // Largeur maximale
-      newParams.set('h', '3072'); // Hauteur maximale
-      newParams.set('quality', '100'); // Qualité maximale
-      newParams.set('scale', 'both'); // Échelle optimale
+      newParams.set('sm', 'c');
+      newParams.set('w', '1024'); // Réduire la taille pour éviter les timeouts
+      newParams.set('h', '768');
+      newParams.set('quality', '80'); // Réduire la qualité pour accélérer le téléchargement
 
       const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
       console.log('URL d\'image nettoyée:', finalUrl);
@@ -54,63 +59,43 @@ export class ImageParser {
     console.log('Début de l\'extraction des images');
     const imageUrls: string[] = [];
     
-    // Recherche dans les balises img avec des sélecteurs spécifiques à Centris
-    const selectors = [
-      'img[src*="centris.ca"]',
-      'img[data-src*="centris.ca"]',
-      'img[data-original*="centris.ca"]',
-      '.MainImg img',
-      '#divMainPhoto img',
-      '.photo-gallery img',
-      '.carouselbox img',
-      '.carousel-item img',
-      '.property-thumbnail img',
-      '.property-image img',
-      '.listing-image img',
-      // Nouveaux sélecteurs plus spécifiques
-      '#divMainPhoto img[src*="media.ashx"]',
-      '#divMainPhoto img[data-src*="media.ashx"]',
-      '.carouselbox img[src*="media.ashx"]',
-      '.carouselbox img[data-src*="media.ashx"]',
-      'img[src*="mspublic.centris.ca"]',
-      'img[data-src*="mspublic.centris.ca"]',
-      // Sélecteurs pour les conteneurs d'images
-      '.imgCarouselbox img',
-      '.imgGallery img',
-      '.property-media img'
-    ];
-    
-    for (const selector of selectors) {
-      const elements = this.doc.querySelectorAll(selector);
-      console.log(`${elements.length} éléments trouvés avec le sélecteur ${selector}`);
+    // Recherche dans tous les éléments img de la page
+    const allImages = this.doc.getElementsByTagName('img');
+    console.log(`Nombre total d'images trouvées: ${allImages.length}`);
+
+    for (const img of allImages) {
+      const src = img.getAttribute("src");
+      const dataSrc = img.getAttribute("data-src");
+      const dataOriginal = img.getAttribute("data-original");
+      const srcset = img.getAttribute("srcset");
       
-      for (const img of elements) {
-        const src = img.getAttribute("src");
-        const dataSrc = img.getAttribute("data-src");
-        const dataOriginal = img.getAttribute("data-original");
-        const srcset = img.getAttribute("srcset");
-        
-        [src, dataSrc, dataOriginal].forEach(url => {
-          if (url && this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
+      console.log('Attributs de l\'image:', { src, dataSrc, dataOriginal, srcset });
+
+      [src, dataSrc, dataOriginal].forEach(url => {
+        if (url && !this.seenUrls.has(url)) {
+          if (this.isValidImageUrl(url)) {
             const cleanedUrl = this.cleanImageUrl(url);
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
             console.log('Image trouvée et nettoyée:', cleanedUrl);
+          } else {
+            console.log('URL ignorée car invalide:', url);
+          }
+        }
+      });
+
+      if (srcset) {
+        const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
+        console.log('URLs trouvées dans srcset:', srcsetUrls);
+        
+        srcsetUrls.forEach(url => {
+          if (!this.seenUrls.has(url) && this.isValidImageUrl(url)) {
+            const cleanedUrl = this.cleanImageUrl(url);
+            this.seenUrls.add(cleanedUrl);
+            imageUrls.push(cleanedUrl);
+            console.log('Image trouvée dans srcset et nettoyée:', cleanedUrl);
           }
         });
-
-        // Traitement du srcset si présent
-        if (srcset) {
-          const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
-          srcsetUrls.forEach(url => {
-            if (this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
-              const cleanedUrl = this.cleanImageUrl(url);
-              this.seenUrls.add(cleanedUrl);
-              imageUrls.push(cleanedUrl);
-              console.log('Image trouvée dans srcset et nettoyée:', cleanedUrl);
-            }
-          });
-        }
       }
     }
 
@@ -118,10 +103,11 @@ export class ImageParser {
     const scripts = this.doc.getElementsByTagName('script');
     for (const script of scripts) {
       const content = script.textContent || '';
-      const matches = content.match(/https:\/\/mspublic\.centris\.ca\/media\.ashx\?[^"'\s]+/g);
+      const matches = content.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|gif|webp)[^"'\s]*/gi);
       if (matches) {
+        console.log('URLs trouvées dans les scripts:', matches);
         matches.forEach(url => {
-          if (this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
+          if (!this.seenUrls.has(url) && this.isValidImageUrl(url)) {
             const cleanedUrl = this.cleanImageUrl(url);
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);

@@ -33,13 +33,16 @@ serve(async (req) => {
       ...scrapingHeaders,
       'Referer': 'https://www.centris.ca/',
       'Origin': 'https://www.centris.ca',
-      'Cookie': ''  // Ajout d'un cookie vide pour éviter les redirections
     };
 
     console.log('Headers de la requête:', headers);
+    
+    // Ajouter un délai aléatoire pour éviter la détection
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+    
     const response = await fetch(url, { 
       headers,
-      redirect: 'follow'  // Suivre les redirections
+      redirect: 'follow'
     });
     
     if (!response.ok) {
@@ -72,17 +75,21 @@ serve(async (req) => {
     
     if (imageUrls.length === 0) {
       console.error('Aucune image trouvée dans le HTML');
-      throw new Error("Aucune image n'a été trouvée dans l'annonce");
+      throw new Error("Aucune image n'a été trouvée dans l'annonce. Veuillez vérifier que l'URL est correcte et que l'annonce contient des images.");
     }
     
     const processedImages: string[] = [];
+    let processedCount = 0;
     
     for (const imageUrl of imageUrls) {
-      console.log('Traitement de l\'URL d\'image:', imageUrl);
+      if (processedCount >= 3) break; // Limiter à 3 images pour commencer
+      
+      console.log(`Traitement de l'image ${processedCount + 1}/${imageUrls.length}:`, imageUrl);
       const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
       
       if (processedUrl) {
         processedImages.push(processedUrl);
+        processedCount++;
         console.log('Image traitée avec succès:', processedUrl);
       } else {
         console.error('Échec du traitement de l\'image:', error);
@@ -90,7 +97,7 @@ serve(async (req) => {
     }
 
     if (processedImages.length === 0) {
-      throw new Error("Impossible de traiter les images de l'annonce");
+      throw new Error("Impossible de traiter les images de l'annonce. Veuillez réessayer.");
     }
 
     const listing: ListingData = {
