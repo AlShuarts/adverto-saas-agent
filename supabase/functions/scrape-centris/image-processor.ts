@@ -20,20 +20,25 @@ export class ImageProcessor {
       const originalUrl = new URL(url);
       const params = new URLSearchParams(originalUrl.search);
       
-      // Extraire l'ID de l'image
+      // Garder uniquement l'ID de l'image
       const imageId = params.get('id');
       
-      // Construire une nouvelle URL avec les paramètres optimaux pour la haute qualité
+      // Construire une nouvelle URL avec les paramètres originaux
       const newParams = new URLSearchParams();
       newParams.set('id', imageId || '');
-      newParams.set('t', 'pi'); // Type: photo
-      newParams.set('w', '4096'); // Largeur maximale supportée
-      newParams.set('h', '3072'); // Hauteur maximale supportée
-      newParams.set('sm', 'both'); // Scale mode: both pour conserver les proportions
-      newParams.set('q', '100'); // Qualité maximale
+      newParams.set('t', 'photo');
+      
+      // Garder les dimensions originales si présentes
+      if (params.has('w') && params.has('h')) {
+        newParams.set('w', params.get('w') || '1024');
+        newParams.set('h', params.get('h') || '768');
+      } else {
+        newParams.set('w', '1024');
+        newParams.set('h', '768');
+      }
 
       const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
-      console.log('URL optimisée pour haute qualité:', finalUrl);
+      console.log('URL nettoyée:', finalUrl);
       return finalUrl;
     } catch (error) {
       console.error('Erreur lors du nettoyage de l\'URL:', error);
@@ -56,11 +61,14 @@ export class ImageProcessor {
       const response = await fetch(cleanedUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/webp,image/jpeg,image/png,image/*',
-          'Accept-Encoding': 'gzip, deflate, br',
+          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+          'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
           'Referer': 'https://www.centris.ca/',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Origin': 'https://www.centris.ca',
+          'Sec-Fetch-Site': 'same-site',
+          'Sec-Fetch-Mode': 'no-cors',
+          'Sec-Fetch-Dest': 'image',
+          'Connection': 'keep-alive'
         }
       });
 
@@ -79,12 +87,6 @@ export class ImageProcessor {
       console.log('- Taille:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
       console.log('- Type:', blob.type);
 
-      // Vérifier la taille minimale pour la qualité
-      if (blob.size < 500 * 1024) { // Moins de 500KB
-        console.warn('⚠️ Image de faible qualité détectée');
-        return { processedUrl: null, error: 'Image de qualité insuffisante' };
-      }
-
       const fileExt = blob.type.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       console.log('Nom du fichier:', fileName);
@@ -93,7 +95,7 @@ export class ImageProcessor {
         .from('listings-images')
         .upload(fileName, blob, {
           contentType: blob.type,
-          cacheControl: '31536000', // Cache d'un an pour les images
+          cacheControl: '31536000',
           upsert: false
         });
 
