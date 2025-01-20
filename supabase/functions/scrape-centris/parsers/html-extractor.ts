@@ -1,5 +1,5 @@
-import { UrlValidator } from './url-validator';
-import { UrlGenerator } from './url-generator';
+import { UrlValidator } from './url-validator.ts';
+import { UrlGenerator } from './url-generator.ts';
 
 export class HtmlExtractor {
   private doc: Document;

@@ -1,3 +1,5 @@
+import { UrlValidator } from './url-validator.ts';
+
 export class UrlGenerator {
   static createHighQualityUrl(centrisId: string): string {
     return `https://mspublic.centris.ca/media.ashx?id=${centrisId}&t=pi&sm=h&w=1920&h=1080`;
