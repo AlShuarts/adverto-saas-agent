@@ -16,8 +16,8 @@ export class ImageProcessor {
   }
 
   private cleanImageUrl(url: string): string {
-    // Demander une image de haute qualité (2048x1536)
-    return url.includes('&w=') ? url : `${url}&w=2048&h=1536&sm=c`;
+    // Demander une image de très haute qualité (4096x3072)
+    return url.includes('&w=') ? url : `${url}&w=4096&h=3072&sm=c`;
   }
 
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
@@ -34,7 +34,7 @@ export class ImageProcessor {
       const response = await fetch(cleanedUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/*',
+          'Accept': '*/*',
           'Referer': 'https://www.centris.ca/',
         }
       });
@@ -51,9 +51,11 @@ export class ImageProcessor {
       }
 
       console.log('Taille de l\'image téléchargée:', blob.size, 'bytes');
-      console.log('Type de l\'image:', blob.type);
+      console.log('Type MIME de l\'image:', blob.type);
 
-      const fileName = `${crypto.randomUUID()}.jpg`;
+      // Conserver l'extension originale de l'image
+      const fileExt = blob.type.split('/')[1] || 'jpg';
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       console.log('Nom du fichier généré:', fileName);
 
       const { data: uploadData, error: uploadError } = await this.supabase.storage
