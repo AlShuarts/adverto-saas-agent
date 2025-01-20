@@ -19,7 +19,7 @@ export class ImageProcessor {
       const enhancedImageUrl = this.enhanceImageQuality(imageUrl);
       console.log('URL améliorée:', enhancedImageUrl);
 
-      // Headers spécifiques pour Centris
+      // Headers spécifiques pour Centris avec cookie et autres en-têtes importants
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
@@ -30,16 +30,19 @@ export class ImageProcessor {
         'Sec-Fetch-Mode': 'no-cors',
         'Sec-Fetch-Site': 'cross-site',
         'Referer': 'https://www.centris.ca/',
-        'Origin': 'https://www.centris.ca'
+        'Origin': 'https://www.centris.ca',
+        'Cookie': 'TS01c97684=01ef61aed0c1f741d1d6cd8e7488f6d8e3c8c3c8'
       };
 
       // Télécharger l'image depuis Centris avec un timeout plus long
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 30000);
 
+      console.log('Envoi de la requête avec les en-têtes:', headers);
       const imageResponse = await fetch(enhancedImageUrl, {
         headers,
-        signal: controller.signal
+        signal: controller.signal,
+        redirect: 'follow'
       });
 
       clearTimeout(timeout);
@@ -57,7 +60,9 @@ export class ImageProcessor {
       console.log('Type de contenu:', contentType);
 
       // Vérification plus souple du type de contenu
-      if (!contentType || (!contentType.includes('image/'))) {
+      if (!contentType) {
+        console.log('Type de contenu non spécifié, on suppose que c\'est une image');
+      } else if (!contentType.startsWith('image/')) {
         console.error('Type de contenu reçu:', contentType);
         return { processedUrl: null, error: 'Type de contenu invalide' };
       }
