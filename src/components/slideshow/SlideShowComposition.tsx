@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 import { useToast } from "@/hooks/use-toast";
-import { continueRender, delayRender } from "@remotion/core";
 
 type SlideShowCompositionProps = {
   images: string[];
@@ -11,30 +10,21 @@ type SlideShowCompositionProps = {
 export const SlideShowComposition = ({ images, musicUrl }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [audio] = useState(new Audio());
-  const [handle] = useState(() => delayRender());
   const { toast } = useToast();
 
-  const setupAudio = useCallback(async () => {
-    try {
-      if (musicUrl) {
-        audio.src = musicUrl;
-        audio.loop = true;
-        await audio.play();
-      }
-    } catch (error) {
-      console.error('Error playing background music:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de jouer la musique de fond",
-        variant: "destructive",
-      });
-    } finally {
-      continueRender(handle);
-    }
-  }, [audio, musicUrl, toast, handle]);
-
   useEffect(() => {
-    setupAudio();
+    if (musicUrl) {
+      audio.src = musicUrl;
+      audio.loop = true;
+      audio.play().catch((error) => {
+        console.error('Error playing background music:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de jouer la musique de fond",
+          variant: "destructive",
+        });
+      });
+    }
 
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -45,7 +35,7 @@ export const SlideShowComposition = ({ images, musicUrl }: SlideShowCompositionP
       audio.pause();
       audio.currentTime = 0;
     };
-  }, [images.length, audio, setupAudio]);
+  }, [images.length, audio, musicUrl, toast]);
 
   return (
     <div style={{ flex: 1, backgroundColor: 'black', position: 'relative', width: '100%', height: '100%' }}>
