@@ -16,106 +16,89 @@ export const SlideShowComposition = ({
   volume = 1
 }: SlideShowCompositionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  // Mise à jour du volume avec synchronisation mute
-  const updateVolume = () => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-      audioRef.current.muted = volume === 0;
-    }
-  };
-
-  // Gestion robuste de la lecture/pause audio
-  const handlePlayback = async () => {
-    if (!audioRef.current) return;
-
-    try {
-      if (isPlaying) {
-        await audioRef.current.play();
-      } else {
-        audioRef.current.pause();
-      }
-    } catch (error) {
-      console.error('Erreur de lecture audio:', error);
-      toast({
-        title: "Erreur audio",
-        description: "Impossible de lire l'audio",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Effet pour la gestion de la lecture/pause
+  // Gestion du changement d'image
   useEffect(() => {
-    handlePlayback();
-  }, [isPlaying]);
-
-  // Effet pour la gestion du volume
-  useEffect(() => {
-    updateVolume();
-  }, [volume]);
-
-  // Gestion du changement d'image avec nettoyage robuste
-  useEffect(() => {
-    const cleanupInterval = () => {
+    if (!isPlaying) {
       if (intervalRef.current) {
-        console.log('Nettoyage de l\'intervalle:', intervalRef.current);
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
+      }
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 5000);
+
+    return () => {
+      if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = undefined;
       }
     };
-
-    // Nettoyer l'intervalle existant avant d'en créer un nouveau
-    cleanupInterval();
-
-    // Créer un nouvel intervalle uniquement si isPlaying est true
-    if (isPlaying) {
-      intervalRef.current = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 5000);
-
-      console.log('Nouvel intervalle créé:', intervalRef.current);
-    }
-
-    // Nettoyage lors du démontage ou changement d'état
-    return cleanupInterval;
   }, [isPlaying, images.length]);
 
-  // Initialisation et nettoyage de l'audio
+  // Initialisation et gestion de l'audio
   useEffect(() => {
-    if (audioRef.current && musicUrl) {
-      audioRef.current.src = musicUrl;
-      audioRef.current.loop = true;
-      
-      const handleError = (e: Event) => {
-        console.error('Erreur audio:', e);
-        toast({
-          title: "Erreur audio",
-          description: "Erreur lors du chargement de l'audio",
-          variant: "destructive",
-        });
-      };
+    if (!musicUrl) return;
 
-      audioRef.current.addEventListener('error', handleError);
+    // Création d'un nouvel élément audio à chaque changement d'URL
+    const audio = new Audio(musicUrl);
+    audio.loop = true;
+    audioRef.current = audio;
 
-      // Nettoyage complet
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.removeEventListener('error', handleError);
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-          audioRef.current.src = '';
-        }
-      };
-    }
+    const handleError = () => {
+      console.error('Erreur audio:', audio.error);
+      toast({
+        title: "Erreur audio",
+        description: "Erreur lors du chargement de l'audio",
+        variant: "destructive",
+      });
+    };
+
+    audio.addEventListener('error', handleError);
+
+    // Nettoyage
+    return () => {
+      audio.removeEventListener('error', handleError);
+      audio.pause();
+      audio.src = '';
+      audioRef.current = null;
+    };
   }, [musicUrl, toast]);
+
+  // Gestion de la lecture/pause
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error('Erreur de lecture:', error);
+        });
+      }
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying]);
+
+  // Gestion du volume
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.volume = volume;
+    audio.muted = volume === 0;
+  }, [volume]);
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
-      <audio ref={audioRef} />
       {images.map((image, index) => (
         <SlideShowImage
           key={index}
