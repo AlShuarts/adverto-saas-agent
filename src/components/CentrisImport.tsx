@@ -10,22 +10,11 @@ export const CentrisImport = () => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const validateCentrisUrl = (url: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.hostname === "www.centris.ca" && 
-             urlObj.pathname.includes("/property") &&
-             !urlObj.pathname.includes("media");
-    } catch {
-      return false;
-    }
-  };
-
   const handleImport = async () => {
-    if (!validateCentrisUrl(url)) {
+    if (!url.includes("centris.ca")) {
       toast({
         title: "URL invalide",
-        description: "Veuillez entrer une URL d'annonce Centris valide (ex: https://www.centris.ca/fr/property/...)",
+        description: "Veuillez entrer une URL Centris valide",
         variant: "destructive",
       });
       return;
@@ -61,7 +50,7 @@ export const CentrisImport = () => {
     <div className="flex gap-4 max-w-xl mx-auto">
       <Input
         type="url"
-        placeholder="Collez l'URL de l'annonce Centris ici (ex: https://www.centris.ca/fr/property/...)"
+        placeholder="Collez l'URL de l'annonce Centris ici"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         className="flex-1"
