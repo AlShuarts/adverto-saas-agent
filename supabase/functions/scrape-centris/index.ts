@@ -32,11 +32,15 @@ serve(async (req) => {
     const headers = {
       ...scrapingHeaders,
       'Referer': 'https://www.centris.ca/',
-      'Origin': 'https://www.centris.ca'
+      'Origin': 'https://www.centris.ca',
+      'Cookie': ''  // Ajout d'un cookie vide pour éviter les redirections
     };
 
     console.log('Headers de la requête:', headers);
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, { 
+      headers,
+      redirect: 'follow'  // Suivre les redirections
+    });
     
     if (!response.ok) {
       console.error('Échec de la récupération de la page Centris:', {
@@ -72,7 +76,6 @@ serve(async (req) => {
       console.error('Aucune image trouvée dans le HTML');
     }
     
-    // Traiter toutes les images trouvées
     for (const imageUrl of imageUrls) {
       console.log('Traitement de l\'URL d\'image:', imageUrl);
       const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
