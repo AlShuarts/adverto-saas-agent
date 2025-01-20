@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 import { useToast } from "@/hooks/use-toast";
-import { continueRender, delayRender } from "@remotion/player";
+import { continueRender, delayRender } from "@remotion/core";
 
 type SlideShowCompositionProps = {
   images: string[];
