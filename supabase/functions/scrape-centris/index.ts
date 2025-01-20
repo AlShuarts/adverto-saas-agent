@@ -87,6 +87,7 @@ serve(async (req) => {
     
     if (imageUrls.length === 0) {
       console.error('Aucune image trouvée dans le HTML');
+      console.log('Contenu HTML:', html);
       throw new Error("Aucune image n'a été trouvée dans l'annonce. Veuillez vérifier que l'URL est correcte et que l'annonce contient des images.");
     }
     
@@ -121,7 +122,8 @@ serve(async (req) => {
 
     const listing: ListingData = {
       ...listingData,
-      images: processedImages
+      images: processedImages,
+      original_images: imageUrls
     };
 
     console.log('Données finales de l\'annonce:', listing);
