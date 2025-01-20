@@ -18,10 +18,23 @@ serve(async (req) => {
     const { url } = await req.json();
     console.log('URL à scraper:', url);
 
-    if (!url.includes("centris.ca")) {
-      console.error('URL invalide:', url);
+    // Validation plus stricte de l'URL
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname !== "www.centris.ca" || !urlObj.pathname.includes("/property")) {
+        console.error('URL invalide:', url);
+        return new Response(
+          JSON.stringify({ error: "L'URL doit être une annonce Centris valide" }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Erreur de parsing URL:', error);
       return new Response(
-        JSON.stringify({ error: "L'URL doit provenir de centris.ca" }),
+        JSON.stringify({ error: "URL malformée" }),
         { 
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
