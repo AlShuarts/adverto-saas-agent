@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -12,16 +12,6 @@ type SlideshowPlayerProps = {
 export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(1);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Gestion du montage/démontage
-  useEffect(() => {
-    setIsMounted(true);
-    return () => {
-      setIsMounted(false);
-      setIsPlaying(false);
-    };
-  }, []);
 
   const togglePlay = useCallback(() => {
     console.log('Toggling play state from:', isPlaying, 'to:', !isPlaying);
@@ -36,8 +26,7 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
     setVolume(value[0]);
   }, []);
 
-  // Ne rendre le composant que s'il est monté et qu'il y a une URL de musique
-  if (!isMounted || !musicUrl) {
+  if (!musicUrl) {
     return null;
   }
 
