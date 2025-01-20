@@ -11,7 +11,6 @@ export class ImageParser {
   private isValidImageUrl(url: string): boolean {
     if (!url) return false;
     
-    // Vérifie si l'URL contient des marqueurs Centris valides
     const validMarkers = [
       'mspublic.centris.ca/media',
       'centris.ca/media',
@@ -25,29 +24,24 @@ export class ImageParser {
     try {
       console.log('Cleaning URL:', url);
       
-      // Si l'URL est déjà au format media.ashx, vérifier et retourner
+      // Si l'URL contient déjà un ID Centris
       if (url.includes('media.ashx')) {
         const urlObj = new URL(url);
         const id = urlObj.searchParams.get('id');
         if (id && id.length === 32) {
-          // Modifier l'URL pour obtenir l'image en haute qualité
-          const highQualityUrl = `https://mspublic.centris.ca/media.ashx?id=${id}&t=pi&sm=h&w=1920&h=1080`;
-          console.log('High quality URL:', highQualityUrl);
-          return highQualityUrl;
+          // Utiliser directement l'URL Centris en haute résolution
+          return `https://mspublic.centris.ca/media.ashx?id=${id}&t=pi&sm=h&w=1920&h=1080`;
         }
       }
 
-      // Recherche d'un ID de 32 caractères hexadécimaux
+      // Rechercher un ID dans l'URL
       const matches = url.match(/[A-F0-9]{32}/i);
       if (matches && matches[0]) {
-        const highQualityUrl = `https://mspublic.centris.ca/media.ashx?id=${matches[0]}&t=pi&sm=h&w=1920&h=1080`;
-        console.log('High quality URL:', highQualityUrl);
-        return highQualityUrl;
+        return `https://mspublic.centris.ca/media.ashx?id=${matches[0]}&t=pi&sm=h&w=1920&h=1080`;
       }
 
-      // Si aucun ID n'est trouvé mais que l'URL semble valide
+      // Si c'est une URL valide mais sans ID
       if (this.isValidImageUrl(url)) {
-        console.log('Valid URL but no ID found:', url);
         return url;
       }
 
@@ -63,15 +57,15 @@ export class ImageParser {
     console.log('Starting image extraction');
     const imageUrls = new Set<string>();
     
-    // Récupérer tout le contenu HTML pour analyse
+    // Récupérer tout le contenu HTML
     const htmlContent = this.doc.documentElement.innerHTML;
     
-    // Rechercher toutes les URLs contenant des marqueurs Centris
+    // Rechercher toutes les URLs Centris
     const urlRegex = /https:\/\/[^"'\s)}>]*(?:centris\.ca|media\.ashx)[^"'\s)}>]*/g;
     const directUrls = htmlContent.match(urlRegex) || [];
     console.log(`Found ${directUrls.length} direct URLs in HTML`);
     
-    // Traiter les URLs trouvées directement dans le HTML
+    // Traiter les URLs trouvées
     directUrls.forEach(url => {
       if (this.isValidImageUrl(url)) {
         const cleanedUrl = this.cleanImageUrl(url);
@@ -79,22 +73,22 @@ export class ImageParser {
       }
     });
 
-    // Rechercher les IDs d'images dans le HTML
+    // Rechercher les IDs d'images
     const idMatches = htmlContent.match(/[A-F0-9]{32}/gi) || [];
     console.log(`Found ${idMatches.length} image IDs`);
     
     idMatches.forEach(id => {
-      const url = `https://mspublic.centris.ca/media.ashx?id=${id}&t=pi&f=I`;
+      // Utiliser directement l'URL haute résolution
+      const url = `https://mspublic.centris.ca/media.ashx?id=${id}&t=pi&sm=h&w=1920&h=1080`;
       imageUrls.add(url);
     });
 
-    // Parcourir tous les éléments img avec les sélecteurs spécifiés
+    // Parcourir les éléments img
     const imageSelectors = this.doc.querySelectorAll('img');
     console.log(`Found ${imageSelectors.length} img elements`);
 
     imageSelectors.forEach((img: any) => {
-      const attributes = ['src', 'data-src', 'data-original', 'srcset'];
-      attributes.forEach(attr => {
+      ['src', 'data-src', 'data-original', 'srcset'].forEach(attr => {
         const value = img.getAttribute(attr);
         if (value && this.isValidImageUrl(value)) {
           const cleanedUrl = this.cleanImageUrl(value);
@@ -102,19 +96,6 @@ export class ImageParser {
         }
       });
     });
-
-    // Rechercher dans les scripts pour les URLs d'images
-    const scripts = this.doc.getElementsByTagName('script');
-    for (const script of scripts) {
-      const content = script.textContent || '';
-      const scriptUrlMatches = content.match(urlRegex) || [];
-      scriptUrlMatches.forEach(url => {
-        if (this.isValidImageUrl(url)) {
-          const cleanedUrl = this.cleanImageUrl(url);
-          if (cleanedUrl) imageUrls.add(cleanedUrl);
-        }
-      });
-    }
 
     const uniqueUrls = [...imageUrls];
     console.log(`Final unique image URLs found: ${uniqueUrls.length}`);
