@@ -9,17 +9,34 @@ export class ImageParser {
 
   private isValidImageUrl(url: string): boolean {
     if (!url) return false;
-    const isCentrisUrl = url.includes('mspublic.centris.ca/media.ashx');
-    const hasRequiredParams = url.includes('id=') && 
-                            (url.includes('&t=pi') || url.includes('&t=photo'));
-    return isCentrisUrl && hasRequiredParams;
+    return url.includes('mspublic.centris.ca/media.ashx');
   }
 
   private cleanImageUrl(url: string): string {
-    if (!url.includes('&w=') && !url.includes('&h=')) {
-      url += '&w=640&h=480&sm=c';
+    try {
+      const originalUrl = new URL(url);
+      const params = new URLSearchParams(originalUrl.search);
+      
+      // Garder uniquement l'ID de l'image
+      const imageId = params.get('id');
+      if (!imageId) {
+        console.error('Pas d\'ID d\'image trouvé dans l\'URL:', url);
+        return url;
+      }
+
+      // Construire une nouvelle URL avec les paramètres optimaux
+      const newParams = new URLSearchParams();
+      newParams.set('id', imageId);
+      newParams.set('t', 'pi');
+      newParams.set('sm', 'c');
+      newParams.set('w', '1920');
+      newParams.set('h', '1080');
+
+      return `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
+    } catch (error) {
+      console.error('Erreur lors du nettoyage de l\'URL:', error);
+      return url;
     }
-    return url;
   }
 
   private extractFromScript(): string[] {
@@ -35,7 +52,7 @@ export class ImageParser {
             const cleanedUrl = this.cleanImageUrl(url);
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
-            console.log('Found image URL in script:', cleanedUrl);
+            console.log('Image trouvée dans le script:', cleanedUrl);
           }
         });
       }
@@ -44,12 +61,20 @@ export class ImageParser {
     return imageUrls;
   }
 
-  private extractFromImageTags(selectors: string[]): string[] {
+  private extractFromImageTags(): string[] {
     const imageUrls: string[] = [];
+    const selectors = [
+      'img[src*="mspublic.centris.ca"]',
+      'img[data-src*="mspublic.centris.ca"]',
+      'img[srcset*="mspublic.centris.ca"]',
+      '.MainImg img',
+      '#divMainPhoto img',
+      '.photo-gallery img'
+    ];
     
     for (const selector of selectors) {
       const elements = this.doc.querySelectorAll(selector);
-      console.log(`Found ${elements.length} elements with selector ${selector}`);
+      console.log(`${elements.length} éléments trouvés avec le sélecteur ${selector}`);
       
       for (const img of elements) {
         const src = img.getAttribute("src");
@@ -61,7 +86,7 @@ export class ImageParser {
             const cleanedUrl = this.cleanImageUrl(url);
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
-            console.log('Found image URL in img tag:', cleanedUrl);
+            console.log('Image trouvée dans une balise img:', cleanedUrl);
           }
         });
 
@@ -72,7 +97,7 @@ export class ImageParser {
               const cleanedUrl = this.cleanImageUrl(url);
               this.seenUrls.add(cleanedUrl);
               imageUrls.push(cleanedUrl);
-              console.log('Found image URL in srcset:', cleanedUrl);
+              console.log('Image trouvée dans srcset:', cleanedUrl);
             }
           });
         }
@@ -82,14 +107,18 @@ export class ImageParser {
     return imageUrls;
   }
 
-  getImageUrls(selectors: string[]): string[] {
-    console.log('Starting to extract image URLs');
+  getImageUrls(): string[] {
+    console.log('Début de l\'extraction des images');
     
     const scriptUrls = this.extractFromScript();
-    const imageTagUrls = this.extractFromImageTags(selectors);
-    const allUrls = [...scriptUrls, ...imageTagUrls];
+    console.log(`${scriptUrls.length} images trouvées dans les scripts`);
     
-    console.log('Total unique images found:', allUrls.length);
+    const imageTagUrls = this.extractFromImageTags();
+    console.log(`${imageTagUrls.length} images trouvées dans les balises img`);
+    
+    const allUrls = [...new Set([...scriptUrls, ...imageTagUrls])];
+    console.log(`Total d'images uniques trouvées: ${allUrls.length}`);
+    
     return allUrls;
   }
 }

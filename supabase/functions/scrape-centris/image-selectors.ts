@@ -3,8 +3,12 @@ export const imageSelectors = [
   '#divMainPhoto img',
   '.MainImg img',
   '.photo-gallery img',
+  '.carouselbox img',
+  '.carousel-item img',
+  '.property-thumbnail img',
   
   // Sélecteurs de secours
   'img[src*="mspublic.centris.ca/media.ashx"]',
-  'img[data-src*="mspublic.centris.ca/media.ashx"]'
+  'img[data-src*="mspublic.centris.ca/media.ashx"]',
+  'img[srcset*="mspublic.centris.ca/media.ashx"]'
 ];
