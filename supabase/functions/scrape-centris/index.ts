@@ -17,8 +17,10 @@ serve(async (req) => {
   try {
     const { url } = await req.json();
     console.log('URL à scraper:', url);
+    console.log('Headers de la requête:', req.headers);
 
     if (!url.includes("centris.ca")) {
+      console.error('URL invalide:', url);
       return new Response(
         JSON.stringify({ error: "L'URL doit provenir de centris.ca" }),
         { 
@@ -30,9 +32,13 @@ serve(async (req) => {
 
     // Ajout d'un timeout plus long pour la requête
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => {
+      controller.abort();
+      console.error('Timeout de la requête Centris');
+    }, 30000);
 
     try {
+      console.log('Début de la requête vers Centris avec les headers:', scrapingHeaders);
       const response = await fetch(url, { 
         headers: scrapingHeaders,
         signal: controller.signal
@@ -51,6 +57,7 @@ serve(async (req) => {
 
       const html = await response.text();
       console.log('Longueur du HTML:', html.length);
+      console.log('Extrait du HTML:', html.substring(0, 500)); // Affiche les 500 premiers caractères
       
       if (html.length < 1000) {
         console.error('HTML reçu trop court, possible erreur:', html);
