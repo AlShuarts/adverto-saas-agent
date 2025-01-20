@@ -93,6 +93,7 @@ serve(async (req) => {
     
     const processedImages: string[] = [];
     let errorCount = 0;
+    const maxErrors = Math.ceil(imageUrls.length * 0.3); // Permet jusqu'à 30% d'erreurs
     
     for (const imageUrl of imageUrls) {
       try {
@@ -109,6 +110,11 @@ serve(async (req) => {
       } catch (error) {
         console.error('Erreur lors du traitement de l\'image:', error);
         errorCount++;
+      }
+      
+      if (errorCount > maxErrors) {
+        console.error(`Trop d'erreurs lors du traitement des images (${errorCount} erreurs)`);
+        throw new Error("Trop d'erreurs lors du traitement des images. Veuillez réessayer.");
       }
       
       // Petit délai entre chaque traitement d'image

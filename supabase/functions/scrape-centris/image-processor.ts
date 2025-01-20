@@ -29,39 +29,51 @@ export class ImageProcessor {
         'Sec-Fetch-Site': 'same-site'
       };
 
-      // Téléchargement de l'image avec timeout
+      // Téléchargement de l'image avec timeout plus long
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
+      const timeout = setTimeout(() => controller.abort(), 30000); // Augmenté à 30 secondes
 
+      console.log('Tentative de téléchargement de l\'image...');
       const imageResponse = await fetch(imageUrl, { 
         headers,
         signal: controller.signal
       }).finally(() => clearTimeout(timeout));
 
       if (!imageResponse.ok) {
+        console.error(`Erreur HTTP ${imageResponse.status} lors du téléchargement:`, await imageResponse.text());
         throw new Error(`Erreur HTTP ${imageResponse.status}: ${imageResponse.statusText}`);
       }
 
       const contentType = imageResponse.headers.get('content-type');
+      console.log('Type de contenu reçu:', contentType);
+      
       if (!contentType?.startsWith('image/')) {
+        console.error('Type de contenu invalide reçu:', contentType);
         throw new Error(`Type de contenu invalide: ${contentType}`);
       }
 
       const imageBlob = await imageResponse.blob();
+      console.log('Taille de l\'image:', imageBlob.size, 'bytes');
+      
       if (imageBlob.size === 0) {
+        console.error('Image vide reçue');
         throw new Error('Image vide reçue');
       }
 
       // Génération d'un nom de fichier unique
       const fileExt = contentType.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      console.log('Nom du fichier généré:', fileName);
 
       // Upload vers Supabase avec retry
       let retryCount = 0;
       const maxRetries = 3;
+      let lastError = null;
       
       while (retryCount < maxRetries) {
         try {
+          console.log(`Tentative d'upload ${retryCount + 1}/${maxRetries}`);
+          
           const { data: uploadData, error: uploadError } = await this.supabase.storage
             .from('listings-images')
             .upload(fileName, imageBlob, {
@@ -70,7 +82,10 @@ export class ImageProcessor {
               upsert: false
             });
 
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            console.error('Erreur lors de l\'upload:', uploadError);
+            throw uploadError;
+          }
 
           const { data: { publicUrl } } = this.supabase.storage
             .from('listings-images')
@@ -78,17 +93,25 @@ export class ImageProcessor {
 
           console.log('Image uploadée avec succès:', publicUrl);
           return { processedUrl: publicUrl };
+          
         } catch (error) {
+          lastError = error;
+          console.error(`Erreur lors de la tentative ${retryCount + 1}:`, error);
           retryCount++;
+          
           if (retryCount === maxRetries) {
+            console.error('Nombre maximum de tentatives atteint');
             throw error;
           }
-          // Attendre avant de réessayer
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          
+          // Attendre avant de réessayer avec un délai exponentiel
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+          console.log(`Attente de ${delay}ms avant la prochaine tentative...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
 
-      throw new Error('Nombre maximum de tentatives atteint');
+      throw new Error(`Échec après ${maxRetries} tentatives. Dernière erreur: ${lastError?.message}`);
 
     } catch (error) {
       console.error('Erreur lors du traitement de l\'image:', error);
