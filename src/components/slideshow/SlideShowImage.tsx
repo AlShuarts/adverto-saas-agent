@@ -29,10 +29,17 @@ export const SlideShowImage = ({ src, index, currentIndex, isPlaying }: SlideSho
           height: '100%',
           objectFit: 'contain',
           maxWidth: '100%',
-          maxHeight: '100%'
+          maxHeight: '100%',
+          imageRendering: 'high-quality',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)'
         }}
         className={isPlaying ? "animate-float" : ""}
         alt={`Slide ${index + 1}`}
+        loading="eager"
+        decoding="sync"
         onError={(e) => {
           console.error(`Error loading image ${index + 1}:`, src, e);
           e.currentTarget.style.display = 'none';
