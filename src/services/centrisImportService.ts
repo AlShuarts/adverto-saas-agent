@@ -32,6 +32,12 @@ export const importCentrisListing = async (url: string, userId: string) => {
 
   console.log("Données reçues du scraping:", response);
 
+  // Vérification des images
+  if (!response.images || response.images.length === 0) {
+    console.error("Aucune image n'a été trouvée dans l'annonce");
+    throw new Error("Aucune image n'a été trouvée dans l'annonce");
+  }
+
   const listingData = {
     centris_id: response.centris_id,
     centris_url: url,
