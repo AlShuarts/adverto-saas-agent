@@ -9,20 +9,14 @@ export class ImageParser {
   }
 
   private isValidImageUrl(url: string): boolean {
-    if (!url) {
-      console.log('URL invalide (vide)');
-      return false;
-    }
-    // Assouplir la validation pour accepter plus de formats d'URLs
-    const isValid = url.includes('centris.ca') && url.includes('media');
-    console.log(`Validation URL: ${url} -> ${isValid}`);
-    return isValid;
+    if (!url) return false;
+    
+    // Accepter toutes les URLs qui contiennent centris.ca
+    return url.includes('centris.ca');
   }
 
   private cleanImageUrl(url: string): string {
     try {
-      console.log('Nettoyage de l\'URL:', url);
-      
       // Si l'URL ne contient pas media.ashx, on la retourne telle quelle
       if (!url.includes('media.ashx')) {
         return url;
@@ -33,7 +27,7 @@ export class ImageParser {
       
       const imageId = params.get('id');
       if (!imageId) {
-        console.error('Pas d\'ID d\'image trouvé dans l\'URL:', url);
+        console.log('Pas d\'ID d\'image trouvé dans l\'URL:', url);
         return url;
       }
 
@@ -42,15 +36,13 @@ export class ImageParser {
       newParams.set('id', imageId);
       newParams.set('t', 'photo');
       newParams.set('sm', 'c');
-      newParams.set('w', '1024'); // Réduire la taille pour éviter les timeouts
-      newParams.set('h', '768');
-      newParams.set('quality', '80'); // Réduire la qualité pour accélérer le téléchargement
+      newParams.set('w', '800');
+      newParams.set('h', '600');
+      newParams.set('quality', '85');
 
-      const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
-      console.log('URL d\'image nettoyée:', finalUrl);
-      return finalUrl;
+      return `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
     } catch (error) {
-      console.error('Erreur lors du nettoyage de l\'URL:', error);
+      console.log('Erreur lors du nettoyage de l\'URL:', error);
       return url;
     }
   }
@@ -69,8 +61,6 @@ export class ImageParser {
       const dataOriginal = img.getAttribute("data-original");
       const srcset = img.getAttribute("srcset");
       
-      console.log('Attributs de l\'image:', { src, dataSrc, dataOriginal, srcset });
-
       [src, dataSrc, dataOriginal].forEach(url => {
         if (url && !this.seenUrls.has(url)) {
           if (this.isValidImageUrl(url)) {
@@ -78,22 +68,17 @@ export class ImageParser {
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
             console.log('Image trouvée et nettoyée:', cleanedUrl);
-          } else {
-            console.log('URL ignorée car invalide:', url);
           }
         }
       });
 
       if (srcset) {
         const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
-        console.log('URLs trouvées dans srcset:', srcsetUrls);
-        
         srcsetUrls.forEach(url => {
           if (!this.seenUrls.has(url) && this.isValidImageUrl(url)) {
             const cleanedUrl = this.cleanImageUrl(url);
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
-            console.log('Image trouvée dans srcset et nettoyée:', cleanedUrl);
           }
         });
       }
@@ -105,13 +90,11 @@ export class ImageParser {
       const content = script.textContent || '';
       const matches = content.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|gif|webp)[^"'\s]*/gi);
       if (matches) {
-        console.log('URLs trouvées dans les scripts:', matches);
         matches.forEach(url => {
           if (!this.seenUrls.has(url) && this.isValidImageUrl(url)) {
             const cleanedUrl = this.cleanImageUrl(url);
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
-            console.log('Image trouvée dans le script:', cleanedUrl);
           }
         });
       }
