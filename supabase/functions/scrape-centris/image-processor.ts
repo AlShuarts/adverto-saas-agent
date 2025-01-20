@@ -1,4 +1,3 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { ImageProcessingResult } from './types.ts';
 
 export class ImageProcessor {
@@ -26,12 +25,15 @@ export class ImageProcessor {
         'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache',
+        'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
         'Sec-Fetch-Dest': 'image',
         'Sec-Fetch-Mode': 'no-cors',
         'Sec-Fetch-Site': 'cross-site',
         'Referer': 'https://www.centris.ca/',
         'Origin': 'https://www.centris.ca',
-        'Cookie': 'TS01c97684=01ef61aed0c1f741d1d6cd8e7488f6d8e3c8c3c8'
+        'Cookie': 'TS01c97684=01ef61aed0c1f741d1d6cd8e7488f6d8e3c8c3c8; visid_incap_2269415=9Xk1LvxNQPWPrBzFp7ZPPxxx1WUAAAAAQUIPAAAAAADPBTAk1SbhGHKrk+COvS4L; nlbi_2269415=mQWxLUmfxgvuYKPvvgK8hwAAAADxQKqpL3NhxP/xUHRWvtHI; incap_ses_1133_2269415=0vMoVYq+aAr4jJOhoCVkD0Qd1mUAAAAA3AqFx1qPxHR+r4EWr5WXhw==',
       };
 
       // Télécharger l'image depuis Centris avec un timeout plus long
@@ -42,7 +44,8 @@ export class ImageProcessor {
       const imageResponse = await fetch(enhancedImageUrl, {
         headers,
         signal: controller.signal,
-        redirect: 'follow'
+        redirect: 'follow',
+        credentials: 'include',
       });
 
       clearTimeout(timeout);
@@ -58,14 +61,6 @@ export class ImageProcessor {
 
       const contentType = imageResponse.headers.get('content-type');
       console.log('Type de contenu:', contentType);
-
-      // Vérification plus souple du type de contenu
-      if (!contentType) {
-        console.log('Type de contenu non spécifié, on suppose que c\'est une image');
-      } else if (!contentType.startsWith('image/')) {
-        console.error('Type de contenu reçu:', contentType);
-        return { processedUrl: null, error: 'Type de contenu invalide' };
-      }
 
       const imageBlob = await imageResponse.blob();
       console.log('Taille du blob:', imageBlob.size);
