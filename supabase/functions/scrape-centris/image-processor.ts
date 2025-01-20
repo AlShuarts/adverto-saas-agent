@@ -24,36 +24,57 @@ export class ImageProcessor {
         return { processedUrl: null, error: 'URL invalide' };
       }
 
-      // Télécharger l'image depuis Centris
-      const imageResponse = await fetch(imageUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-          'Referer': 'https://www.centris.ca/',
-          'Origin': 'https://www.centris.ca'
-        }
-      });
+      // Headers optimisés pour le téléchargement depuis Centris
+      const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': 'https://www.centris.ca/',
+        'Origin': 'https://www.centris.ca',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      };
+
+      // Téléchargement de l'image avec gestion des erreurs HTTP
+      const imageResponse = await fetch(imageUrl, { headers });
 
       if (!imageResponse.ok) {
-        console.error('Erreur lors du téléchargement de l\'image:', imageResponse.status, imageResponse.statusText);
-        return { processedUrl: null, error: `Erreur HTTP: ${imageResponse.status}` };
+        console.error('Erreur HTTP lors du téléchargement:', {
+          status: imageResponse.status,
+          statusText: imageResponse.statusText
+        });
+        return { 
+          processedUrl: null, 
+          error: `Erreur HTTP: ${imageResponse.status} ${imageResponse.statusText}` 
+        };
+      }
+
+      const contentType = imageResponse.headers.get('content-type');
+      if (!contentType?.startsWith('image/')) {
+        console.error('Type de contenu invalide:', contentType);
+        return { 
+          processedUrl: null, 
+          error: `Type de contenu invalide: ${contentType}` 
+        };
       }
 
       const imageBlob = await imageResponse.blob();
-      console.log('Image téléchargée, taille:', imageBlob.size, 'bytes');
+      console.log('Image téléchargée:', {
+        taille: imageBlob.size,
+        type: imageBlob.type
+      });
 
       if (imageBlob.size === 0) {
         console.error('Image vide reçue');
         return { processedUrl: null, error: 'Image vide' };
       }
 
-      // Générer un nom de fichier unique
+      // Génération d'un nom de fichier unique
       const fileExt = imageBlob.type.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       console.log('Nom de fichier généré:', fileName);
 
-      // Uploader l'image dans le bucket Supabase
+      // Upload vers Supabase avec paramètres optimisés
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
         .upload(fileName, imageBlob, {
@@ -64,12 +85,15 @@ export class ImageProcessor {
 
       if (uploadError) {
         console.error('Erreur lors de l\'upload vers Supabase:', uploadError);
-        return { processedUrl: null, error: 'Erreur d\'upload' };
+        return { 
+          processedUrl: null, 
+          error: `Erreur d'upload: ${uploadError.message}` 
+        };
       }
 
       console.log('Image uploadée avec succès:', uploadData);
 
-      // Obtenir l'URL publique
+      // Obtention de l'URL publique
       const { data: { publicUrl } } = this.supabase.storage
         .from('listings-images')
         .getPublicUrl(fileName);
@@ -79,7 +103,10 @@ export class ImageProcessor {
 
     } catch (error) {
       console.error('Erreur lors du traitement de l\'image:', error);
-      return { processedUrl: null, error: error.message };
+      return { 
+        processedUrl: null, 
+        error: `Erreur inattendue: ${error.message}` 
+      };
     }
   }
 }
