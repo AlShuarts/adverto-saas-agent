@@ -2,12 +2,10 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Player } from "@remotion/player";
 import { Tables } from "@/integrations/supabase/types";
-import { SlideShowComposition } from "./slideshow/SlideShowComposition";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { getBackgroundMusics, BackgroundMusic } from "./slideshow/backgroundMusic";
+import { MusicSelector } from "./slideshow/MusicSelector";
+import { SlideshowPlayer } from "./slideshow/SlideshowPlayer";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -83,40 +81,17 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-4xl">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Musique de fond</Label>
-              <RadioGroup
-                value={selectedMusic || undefined}
-                onValueChange={setSelectedMusic}
-                className="space-y-2"
-              >
-                {musics.map((music) => (
-                  <div key={music.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={music.url} id={music.id} />
-                    <Label htmlFor={music.id}>{music.name}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-            
-            <div className="aspect-video w-full">
-              <Player
-                component={SlideShowComposition}
-                inputProps={{ 
-                  images: listing.images,
-                  musicUrl: selectedMusic || undefined
-                }}
-                durationInFrames={listing.images.length * 60}
-                fps={30}
-                compositionWidth={1920}
-                compositionHeight={1080}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                }}
-                controls
+            <MusicSelector
+              musics={musics}
+              selectedMusic={selectedMusic}
+              onMusicChange={setSelectedMusic}
+            />
+            {listing.images && (
+              <SlideshowPlayer
+                images={listing.images}
+                musicUrl={selectedMusic}
               />
-            </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
