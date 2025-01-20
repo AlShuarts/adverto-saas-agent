@@ -13,40 +13,41 @@ export class HtmlExtractor {
     
     try {
       // Trouver le conteneur principal du visualiseur de photos
-      const photoViewer = this.doc.querySelector('.photoViewer.photoViewerOnPage');
+      const photoViewer = this.doc.querySelector('#divMainPhoto');
       if (photoViewer) {
         console.log('PhotoViewer trouvé');
         
-        // Chercher dans la galerie
-        const gallery = photoViewer.querySelector('.gallery');
-        if (gallery) {
-          console.log('Gallery trouvée');
+        // Chercher l'image principale
+        const fullImg = photoViewer.querySelector('img#fullImg');
+        if (fullImg) {
+          const src = fullImg.getAttribute('src');
+          console.log('Image principale trouvée avec src:', src);
           
-          // Chercher toutes les images dans les wrappers
-          const imageWrappers = gallery.querySelectorAll('.image-wrapper');
-          console.log(`Nombre d'image-wrappers trouvés: ${imageWrappers.length}`);
-          
-          imageWrappers.forEach((wrapper: Element, index: number) => {
-            // Chercher l'image avec id fullImg
-            const fullImg = wrapper.querySelector('img#fullImg');
-            if (fullImg) {
-              const src = fullImg.getAttribute('src');
-              console.log(`Image ${index + 1} trouvée avec src:`, src);
-              
-              if (src && UrlValidator.isValid(src)) {
-                const cleanedUrl = UrlGenerator.cleanImageUrl(src);
-                if (cleanedUrl) {
-                  imageUrls.add(cleanedUrl);
-                  console.log('URL nettoyée ajoutée:', cleanedUrl);
-                }
-              }
-            } else {
-              console.log(`Pas d'image fullImg trouvée dans le wrapper ${index + 1}`);
+          if (src && UrlValidator.isValid(src)) {
+            const cleanedUrl = UrlGenerator.cleanImageUrl(src);
+            if (cleanedUrl) {
+              imageUrls.add(cleanedUrl);
+              console.log('URL nettoyée ajoutée:', cleanedUrl);
             }
-          });
-        } else {
-          console.log('Gallery non trouvée');
+          }
         }
+
+        // Chercher les miniatures pour obtenir tous les IDs d'images
+        const thumbnails = this.doc.querySelectorAll('.thumbPhoto');
+        console.log(`Nombre de miniatures trouvées: ${thumbnails.length}`);
+        
+        thumbnails.forEach((thumb: Element) => {
+          const onclick = thumb.getAttribute('onclick');
+          if (onclick) {
+            const match = onclick.match(/showPhoto\('([^']+)'/);
+            if (match && match[1]) {
+              const imageId = match[1];
+              const highQualityUrl = UrlGenerator.createHighQualityUrl(imageId);
+              imageUrls.add(highQualityUrl);
+              console.log('URL haute qualité générée depuis miniature:', highQualityUrl);
+            }
+          }
+        });
       } else {
         console.log('PhotoViewer non trouvé');
       }
@@ -61,50 +62,15 @@ export class HtmlExtractor {
     const imageUrls = new Set<string>();
     const htmlContent = this.doc.documentElement.innerHTML;
     
-    // Rechercher toutes les URLs Centris
-    const urlRegex = /https:\/\/[^"'\s)}>]*(?:centris\.ca|media\.ashx)[^"'\s)}>]*/g;
-    const directUrls = htmlContent.match(urlRegex) || [];
-    console.log(`Trouvé ${directUrls.length} URLs directes dans le HTML`);
-    
-    directUrls.forEach(url => {
-      if (UrlValidator.isValid(url)) {
-        const cleanedUrl = UrlGenerator.cleanImageUrl(url);
-        if (cleanedUrl) imageUrls.add(cleanedUrl);
-      }
-    });
-
-    return imageUrls;
-  }
-
-  private extractFromImageElements(): Set<string> {
-    const imageUrls = new Set<string>();
-    const imageElements = this.doc.querySelectorAll('img');
-    console.log(`Trouvé ${imageElements.length} éléments img`);
-
-    imageElements.forEach((img: any) => {
-      ['src', 'data-src', 'data-original', 'srcset'].forEach(attr => {
-        const value = img.getAttribute(attr);
-        if (value && UrlValidator.isValid(value)) {
-          const cleanedUrl = UrlGenerator.cleanImageUrl(value);
-          if (cleanedUrl) imageUrls.add(cleanedUrl);
-        }
-      });
-    });
-
-    return imageUrls;
-  }
-
-  private extractFromCentrisIds(): Set<string> {
-    const imageUrls = new Set<string>();
-    const htmlContent = this.doc.documentElement.innerHTML;
-    
-    const idMatches = htmlContent.match(/[A-F0-9]{32}/gi) || [];
-    console.log(`Trouvé ${idMatches.length} IDs d'images`);
-    
-    idMatches.forEach(id => {
-      const url = UrlGenerator.createHighQualityUrl(id);
+    // Rechercher tous les IDs d'images Centris
+    const idRegex = /showPhoto\('([A-F0-9]{32})'\)/g;
+    let match;
+    while ((match = idRegex.exec(htmlContent)) !== null) {
+      const imageId = match[1];
+      const url = UrlGenerator.createHighQualityUrl(imageId);
       imageUrls.add(url);
-    });
+      console.log('ID d\'image trouvé dans le HTML:', imageId);
+    }
 
     return imageUrls;
   }
@@ -124,9 +90,7 @@ export class HtmlExtractor {
     } else {
       console.log('Aucune URL trouvée dans PhotoViewer, utilisation des méthodes alternatives');
       allUrls = new Set<string>([
-        ...this.extractFromHtmlContent(),
-        ...this.extractFromImageElements(),
-        ...this.extractFromCentrisIds()
+        ...this.extractFromHtmlContent()
       ]);
     }
 
