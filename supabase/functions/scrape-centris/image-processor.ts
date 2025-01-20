@@ -16,17 +16,37 @@ export class ImageProcessor {
   }
 
   private cleanImageUrl(url: string): string {
-    // Paramètres pour obtenir la meilleure qualité possible
-    const params = new URLSearchParams({
-      id: url.split('id=')[1]?.split('&')[0] || '', // Extraire l'ID de l'image
-      t: 'pi', // Type: photo
-      w: '4096', // Largeur maximale
-      h: '3072', // Hauteur maximale
-      sm: 'both', // Scale mode: both pour conserver les proportions
-      q: '100', // Qualité maximale
-    });
+    try {
+      const originalUrl = new URL(url);
+      const params = new URLSearchParams(originalUrl.search);
+      
+      // Garder l'ID et le type de l'image originale
+      const imageId = params.get('id');
+      const imageType = params.get('t') || 'pi';
+      
+      // Construire une nouvelle URL avec les paramètres optimaux
+      const newParams = new URLSearchParams();
+      newParams.set('id', imageId || '');
+      newParams.set('t', imageType);
+      
+      // Ne pas modifier les dimensions si elles sont déjà présentes
+      if (!params.has('w') && !params.has('h')) {
+        newParams.set('w', '1024');
+        newParams.set('h', '768');
+      } else {
+        newParams.set('w', params.get('w') || '1024');
+        newParams.set('h', params.get('h') || '768');
+      }
+      
+      // Ajouter les paramètres de qualité si absents
+      if (!params.has('sm')) newParams.set('sm', 'c');
+      if (!params.has('q')) newParams.set('q', '80');
 
-    return `https://mspublic.centris.ca/media.ashx?${params.toString()}`;
+      return `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
+    } catch (error) {
+      console.error('Erreur lors du nettoyage de l\'URL:', error);
+      return url; // Retourner l'URL originale en cas d'erreur
+    }
   }
 
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
@@ -44,8 +64,7 @@ export class ImageProcessor {
       const response = await fetch(cleanedUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/webp,image/jpeg,image/png,image/*,*/*;q=0.8',
-          'Accept-Encoding': 'gzip, deflate, br',
+          'Accept': 'image/webp,image/jpeg,image/png,image/*',
           'Referer': 'https://www.centris.ca/',
         }
       });
@@ -64,11 +83,6 @@ export class ImageProcessor {
       console.log('Informations sur l\'image:');
       console.log('- Taille:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
       console.log('- Type:', blob.type);
-
-      if (blob.size < 100 * 1024) { // Moins de 100KB
-        console.warn('⚠️ Image trop petite détectée');
-        return { processedUrl: null, error: 'Image trop petite' };
-      }
 
       const fileExt = blob.type.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
