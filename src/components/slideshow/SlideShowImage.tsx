@@ -57,7 +57,7 @@ export const SlideShowImage = ({ src, index, currentIndex, isPlaying }: SlideSho
           objectFit: 'contain',
           maxWidth: '100%',
           maxHeight: '100%',
-          imageRendering: 'high-quality',
+          imageRendering: 'crisp-edges',
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
           transform: 'translateZ(0)',
