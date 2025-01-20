@@ -3,12 +3,14 @@ import { ImageProcessingResult } from './types.ts';
 
 export class ImageProcessor {
   private supabase;
+  private seenUrls: Set<string>;
 
   constructor() {
     this.supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+    this.seenUrls = new Set<string>();
   }
 
   private isValidImageUrl(url: string): boolean {
@@ -20,22 +22,14 @@ export class ImageProcessor {
       const originalUrl = new URL(url);
       const params = new URLSearchParams(originalUrl.search);
       
-      // Garder uniquement l'ID de l'image
       const imageId = params.get('id');
       
-      // Construire une nouvelle URL avec les paramètres originaux
       const newParams = new URLSearchParams();
       newParams.set('id', imageId || '');
       newParams.set('t', 'photo');
-      
-      // Garder les dimensions originales si présentes
-      if (params.has('w') && params.has('h')) {
-        newParams.set('w', params.get('w') || '1024');
-        newParams.set('h', params.get('h') || '768');
-      } else {
-        newParams.set('w', '1024');
-        newParams.set('h', '768');
-      }
+      newParams.set('w', '1920');
+      newParams.set('h', '1080');
+      newParams.set('sm', 'c');
 
       const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
       console.log('URL nettoyée:', finalUrl);
