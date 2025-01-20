@@ -1,4 +1,4 @@
-import { HtmlExtractor } from './html-extractor';
+import { HtmlExtractor } from './html-extractor.ts';
 
 export class ImageParser {
   private doc: Document;
