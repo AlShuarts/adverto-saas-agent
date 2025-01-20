@@ -17,47 +17,17 @@ export class ImageProcessor {
     return url.includes('mspublic.centris.ca/media.ashx');
   }
 
-  private cleanImageUrl(url: string): string {
-    try {
-      const originalUrl = new URL(url);
-      const params = new URLSearchParams(originalUrl.search);
-      
-      // Garder uniquement l'ID de l'image
-      const imageId = params.get('id');
-      if (!imageId) {
-        console.error('Pas d\'ID d\'image trouvé dans l\'URL:', url);
-        return url;
-      }
-
-      // Construire une nouvelle URL avec les paramètres optimaux
-      const newParams = new URLSearchParams();
-      newParams.set('id', imageId);
-      newParams.set('t', 'photo');
-      newParams.set('w', '1920');
-      newParams.set('h', '1080');
-
-      const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
-      console.log('URL nettoyée:', finalUrl);
-      return finalUrl;
-    } catch (error) {
-      console.error('Erreur lors du nettoyage de l\'URL:', error);
-      return url;
-    }
-  }
-
   async processImage(imageUrl: string): Promise<ImageProcessingResult> {
     try {
-      console.log('Traitement de l\'image:', imageUrl);
+      console.log('Début du traitement de l\'image:', imageUrl);
 
       if (!this.isValidImageUrl(imageUrl)) {
         console.error('URL invalide:', imageUrl);
         return { processedUrl: null, error: 'URL invalide' };
       }
 
-      const cleanedUrl = this.cleanImageUrl(imageUrl);
-      console.log('URL nettoyée:', cleanedUrl);
-
-      const response = await fetch(cleanedUrl, {
+      // Télécharger l'image depuis Centris
+      const imageResponse = await fetch(imageUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
@@ -67,38 +37,46 @@ export class ImageProcessor {
         }
       });
 
-      if (!response.ok) {
-        console.error('Erreur de téléchargement:', response.status, response.statusText);
-        return { processedUrl: null, error: `Erreur HTTP: ${response.status}` };
+      if (!imageResponse.ok) {
+        console.error('Erreur lors du téléchargement de l\'image:', imageResponse.status, imageResponse.statusText);
+        return { processedUrl: null, error: `Erreur HTTP: ${imageResponse.status}` };
       }
 
-      const blob = await response.blob();
-      if (blob.size === 0) {
+      const imageBlob = await imageResponse.blob();
+      console.log('Image téléchargée, taille:', imageBlob.size, 'bytes');
+
+      if (imageBlob.size === 0) {
         console.error('Image vide reçue');
         return { processedUrl: null, error: 'Image vide' };
       }
 
-      const fileExt = blob.type.split('/')[1] || 'jpg';
+      // Générer un nom de fichier unique
+      const fileExt = imageBlob.type.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      console.log('Nom de fichier généré:', fileName);
 
+      // Uploader l'image dans le bucket Supabase
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
-        .upload(fileName, blob, {
-          contentType: blob.type,
+        .upload(fileName, imageBlob, {
+          contentType: imageBlob.type,
           cacheControl: '31536000',
           upsert: false
         });
 
       if (uploadError) {
-        console.error('Erreur d\'upload:', uploadError);
+        console.error('Erreur lors de l\'upload vers Supabase:', uploadError);
         return { processedUrl: null, error: 'Erreur d\'upload' };
       }
 
+      console.log('Image uploadée avec succès:', uploadData);
+
+      // Obtenir l'URL publique
       const { data: { publicUrl } } = this.supabase.storage
         .from('listings-images')
         .getPublicUrl(fileName);
 
-      console.log('Image traitée avec succès:', publicUrl);
+      console.log('URL publique générée:', publicUrl);
       return { processedUrl: publicUrl };
 
     } catch (error) {
