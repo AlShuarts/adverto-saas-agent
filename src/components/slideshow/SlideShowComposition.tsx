@@ -35,7 +35,6 @@ export const SlideShowComposition = ({
 
     try {
       if (isPlaying) {
-        // Tentative de lecture avec gestion des erreurs
         await audioRef.current.play();
       } else {
         audioRef.current.pause();
@@ -55,7 +54,7 @@ export const SlideShowComposition = ({
     handlePlayback();
   }, [isPlaying]);
 
-  // Effet pour la gestion du volume avec mise à jour immédiate
+  // Effet pour la gestion du volume
   useEffect(() => {
     updateVolume();
   }, [volume]);
@@ -65,18 +64,25 @@ export const SlideShowComposition = ({
     // Nettoyer l'intervalle existant avant d'en créer un nouveau
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
+      intervalRef.current = undefined;
     }
 
+    // Créer un nouvel intervalle uniquement si isPlaying est true
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
       }, 5000);
+
+      // Log pour debug
+      console.log('Nouvel intervalle créé:', intervalRef.current);
     }
 
     // Nettoyage lors du démontage ou changement d'état
     return () => {
       if (intervalRef.current) {
+        console.log('Nettoyage de l\'intervalle:', intervalRef.current);
         clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
       }
     };
   }, [isPlaying, images.length]);
