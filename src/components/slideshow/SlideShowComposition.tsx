@@ -20,7 +20,7 @@ export const SlideShowComposition = ({
   const intervalRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  // Mise à jour immédiate du volume avec synchronisation mute
+  // Mise à jour du volume avec synchronisation mute
   const updateVolume = () => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -60,11 +60,16 @@ export const SlideShowComposition = ({
 
   // Gestion du changement d'image avec nettoyage robuste
   useEffect(() => {
+    const cleanupInterval = () => {
+      if (intervalRef.current) {
+        console.log('Nettoyage de l\'intervalle:', intervalRef.current);
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
+      }
+    };
+
     // Nettoyer l'intervalle existant avant d'en créer un nouveau
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = undefined;
-    }
+    cleanupInterval();
 
     // Créer un nouvel intervalle uniquement si isPlaying est true
     if (isPlaying) {
@@ -72,18 +77,11 @@ export const SlideShowComposition = ({
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
       }, 5000);
 
-      // Log pour debug
       console.log('Nouvel intervalle créé:', intervalRef.current);
     }
 
     // Nettoyage lors du démontage ou changement d'état
-    return () => {
-      if (intervalRef.current) {
-        console.log('Nettoyage de l\'intervalle:', intervalRef.current);
-        clearInterval(intervalRef.current);
-        intervalRef.current = undefined;
-      }
-    };
+    return cleanupInterval;
   }, [isPlaying, images.length]);
 
   // Initialisation et nettoyage de l'audio
@@ -92,7 +90,6 @@ export const SlideShowComposition = ({
       audioRef.current.src = musicUrl;
       audioRef.current.loop = true;
       
-      // Gestionnaire d'erreurs audio
       const handleError = (e: Event) => {
         console.error('Erreur audio:', e);
         toast({
