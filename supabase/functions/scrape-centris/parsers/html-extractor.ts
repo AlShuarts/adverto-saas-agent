@@ -15,7 +15,7 @@ export class HtmlExtractor {
     // Rechercher toutes les URLs Centris
     const urlRegex = /https:\/\/[^"'\s)}>]*(?:centris\.ca|media\.ashx)[^"'\s)}>]*/g;
     const directUrls = htmlContent.match(urlRegex) || [];
-    console.log(`Found ${directUrls.length} direct URLs in HTML`);
+    console.log(`Trouvé ${directUrls.length} URLs directes dans le HTML`);
     
     directUrls.forEach(url => {
       if (UrlValidator.isValid(url)) {
@@ -30,7 +30,7 @@ export class HtmlExtractor {
   private extractFromImageElements(): Set<string> {
     const imageUrls = new Set<string>();
     const imageElements = this.doc.querySelectorAll('img');
-    console.log(`Found ${imageElements.length} img elements`);
+    console.log(`Trouvé ${imageElements.length} éléments img`);
 
     imageElements.forEach((img: any) => {
       ['src', 'data-src', 'data-original', 'srcset'].forEach(attr => {
@@ -50,7 +50,7 @@ export class HtmlExtractor {
     const htmlContent = this.doc.documentElement.innerHTML;
     
     const idMatches = htmlContent.match(/[A-F0-9]{32}/gi) || [];
-    console.log(`Found ${idMatches.length} image IDs`);
+    console.log(`Trouvé ${idMatches.length} IDs d'images`);
     
     idMatches.forEach(id => {
       const url = UrlGenerator.createHighQualityUrl(id);
@@ -61,7 +61,7 @@ export class HtmlExtractor {
   }
 
   extract(): string[] {
-    console.log('Starting image extraction');
+    console.log('Démarrage de l\'extraction des images');
     
     const allUrls = new Set<string>([
       ...this.extractFromHtmlContent(),
@@ -70,8 +70,8 @@ export class HtmlExtractor {
     ]);
 
     const uniqueUrls = [...allUrls];
-    console.log(`Final unique image URLs found: ${uniqueUrls.length}`);
-    console.log('Image URLs:', uniqueUrls);
+    console.log(`URLs d'images uniques trouvées: ${uniqueUrls.length}`);
+    console.log('URLs des images:', uniqueUrls);
     
     return uniqueUrls;
   }
