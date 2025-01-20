@@ -27,12 +27,14 @@ export class ImageParser {
       // Construire une nouvelle URL avec les paramètres optimaux
       const newParams = new URLSearchParams();
       newParams.set('id', imageId);
-      newParams.set('t', 'pi');
+      newParams.set('t', 'photo');
       newParams.set('sm', 'c');
       newParams.set('w', '1920');
       newParams.set('h', '1080');
 
-      return `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
+      const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
+      console.log('URL d\'image nettoyée:', finalUrl);
+      return finalUrl;
     } catch (error) {
       console.error('Erreur lors du nettoyage de l\'URL:', error);
       return url;
@@ -69,7 +71,12 @@ export class ImageParser {
       'img[srcset*="mspublic.centris.ca"]',
       '.MainImg img',
       '#divMainPhoto img',
-      '.photo-gallery img'
+      '.photo-gallery img',
+      '.carouselbox img',
+      '.carousel-item img',
+      '.property-thumbnail img',
+      '.property-image img',
+      '.listing-image img'
     ];
     
     for (const selector of selectors) {

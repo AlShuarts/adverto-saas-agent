@@ -29,7 +29,18 @@ serve(async (req) => {
       );
     }
 
-    const response = await fetch(url, { headers: scrapingHeaders });
+    // Ajout d'un User-Agent plus réaliste
+    const headers = {
+      ...scrapingHeaders,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    };
+
+    console.log('Headers de la requête:', headers);
+    const response = await fetch(url, { headers });
     
     if (!response.ok) {
       console.error('Échec de la récupération de la page Centris:', {
@@ -61,8 +72,12 @@ serve(async (req) => {
     
     const processedImages: string[] = [];
     
-    // Traiter uniquement les 5 premières images pour éviter les timeouts
-    for (const imageUrl of imageUrls.slice(0, 5)) {
+    if (imageUrls.length === 0) {
+      console.error('Aucune image trouvée dans le HTML');
+    }
+    
+    // Traiter toutes les images trouvées
+    for (const imageUrl of imageUrls) {
       console.log('Traitement de l\'URL d\'image:', imageUrl);
       const { processedUrl, error } = await imageProcessor.processImage(imageUrl);
       

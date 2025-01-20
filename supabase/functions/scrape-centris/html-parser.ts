@@ -22,7 +22,10 @@ export class HtmlParser {
   }
 
   getImageUrls(): string[] {
-    return this.imageParser.getImageUrls(imageSelectors);
+    console.log('Extraction des images avec les sélecteurs:', imageSelectors);
+    const urls = this.imageParser.getImageUrls();
+    console.log('URLs d\'images extraites:', urls);
+    return urls;
   }
 
   parseListing(centrisId: string): Omit<ListingData, 'images'> {
