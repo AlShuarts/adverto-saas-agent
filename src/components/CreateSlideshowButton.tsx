@@ -115,6 +115,8 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
                   height: '100%',
                 }}
                 controls
+                autoPlay
+                loop
               />
             </div>
           </div>
