@@ -14,7 +14,7 @@ export class ImageProcessor {
   }
 
   private isValidImageUrl(url: string): boolean {
-    return url.includes('mspublic.centris.ca/media.ashx') && url.includes('id=');
+    return url.includes('mspublic.centris.ca/media.ashx');
   }
 
   private cleanImageUrl(url: string): string {
@@ -22,14 +22,19 @@ export class ImageProcessor {
       const originalUrl = new URL(url);
       const params = new URLSearchParams(originalUrl.search);
       
+      // Garder uniquement l'ID de l'image
       const imageId = params.get('id');
-      
+      if (!imageId) {
+        console.error('Pas d\'ID d\'image trouvé dans l\'URL:', url);
+        return url;
+      }
+
+      // Construire une nouvelle URL avec les paramètres optimaux
       const newParams = new URLSearchParams();
-      newParams.set('id', imageId || '');
+      newParams.set('id', imageId);
       newParams.set('t', 'photo');
       newParams.set('w', '1920');
       newParams.set('h', '1080');
-      newParams.set('sm', 'c');
 
       const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
       console.log('URL nettoyée:', finalUrl);
@@ -55,14 +60,10 @@ export class ImageProcessor {
       const response = await fetch(cleanedUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+          'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
           'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
           'Referer': 'https://www.centris.ca/',
-          'Origin': 'https://www.centris.ca',
-          'Sec-Fetch-Site': 'same-site',
-          'Sec-Fetch-Mode': 'no-cors',
-          'Sec-Fetch-Dest': 'image',
-          'Connection': 'keep-alive'
+          'Origin': 'https://www.centris.ca'
         }
       });
 
@@ -77,13 +78,8 @@ export class ImageProcessor {
         return { processedUrl: null, error: 'Image vide' };
       }
 
-      console.log('Informations sur l\'image:');
-      console.log('- Taille:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
-      console.log('- Type:', blob.type);
-
       const fileExt = blob.type.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      console.log('Nom du fichier:', fileName);
 
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('listings-images')
