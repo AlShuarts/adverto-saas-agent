@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -12,21 +12,18 @@ type SlideshowPlayerProps = {
 export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
 
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const togglePlay = useCallback(() => {
+    setIsPlaying(prev => !prev);
+  }, []);
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    setVolume(isMuted ? 1 : 0);
-  };
+  const toggleMute = useCallback(() => {
+    setVolume(prev => prev === 0 ? 1 : 0);
+  }, []);
 
-  const handleVolumeChange = (value: number[]) => {
+  const handleVolumeChange = useCallback((value: number[]) => {
     setVolume(value[0]);
-    setIsMuted(value[0] === 0);
-  };
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -35,7 +32,7 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
           images={images}
           musicUrl={musicUrl || undefined}
           isPlaying={isPlaying}
-          volume={isMuted ? 0 : volume}
+          volume={volume}
         />
       </div>
       
@@ -59,7 +56,7 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
           onClick={toggleMute}
           className="h-10 w-10"
         >
-          {isMuted ? (
+          {volume === 0 ? (
             <VolumeX className="h-5 w-5" />
           ) : (
             <Volume2 className="h-5 w-5" />

@@ -20,32 +20,46 @@ export const SlideShowComposition = ({
   const intervalRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  // Gérer la lecture/pause de la musique
-  useEffect(() => {
+  // Gestion immédiate du volume
+  const updateVolume = () => {
     if (audioRef.current) {
+      audioRef.current.volume = volume;
+      // Synchroniser l'état muet avec le volume
+      audioRef.current.muted = volume === 0;
+    }
+  };
+
+  // Gérer la lecture/pause de la musique avec gestion d'erreurs robuste
+  const handlePlayback = async () => {
+    if (!audioRef.current) return;
+
+    try {
       if (isPlaying) {
-        audioRef.current.play().catch((error) => {
-          console.error('Error playing background music:', error);
-          toast({
-            title: "Erreur",
-            description: "Impossible de jouer la musique de fond",
-            variant: "destructive",
-          });
-        });
+        await audioRef.current.play();
       } else {
         audioRef.current.pause();
       }
+    } catch (error) {
+      console.error('Error managing audio playback:', error);
+      toast({
+        title: "Erreur audio",
+        description: "Impossible de contrôler la lecture audio",
+        variant: "destructive",
+      });
     }
-  }, [isPlaying, toast]);
+  };
 
-  // Gérer le volume
+  // Effet pour la gestion de la lecture/pause
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
+    handlePlayback();
+  }, [isPlaying]);
+
+  // Effet pour la gestion du volume avec mise à jour immédiate
+  useEffect(() => {
+    updateVolume();
   }, [volume]);
 
-  // Gérer le changement d'image avec pause
+  // Gérer le changement d'image avec pause robuste
   useEffect(() => {
     if (isPlaying) {
       intervalRef.current = setInterval(() => {
@@ -60,20 +74,32 @@ export const SlideShowComposition = ({
     };
   }, [isPlaying, images.length]);
 
-  // Initialiser l'audio
+  // Initialiser l'audio avec gestion d'erreurs
   useEffect(() => {
     if (audioRef.current && musicUrl) {
       audioRef.current.src = musicUrl;
       audioRef.current.loop = true;
-    }
+      
+      // Configurer les gestionnaires d'événements audio
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        toast({
+          title: "Erreur audio",
+          description: "Erreur lors du chargement de l'audio",
+          variant: "destructive",
+        });
+      });
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    };
-  }, [musicUrl]);
+      // Nettoyer les gestionnaires d'événements
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+          audioRef.current.removeEventListener('error', () => {});
+        }
+      };
+    }
+  }, [musicUrl, toast]);
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
