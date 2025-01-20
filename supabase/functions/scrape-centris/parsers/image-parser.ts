@@ -9,16 +9,28 @@ export class ImageParser {
   }
 
   private isValidImageUrl(url: string): boolean {
-    return url && url.includes('mspublic.centris.ca/media');
+    if (!url) return false;
+    
+    // Vérifie si l'URL contient des marqueurs Centris valides
+    const validMarkers = [
+      'mspublic.centris.ca/media',
+      'centris.ca/media',
+      'media.ashx'
+    ];
+    
+    return validMarkers.some(marker => url.includes(marker));
   }
 
   private cleanImageUrl(url: string): string | null {
     try {
-      // Si l'URL est déjà au bon format, on la retourne directement
-      if (url.startsWith('https://mspublic.centris.ca/media.ashx')) {
+      console.log('Cleaning URL:', url);
+      
+      // Si l'URL est déjà au format media.ashx, vérifier et retourner
+      if (url.includes('media.ashx')) {
         const urlObj = new URL(url);
         const id = urlObj.searchParams.get('id');
         if (id && id.length === 32) {
+          console.log('URL already in correct format:', url);
           return url;
         }
       }
@@ -26,28 +38,38 @@ export class ImageParser {
       // Recherche d'un ID de 32 caractères hexadécimaux
       const matches = url.match(/[A-F0-9]{32}/i);
       if (matches && matches[0]) {
-        return `https://mspublic.centris.ca/media.ashx?id=${matches[0]}&t=pi&f=I`;
+        const cleanedUrl = `https://mspublic.centris.ca/media.ashx?id=${matches[0]}&t=pi&f=I`;
+        console.log('Cleaned URL:', cleanedUrl);
+        return cleanedUrl;
       }
 
+      // Si aucun ID n'est trouvé mais que l'URL semble valide
+      if (this.isValidImageUrl(url)) {
+        console.log('Valid URL but no ID found:', url);
+        return url;
+      }
+
+      console.log('Could not clean URL:', url);
       return null;
     } catch (error) {
-      console.log('Erreur lors du nettoyage de l\'URL:', error);
+      console.error('Error cleaning URL:', error);
       return null;
     }
   }
 
   getImageUrls(): string[] {
-    console.log('Début de l\'extraction des images');
+    console.log('Starting image extraction');
     const imageUrls = new Set<string>();
     
-    // Récupérer tout le contenu HTML
+    // Récupérer tout le contenu HTML pour analyse
     const htmlContent = this.doc.documentElement.innerHTML;
     
-    // Rechercher toutes les URLs contenant mspublic.centris.ca/media
-    const urlRegex = /https:\/\/mspublic\.centris\.ca\/media[^"'\s)}>]*/g;
+    // Rechercher toutes les URLs contenant des marqueurs Centris
+    const urlRegex = /https:\/\/[^"'\s)}>]*(?:centris\.ca|media\.ashx)[^"'\s)}>]*/g;
     const directUrls = htmlContent.match(urlRegex) || [];
-    console.log(`URLs directes trouvées: ${directUrls.length}`);
+    console.log(`Found ${directUrls.length} direct URLs in HTML`);
     
+    // Traiter les URLs trouvées directement dans le HTML
     directUrls.forEach(url => {
       if (this.isValidImageUrl(url)) {
         const cleanedUrl = this.cleanImageUrl(url);
@@ -55,31 +77,31 @@ export class ImageParser {
       }
     });
 
-    // Rechercher tous les IDs d'images possibles dans le HTML
+    // Rechercher les IDs d'images dans le HTML
     const idMatches = htmlContent.match(/[A-F0-9]{32}/gi) || [];
-    console.log(`IDs d'images trouvés: ${idMatches.length}`);
+    console.log(`Found ${idMatches.length} image IDs`);
     
     idMatches.forEach(id => {
       const url = `https://mspublic.centris.ca/media.ashx?id=${id}&t=pi&f=I`;
       imageUrls.add(url);
     });
 
-    // Rechercher dans les attributs des images
-    const allImages = this.doc.getElementsByTagName('img');
-    console.log(`Éléments img trouvés: ${allImages.length}`);
+    // Parcourir tous les éléments img avec les sélecteurs spécifiés
+    const imageSelectors = this.doc.querySelectorAll('img');
+    console.log(`Found ${imageSelectors.length} img elements`);
 
-    for (const img of allImages) {
-      const attributes = img.attributes;
-      for (let i = 0; i < attributes.length; i++) {
-        const attr = attributes[i];
-        if (this.isValidImageUrl(attr.value)) {
-          const cleanedUrl = this.cleanImageUrl(attr.value);
+    imageSelectors.forEach((img: any) => {
+      const attributes = ['src', 'data-src', 'data-original', 'srcset'];
+      attributes.forEach(attr => {
+        const value = img.getAttribute(attr);
+        if (value && this.isValidImageUrl(value)) {
+          const cleanedUrl = this.cleanImageUrl(value);
           if (cleanedUrl) imageUrls.add(cleanedUrl);
         }
-      }
-    }
+      });
+    });
 
-    // Rechercher dans tous les scripts
+    // Rechercher dans les scripts pour les URLs d'images
     const scripts = this.doc.getElementsByTagName('script');
     for (const script of scripts) {
       const content = script.textContent || '';
@@ -93,7 +115,9 @@ export class ImageParser {
     }
 
     const uniqueUrls = [...imageUrls];
-    console.log(`Total d'images uniques trouvées: ${uniqueUrls.length}`);
+    console.log(`Final unique image URLs found: ${uniqueUrls.length}`);
+    console.log('Image URLs:', uniqueUrls);
+    
     return uniqueUrls;
   }
 }
