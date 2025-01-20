@@ -20,32 +20,24 @@ export class ImageProcessor {
       const originalUrl = new URL(url);
       const params = new URLSearchParams(originalUrl.search);
       
-      // Garder l'ID et le type de l'image originale
+      // Extraire l'ID de l'image
       const imageId = params.get('id');
-      const imageType = params.get('t') || 'pi';
       
-      // Construire une nouvelle URL avec les paramètres optimaux
+      // Construire une nouvelle URL avec les paramètres optimaux pour la haute qualité
       const newParams = new URLSearchParams();
       newParams.set('id', imageId || '');
-      newParams.set('t', imageType);
-      
-      // Ne pas modifier les dimensions si elles sont déjà présentes
-      if (!params.has('w') && !params.has('h')) {
-        newParams.set('w', '1024');
-        newParams.set('h', '768');
-      } else {
-        newParams.set('w', params.get('w') || '1024');
-        newParams.set('h', params.get('h') || '768');
-      }
-      
-      // Ajouter les paramètres de qualité si absents
-      if (!params.has('sm')) newParams.set('sm', 'c');
-      if (!params.has('q')) newParams.set('q', '80');
+      newParams.set('t', 'pi'); // Type: photo
+      newParams.set('w', '4096'); // Largeur maximale supportée
+      newParams.set('h', '3072'); // Hauteur maximale supportée
+      newParams.set('sm', 'both'); // Scale mode: both pour conserver les proportions
+      newParams.set('q', '100'); // Qualité maximale
 
-      return `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
+      const finalUrl = `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
+      console.log('URL optimisée pour haute qualité:', finalUrl);
+      return finalUrl;
     } catch (error) {
       console.error('Erreur lors du nettoyage de l\'URL:', error);
-      return url; // Retourner l'URL originale en cas d'erreur
+      return url;
     }
   }
 
@@ -65,7 +57,10 @@ export class ImageProcessor {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'image/webp,image/jpeg,image/png,image/*',
+          'Accept-Encoding': 'gzip, deflate, br',
           'Referer': 'https://www.centris.ca/',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       });
 
@@ -84,6 +79,12 @@ export class ImageProcessor {
       console.log('- Taille:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
       console.log('- Type:', blob.type);
 
+      // Vérifier la taille minimale pour la qualité
+      if (blob.size < 500 * 1024) { // Moins de 500KB
+        console.warn('⚠️ Image de faible qualité détectée');
+        return { processedUrl: null, error: 'Image de qualité insuffisante' };
+      }
+
       const fileExt = blob.type.split('/')[1] || 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       console.log('Nom du fichier:', fileName);
@@ -92,7 +93,7 @@ export class ImageProcessor {
         .from('listings-images')
         .upload(fileName, blob, {
           contentType: blob.type,
-          cacheControl: '31536000',
+          cacheControl: '31536000', // Cache d'un an pour les images
           upsert: false
         });
 

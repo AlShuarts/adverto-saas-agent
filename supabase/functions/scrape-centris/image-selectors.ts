@@ -1,20 +1,22 @@
 export const imageSelectors = [
-  // Sélecteurs spécifiques pour les images Centris
+  // Sélecteurs pour les images haute qualité
+  'img[src*="mspublic.centris.ca/media.ashx"][data-high-res]',
+  'img[data-src*="mspublic.centris.ca/media.ashx"][data-high-res]',
+  '[data-image-url*="mspublic.centris.ca/media.ashx"][data-high-res]',
+  
+  // Sélecteurs de base pour les images Centris
   'img[src*="mspublic.centris.ca/media.ashx"]',
   'img[data-src*="mspublic.centris.ca/media.ashx"]',
   '[data-image-url*="mspublic.centris.ca/media.ashx"]',
   '[data-original*="mspublic.centris.ca/media.ashx"]',
   
-  // Conteneurs d'images
+  // Conteneurs d'images spécifiques
   '#divMainPhoto img',
-  '#divPhotos img',
-  '.photo-gallery img',
   '.MainImg img',
-  '.Carousel img',
-  '.Gallery img',
+  '.photo-gallery img[data-high-res]',
+  '.Carousel img[data-high-res]',
   
-  // Attributs spécifiques
-  'img[itemprop="image"]',
-  'img[data-qaid="property-photo"]',
-  '[data-qaid="photos"] img'
+  // Attributs spécifiques pour les images haute qualité
+  'img[itemprop="image"][data-high-res]',
+  'img[data-qaid="property-photo"][data-high-res]'
 ];
