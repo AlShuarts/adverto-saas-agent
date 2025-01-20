@@ -22,31 +22,34 @@ export const SlideShowComposition = ({
 
   // Gestion du changement d'image
   useEffect(() => {
-    if (!isPlaying) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = undefined;
-      }
-      return;
+    // Nettoyage de l'intervalle existant
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = undefined;
     }
 
-    intervalRef.current = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 5000);
+    // Création d'un nouvel intervalle uniquement si isPlaying est true
+    if (isPlaying) {
+      console.log('Starting slideshow interval');
+      intervalRef.current = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, 5000);
+    }
 
+    // Nettoyage lors du démontage
     return () => {
+      console.log('Cleaning up slideshow interval');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = undefined;
       }
     };
-  }, [isPlaying, images.length]);
+  }, [isPlaying, images.length]); // Dépendances mises à jour
 
   // Initialisation et gestion de l'audio
   useEffect(() => {
     if (!musicUrl) return;
 
-    // Création d'un nouvel élément audio à chaque changement d'URL
     const audio = new Audio(musicUrl);
     audio.loop = true;
     audioRef.current = audio;
@@ -62,7 +65,6 @@ export const SlideShowComposition = ({
 
     audio.addEventListener('error', handleError);
 
-    // Nettoyage
     return () => {
       audio.removeEventListener('error', handleError);
       audio.pause();
