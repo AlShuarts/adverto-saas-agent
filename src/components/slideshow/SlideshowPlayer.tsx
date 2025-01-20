@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Player } from "@remotion/player";
 import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";

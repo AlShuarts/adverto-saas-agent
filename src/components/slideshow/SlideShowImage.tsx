@@ -22,11 +22,13 @@ export const SlideShowImage = ({ src, index, currentIndex }: SlideShowImageProps
       }}
     >
       <img
-        src={`${src}?w=1920&h=1080&fit=cover`}
+        src={src}
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'cover',
+          objectFit: 'contain',
+          maxWidth: '100%',
+          maxHeight: '100%'
         }}
         className="animate-float"
         alt={`Slide ${index + 1}`}
