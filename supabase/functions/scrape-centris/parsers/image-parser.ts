@@ -11,14 +11,18 @@ export class ImageParser {
   private isValidImageUrl(url: string): boolean {
     if (!url) return false;
     
-    // Accepter toutes les URLs qui contiennent centris.ca
-    return url.includes('centris.ca');
+    // Accepter uniquement les URLs qui contiennent centris.ca/media.ashx
+    return url.includes('centris.ca/media.ashx');
   }
 
   private cleanImageUrl(url: string): string {
     try {
-      // Si l'URL ne contient pas media.ashx, on la retourne telle quelle
+      // Si l'URL ne contient pas media.ashx, on essaie d'extraire l'ID de l'image
       if (!url.includes('media.ashx')) {
+        const matches = url.match(/[A-Z0-9]{32}/);
+        if (matches && matches[0]) {
+          return `https://mspublic.centris.ca/media.ashx?id=${matches[0]}&t=pi&f=I`;
+        }
         return url;
       }
 
@@ -31,16 +35,8 @@ export class ImageParser {
         return url;
       }
 
-      // Paramètres optimisés pour la qualité d'image
-      const newParams = new URLSearchParams();
-      newParams.set('id', imageId);
-      newParams.set('t', 'photo');
-      newParams.set('sm', 'c');
-      newParams.set('w', '800');
-      newParams.set('h', '600');
-      newParams.set('quality', '85');
-
-      return `https://mspublic.centris.ca/media.ashx?${newParams.toString()}`;
+      // Construction de l'URL avec le format correct
+      return `https://mspublic.centris.ca/media.ashx?id=${imageId}&t=pi&f=I`;
     } catch (error) {
       console.log('Erreur lors du nettoyage de l\'URL:', error);
       return url;
@@ -63,8 +59,8 @@ export class ImageParser {
       
       [src, dataSrc, dataOriginal].forEach(url => {
         if (url && !this.seenUrls.has(url)) {
-          if (this.isValidImageUrl(url)) {
-            const cleanedUrl = this.cleanImageUrl(url);
+          const cleanedUrl = this.cleanImageUrl(url);
+          if (this.isValidImageUrl(cleanedUrl)) {
             this.seenUrls.add(cleanedUrl);
             imageUrls.push(cleanedUrl);
             console.log('Image trouvée et nettoyée:', cleanedUrl);
@@ -75,10 +71,12 @@ export class ImageParser {
       if (srcset) {
         const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
         srcsetUrls.forEach(url => {
-          if (!this.seenUrls.has(url) && this.isValidImageUrl(url)) {
+          if (!this.seenUrls.has(url)) {
             const cleanedUrl = this.cleanImageUrl(url);
-            this.seenUrls.add(cleanedUrl);
-            imageUrls.push(cleanedUrl);
+            if (this.isValidImageUrl(cleanedUrl)) {
+              this.seenUrls.add(cleanedUrl);
+              imageUrls.push(cleanedUrl);
+            }
           }
         });
       }
@@ -91,10 +89,25 @@ export class ImageParser {
       const matches = content.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|gif|webp)[^"'\s]*/gi);
       if (matches) {
         matches.forEach(url => {
-          if (!this.seenUrls.has(url) && this.isValidImageUrl(url)) {
+          if (!this.seenUrls.has(url)) {
             const cleanedUrl = this.cleanImageUrl(url);
-            this.seenUrls.add(cleanedUrl);
-            imageUrls.push(cleanedUrl);
+            if (this.isValidImageUrl(cleanedUrl)) {
+              this.seenUrls.add(cleanedUrl);
+              imageUrls.push(cleanedUrl);
+            }
+          }
+        });
+      }
+
+      // Recherche spécifique des IDs d'images Centris
+      const idMatches = content.match(/[A-Z0-9]{32}/g);
+      if (idMatches) {
+        idMatches.forEach(id => {
+          const url = `https://mspublic.centris.ca/media.ashx?id=${id}&t=pi&f=I`;
+          if (!this.seenUrls.has(url)) {
+            this.seenUrls.add(url);
+            imageUrls.push(url);
+            console.log('ID d\'image Centris trouvé:', id);
           }
         });
       }
