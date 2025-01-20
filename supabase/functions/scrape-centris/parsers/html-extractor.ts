@@ -12,36 +12,43 @@ export class HtmlExtractor {
     const imageUrls = new Set<string>();
     
     try {
-      // Trouver le conteneur principal du visualiseur de photos
-      const photoViewer = this.doc.querySelector('.photoViewer.photoViewerOnPage');
+      // Trouver le conteneur principal du visualiseur de photos avec l'attribut show
+      const photoViewer = this.doc.querySelector('.photoViewer.photoViewerOnPage[show]');
       if (photoViewer) {
-        console.log('PhotoViewer trouvé');
+        console.log('PhotoViewer avec attribut show trouvé');
         
-        // Chercher dans la galerie
-        const gallery = photoViewer.querySelector('.gallery');
+        // Chercher dans la galerie avec l'attribut ondragstart
+        const gallery = photoViewer.querySelector('.gallery[ondragstart]');
         if (gallery) {
-          console.log('Gallery trouvée');
+          console.log('Gallery avec ondragstart trouvée');
           
-          // Chercher toutes les images dans les wrappers
-          const imageWrappers = gallery.querySelectorAll('.image-wrapper');
-          console.log(`Nombre d'image-wrappers trouvés: ${imageWrappers.length}`);
+          // Chercher toutes les images dans les wrappers avec style height
+          const imageWrappers = gallery.querySelectorAll('.image-wrapper[style*="height"]');
+          console.log(`Nombre d'image-wrappers avec style height trouvés: ${imageWrappers.length}`);
           
-          imageWrappers.forEach((wrapper: Element) => {
-            const fullImg = wrapper.querySelector('img#fullImg');
+          imageWrappers.forEach((wrapper: Element, index: number) => {
+            // Chercher l'image avec id fullImg et src
+            const fullImg = wrapper.querySelector('img#fullImg[src]');
             if (fullImg) {
               const src = fullImg.getAttribute('src');
+              console.log(`Image ${index + 1} trouvée avec src:`, src);
+              
               if (src && UrlValidator.isValid(src)) {
                 const cleanedUrl = UrlGenerator.cleanImageUrl(src);
                 if (cleanedUrl) {
                   imageUrls.add(cleanedUrl);
-                  console.log('Image trouvée dans PhotoViewer:', cleanedUrl);
+                  console.log('URL nettoyée ajoutée:', cleanedUrl);
                 }
               }
+            } else {
+              console.log(`Pas d'image fullImg trouvée dans le wrapper ${index + 1}`);
             }
           });
+        } else {
+          console.log('Gallery avec ondragstart non trouvée');
         }
       } else {
-        console.log('PhotoViewer non trouvé, utilisation des méthodes alternatives');
+        console.log('PhotoViewer avec attribut show non trouvé');
       }
     } catch (error) {
       console.error('Erreur lors de l\'extraction depuis PhotoViewer:', error);
@@ -113,7 +120,9 @@ export class HtmlExtractor {
     let allUrls: Set<string>;
     if (photoViewerUrls.size > 0) {
       allUrls = photoViewerUrls;
+      console.log('Utilisation des URLs du PhotoViewer');
     } else {
+      console.log('Aucune URL trouvée dans PhotoViewer, utilisation des méthodes alternatives');
       allUrls = new Set<string>([
         ...this.extractFromHtmlContent(),
         ...this.extractFromImageElements(),
