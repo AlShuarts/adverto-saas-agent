@@ -38,11 +38,6 @@ serve(async (req) => {
       'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
       'Cache-Control': 'no-cache',
       'Pragma': 'no-cache',
-      'Sec-Fetch-Dest': 'document',
-      'Sec-Fetch-Mode': 'navigate',
-      'Sec-Fetch-Site': 'none',
-      'Sec-Fetch-User': '?1',
-      'Upgrade-Insecure-Requests': '1',
     };
     
     console.log('Headers de la requête:', headers);
@@ -87,13 +82,12 @@ serve(async (req) => {
     
     if (imageUrls.length === 0) {
       console.error('Aucune image trouvée dans le HTML');
-      console.log('Contenu HTML:', html);
       throw new Error("Aucune image n'a été trouvée dans l'annonce. Veuillez vérifier que l'URL est correcte et que l'annonce contient des images.");
     }
     
     const processedImages: string[] = [];
     let errorCount = 0;
-    const maxErrors = Math.ceil(imageUrls.length * 0.3); // Permet jusqu'à 30% d'erreurs
+    const maxErrors = Math.ceil(imageUrls.length * 0.6); // Augmenté à 60% de tolérance
     
     for (const imageUrl of imageUrls) {
       try {
@@ -117,8 +111,8 @@ serve(async (req) => {
         throw new Error("Trop d'erreurs lors du traitement des images. Veuillez réessayer.");
       }
       
-      // Petit délai entre chaque traitement d'image
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Délai plus long entre chaque traitement d'image
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     if (processedImages.length === 0) {

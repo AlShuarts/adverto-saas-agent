@@ -31,12 +31,13 @@ export class ImageProcessor {
 
       // Téléchargement de l'image avec timeout plus long
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000); // Augmenté à 30 secondes
+      const timeout = setTimeout(() => controller.abort(), 60000); // Augmenté à 60 secondes
 
       console.log('Tentative de téléchargement de l\'image...');
       const imageResponse = await fetch(imageUrl, { 
         headers,
-        signal: controller.signal
+        signal: controller.signal,
+        redirect: 'follow'
       }).finally(() => clearTimeout(timeout));
 
       if (!imageResponse.ok) {
@@ -47,7 +48,9 @@ export class ImageProcessor {
       const contentType = imageResponse.headers.get('content-type');
       console.log('Type de contenu reçu:', contentType);
       
-      if (!contentType?.startsWith('image/')) {
+      // Accepter plus de types MIME d'images
+      const validImageTypes = ['image/', 'application/octet-stream'];
+      if (!contentType || !validImageTypes.some(type => contentType.startsWith(type))) {
         console.error('Type de contenu invalide reçu:', contentType);
         throw new Error(`Type de contenu invalide: ${contentType}`);
       }
@@ -61,13 +64,13 @@ export class ImageProcessor {
       }
 
       // Génération d'un nom de fichier unique
-      const fileExt = contentType.split('/')[1] || 'jpg';
+      const fileExt = contentType.includes('image/') ? contentType.split('/')[1] : 'jpg';
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       console.log('Nom du fichier généré:', fileName);
 
       // Upload vers Supabase avec retry
       let retryCount = 0;
-      const maxRetries = 3;
+      const maxRetries = 5; // Augmenté à 5 tentatives
       let lastError = null;
       
       while (retryCount < maxRetries) {
@@ -79,7 +82,7 @@ export class ImageProcessor {
             .upload(fileName, imageBlob, {
               contentType: contentType,
               cacheControl: '31536000',
-              upsert: false
+              upsert: true // Changé à true pour éviter les conflits
             });
 
           if (uploadError) {
@@ -104,8 +107,8 @@ export class ImageProcessor {
             throw error;
           }
           
-          // Attendre avant de réessayer avec un délai exponentiel
-          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+          // Attendre avant de réessayer avec un délai exponentiel plus long
+          const delay = Math.min(2000 * Math.pow(2, retryCount), 30000);
           console.log(`Attente de ${delay}ms avant la prochaine tentative...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
