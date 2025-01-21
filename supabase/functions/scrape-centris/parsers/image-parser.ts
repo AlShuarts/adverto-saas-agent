@@ -15,11 +15,9 @@ export class ImageParser {
   }
 
   private cleanImageUrl(url: string): string {
-    // Extraire l'ID de l'image de l'URL
     const idMatch = url.match(/id=([^&]+)/);
     if (!idMatch) return url;
     
-    // Construire la nouvelle URL avec les paramètres optimaux
     const imageId = idMatch[1];
     return `https://mspublic.centris.ca/media.ashx?id=${imageId}&t=pi&f=I`;
   }
@@ -46,52 +44,10 @@ export class ImageParser {
     return imageUrls;
   }
 
-  private extractFromImageTags(selectors: string[]): string[] {
-    const imageUrls: string[] = [];
-    
-    for (const selector of selectors) {
-      const elements = this.doc.querySelectorAll(selector);
-      console.log(`Found ${elements.length} elements with selector ${selector}`);
-      
-      for (const img of elements) {
-        const src = img.getAttribute("src");
-        const dataSrc = img.getAttribute("data-src");
-        const srcset = img.getAttribute("srcset");
-        
-        [src, dataSrc].forEach(url => {
-          if (url && this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
-            const cleanedUrl = this.cleanImageUrl(url);
-            this.seenUrls.add(cleanedUrl);
-            imageUrls.push(cleanedUrl);
-            console.log('Found image URL in img tag:', cleanedUrl);
-          }
-        });
-
-        if (srcset) {
-          const srcsetUrls = srcset.split(',').map(s => s.trim().split(' ')[0]);
-          srcsetUrls.forEach(url => {
-            if (this.isValidImageUrl(url) && !this.seenUrls.has(url)) {
-              const cleanedUrl = this.cleanImageUrl(url);
-              this.seenUrls.add(cleanedUrl);
-              imageUrls.push(cleanedUrl);
-              console.log('Found image URL in srcset:', cleanedUrl);
-            }
-          });
-        }
-      }
-    }
-    
-    return imageUrls;
-  }
-
   getImageUrls(selectors: string[]): string[] {
     console.log('Starting to extract image URLs');
-    
     const scriptUrls = this.extractFromScript();
-    const imageTagUrls = this.extractFromImageTags(selectors);
-    const allUrls = [...scriptUrls, ...imageTagUrls];
-    
-    console.log('Total unique images found:', allUrls.length);
-    return allUrls;
+    console.log('Total unique images found:', scriptUrls.length);
+    return scriptUrls;
   }
 }
