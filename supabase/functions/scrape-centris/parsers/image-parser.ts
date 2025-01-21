@@ -10,16 +10,18 @@ export class ImageParser {
   private isValidImageUrl(url: string): boolean {
     if (!url) return false;
     const isCentrisUrl = url.includes('mspublic.centris.ca/media.ashx');
-    const hasRequiredParams = url.includes('id=') && 
-                            (url.includes('&t=pi') || url.includes('&t=photo'));
+    const hasRequiredParams = url.includes('id=');
     return isCentrisUrl && hasRequiredParams;
   }
 
   private cleanImageUrl(url: string): string {
-    if (!url.includes('&w=') && !url.includes('&h=')) {
-      url += '&w=640&h=480&sm=c';
-    }
-    return url;
+    // Extraire l'ID de l'image de l'URL
+    const idMatch = url.match(/id=([^&]+)/);
+    if (!idMatch) return url;
+    
+    // Construire la nouvelle URL avec les paramètres optimaux
+    const imageId = idMatch[1];
+    return `https://mspublic.centris.ca/media.ashx?id=${imageId}&t=pi&f=I`;
   }
 
   private extractFromScript(): string[] {
