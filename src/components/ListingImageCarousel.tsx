@@ -29,8 +29,6 @@ export const ListingImageCarousel = ({ images }: ListingImageCarouselProps) => {
                 src={image}
                 alt={`Image ${index + 1}`}
                 className="object-cover w-full h-full"
-                loading={index === 0 ? "eager" : "lazy"}
-                decoding="async"
               />
             </div>
           </CarouselItem>

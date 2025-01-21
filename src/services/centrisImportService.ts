@@ -32,25 +32,22 @@ export const importCentrisListing = async (url: string, userId: string) => {
 
   console.log("Données reçues du scraping:", response);
 
-  // Vérification des images
-  if (!response.images || response.images.length === 0) {
-    console.error("Aucune image n'a été trouvée dans l'annonce");
-    throw new Error("Aucune image n'a été trouvée dans l'annonce");
-  }
+  const formattedPrice = formatPrice(response.price);
+  console.log("Prix formaté:", response.price, "->", formattedPrice);
 
   const listingData = {
     centris_id: response.centris_id,
-    centris_url: url,
+    centris_url: url, // Ajout de l'URL Centris
     title: response.title,
     description: response.description || null,
-    price: response.price ? Number(response.price) : null,
+    price: formattedPrice,
     address: response.address || null,
     city: response.city || null,
     postal_code: response.postal_code || null,
     bedrooms: response.bedrooms || null,
     bathrooms: response.bathrooms || null,
     property_type: response.property_type || null,
-    images: response.original_images || response.images || null, // Utiliser les URLs originales
+    images: response.images || null,
     user_id: userId,
   };
 
