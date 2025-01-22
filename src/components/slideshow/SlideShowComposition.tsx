@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 
-export const SLIDE_DURATION = 5000; // 5 secondes en millisecondes
+export const SLIDE_DURATION = 3000; // 3 secondes en millisecondes
 
 type SlideShowCompositionProps = {
   images: string[];

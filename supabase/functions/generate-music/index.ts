@@ -26,7 +26,7 @@ serve(async (req) => {
     });
 
     // Calculer la durée totale nécessaire (5 secondes par image)
-    const slideDuration = 5; // secondes par image
+    const slideDuration = 3; // secondes par image
     const totalDuration = Math.ceil((listing.images?.length || 1) * slideDuration);
     
     console.log(`Generating music for ${listing.images?.length} images, duration: ${totalDuration} seconds`);
