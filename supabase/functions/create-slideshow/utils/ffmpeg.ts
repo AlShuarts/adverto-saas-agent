@@ -23,9 +23,10 @@ export const initFFmpeg = async () => {
 export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
   console.log('Starting slideshow creation with', images.length, 'images');
   
-  // Limit number of images to prevent resource exhaustion
-  const maxImages = 5;
+  // Limit to only 3 images maximum
+  const maxImages = 3;
   const processedImages = images.slice(0, maxImages);
+  console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
   
   // Process images sequentially with lower quality
   for (let i = 0; i < processedImages.length; i++) {
@@ -40,11 +41,11 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
       const imageData = await imageResponse.arrayBuffer();
       await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
       
-      // Optimize each image before processing
+      // Optimize each image with lower resolution
       await ffmpeg.exec([
         '-i', `image${i}.jpg`,
-        '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease',
-        '-quality', '80',
+        '-vf', 'scale=640:360:force_original_aspect_ratio=decrease',
+        '-quality', '60',
         `optimized${i}.jpg`
       ]);
     } catch (error) {
@@ -53,26 +54,26 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
     }
   }
 
-  // Create text overlay with minimal formatting
-  const textContent = `${listing.title}\n${listing.price ? formatPrice(listing.price) : "Prix sur demande"}`;
+  // Simplified text overlay
+  const textContent = listing.title;
   await ffmpeg.writeFile('info.txt', textContent);
 
   // Write background music
   await ffmpeg.writeFile('background.mp3', backgroundMusic);
 
-  // Generate video with optimized settings
+  // Generate video with minimal settings
   const command = [
-    '-framerate', '1/3',
+    '-framerate', '1/4',
     '-pattern_type', 'sequence',
     '-i', 'optimized%d.jpg',
     '-i', 'background.mp3',
     '-filter_complex',
-    '[0:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=info.txt:fontcolor=white:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-text_h-50[v]',
+    '[0:v]scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=info.txt:fontcolor=white:fontsize=18:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-text_h-20[v]',
     '-map', '[v]',
     '-map', '1:a',
     '-c:v', 'libx264',
     '-preset', 'ultrafast',
-    '-crf', '30',
+    '-crf', '35',
     '-c:a', 'aac',
     '-shortest',
     '-movflags', '+faststart',
