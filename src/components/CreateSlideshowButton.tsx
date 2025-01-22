@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
 import { MusicSelector } from "./slideshow/MusicSelector";
 import { SlideshowPlayer } from "./slideshow/SlideshowPlayer";
@@ -18,15 +18,17 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const publishToFacebook = async (videoUrl: string) => {
+  const publishToFacebook = async () => {
+    if (!videoUrl) return;
+    
     try {
       setIsPublishing(true);
       console.log("Début de la publication sur Facebook");
 
-      // Vérifier si l'utilisateur a connecté Facebook
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("facebook_page_id, facebook_access_token")
@@ -61,8 +63,6 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         throw new Error(functionError.message || "Erreur lors de la publication sur Facebook");
       }
 
-      console.log("Réponse de la fonction:", responseData);
-
       if (!responseData?.id) {
         throw new Error("Aucun ID de publication reçu");
       }
@@ -79,10 +79,8 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         console.error("Erreur lors de la mise à jour du statut:", updateError);
       }
 
-      // Rafraîchir les données
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
-      // Afficher la confirmation avec le lien vers la publication
       toast({
         title: "Publication réussie ! 🎉",
         description: (
@@ -136,7 +134,6 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
       const { musicUrl } = data;
       setSelectedMusic(musicUrl);
-      setIsOpen(true);
       
       // Créer le diaporama
       const { data: slideshowData, error: slideshowError } = await supabase.functions.invoke('create-slideshow', {
@@ -147,15 +144,8 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         throw slideshowError;
       }
 
-      const { url: videoUrl } = slideshowData;
-
-      // Publier sur Facebook
-      await publishToFacebook(videoUrl);
-
-      toast({
-        title: "Succès",
-        description: "Le diaporama a été créé et publié avec succès",
-      });
+      setVideoUrl(slideshowData.url);
+      setIsOpen(true);
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -185,7 +175,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-4xl">
-          <DialogTitle>Diaporama</DialogTitle>
+          <DialogTitle>Prévisualisation du diaporama</DialogTitle>
           <div className="space-y-4">
             {listing.images && (
               <SlideshowPlayer
@@ -194,6 +184,14 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
               />
             )}
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={publishToFacebook} disabled={isPublishing}>
+              {isPublishing ? "Publication en cours..." : "Publier sur Facebook"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
