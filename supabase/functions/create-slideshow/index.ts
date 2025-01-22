@@ -17,10 +17,7 @@ serve(async (req) => {
     if (!listingId) {
       console.error('No listingId provided');
       return new Response(
-        JSON.stringify({ 
-          error: 'listingId is required',
-          success: false 
-        }), 
+        JSON.stringify({ error: 'listingId is required' }), 
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -40,13 +37,10 @@ serve(async (req) => {
       .eq('id', listingId)
       .single();
 
-    if (listingError) {
+    if (listingError || !listing) {
       console.error('Error fetching listing:', listingError);
       return new Response(
-        JSON.stringify({ 
-          error: 'Listing not found',
-          success: false 
-        }), 
+        JSON.stringify({ error: 'Listing not found' }), 
         { 
           status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -58,10 +52,7 @@ serve(async (req) => {
     if (images.length === 0) {
       console.error('No images found for listing:', listingId);
       return new Response(
-        JSON.stringify({ 
-          error: 'No images found for this listing',
-          success: false 
-        }), 
+        JSON.stringify({ error: 'No images found for this listing' }), 
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -69,43 +60,26 @@ serve(async (req) => {
       );
     }
 
-    try {
-      console.log('Initializing FFmpeg...');
-      const ffmpeg = await initFFmpeg();
+    console.log('Initializing FFmpeg...');
+    const ffmpeg = await initFFmpeg();
 
-      console.log('Creating slideshow...');
-      const videoBlob = await createSlideshow(ffmpeg, images, listing);
+    console.log('Creating slideshow...');
+    const videoBlob = await createSlideshow(ffmpeg, images, listing);
 
-      console.log('Uploading slideshow...');
-      const url = await uploadToStorage(videoBlob, listingId);
+    console.log('Uploading slideshow...');
+    const url = await uploadToStorage(videoBlob, listingId);
 
-      console.log('Slideshow created successfully:', url);
-      return new Response(
-        JSON.stringify({ success: true, url }), 
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (processingError) {
-      console.error('Processing error:', processingError);
-      return new Response(
-        JSON.stringify({ 
-          error: `Error processing slideshow: ${processingError.message}`,
-          success: false 
-        }), 
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    console.log('Slideshow created successfully:', url);
+    return new Response(
+      JSON.stringify({ success: true, url }), 
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'An unexpected error occurred',
-        success: false 
-      }), 
+      JSON.stringify({ error: error.message || 'An unexpected error occurred' }), 
       { 
-        status: 500,
+        status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
