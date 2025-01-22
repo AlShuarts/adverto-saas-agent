@@ -11,7 +11,10 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { createSlideshow, isLoading, selectedMusic, videoUrl } = useSlideshow(listing);
+  const { createSlideshow, isLoading, selectedMusic, videoUrl } = useSlideshow({ 
+    listing,
+    images: listing.images || []
+  });
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
   const handleCreateSlideshow = async () => {
