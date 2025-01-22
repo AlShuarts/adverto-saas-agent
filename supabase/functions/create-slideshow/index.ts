@@ -1,11 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { corsHeaders } from './utils/cors.ts';
-import { initFFmpeg, createSlideshow } from './utils/ffmpeg.ts';
+import { createSlideshow } from './utils/ffmpeg.ts';
 import { uploadToStorage } from './utils/storage.ts';
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -60,20 +59,12 @@ serve(async (req) => {
       );
     }
 
-    console.log('Initializing FFmpeg...');
-    const ffmpeg = await initFFmpeg();
-    console.log('FFmpeg initialized successfully');
-
     console.log('Creating slideshow...');
-    const videoBlob = await createSlideshow(ffmpeg, images, listing);
-    console.log('Slideshow created successfully');
-
-    console.log('Uploading slideshow...');
-    const url = await uploadToStorage(videoBlob, listingId);
-    console.log('Slideshow uploaded successfully:', url);
+    const videoUrl = await createSlideshow(images, listing);
+    console.log('Slideshow created successfully:', videoUrl);
 
     return new Response(
-      JSON.stringify({ success: true, url }), 
+      JSON.stringify({ success: true, url: videoUrl }), 
       { 
         headers: { 
           ...corsHeaders, 

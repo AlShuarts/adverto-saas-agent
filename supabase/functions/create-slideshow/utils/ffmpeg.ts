@@ -1,60 +1,65 @@
-import { createFFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.11.0';
-
-export const initFFmpeg = async () => {
-  console.log('Initializing FFmpeg...');
-  const ffmpeg = createFFmpeg({
-    log: true,
-  });
+// Nous allons utiliser Replicate au lieu de FFmpeg
+export const createSlideshow = async (images: string[], listing: any) => {
+  console.log('Starting slideshow creation with Replicate...');
   
   try {
-    console.log('Loading FFmpeg...');
-    await ffmpeg.load();
-    console.log('FFmpeg loaded successfully');
-    return ffmpeg;
-  } catch (error) {
-    console.error('Error loading FFmpeg:', error);
-    throw new Error(`Failed to initialize FFmpeg: ${error.message}`);
-  }
-};
-
-export const createSlideshow = async (ffmpeg: any, images: string[], listing: any) => {
-  console.log('Starting slideshow creation with first image...');
-  
-  try {
-    // Fetch only the first image
+    // Nous utilisons seulement la première image pour l'instant
     const imageUrl = images[0];
     console.log('Processing image:', imageUrl);
     
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
+    // Appel à l'API Replicate
+    const response = await fetch("https://api.replicate.com/v1/predictions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${Deno.env.get("REPLICATE_API_KEY")}`,
+      },
+      body: JSON.stringify({
+        version: "c24011d8e77b8a51f1661f66f057a2906e7a2e9f9d63d3bb468a350193f8fd3c",
+        input: {
+          image: imageUrl,
+          num_frames: 30,
+          fps: 10,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Replicate API error: ${response.statusText}`);
     }
-    
-    const imageData = await imageResponse.arrayBuffer();
-    console.log('Image data fetched, size:', imageData.byteLength);
-    
-    // Write input file
-    await ffmpeg.writeFile('input.jpg', new Uint8Array(imageData));
-    console.log('Image written to FFmpeg');
 
-    // Simple command to create a static video
-    const command = [
-      '-i', 'input.jpg',
-      '-t', '3',
-      '-c:v', 'libx264',
-      '-preset', 'ultrafast',
-      '-pix_fmt', 'yuv420p',
-      'output.mp4'
-    ];
+    const prediction = await response.json();
+    console.log('Prediction created:', prediction);
 
-    console.log('Executing FFmpeg command:', command.join(' '));
-    await ffmpeg.exec(command);
-    console.log('FFmpeg command executed');
+    // Attendre que la prédiction soit terminée
+    const pollInterval = 1000; // 1 seconde
+    let result;
+    while (!result) {
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+      
+      const pollResponse = await fetch(
+        `https://api.replicate.com/v1/predictions/${prediction.id}`,
+        {
+          headers: {
+            Authorization: `Token ${Deno.env.get("REPLICATE_API_KEY")}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      const pollResult = await pollResponse.json();
+      if (pollResult.status === "succeeded") {
+        result = pollResult;
+        break;
+      } else if (pollResult.status === "failed") {
+        throw new Error(`Prediction failed: ${pollResult.error}`);
+      }
+      
+      console.log('Waiting for prediction to complete...');
+    }
 
-    const data = await ffmpeg.readFile('output.mp4');
-    console.log('Output video read, size:', data.byteLength);
-    
-    return new Blob([data], { type: 'video/mp4' });
+    console.log('Video generation completed:', result);
+    return result.output;
   } catch (error) {
     console.error('Error in createSlideshow:', error);
     throw error;
