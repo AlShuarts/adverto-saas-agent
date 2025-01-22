@@ -22,9 +22,8 @@ export const initFFmpeg = async () => {
 export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
   console.log('Starting slideshow creation with', images.length, 'images');
   
-  // Limit to only 2 images maximum to reduce processing time
-  const maxImages = 2;
-  const processedImages = images.slice(0, maxImages);
+  // Process only first image for testing
+  const processedImages = [images[0]];
   console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
   
   try {
@@ -44,10 +43,11 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
     // Write background music
     await ffmpeg.writeFile('background.mp3', backgroundMusic);
 
-    // Generate video with basic settings
+    // Generate video with minimal settings for testing
     const command = [
-      '-framerate', '1/2',
-      '-i', 'image%d.jpg',
+      '-loop', '1',
+      '-t', '3',
+      '-i', 'image0.jpg',
       '-i', 'background.mp3',
       '-c:v', 'libx264',
       '-preset', 'ultrafast',
