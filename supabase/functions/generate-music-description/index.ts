@@ -58,11 +58,15 @@ serve(async (req) => {
       throw new Error(`Erreur lors de la récupération des musiques: ${storageError.message}`);
     }
 
-    // Filtrer les musiques selon le style suggéré
-    const matchingMusic = musicFiles.find(file => file.name.toLowerCase().includes(style));
+    // Si aucune musique n'est trouvée, utiliser la première musique disponible
+    let matchingMusic = musicFiles.find(file => file.name.toLowerCase().includes(style));
+    if (!matchingMusic && musicFiles.length > 0) {
+      console.log(`Aucune musique trouvée pour le style ${style}, utilisation de la première musique disponible`);
+      matchingMusic = musicFiles[0];
+    }
     
     if (!matchingMusic) {
-      throw new Error(`Aucune musique trouvée pour le style ${style}`);
+      throw new Error('Aucune musique disponible dans le bucket');
     }
 
     const { data: { publicUrl } } = supabase
