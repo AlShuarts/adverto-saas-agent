@@ -11,17 +11,15 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { createSlideshow, isLoading, selectedMusic, videoUrl } = useSlideshow({ 
+  const { isLoading, videoUrl } = useSlideshow({ 
     listing,
     images: listing.images || []
   });
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
   const handleCreateSlideshow = async () => {
-    const success = await createSlideshow();
-    if (success) {
-      setIsOpen(true);
-    }
+    // Pour le moment, on ouvre directement la prévisualisation sans générer de musique
+    setIsOpen(true);
   };
 
   const handlePublish = async () => {
@@ -43,7 +41,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         onClick={handleCreateSlideshow}
         disabled={isLoading || isPublishing}
       >
-        {isLoading ? "Génération en cours..." : "Créer un diaporama"}
+        {isLoading ? "Génération en cours..." : "Prévisualiser le diaporama"}
       </Button>
 
       <SlideshowPreviewDialog
@@ -52,7 +50,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         onPublish={handlePublish}
         isPublishing={isPublishing}
         listing={listing}
-        musicUrl={selectedMusic}
+        musicUrl="/background-music.mp3"
       />
     </>
   );
