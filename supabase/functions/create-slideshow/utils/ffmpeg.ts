@@ -1,5 +1,5 @@
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
-import { toBlobURL } from 'https://esm.sh/@ffmpeg/util@0.12.0';
+import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.11.0';
+import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.11.0';
 
 export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
@@ -7,17 +7,7 @@ export const initFFmpeg = async () => {
   
   try {
     console.log('Loading FFmpeg...');
-    await ffmpeg.load({
-      log: true,
-      coreURL: await toBlobURL(
-        `https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.js`,
-        'text/javascript'
-      ),
-      wasmURL: await toBlobURL(
-        `https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm/ffmpeg-core.wasm`,
-        'application/wasm'
-      )
-    });
+    await ffmpeg.load();
     console.log('FFmpeg loaded successfully');
     return ffmpeg;
   } catch (error) {
