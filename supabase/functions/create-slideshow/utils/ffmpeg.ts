@@ -15,12 +15,12 @@ export const createSlideshow = async (images: string[], listing: any) => {
         Authorization: `Token ${Deno.env.get("REPLICATE_API_KEY")}`,
       },
       body: JSON.stringify({
-        version: "2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3787b6ee",
+        version: "9ea6dbf8-3022-4c7c-b463-22daf4eb6d3a",
         input: {
-          image_sequence: imageUrls,
-          fps: 1,
-          transition: "fade",
-          transition_duration: 1
+          images: imageUrls,
+          transition_time: 1,
+          frame_rate: 30,
+          output_format: "mp4"
         },
       }),
     });
