@@ -6,6 +6,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { getBackgroundMusics, BackgroundMusic } from "./slideshow/backgroundMusic";
 import { MusicSelector } from "./slideshow/MusicSelector";
 import { SlideshowPlayer } from "./slideshow/SlideshowPlayer";
+import { supabase } from "@/integrations/supabase/client";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -51,19 +52,15 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
     setIsLoading(true);
     try {
-      const response = await fetch('https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/generate-music-description', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ listing }),
+      const { data, error } = await supabase.functions.invoke('generate-music-description', {
+        body: { listing }
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la génération de la musique');
+      if (error) {
+        throw error;
       }
 
-      const { musicUrl } = await response.json();
+      const { musicUrl } = data;
       setSelectedMusic(musicUrl);
       setIsOpen(true);
       
