@@ -3,14 +3,22 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
-export const useSlideshow = (listing: Tables<"listings">) => {
+type SlideshowHookProps = {
+  listing?: Tables<"listings">;
+  images?: string[];
+  musicUrl?: string | null;
+};
+
+export const useSlideshow = ({ listing, images, musicUrl }: SlideshowHookProps = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(1);
   const { toast } = useToast();
 
   const createSlideshow = async () => {
-    if (!listing.images || listing.images.length === 0) {
+    if (!listing?.images || listing.images.length === 0) {
       toast({
         title: "Erreur",
         description: "Aucune image disponible pour le diaporama",
@@ -61,5 +69,9 @@ export const useSlideshow = (listing: Tables<"listings">) => {
     selectedMusic,
     videoUrl,
     setVideoUrl,
+    isPlaying,
+    setIsPlaying,
+    volume,
+    setVolume,
   };
 };

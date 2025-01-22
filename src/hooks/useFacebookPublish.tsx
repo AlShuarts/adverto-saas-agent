@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
+import { ExternalLink } from "lucide-react";
 
 export const useFacebookPublish = (listing: Tables<"listings">) => {
   const [isPublishing, setIsPublishing] = useState(false);

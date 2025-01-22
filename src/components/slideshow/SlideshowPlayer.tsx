@@ -16,7 +16,7 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
     volume,
     setIsPlaying,
     setVolume
-  } = useSlideshow(images, musicUrl);
+  } = useSlideshow({ images, musicUrl });
 
   const togglePlay = useCallback(() => {
     console.log('Toggling play state from:', isPlaying, 'to:', !isPlaying);
