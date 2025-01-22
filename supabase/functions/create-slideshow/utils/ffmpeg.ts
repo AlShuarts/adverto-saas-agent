@@ -22,7 +22,7 @@ export const createSlideshow = async (images: string[], listing: any) => {
       },
       body: JSON.stringify({
         // Using stable-video-diffusion model
-        version: "b96a2f33cc8e4b0aa23eacfce731b9c41a7d9466d9ed4e167375587b54db9423",
+        version: "2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
         input: {
           input_images: imageUrls,
           video_length: "14_frames_with_svd",
