@@ -16,10 +16,7 @@ serve(async (req) => {
     
     if (!listingId) {
       console.error('No listingId provided');
-      return new Response(
-        JSON.stringify({ error: 'listingId is required' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      throw new Error('listingId is required');
     }
 
     const supabase = createClient(
@@ -36,19 +33,13 @@ serve(async (req) => {
 
     if (listingError) {
       console.error('Error fetching listing:', listingError);
-      return new Response(
-        JSON.stringify({ error: 'Listing not found' }), 
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      throw new Error('Listing not found');
     }
 
     const images = listing.images || [];
     if (images.length === 0) {
       console.error('No images found for listing:', listingId);
-      return new Response(
-        JSON.stringify({ error: 'No images found for this listing' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      throw new Error('No images found for this listing');
     }
 
     try {
@@ -68,16 +59,19 @@ serve(async (req) => {
       );
     } catch (processingError) {
       console.error('Processing error:', processingError);
-      return new Response(
-        JSON.stringify({ error: 'Error processing slideshow', details: processingError.message }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      throw new Error(`Error processing slideshow: ${processingError.message}`);
     }
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred', details: error.message }), 
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        success: false
+      }), 
+      { 
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });

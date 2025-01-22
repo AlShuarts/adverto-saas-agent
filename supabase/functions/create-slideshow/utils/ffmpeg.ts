@@ -15,15 +15,15 @@ export const initFFmpeg = async () => {
     return ffmpeg;
   } catch (error) {
     console.error('Error loading FFmpeg:', error);
-    throw error;
+    throw new Error(`Failed to initialize FFmpeg: ${error.message}`);
   }
 };
 
 export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
   console.log('Starting slideshow creation with', images.length, 'images');
   
-  // Limit to only 3 images maximum to reduce processing time
-  const maxImages = 3;
+  // Limit to only 2 images maximum to reduce processing time
+  const maxImages = 2;
   const processedImages = images.slice(0, maxImages);
   console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
   
@@ -39,31 +39,20 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
       }
       const imageData = await imageResponse.arrayBuffer();
       await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
-      
-      // Optimize each image
-      await ffmpeg.exec([
-        '-i', `image${i}.jpg`,
-        '-vf', 'scale=640:360:force_original_aspect_ratio=decrease',
-        '-quality', '60',
-        `optimized${i}.jpg`
-      ]);
     }
 
     // Write background music
     await ffmpeg.writeFile('background.mp3', backgroundMusic);
 
-    // Generate video with simpler settings
+    // Generate video with basic settings
     const command = [
-      '-framerate', '1/3',
-      '-pattern_type', 'sequence',
-      '-i', 'optimized%d.jpg',
+      '-framerate', '1/2',
+      '-i', 'image%d.jpg',
       '-i', 'background.mp3',
       '-c:v', 'libx264',
       '-preset', 'ultrafast',
-      '-crf', '28',
-      '-c:a', 'aac',
+      '-pix_fmt', 'yuv420p',
       '-shortest',
-      '-movflags', '+faststart',
       'output.mp4'
     ];
 
