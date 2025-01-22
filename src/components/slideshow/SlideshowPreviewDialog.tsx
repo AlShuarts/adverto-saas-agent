@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
+import { VideoPreview } from "./VideoPreview";
 
 type SlideshowPreviewDialogProps = {
   isOpen: boolean;
@@ -23,15 +24,7 @@ export const SlideshowPreviewDialog = ({
       <DialogContent className="max-w-4xl">
         <DialogTitle>Prévisualisation de la vidéo</DialogTitle>
         <div className="space-y-4">
-          {listing.video_url && (
-            <video 
-              controls 
-              className="w-full aspect-video"
-              src={listing.video_url}
-            >
-              Votre navigateur ne supporte pas la lecture de vidéos.
-            </video>
-          )}
+          <VideoPreview videoUrl={listing.video_url} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

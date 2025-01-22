@@ -2,11 +2,9 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
-import { useSlideshow } from "@/hooks/useSlideshow";
+import { useVideoGeneration } from "@/hooks/useVideoGeneration";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -15,51 +13,13 @@ type CreateSlideshowButtonProps = {
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { isLoading, setVideoUrl } = useSlideshow({ 
-    listing,
-    images: listing.images || []
-  });
+  const { generateVideo, isLoading } = useVideoGeneration(listing.id);
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
   const handleCreateVideo = async () => {
-    try {
+    const videoUrl = await generateVideo();
+    if (videoUrl) {
       setIsOpen(true);
-      const { data, error } = await supabase.functions.invoke('create-slideshow', {
-        body: { listingId: listing.id }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.url) {
-        // Mettre à jour la colonne video_url dans la base de données
-        const { error: updateError } = await supabase
-          .from('listings')
-          .update({ video_url: data.url })
-          .eq('id', listing.id);
-
-        if (updateError) {
-          throw updateError;
-        }
-
-        setVideoUrl(data.url);
-        queryClient.invalidateQueries({ queryKey: ["listings"] });
-        
-        toast({
-          title: "Succès",
-          description: "La vidéo a été générée avec succès",
-        });
-      }
-    } catch (error) {
-      console.error('Erreur lors de la création de la vidéo:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de générer la vidéo",
-        variant: "destructive",
-      });
-      setIsOpen(false);
     }
   };
 
