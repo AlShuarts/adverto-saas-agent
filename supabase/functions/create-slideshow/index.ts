@@ -50,17 +50,12 @@ serve(async (req) => {
       );
     }
 
-    // Limit the number of images to prevent resource exhaustion
-    const maxImages = 10;
-    const processedImages = images.slice(0, maxImages);
-    console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
-
     try {
       console.log('Initializing FFmpeg...');
       const ffmpeg = await initFFmpeg();
 
       console.log('Creating slideshow...');
-      const videoBlob = await createSlideshow(ffmpeg, processedImages, listing);
+      const videoBlob = await createSlideshow(ffmpeg, images, listing);
 
       console.log('Uploading slideshow...');
       const url = await uploadToStorage(videoBlob, listingId);
