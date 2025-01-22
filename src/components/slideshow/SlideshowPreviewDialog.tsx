@@ -23,11 +23,11 @@ export const SlideshowPreviewDialog = ({
       <DialogContent className="max-w-4xl">
         <DialogTitle>Prévisualisation de la vidéo</DialogTitle>
         <div className="space-y-4">
-          {listing.videoUrl && (
+          {listing.video_url && (
             <video 
               controls 
               className="w-full aspect-video"
-              src={listing.videoUrl}
+              src={listing.video_url}
             >
               Votre navigateur ne supporte pas la lecture de vidéos.
             </video>
@@ -37,7 +37,7 @@ export const SlideshowPreviewDialog = ({
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button onClick={onPublish} disabled={isPublishing || !listing.videoUrl}>
+          <Button onClick={onPublish} disabled={isPublishing || !listing.video_url}>
             {isPublishing ? "Publication en cours..." : "Publier sur Facebook"}
           </Button>
         </DialogFooter>

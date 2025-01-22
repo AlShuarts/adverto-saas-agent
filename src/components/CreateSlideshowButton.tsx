@@ -6,6 +6,7 @@ import { useSlideshow } from "@/hooks/useSlideshow";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -14,7 +15,8 @@ type CreateSlideshowButtonProps = {
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
-  const { isLoading, videoUrl, setVideoUrl } = useSlideshow({ 
+  const queryClient = useQueryClient();
+  const { isLoading, setVideoUrl } = useSlideshow({ 
     listing,
     images: listing.images || []
   });
@@ -32,7 +34,19 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       }
 
       if (data?.url) {
+        // Mettre à jour la colonne video_url dans la base de données
+        const { error: updateError } = await supabase
+          .from('listings')
+          .update({ video_url: data.url })
+          .eq('id', listing.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+
         setVideoUrl(data.url);
+        queryClient.invalidateQueries({ queryKey: ["listings"] });
+        
         toast({
           title: "Succès",
           description: "La vidéo a été générée avec succès",
@@ -50,7 +64,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   };
 
   const handlePublish = async () => {
-    if (!videoUrl) {
+    if (!listing.video_url) {
       toast({
         title: "Erreur",
         description: "Aucune vidéo n'a été générée",
@@ -59,7 +73,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       return;
     }
 
-    const success = await publishToFacebook(videoUrl);
+    const success = await publishToFacebook(listing.video_url);
     if (success) {
       setIsOpen(false);
     }
