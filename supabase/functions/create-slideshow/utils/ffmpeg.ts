@@ -7,19 +7,27 @@ export const createSlideshow = async (images: string[], listing: any) => {
     const imageUrls = images.slice(0, 4); // Limit to 4 images as per model requirements
     console.log('Processing images:', imageUrls);
     
+    // Vérification de la clé API
+    const apiKey = Deno.env.get("REPLICATE_API_KEY");
+    if (!apiKey) {
+      throw new Error("REPLICATE_API_KEY is not set");
+    }
+    
     // Appel à l'API Replicate
     const response = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Token ${Deno.env.get("REPLICATE_API_KEY")}`,
+        Authorization: `Token ${apiKey}`,
       },
       body: JSON.stringify({
-        version: "9ea6dbf8-3022-4c7c-b463-22daf4eb6d3a",
+        version: "e22e77495f2fb83c34d54e76dae49b868fb3d220a12c7da31c4e568f530f4931",
         input: {
-          images: imageUrls,
-          transition_time: 1,
-          frame_rate: 30,
+          prompt: "create a slideshow video",
+          image_urls: imageUrls,
+          width: 1920,
+          height: 1080,
+          num_frames: 120,
           output_format: "mp4"
         },
       }),
@@ -28,7 +36,7 @@ export const createSlideshow = async (images: string[], listing: any) => {
     if (!response.ok) {
       const error = await response.json();
       console.error('Replicate API error response:', error);
-      throw new Error(`Replicate API error: ${response.statusText}`);
+      throw new Error(`Replicate API error: ${error.detail || response.statusText}`);
     }
 
     const prediction = await response.json();
@@ -44,7 +52,7 @@ export const createSlideshow = async (images: string[], listing: any) => {
         `https://api.replicate.com/v1/predictions/${prediction.id}`,
         {
           headers: {
-            Authorization: `Token ${Deno.env.get("REPLICATE_API_KEY")}`,
+            Authorization: `Token ${apiKey}`,
             "Content-Type": "application/json",
           },
         }
@@ -53,7 +61,7 @@ export const createSlideshow = async (images: string[], listing: any) => {
       if (!pollResponse.ok) {
         const error = await pollResponse.json();
         console.error('Error polling prediction:', error);
-        throw new Error(`Polling error: ${pollResponse.statusText}`);
+        throw new Error(`Polling error: ${error.detail || pollResponse.statusText}`);
       }
 
       const pollResult = await pollResponse.json();
