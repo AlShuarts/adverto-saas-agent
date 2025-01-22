@@ -1,8 +1,10 @@
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.11.0';
+import { createFFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.11.0';
 
 export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
-  const ffmpeg = new FFmpeg();
+  const ffmpeg = createFFmpeg({
+    log: true,
+  });
   
   try {
     console.log('Loading FFmpeg...');
@@ -15,7 +17,7 @@ export const initFFmpeg = async () => {
   }
 };
 
-export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
+export const createSlideshow = async (ffmpeg: any, images: string[], listing: any) => {
   console.log('Starting slideshow creation with first image...');
   
   try {
