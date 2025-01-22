@@ -3,8 +3,8 @@ export const createSlideshow = async (images: string[], listing: any) => {
   console.log('Starting slideshow creation with Replicate...');
   
   try {
-    // Nous utilisons le premier lot d'images pour créer la vidéo
-    const imageUrls = images.slice(0, 4); // Limit to 4 images as per model requirements
+    // Nous utilisons toutes les images pour créer la vidéo
+    const imageUrls = images;
     console.log('Processing images:', imageUrls);
     
     // Vérification de la clé API
@@ -25,14 +25,16 @@ export const createSlideshow = async (images: string[], listing: any) => {
         Authorization: `Token ${apiKey}`,
       },
       body: JSON.stringify({
-        // Using stable-video-diffusion model
-        version: "2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
+        // Using stability-ai/stable-video-diffusion model
+        version: "cf0a980c41e0c7a1fc663e15e5faf10e35992488c7c5f3fc75230c6a41a6e607",
         input: {
-          image: imageUrls[0], // Use first image as main input
-          frames_per_second: 6,
-          num_frames: 14,
-          motion_bucket_id: 127,
-          cond_aug: 0.02
+          images: imageUrls,
+          output_format: "mp4",
+          transition_frames: 10,
+          frame_rate: 10,
+          crossfade: true,
+          width: 1080,
+          height: 1080,
         },
       }),
     });
