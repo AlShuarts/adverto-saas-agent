@@ -25,12 +25,12 @@ serve(async (req) => {
       );
     }
 
+    console.log('Fetching listing data for ID:', listingId);
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Fetching listing data for ID:', listingId);
     const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('*')
@@ -62,22 +62,32 @@ serve(async (req) => {
 
     console.log('Initializing FFmpeg...');
     const ffmpeg = await initFFmpeg();
+    console.log('FFmpeg initialized successfully');
 
     console.log('Creating slideshow...');
     const videoBlob = await createSlideshow(ffmpeg, images, listing);
+    console.log('Slideshow created successfully');
 
     console.log('Uploading slideshow...');
     const url = await uploadToStorage(videoBlob, listingId);
+    console.log('Slideshow uploaded successfully:', url);
 
-    console.log('Slideshow created successfully:', url);
     return new Response(
       JSON.stringify({ success: true, url }), 
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     );
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }), 
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        stack: error.stack 
+      }), 
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
