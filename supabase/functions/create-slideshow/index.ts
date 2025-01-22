@@ -5,6 +5,7 @@ import { initFFmpeg, createSlideshow } from './utils/ffmpeg.ts';
 import { uploadToStorage } from './utils/storage.ts';
 
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
