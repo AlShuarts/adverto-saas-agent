@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
 import { getBackgroundMusics, BackgroundMusic } from "./slideshow/backgroundMusic";
 import { MusicSelector } from "./slideshow/MusicSelector";
@@ -15,6 +15,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const [isOpen, setIsOpen] = useState(false);
   const [musics, setMusics] = useState<BackgroundMusic[]>([]);
   const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
     loadMusics();
   }, [toast]);
 
-  const handleCreateSlideshow = () => {
+  const handleCreateSlideshow = async () => {
     if (!listing.images || listing.images.length === 0) {
       toast({
         title: "Erreur",
@@ -48,20 +49,38 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       return;
     }
 
-    if (!selectedMusic) {
+    setIsLoading(true);
+    try {
+      const response = await fetch('https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/generate-music-description', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ listing }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération de la musique');
+      }
+
+      const { musicUrl } = await response.json();
+      setSelectedMusic(musicUrl);
+      setIsOpen(true);
+      
+      toast({
+        title: "Succès",
+        description: "Le diaporama a été créé avec succès",
+      });
+    } catch (error) {
+      console.error('Error:', error);
       toast({
         title: "Erreur",
-        description: "Veuillez sélectionner une musique de fond",
+        description: "Impossible de générer la musique de fond",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsOpen(true);
-    toast({
-      title: "Succès",
-      description: "Le diaporama a été créé avec succès",
-    });
   };
 
   if (!listing.images || listing.images.length === 0) {
@@ -74,12 +93,14 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         variant="outline"
         size="sm"
         onClick={handleCreateSlideshow}
+        disabled={isLoading}
       >
-        Créer un diaporama
+        {isLoading ? "Génération en cours..." : "Créer un diaporama"}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-4xl">
+          <DialogTitle>Diaporama</DialogTitle>
           <div className="space-y-4">
             <MusicSelector
               musics={musics}
