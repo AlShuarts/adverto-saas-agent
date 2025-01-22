@@ -25,6 +25,12 @@ serve(async (req) => {
       auth: REPLICATE_API_KEY,
     });
 
+    // Calculer la durée totale nécessaire (5 secondes par image)
+    const slideDuration = 5; // secondes par image
+    const totalDuration = Math.ceil((listing.images?.length || 1) * slideDuration);
+    
+    console.log(`Generating music for ${listing.images?.length} images, duration: ${totalDuration} seconds`);
+
     // Créer un prompt pour la musique basé sur les caractéristiques de la propriété
     const prompt = `Create a professional, uplifting background music for a real estate video. 
     Property type: ${listing.property_type || 'residential'}
@@ -39,7 +45,7 @@ serve(async (req) => {
         input: {
           model_version: "large",
           prompt: prompt,
-          duration: 30
+          duration: totalDuration
         }
       }
     );

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 
+export const SLIDE_DURATION = 5000; // 5 secondes en millisecondes
+
 type SlideShowCompositionProps = {
   images: string[];
   musicUrl?: string;
@@ -21,7 +23,7 @@ export const SlideShowComposition = ({
       console.log('Starting slideshow interval in composition');
       interval = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 5000);
+      }, SLIDE_DURATION);
     }
 
     return () => {
