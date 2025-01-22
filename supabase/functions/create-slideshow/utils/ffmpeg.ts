@@ -1,5 +1,4 @@
 import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.11.0';
-import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.11.0';
 
 export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
