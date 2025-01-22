@@ -3,9 +3,9 @@ export const createSlideshow = async (images: string[], listing: any) => {
   console.log('Starting slideshow creation with Replicate...');
   
   try {
-    // Nous utilisons seulement la première image pour l'instant
-    const imageUrl = images[0];
-    console.log('Processing image:', imageUrl);
+    // Nous utilisons le premier lot d'images pour créer la vidéo
+    const imageUrls = images.slice(0, 4); // Limit to 4 images as per model requirements
+    console.log('Processing images:', imageUrls);
     
     // Appel à l'API Replicate
     const response = await fetch("https://api.replicate.com/v1/predictions", {
@@ -15,16 +15,19 @@ export const createSlideshow = async (images: string[], listing: any) => {
         Authorization: `Token ${Deno.env.get("REPLICATE_API_KEY")}`,
       },
       body: JSON.stringify({
-        version: "c24011d8e77b8a51f1661f66f057a2906e7a2e9f9d63d3bb468a350193f8fd3c",
+        version: "2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3787b6ee",
         input: {
-          image: imageUrl,
-          num_frames: 30,
-          fps: 10,
+          image_sequence: imageUrls,
+          fps: 1,
+          transition: "fade",
+          transition_duration: 1
         },
       }),
     });
 
     if (!response.ok) {
+      const error = await response.json();
+      console.error('Replicate API error response:', error);
       throw new Error(`Replicate API error: ${response.statusText}`);
     }
 
@@ -47,7 +50,15 @@ export const createSlideshow = async (images: string[], listing: any) => {
         }
       );
       
+      if (!pollResponse.ok) {
+        const error = await pollResponse.json();
+        console.error('Error polling prediction:', error);
+        throw new Error(`Polling error: ${pollResponse.statusText}`);
+      }
+
       const pollResult = await pollResponse.json();
+      console.log('Poll result:', pollResult);
+
       if (pollResult.status === "succeeded") {
         result = pollResult;
         break;

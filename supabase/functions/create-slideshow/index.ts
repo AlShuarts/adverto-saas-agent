@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { corsHeaders } from './utils/cors.ts';
 import { createSlideshow } from './utils/ffmpeg.ts';
-import { uploadToStorage } from './utils/storage.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
