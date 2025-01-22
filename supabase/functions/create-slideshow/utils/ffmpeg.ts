@@ -30,37 +30,45 @@ export const initFFmpeg = async () => {
 };
 
 export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
-  console.log('Starting slideshow creation...');
+  console.log('Starting slideshow creation with', images.length, 'images');
   
-  // Process images
+  // Process images with lower quality to reduce memory usage
   for (let i = 0; i < images.length; i++) {
     const imageUrl = images[i];
-    console.log(`Downloading image ${i + 1}/${images.length}: ${imageUrl}`);
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to download image ${i + 1}: ${imageResponse.statusText}`);
+    console.log(`Processing image ${i + 1}/${images.length}`);
+    
+    try {
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch image ${i + 1}: ${imageResponse.statusText}`);
+      }
+      const imageData = await imageResponse.arrayBuffer();
+      await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
+    } catch (error) {
+      console.error(`Error processing image ${i + 1}:`, error);
+      throw error;
     }
-    const imageData = await imageResponse.arrayBuffer();
-    await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
   }
 
-  // Create text overlay
+  // Create text overlay with minimal formatting
   const textContent = `${listing.title}\n${listing.price ? formatPrice(listing.price) : "Prix sur demande"}\n${listing.bedrooms || 0} chambre(s) | ${listing.bathrooms || 0} salle(s) de bain\n${[listing.address, listing.city].filter(Boolean).join(", ")}`;
   await ffmpeg.writeFile('info.txt', textContent);
 
   // Write background music
   await ffmpeg.writeFile('background.mp3', backgroundMusic);
 
-  // Generate video
+  // Generate video with optimized settings
   await ffmpeg.exec([
     '-framerate', '1/3',
     '-i', 'image%d.jpg',
     '-i', 'background.mp3',
     '-filter_complex',
-    '[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=info.txt:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-text_h-50[v]',
+    '[0:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=info.txt:fontcolor=white:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-text_h-50[v]',
     '-map', '[v]',
     '-map', '1:a',
     '-c:v', 'libx264',
+    '-preset', 'ultrafast', // Use faster encoding
+    '-crf', '28', // Lower quality for smaller file size
     '-c:a', 'aac',
     '-shortest',
     '-r', '30',
