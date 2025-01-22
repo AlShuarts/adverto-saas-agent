@@ -1,81 +1,65 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-export const useSlideshow = (images: string[], musicUrl: string | null | undefined) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [volume, setVolume] = useState(1);
-  const intervalRef = useRef<NodeJS.Timeout>();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+export const useSlideshow = (listing: Tables<"listings">) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Gestion du diaporama
-  useEffect(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = undefined;
+  const createSlideshow = async () => {
+    if (!listing.images || listing.images.length === 0) {
+      toast({
+        title: "Erreur",
+        description: "Aucune image disponible pour le diaporama",
+        variant: "destructive",
+      });
+      return false;
     }
 
-    if (isPlaying) {
-      console.log('Starting slideshow interval');
-      intervalRef.current = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 5000);
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-music', {
+        body: { listing }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const { musicUrl } = data;
+      setSelectedMusic(musicUrl);
+      
+      const { data: slideshowData, error: slideshowError } = await supabase.functions.invoke('create-slideshow', {
+        body: { listingId: listing.id }
+      });
+
+      if (slideshowError) {
+        throw slideshowError;
+      }
+
+      setVideoUrl(slideshowData.url);
+      return true;
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer le diaporama",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
-
-    return () => {
-      console.log('Cleaning up slideshow interval');
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isPlaying, images.length]);
-
-  // Gestion de l'audio
-  useEffect(() => {
-    if (!musicUrl) return;
-
-    const audio = new Audio(musicUrl);
-    audio.loop = true;
-    audioRef.current = audio;
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, [musicUrl]);
-
-  // Gestion de la lecture/pause audio
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((error) => {
-          console.error('Erreur de lecture:', error);
-        });
-      }
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying]);
-
-  // Gestion du volume
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.volume = volume;
-    audio.muted = volume === 0;
-  }, [volume]);
+  };
 
   return {
-    currentIndex,
-    isPlaying,
-    volume,
-    setIsPlaying,
-    setVolume
+    createSlideshow,
+    isLoading,
+    selectedMusic,
+    videoUrl,
+    setVideoUrl,
   };
 };
