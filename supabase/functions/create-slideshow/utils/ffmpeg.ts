@@ -25,16 +25,15 @@ export const createSlideshow = async (images: string[], listing: any) => {
         Authorization: `Token ${apiKey}`,
       },
       body: JSON.stringify({
-        // Using stability-ai/stable-video-diffusion model
-        version: "cf0a980c41e0c7a1fc663e15e5faf10e35992488c7c5f3fc75230c6a41a6e607",
+        // Using andreasjansson/stable-diffusion-animation model for slideshow
+        version: "ca1f5e306e5721e19c473e0fa7e09b61d2adb6e0562c9f8f81faa2744a5dd7bc",
         input: {
-          images: imageUrls,
+          prompt: "slideshow",
+          input_images: imageUrls,
+          animation_mode: "2D",
+          fps: 10,
+          num_interpolation_steps: 5,
           output_format: "mp4",
-          transition_frames: 10,
-          frame_rate: 10,
-          crossfade: true,
-          width: 1080,
-          height: 1080,
         },
       }),
     });
