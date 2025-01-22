@@ -13,7 +13,7 @@ export const createSlideshow = async (images: string[], listing: any) => {
       throw new Error("REPLICATE_API_KEY is not set");
     }
     
-    // Appel à l'API Replicate avec un modèle différent
+    // Utilisation du modèle image-to-video de Replicate
     const response = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
@@ -21,14 +21,14 @@ export const createSlideshow = async (images: string[], listing: any) => {
         Authorization: `Token ${apiKey}`,
       },
       body: JSON.stringify({
-        version: "50d6931f39e680e58a8c7bc4a32a861d5c0d263c254cc5d3387fb62d4c967b74",
+        // Using stable-video-diffusion model
+        version: "b96a2f33cc8e4b0aa23eacfce731b9c41a7d9466d9ed4e167375587b54db9423",
         input: {
-          image_sequence: imageUrls,
-          fps: 1,
-          transition: "fade",
-          output_format: "mp4",
-          width: 1920,
-          height: 1080
+          input_images: imageUrls,
+          video_length: "14_frames_with_svd",
+          sizing_strategy: "maintain_aspect_ratio",
+          motion_bucket_id: 127,
+          frames_per_second: 6
         },
       }),
     });
