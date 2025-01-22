@@ -13,7 +13,7 @@ export const createSlideshow = async (images: string[], listing: any) => {
       throw new Error("REPLICATE_API_KEY is not set");
     }
     
-    // Appel à l'API Replicate
+    // Appel à l'API Replicate avec un modèle différent
     const response = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
@@ -21,14 +21,14 @@ export const createSlideshow = async (images: string[], listing: any) => {
         Authorization: `Token ${apiKey}`,
       },
       body: JSON.stringify({
-        version: "e22e77495f2fb83c34d54e76dae49b868fb3d220a12c7da31c4e568f530f4931",
+        version: "50d6931f39e680e58a8c7bc4a32a861d5c0d263c254cc5d3387fb62d4c967b74",
         input: {
-          prompt: "create a slideshow video",
-          image_urls: imageUrls,
+          image_sequence: imageUrls,
+          fps: 1,
+          transition: "fade",
+          output_format: "mp4",
           width: 1920,
-          height: 1080,
-          num_frames: 120,
-          output_format: "mp4"
+          height: 1080
         },
       }),
     });
