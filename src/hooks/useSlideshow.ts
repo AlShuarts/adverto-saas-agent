@@ -12,6 +12,7 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   return {
     isLoading,
@@ -21,5 +22,7 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
     setIsPlaying,
     volume,
     setVolume,
+    currentIndex,
+    setCurrentIndex,
   };
 };

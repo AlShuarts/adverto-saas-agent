@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 
 export const SLIDE_DURATION = 3000; // 3 secondes en millisecondes
@@ -8,21 +8,23 @@ type SlideShowCompositionProps = {
   musicUrl?: string;
   isPlaying?: boolean;
   volume?: number;
+  currentIndex: number;
+  onIndexChange: (index: number) => void;
 };
 
 export const SlideShowComposition = ({ 
   images,
   isPlaying = true,
+  currentIndex,
+  onIndexChange,
 }: SlideShowCompositionProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
 
     if (isPlaying) {
       console.log('Starting slideshow interval in composition');
       interval = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+        onIndexChange((currentIndex + 1) % images.length);
       }, SLIDE_DURATION);
     }
 
@@ -32,7 +34,7 @@ export const SlideShowComposition = ({
         clearInterval(interval);
       }
     };
-  }, [isPlaying, images.length]);
+  }, [isPlaying, images.length, currentIndex, onIndexChange]);
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
