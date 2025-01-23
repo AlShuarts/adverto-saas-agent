@@ -5,6 +5,7 @@ import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
 import { useSlideshow } from "@/hooks/useSlideshow";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -12,7 +13,7 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isLoading } = useSlideshow({ 
+  const { isLoading, setIsLoading } = useSlideshow({ 
     listing,
     images: listing.images || []
   });
@@ -21,39 +22,72 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
   const handleCreateSlideshow = async () => {
     if (!listing.video_url) {
-      toast({
-        title: "Génération du diaporama",
-        description: "Veuillez patienter pendant la génération du diaporama...",
-      });
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('create-slideshow-mp4', {
+          body: {
+            images: listing.images,
+            listingId: listing.id,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data?.url) {
+          throw new Error('No video URL returned');
+        }
+
+        toast({
+          title: "Diaporama créé",
+          description: "Le diaporama a été généré avec succès.",
+        });
+      } catch (error) {
+        console.error('Error creating slideshow:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la création du diaporama.",
+          variant: "destructive",
+        });
+        return;
+      } finally {
+        setIsLoading(false);
+      }
     }
     setIsOpen(true);
   };
 
   const handlePublish = async (message: string) => {
     try {
-      // Vérification de l'URL vidéo
-      if (!listing.video_url) {
+      // Récupérer la dernière version du listing
+      const { data: updatedListing, error: fetchError } = await supabase
+        .from('listings')
+        .select('video_url')
+        .eq('id', listing.id)
+        .single();
+
+      if (fetchError || !updatedListing?.video_url) {
         toast({
-          title: "Erreur de publication",
-          description: "Aucune URL vidéo n'est disponible. Veuillez d'abord générer le diaporama.",
+          title: "Erreur",
+          description: "Impossible de récupérer l'URL du diaporama.",
           variant: "destructive",
         });
         return false;
       }
 
-      // Vérification que c'est une URL Supabase Storage
-      const isSupabaseUrl = listing.video_url.includes('supabase.co/storage/v1/object/public/listings-images');
+      // Vérifier que c'est une URL Supabase Storage
+      const isSupabaseUrl = updatedListing.video_url.includes('supabase.co/storage/v1/object/public/listings-images');
       if (!isSupabaseUrl) {
         toast({
-          title: "Erreur de publication",
-          description: "L'URL du diaporama n'est pas valide. Veuillez régénérer le diaporama.",
+          title: "Erreur",
+          description: "L'URL du diaporama n'est pas valide.",
           variant: "destructive",
         });
         return false;
       }
 
-      console.log("Publication du diaporama avec l'URL:", listing.video_url);
-      const success = await publishToFacebook(listing.video_url, message);
+      const success = await publishToFacebook(updatedListing.video_url, message);
       
       if (success) {
         toast({
@@ -64,8 +98,8 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         return true;
       } else {
         toast({
-          title: "Erreur de publication",
-          description: "La publication sur Facebook a échoué. Veuillez réessayer.",
+          title: "Erreur",
+          description: "La publication sur Facebook a échoué.",
           variant: "destructive",
         });
         return false;
@@ -73,8 +107,8 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
     } catch (error) {
       console.error("Erreur lors de la publication:", error);
       toast({
-        title: "Erreur de publication",
-        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite.",
         variant: "destructive",
       });
       return false;
