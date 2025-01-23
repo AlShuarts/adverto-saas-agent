@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import Replicate from "https://esm.sh/replicate@0.25.2";
+import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,39 +53,62 @@ serve(async (req) => {
       );
     }
 
-    const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY');
-    if (!REPLICATE_API_KEY) {
-      throw new Error('REPLICATE_API_KEY is not set');
+    // Initialize FFmpeg
+    const ffmpeg = new FFmpeg();
+    await ffmpeg.load();
+    console.log('FFmpeg loaded successfully');
+
+    // Download and process each image
+    for (let i = 0; i < images.length; i++) {
+      const imageResponse = await fetch(images[i]);
+      const imageBuffer = await imageResponse.arrayBuffer();
+      await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageBuffer));
     }
 
-    const replicate = new Replicate({
-      auth: REPLICATE_API_KEY,
-    });
+    // Create a file list for FFmpeg
+    const fileList = images.map((_, i) => `file 'image${i}.jpg'`).join('\n');
+    await ffmpeg.writeFile('files.txt', fileList);
 
-    console.log('Creating slideshow with Replicate...');
-    const output = await replicate.run(
-      "andreasjansson/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
-      {
-        input: {
-          images: images,
-          frames_per_image: 30,
-          output_format: "mp4",
-          fps: 30,
-          transition_frames: 10,
-          motion_bucket_id: 127,
-          cond_aug: 0.02,
-          decoding_t: 14,
-          video_length: "input_length"
-        }
-      }
-    );
+    // Create slideshow with transitions
+    await ffmpeg.exec([
+      '-f', 'concat',
+      '-safe', '0',
+      '-i', 'files.txt',
+      '-framerate', '1/3', // Each image shows for 3 seconds
+      '-c:v', 'libx264',
+      '-pix_fmt', 'yuv420p',
+      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+      'output.mp4'
+    ]);
 
-    console.log('Slideshow created successfully:', output);
+    // Read the output video
+    const data = await ffmpeg.readFile('output.mp4');
+    const videoBlob = new Blob([data], { type: 'video/mp4' });
+
+    // Upload to Supabase Storage
+    const fileName = `slideshow-${listingId}-${Date.now()}.mp4`;
+    const { error: uploadError } = await supabase
+      .storage
+      .from('listings-images')
+      .upload(fileName, videoBlob, {
+        contentType: 'video/mp4',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Error uploading video:', uploadError);
+      throw new Error('Failed to upload video');
+    }
+
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from('listings-images')
+      .getPublicUrl(fileName);
 
     // Update the listing with the video URL
     const { error: updateError } = await supabase
       .from('listings')
-      .update({ video_url: output })
+      .update({ video_url: publicUrl })
       .eq('id', listingId);
 
     if (updateError) {
@@ -93,7 +116,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, url: output }), 
+      JSON.stringify({ success: true, url: publicUrl }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
