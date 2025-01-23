@@ -43,27 +43,39 @@ serve(async (req) => {
     let postData;
     let endpoint;
 
-    // Vérifier si l'URL est une image (se termine par .png, .jpg, etc.)
-    const isImage = video && /\.(png|jpg|jpeg|gif)$/i.test(video);
+    // Parser l'URL vidéo si c'est un JSON stringifié
+    let processedVideoUrl = video;
+    if (typeof video === 'string' && video.startsWith('[')) {
+      try {
+        const parsedUrls = JSON.parse(video);
+        processedVideoUrl = Array.isArray(parsedUrls) ? parsedUrls[0] : video;
+        console.log("URL vidéo parsée:", processedVideoUrl);
+      } catch (e) {
+        console.error("Erreur lors du parsing de l'URL vidéo:", e);
+      }
+    }
 
-    if (video && !isImage) {
+    // Vérifier si l'URL est une image (se termine par .png, .jpg, etc.)
+    const isImage = processedVideoUrl && /\.(png|jpg|jpeg|gif)$/i.test(processedVideoUrl);
+
+    if (processedVideoUrl && !isImage) {
       // Publication d'une vidéo
-      console.log("Tentative de publication de la vidéo:", video);
+      console.log("Tentative de publication de la vidéo:", processedVideoUrl);
       endpoint = `https://graph.facebook.com/v18.0/${pageId}/videos`;
       postData = {
         description: message,
-        file_url: video,
+        file_url: processedVideoUrl,
         access_token: accessToken,
       };
     } else {
-      // Publication d'images (soit fournies directement, soit l'URL vidéo est en fait une image)
+      // Publication d'images
       console.log(`Début du téléchargement des images`);
       const imageIds = [];
       const imagesToUpload = [...(images || [])];
       
       // Si l'URL vidéo est une image, l'ajouter à la liste
-      if (video && isImage) {
-        imagesToUpload.push(video);
+      if (processedVideoUrl && isImage) {
+        imagesToUpload.push(processedVideoUrl);
       }
 
       for (const imageUrl of imagesToUpload) {
