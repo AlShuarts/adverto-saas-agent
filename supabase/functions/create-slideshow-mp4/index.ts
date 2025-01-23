@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.11.0';
-import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.11.0';
+import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.10.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
