@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.10.1';
+import ffmpeg from 'https://esm.sh/@ffmpeg/ffmpeg@0.10.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,7 +50,6 @@ serve(async (req) => {
 
     // Initialize FFmpeg
     console.log('Loading FFmpeg...');
-    const ffmpeg = new FFmpeg();
     try {
       await ffmpeg.load();
       console.log('FFmpeg loaded successfully');
@@ -85,7 +84,7 @@ serve(async (req) => {
     console.log('Creating slideshow...');
     try {
       // Create MP4 video with basic settings
-      await ffmpeg.exec([
+      await ffmpeg.run(
         '-f', 'concat',
         '-safe', '0',
         '-i', 'files.txt',
@@ -94,7 +93,7 @@ serve(async (req) => {
         '-preset', 'ultrafast',
         '-pix_fmt', 'yuv420p',
         'output.mp4'
-      ]);
+      );
       console.log('Slideshow creation completed');
     } catch (error) {
       console.error('Error creating slideshow:', error);
