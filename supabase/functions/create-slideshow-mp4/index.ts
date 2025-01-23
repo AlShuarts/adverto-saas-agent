@@ -49,9 +49,14 @@ serve(async (req) => {
       }
     );
 
-    // Initialize FFmpeg
+    // Initialize FFmpeg with correct worker paths
     console.log('Loading FFmpeg...');
-    const ffmpeg = new FFmpeg();
+    const ffmpeg = new FFmpeg({
+      mainName: 'main',
+      corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
+      workerPath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.worker.js'
+    });
+    
     await ffmpeg.load();
     console.log('FFmpeg loaded successfully');
 
