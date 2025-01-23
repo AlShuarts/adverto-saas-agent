@@ -4,6 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
 import { useSlideshow } from "@/hooks/useSlideshow";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
+import { useToast } from "@/hooks/use-toast";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -16,35 +17,63 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
     images: listing.images || []
   });
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
+  const { toast } = useToast();
 
   const handleCreateSlideshow = async () => {
     setIsOpen(true);
   };
 
   const handlePublish = async (message: string) => {
-    // Parse le videoUrl qui est stocké comme une chaîne JSON
     let parsedVideoUrl = null;
+    
     try {
+      console.log("Video URL avant parsing:", videoUrl);
+      
       if (videoUrl) {
-        const urls = JSON.parse(videoUrl);
-        parsedVideoUrl = Array.isArray(urls) ? urls[0] : urls;
+        try {
+          // Essayer de parser si c'est une chaîne JSON
+          const parsed = JSON.parse(videoUrl);
+          parsedVideoUrl = Array.isArray(parsed) ? parsed[0] : parsed;
+        } catch {
+          // Si ce n'est pas du JSON valide, utiliser directement la chaîne
+          parsedVideoUrl = videoUrl;
+        }
+      }
+
+      console.log("URL vidéo parsée:", parsedVideoUrl);
+
+      if (!parsedVideoUrl) {
+        toast({
+          title: "Erreur de publication",
+          description: "Aucune URL vidéo valide n'a été trouvée. Veuillez réessayer de générer le diaporama.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log("Publication avec l'URL vidéo:", parsedVideoUrl);
+      const success = await publishToFacebook(parsedVideoUrl, message);
+      
+      if (success) {
+        setIsOpen(false);
+        return true;
+      } else {
+        toast({
+          title: "Erreur de publication",
+          description: "La publication sur Facebook a échoué. Veuillez réessayer.",
+          variant: "destructive",
+        });
+        return false;
       }
     } catch (error) {
-      console.error("Erreur lors du parsing de l'URL vidéo:", error);
+      console.error("Erreur lors de la publication:", error);
+      toast({
+        title: "Erreur de publication",
+        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
+        variant: "destructive",
+      });
       return false;
     }
-
-    if (!parsedVideoUrl) {
-      console.error("Aucune URL vidéo valide trouvée");
-      return false;
-    }
-
-    console.log("Publication avec l'URL vidéo:", parsedVideoUrl);
-    const success = await publishToFacebook(parsedVideoUrl, message);
-    if (success) {
-      setIsOpen(false);
-    }
-    return success;
   };
 
   if (!listing.images || listing.images.length === 0) {
