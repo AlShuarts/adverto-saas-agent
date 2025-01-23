@@ -51,42 +51,55 @@ serve(async (req) => {
     // Initialize FFmpeg
     console.log('Loading FFmpeg...');
     const ffmpeg = new FFmpeg();
-    await ffmpeg.load({
-      log: true
-    });
-    console.log('FFmpeg loaded successfully');
+    try {
+      await ffmpeg.load();
+      console.log('FFmpeg loaded successfully');
+    } catch (error) {
+      console.error('Error loading FFmpeg:', error);
+      throw new Error('Failed to load FFmpeg');
+    }
 
     // Process images
     console.log('Starting image processing...');
     for (let i = 0; i < images.length; i++) {
       console.log(`Processing image ${i + 1}/${images.length}: ${images[i]}`);
-      const imageResponse = await fetch(images[i]);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to fetch image ${i + 1}`);
+      try {
+        const imageResponse = await fetch(images[i]);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to fetch image ${i + 1}`);
+        }
+        const imageData = await imageResponse.arrayBuffer();
+        await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
+        console.log(`Successfully processed image ${i + 1}`);
+      } catch (error) {
+        console.error(`Error processing image ${i + 1}:`, error);
+        throw error;
       }
-      const imageData = await imageResponse.arrayBuffer();
-      await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
     }
 
     // Create file list for FFmpeg
     const fileList = images.map((_, i) => `file 'image${i}.jpg'`).join('\n');
     await ffmpeg.writeFile('files.txt', fileList);
+    console.log('Created file list:', fileList);
 
     console.log('Creating slideshow...');
-    // Create MP4 video with transitions
-    await ffmpeg.exec([
-      '-f', 'concat',
-      '-safe', '0',
-      '-i', 'files.txt',
-      '-framerate', '1',
-      '-c:v', 'libx264',
-      '-preset', 'ultrafast',
-      '-crf', '28',
-      '-movflags', '+faststart',
-      '-pix_fmt', 'yuv420p',
-      '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
-      'output.mp4'
-    ]);
+    try {
+      // Create MP4 video with basic settings
+      await ffmpeg.exec([
+        '-f', 'concat',
+        '-safe', '0',
+        '-i', 'files.txt',
+        '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
+        '-c:v', 'libx264',
+        '-preset', 'ultrafast',
+        '-pix_fmt', 'yuv420p',
+        'output.mp4'
+      ]);
+      console.log('Slideshow creation completed');
+    } catch (error) {
+      console.error('Error creating slideshow:', error);
+      throw error;
+    }
 
     console.log('Reading output video...');
     const data = await ffmpeg.readFile('output.mp4');
