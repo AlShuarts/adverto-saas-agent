@@ -16,14 +16,18 @@ serve(async (req) => {
   try {
     const { listing } = await req.json();
 
+    // Créer un titre descriptif basé sur les caractéristiques de la propriété
+    const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
+
     const prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
     Utilise ces informations:
-    - Titre: ${listing.title}
+    - Type: ${propertyTitle}
     - Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
     - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
     ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
     ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
     ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
+    - Courtier: ${listing.title}
 
     Le texte doit:
     1. Être accrocheur et professionnel
@@ -31,7 +35,8 @@ serve(async (req) => {
     3. Inclure le prix et l'adresse
     4. Ne pas dépasser 300 caractères
     5. Inclure des émojis pertinents
-    6. Terminer par "Plus de détails sur ${listing.centris_url}"`;
+    6. Mentionner le courtier à la fin
+    7. Terminer par "Plus de détails sur ${listing.centris_url}"`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
