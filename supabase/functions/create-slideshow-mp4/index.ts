@@ -15,13 +15,16 @@ serve(async (req) => {
 
   try {
     const { images, listingId } = await req.json();
-    console.log('Received request with images:', images);
+    console.log('Received request for listing:', listingId);
+    console.log('Number of images to process:', images?.length);
 
     if (!images || !Array.isArray(images) || images.length === 0) {
+      console.error('No images provided');
       throw new Error('No images provided');
     }
 
     if (!listingId) {
+      console.error('No listing ID provided');
       throw new Error('No listing ID provided');
     }
 
@@ -30,9 +33,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables');
       throw new Error('Missing Supabase environment variables');
     }
 
+    console.log('Initializing Supabase client...');
     const supabase = createClient(
       supabaseUrl,
       supabaseKey,
@@ -45,14 +50,15 @@ serve(async (req) => {
     );
 
     // Initialize FFmpeg
+    console.log('Loading FFmpeg...');
     const ffmpeg = new FFmpeg();
     await ffmpeg.load();
     console.log('FFmpeg loaded successfully');
 
     // Process images
-    console.log('Processing images...');
+    console.log('Starting image processing...');
     for (let i = 0; i < images.length; i++) {
-      console.log(`Downloading image ${i + 1}/${images.length}`);
+      console.log(`Processing image ${i + 1}/${images.length}: ${images[i]}`);
       const imageResponse = await fetch(images[i]);
       if (!imageResponse.ok) {
         throw new Error(`Failed to fetch image ${i + 1}`);
@@ -116,6 +122,7 @@ serve(async (req) => {
       .eq('id', listingId);
 
     if (updateError) {
+      console.error('Error updating listing:', updateError);
       throw updateError;
     }
 

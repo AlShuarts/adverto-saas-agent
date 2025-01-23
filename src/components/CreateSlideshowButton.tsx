@@ -21,9 +21,11 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const { toast } = useToast();
 
   const handleCreateSlideshow = async () => {
+    console.log('Starting slideshow creation for listing:', listing.id);
     if (!listing.video_url) {
       setIsLoading(true);
       try {
+        console.log('Calling create-slideshow-mp4 function with images:', listing.images?.length);
         const { data, error } = await supabase.functions.invoke('create-slideshow-mp4', {
           body: {
             images: listing.images,
@@ -31,14 +33,19 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
           },
         });
 
+        console.log('Function response:', { data, error });
+
         if (error) {
+          console.error('Function error:', error);
           throw error;
         }
 
         if (!data?.url) {
+          console.error('No video URL returned');
           throw new Error('No video URL returned');
         }
 
+        console.log('Slideshow created successfully:', data.url);
         toast({
           title: "Diaporama créé",
           description: "Le diaporama a été généré avec succès.",
@@ -60,6 +67,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
   const handlePublish = async (message: string) => {
     try {
+      console.log('Starting Facebook publication process');
       // Récupérer la dernière version du listing
       const { data: updatedListing, error: fetchError } = await supabase
         .from('listings')
@@ -67,7 +75,10 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         .eq('id', listing.id)
         .single();
 
+      console.log('Updated listing data:', updatedListing);
+
       if (fetchError || !updatedListing?.video_url) {
+        console.error('Error fetching listing:', fetchError);
         toast({
           title: "Erreur",
           description: "Impossible de récupérer l'URL du diaporama.",
@@ -78,7 +89,10 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
       // Vérifier que c'est une URL Supabase Storage
       const isSupabaseUrl = updatedListing.video_url.includes('supabase.co/storage/v1/object/public/listings-images');
+      console.log('Is Supabase URL:', isSupabaseUrl);
+      
       if (!isSupabaseUrl) {
+        console.error('Invalid video URL:', updatedListing.video_url);
         toast({
           title: "Erreur",
           description: "L'URL du diaporama n'est pas valide.",
