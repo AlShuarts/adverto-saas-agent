@@ -3,6 +3,8 @@ interface Window {
     init: (params: {
       appId: string;
       version: string;
+      cookie?: boolean;
+      xfbml?: boolean;
     }) => void;
     login: (
       callback: (response: fb.AuthResponse) => void,
