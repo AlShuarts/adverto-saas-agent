@@ -22,10 +22,29 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   };
 
   const handlePublish = async (message: string) => {
-    const success = await publishToFacebook(videoUrl, message);
+    // Parse le videoUrl qui est stocké comme une chaîne JSON
+    let parsedVideoUrl = null;
+    try {
+      if (videoUrl) {
+        const urls = JSON.parse(videoUrl);
+        parsedVideoUrl = Array.isArray(urls) ? urls[0] : urls;
+      }
+    } catch (error) {
+      console.error("Erreur lors du parsing de l'URL vidéo:", error);
+      return false;
+    }
+
+    if (!parsedVideoUrl) {
+      console.error("Aucune URL vidéo valide trouvée");
+      return false;
+    }
+
+    console.log("Publication avec l'URL vidéo:", parsedVideoUrl);
+    const success = await publishToFacebook(parsedVideoUrl, message);
     if (success) {
       setIsOpen(false);
     }
+    return success;
   };
 
   if (!listing.images || listing.images.length === 0) {
