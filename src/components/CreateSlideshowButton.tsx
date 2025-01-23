@@ -18,12 +18,11 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
   const handleCreateSlideshow = async () => {
-    // Pour le moment, on ouvre directement la prévisualisation sans générer de musique
     setIsOpen(true);
   };
 
-  const handlePublish = async () => {
-    const success = await publishToFacebook(videoUrl);
+  const handlePublish = async (message: string) => {
+    const success = await publishToFacebook(videoUrl, message);
     if (success) {
       setIsOpen(false);
     }
