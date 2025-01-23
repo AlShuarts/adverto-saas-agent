@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
-import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.12.1';
+import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.11.0';
+import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.11.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,14 +49,9 @@ serve(async (req) => {
       }
     );
 
-    // Initialize FFmpeg with correct worker paths
+    // Initialize FFmpeg
     console.log('Loading FFmpeg...');
-    const ffmpeg = new FFmpeg({
-      mainName: 'main',
-      corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
-      workerPath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.worker.js'
-    });
-    
+    const ffmpeg = new FFmpeg();
     await ffmpeg.load();
     console.log('FFmpeg loaded successfully');
 
