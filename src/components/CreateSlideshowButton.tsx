@@ -22,45 +22,69 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
   const handleCreateSlideshow = async () => {
     console.log('Starting slideshow creation for listing:', listing.id);
-    if (!listing.video_url) {
-      setIsLoading(true);
-      try {
-        console.log('Calling create-slideshow-mp4 function with images:', listing.images?.length);
-        const { data, error } = await supabase.functions.invoke('create-slideshow-mp4', {
-          body: {
-            images: listing.images,
-            listingId: listing.id,
-          },
-        });
+    console.log('Images to process:', listing.images);
+    
+    if (!listing.images || listing.images.length === 0) {
+      console.error('No images available for the listing');
+      toast({
+        title: "Erreur",
+        description: "Aucune image n'est disponible pour créer le diaporama.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-        console.log('Function response:', { data, error });
+    setIsLoading(true);
+    try {
+      console.log('Calling create-slideshow-mp4 function with images:', listing.images.length);
+      const { data, error } = await supabase.functions.invoke('create-slideshow-mp4', {
+        body: {
+          images: listing.images,
+          listingId: listing.id,
+        },
+      });
 
-        if (error) {
-          console.error('Function error:', error);
-          throw error;
-        }
+      console.log('Function response:', { data, error });
 
-        if (!data?.url) {
-          console.error('No video URL returned');
-          throw new Error('No video URL returned');
-        }
-
-        console.log('Slideshow created successfully:', data.url);
-        toast({
-          title: "Diaporama créé",
-          description: "Le diaporama a été généré avec succès.",
-        });
-      } catch (error) {
-        console.error('Error creating slideshow:', error);
-        toast({
-          title: "Erreur",
-          description: "Une erreur est survenue lors de la création du diaporama.",
-          variant: "destructive",
-        });
-        return;
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
       }
+
+      if (!data?.url) {
+        console.error('No video URL returned');
+        throw new Error('No video URL returned');
+      }
+
+      console.log('Slideshow created successfully:', data.url);
+
+      // Vérifier que le fichier existe dans Supabase Storage
+      const { data: storageData, error: storageError } = await supabase
+        .storage
+        .from('listings-images')
+        .list('', {
+          search: data.url.split('/').pop(),
+        });
+
+      if (storageError || !storageData?.length) {
+        console.error('File not found in storage:', storageError);
+        throw new Error('Le fichier du diaporama n\'a pas été trouvé dans le stockage');
+      }
+
+      toast({
+        title: "Diaporama créé",
+        description: "Le diaporama a été généré avec succès.",
+      });
+    } catch (error) {
+      console.error('Error creating slideshow:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création du diaporama.",
+        variant: "destructive",
+      });
+      return;
+    } finally {
+      setIsLoading(false);
     }
     setIsOpen(true);
   };
