@@ -14,10 +14,39 @@ const Index = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [fbInitialized, setFbInitialized] = useState(false);
 
   useEffect(() => {
     getProfile();
+    initFacebook();
   }, []);
+
+  const initFacebook = async () => {
+    try {
+      // Attendre que le SDK Facebook soit chargé
+      await new Promise<void>((resolve) => {
+        const checkFB = () => {
+          if (window.FB) {
+            resolve();
+          } else {
+            setTimeout(checkFB, 100);
+          }
+        };
+        checkFB();
+      });
+
+      window.FB.init({
+        appId: '3819439438267773',
+        version: 'v18.0',
+        cookie: true,
+        xfbml: true
+      });
+
+      setFbInitialized(true);
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation de Facebook:', error);
+    }
+  };
 
   const getProfile = async () => {
     try {
@@ -54,10 +83,19 @@ const Index = () => {
   };
 
   const connectFacebook = async () => {
+    if (!fbInitialized) {
+      toast({
+        title: "Erreur",
+        description: "Le SDK Facebook n'est pas encore initialisé. Veuillez réessayer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       // Réinitialiser d'abord les informations Facebook dans le profil
-      if (profile.facebook_page_id) {
+      if (profile?.facebook_page_id) {
         const { error: resetError } = await supabase
           .from('profiles')
           .update({
@@ -69,20 +107,12 @@ const Index = () => {
         if (resetError) throw resetError;
       }
 
-      await new Promise<void>((resolve) => {
-        window.FB.init({
-          appId: '3819439438267773',
-          version: 'v18.0'
-        });
-        resolve();
-      });
-
       const response = await new Promise<fb.AuthResponse>((resolve) => {
         window.FB.login((response) => {
           resolve(response);
         }, {
           scope: 'pages_manage_posts,pages_read_engagement,pages_show_list',
-          auth_type: 'reauthorize' // Force la réautorisation
+          auth_type: 'reauthorize'
         });
       });
 
