@@ -6,11 +6,12 @@ import { useListingText } from "@/hooks/useListingText";
 import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type SlideshowPreviewDialogProps = {
   isOpen: boolean;
   onClose: () => void;
-  onPublish: (message: string) => void;
+  onPublish: (message: string) => Promise<boolean>;
   isPublishing: boolean;
   listing: Tables<"listings">;
   musicUrl: string | null;
@@ -26,12 +27,33 @@ export const SlideshowPreviewDialog = ({
 }: SlideshowPreviewDialogProps) => {
   const { generatedText, isLoading, error } = useListingText(listing, isOpen);
   const [editedText, setEditedText] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     if (generatedText) {
       setEditedText(generatedText);
     }
   }, [generatedText]);
+
+  const handlePublish = async () => {
+    try {
+      const success = await onPublish(editedText);
+      if (!success) {
+        toast({
+          title: "Erreur de publication",
+          description: "La publication n'a pas pu être effectuée. Veuillez réessayer.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la publication:", error);
+      toast({
+        title: "Erreur de publication",
+        description: "Une erreur est survenue lors de la publication. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -65,7 +87,7 @@ export const SlideshowPreviewDialog = ({
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button onClick={() => onPublish(editedText)} disabled={isPublishing}>
+          <Button onClick={handlePublish} disabled={isPublishing}>
             {isPublishing ? "Publication en cours..." : "Publier sur Facebook"}
           </Button>
         </DialogFooter>
