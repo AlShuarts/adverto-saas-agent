@@ -9,17 +9,34 @@ import { useSlideshow } from "@/hooks/useSlideshow";
 type SlideshowPlayerProps = {
   images: string[];
   musicUrl: string | null | undefined;
+  isPlaying?: boolean;
+  currentIndex?: number;
+  onIndexChange?: (index: number) => void;
 };
 
-export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
+export const SlideshowPlayer = ({ 
+  images, 
+  musicUrl,
+  isPlaying: externalIsPlaying,
+  currentIndex: externalCurrentIndex,
+  onIndexChange: externalOnIndexChange
+}: SlideshowPlayerProps) => {
   const {
-    isPlaying,
+    isPlaying = externalIsPlaying,
     volume,
-    currentIndex,
+    currentIndex = externalCurrentIndex,
     setIsPlaying,
     setVolume,
-    setCurrentIndex
+    setCurrentIndex: internalSetCurrentIndex
   } = useSlideshow({ images, musicUrl });
+
+  const setCurrentIndex = useCallback((index: number) => {
+    if (externalOnIndexChange) {
+      externalOnIndexChange(index);
+    } else {
+      internalSetCurrentIndex(index);
+    }
+  }, [externalOnIndexChange, internalSetCurrentIndex]);
 
   const togglePlay = useCallback(() => {
     console.log('Toggling play state from:', isPlaying, 'to:', !isPlaying);
