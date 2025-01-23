@@ -43,7 +43,10 @@ serve(async (req) => {
     let postData;
     let endpoint;
 
-    if (video) {
+    // Vérifier si l'URL est une image (se termine par .png, .jpg, etc.)
+    const isImage = video && /\.(png|jpg|jpeg|gif)$/i.test(video);
+
+    if (video && !isImage) {
       // Publication d'une vidéo
       console.log("Tentative de publication de la vidéo:", video);
       endpoint = `https://graph.facebook.com/v18.0/${pageId}/videos`;
@@ -52,11 +55,18 @@ serve(async (req) => {
         file_url: video,
         access_token: accessToken,
       };
-    } else if (images && images.length > 0) {
-      // Publication d'images
-      console.log(`Début du téléchargement de ${images.length} image(s)`);
+    } else {
+      // Publication d'images (soit fournies directement, soit l'URL vidéo est en fait une image)
+      console.log(`Début du téléchargement des images`);
       const imageIds = [];
-      for (const imageUrl of images) {
+      const imagesToUpload = [...(images || [])];
+      
+      // Si l'URL vidéo est une image, l'ajouter à la liste
+      if (video && isImage) {
+        imagesToUpload.push(video);
+      }
+
+      for (const imageUrl of imagesToUpload) {
         if (!imageUrl) continue;
         
         const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}/photos`, {
@@ -92,12 +102,6 @@ serve(async (req) => {
         message,
         access_token: accessToken,
         attached_media: imageIds,
-      };
-    } else {
-      endpoint = `https://graph.facebook.com/v18.0/${pageId}/feed`;
-      postData = {
-        message,
-        access_token: accessToken,
       };
     }
 
