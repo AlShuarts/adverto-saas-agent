@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { FFmpeg } from 'https://deno.land/x/ffmpeg@v1.1.0/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,14 +76,10 @@ serve(async (req) => {
     await Deno.writeTextFile(fileListPath, fileList);
     console.log('Created file list:', fileList);
 
-    // Initialize FFmpeg
-    console.log('Initializing FFmpeg...');
-    const ffmpeg = new FFmpeg();
+    // Create output video using FFmpeg command
     const outputPath = `${tempDir}/output.mp4`;
-
-    console.log('Creating slideshow...');
-    try {
-      await ffmpeg.runCommand([
+    const ffmpegCmd = new Deno.Command("ffmpeg", {
+      args: [
         '-f', 'concat',
         '-safe', '0',
         '-i', fileListPath,
@@ -93,11 +88,15 @@ serve(async (req) => {
         '-preset', 'ultrafast',
         '-pix_fmt', 'yuv420p',
         outputPath
-      ]);
-      console.log('Slideshow creation completed');
-    } catch (error) {
-      console.error('Error creating slideshow:', error);
-      throw error;
+      ]
+    });
+
+    console.log('Running FFmpeg command...');
+    const ffmpegResult = await ffmpegCmd.output();
+    
+    if (!ffmpegResult.success) {
+      console.error('FFmpeg command failed:', new TextDecoder().decode(ffmpegResult.stderr));
+      throw new Error('Failed to create video');
     }
 
     console.log('Reading output video...');
