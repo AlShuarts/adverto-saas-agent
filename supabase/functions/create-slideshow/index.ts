@@ -72,6 +72,10 @@ serve(async (req) => {
           output_format: "mp4",
           fps: 30,
           transition_frames: 10,
+          motion_bucket_id: 127,
+          cond_aug: 0.02,
+          decoding_t: 14,
+          video_length: "input_length"
         }
       }
     );
