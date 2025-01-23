@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { createFFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.10.1';
+import { FFmpeg } from 'https://deno.land/x/ffmpeg@v1.1.0/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,18 +48,11 @@ serve(async (req) => {
       }
     );
 
-    // Initialize FFmpeg
-    console.log('Loading FFmpeg...');
-    const ffmpeg = createFFmpeg({ log: true });
-    try {
-      await ffmpeg.load();
-      console.log('FFmpeg loaded successfully');
-    } catch (error) {
-      console.error('Error loading FFmpeg:', error);
-      throw new Error('Failed to load FFmpeg');
-    }
+    // Create temporary directory for images
+    const tempDir = await Deno.makeTempDir();
+    console.log('Created temporary directory:', tempDir);
 
-    // Process images
+    // Download and save images
     console.log('Starting image processing...');
     for (let i = 0; i < images.length; i++) {
       console.log(`Processing image ${i + 1}/${images.length}: ${images[i]}`);
@@ -69,8 +62,9 @@ serve(async (req) => {
           throw new Error(`Failed to fetch image ${i + 1}`);
         }
         const imageData = await imageResponse.arrayBuffer();
-        ffmpeg.FS('writeFile', `image${i}.jpg`, new Uint8Array(imageData));
-        console.log(`Successfully processed image ${i + 1}`);
+        const imagePath = `${tempDir}/image${i}.jpg`;
+        await Deno.writeFile(imagePath, new Uint8Array(imageData));
+        console.log(`Successfully saved image ${i + 1} to ${imagePath}`);
       } catch (error) {
         console.error(`Error processing image ${i + 1}:`, error);
         throw error;
@@ -78,23 +72,28 @@ serve(async (req) => {
     }
 
     // Create file list for FFmpeg
-    const fileList = images.map((_, i) => `file 'image${i}.jpg'`).join('\n');
-    ffmpeg.FS('writeFile', 'files.txt', fileList);
+    const fileListPath = `${tempDir}/files.txt`;
+    const fileList = images.map((_, i) => `file '${tempDir}/image${i}.jpg'`).join('\n');
+    await Deno.writeTextFile(fileListPath, fileList);
     console.log('Created file list:', fileList);
+
+    // Initialize FFmpeg
+    console.log('Initializing FFmpeg...');
+    const ffmpeg = new FFmpeg();
+    const outputPath = `${tempDir}/output.mp4`;
 
     console.log('Creating slideshow...');
     try {
-      // Create MP4 video with basic settings
-      await ffmpeg.run(
+      await ffmpeg.runCommand([
         '-f', 'concat',
         '-safe', '0',
-        '-i', 'files.txt',
+        '-i', fileListPath,
         '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
         '-c:v', 'libx264',
         '-preset', 'ultrafast',
         '-pix_fmt', 'yuv420p',
-        'output.mp4'
-      );
+        outputPath
+      ]);
       console.log('Slideshow creation completed');
     } catch (error) {
       console.error('Error creating slideshow:', error);
@@ -102,8 +101,8 @@ serve(async (req) => {
     }
 
     console.log('Reading output video...');
-    const data = ffmpeg.FS('readFile', 'output.mp4');
-    const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
+    const videoData = await Deno.readFile(outputPath);
+    const videoBlob = new Blob([videoData], { type: 'video/mp4' });
 
     // Upload to Supabase Storage
     const fileName = `slideshow-${listingId}-${Date.now()}.mp4`;
@@ -138,6 +137,15 @@ serve(async (req) => {
     if (updateError) {
       console.error('Error updating listing:', updateError);
       throw updateError;
+    }
+
+    // Cleanup temporary files
+    try {
+      await Deno.remove(tempDir, { recursive: true });
+      console.log('Cleaned up temporary directory');
+    } catch (error) {
+      console.error('Error cleaning up temporary directory:', error);
+      // Don't throw here as the main operation succeeded
     }
 
     console.log('Listing updated successfully');
