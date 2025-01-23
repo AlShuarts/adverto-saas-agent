@@ -1,8 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { corsHeaders } from './utils/cors.ts';
-import { initFFmpeg, createSlideshow } from './utils/ffmpeg.ts';
-import { uploadToStorage } from './utils/storage.ts';
+import Replicate from "https://esm.sh/replicate@0.25.2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -50,37 +53,49 @@ serve(async (req) => {
       );
     }
 
-    // Limit the number of images to prevent resource exhaustion
-    const maxImages = 10;
-    const processedImages = images.slice(0, maxImages);
-    console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
-
-    try {
-      console.log('Initializing FFmpeg...');
-      const ffmpeg = await initFFmpeg();
-
-      console.log('Creating slideshow...');
-      const videoBlob = await createSlideshow(ffmpeg, processedImages, listing);
-
-      console.log('Uploading slideshow...');
-      const url = await uploadToStorage(videoBlob, listingId);
-
-      console.log('Slideshow created successfully:', url);
-      return new Response(
-        JSON.stringify({ success: true, url }), 
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (processingError) {
-      console.error('Processing error:', processingError);
-      return new Response(
-        JSON.stringify({ error: 'Error processing slideshow', details: processingError.message }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY');
+    if (!REPLICATE_API_KEY) {
+      throw new Error('REPLICATE_API_KEY is not set');
     }
-  } catch (error) {
-    console.error('Unexpected error:', error);
+
+    const replicate = new Replicate({
+      auth: REPLICATE_API_KEY,
+    });
+
+    console.log('Creating slideshow with Replicate...');
+    const output = await replicate.run(
+      "andreasjansson/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+      {
+        input: {
+          images: images,
+          frames_per_image: 30,
+          output_format: "mp4",
+          fps: 30,
+          transition_frames: 10,
+        }
+      }
+    );
+
+    console.log('Slideshow created successfully:', output);
+
+    // Update the listing with the video URL
+    const { error: updateError } = await supabase
+      .from('listings')
+      .update({ video_url: output })
+      .eq('id', listingId);
+
+    if (updateError) {
+      console.error('Error updating listing with video URL:', updateError);
+    }
+
     return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred', details: error.message }), 
+      JSON.stringify({ success: true, url: output }), 
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error creating slideshow:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
