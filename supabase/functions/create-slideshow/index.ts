@@ -53,8 +53,12 @@ serve(async (req) => {
     console.log('Processing images...');
     for (let i = 0; i < images.length; i++) {
       console.log(`Downloading image ${i + 1}/${images.length}`);
-      const imageData = await fetchFile(images[i]);
-      await ffmpeg.writeFile(`image${i}.jpg`, imageData);
+      const imageResponse = await fetch(images[i]);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch image ${i + 1}`);
+      }
+      const imageData = await imageResponse.arrayBuffer();
+      await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
     }
 
     // Create a file list for FFmpeg
@@ -62,18 +66,18 @@ serve(async (req) => {
     await ffmpeg.writeFile('files.txt', fileList);
 
     console.log('Creating slideshow...');
-    // Create slideshow with transitions
+    // Create slideshow with transitions and better quality settings for Facebook
     await ffmpeg.exec([
       '-f', 'concat',
       '-safe', '0',
       '-i', 'files.txt',
-      '-framerate', '1/3',
+      '-framerate', '30',
       '-c:v', 'libx264',
       '-preset', 'medium',
       '-crf', '23',
-      '-pix_fmt', 'yuv420p',
-      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,format=yuv420p',
       '-movflags', '+faststart',
+      '-pix_fmt', 'yuv420p',
+      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
       'output.mp4'
     ]);
 
@@ -85,7 +89,7 @@ serve(async (req) => {
     const fileName = `slideshow-${listingId}-${Date.now()}.mp4`;
     console.log('Uploading to Supabase Storage:', fileName);
     
-    const { error: uploadError } = await supabase
+    const { error: uploadError, data: uploadData } = await supabase
       .storage
       .from('listings-images')
       .upload(fileName, videoBlob, {
