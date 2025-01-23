@@ -51,7 +51,9 @@ serve(async (req) => {
     // Initialize FFmpeg
     console.log('Loading FFmpeg...');
     const ffmpeg = new FFmpeg();
-    await ffmpeg.load();
+    await ffmpeg.load({
+      log: true
+    });
     console.log('FFmpeg loaded successfully');
 
     // Process images
