@@ -1,12 +1,11 @@
-import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { SlideshowPlayer } from "./SlideshowPlayer";
 import { Tables } from "@/integrations/supabase/types";
-import { useListingText } from "@/hooks/useListingText";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { SlideshowPlayer } from "./SlideshowPlayer";
+import { MusicSelector } from "./MusicSelector";
+import { BackgroundMusic } from "./backgroundMusic";
 
 type SlideshowPreviewDialogProps = {
   isOpen: boolean;
@@ -14,7 +13,7 @@ type SlideshowPreviewDialogProps = {
   onPublish: (message: string) => Promise<boolean>;
   isPublishing: boolean;
   listing: Tables<"listings">;
-  musicUrl: string | null;
+  musicUrl?: string;
 };
 
 export const SlideshowPreviewDialog = ({
@@ -25,72 +24,70 @@ export const SlideshowPreviewDialog = ({
   listing,
   musicUrl,
 }: SlideshowPreviewDialogProps) => {
-  const { generatedText, isLoading, error } = useListingText(listing, isOpen);
-  const [editedText, setEditedText] = useState("");
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (generatedText) {
-      setEditedText(generatedText);
-    }
-  }, [generatedText]);
+  const [message, setMessage] = useState(`🏠 ${listing.title}\n\n${listing.description || ""}\n\n💰 ${listing.price ? new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(listing.price) : "Prix sur demande"}`);
+  const [selectedMusic, setSelectedMusic] = useState<string | null>(musicUrl || null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const handlePublish = async () => {
-    try {
-      const success = await onPublish(editedText);
-      if (!success) {
-        toast({
-          title: "Erreur de publication",
-          description: "La publication n'a pas pu être effectuée. Veuillez réessayer.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de la publication:", error);
-      toast({
-        title: "Erreur de publication",
-        description: "Une erreur est survenue lors de la publication. Veuillez réessayer.",
-        variant: "destructive",
-      });
+    const success = await onPublish(message);
+    if (success) {
+      onClose();
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl">
-        <DialogTitle>Prévisualisation du diaporama</DialogTitle>
-        <div className="space-y-4">
-          {listing.images && (
-            <SlideshowPlayer
-              images={listing.images}
-              musicUrl={musicUrl}
-            />
-          )}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Message de la publication</h3>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin" />
-              </div>
-            ) : (
-              <Textarea
-                value={editedText}
-                onChange={(e) => setEditedText(e.target.value)}
-                className="min-h-[150px]"
-                placeholder="Entrez votre texte ici..."
+        <DialogHeader>
+          <DialogTitle>Prévisualiser et publier le diaporama</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-6">
+          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+            {listing.images && (
+              <SlideshowPlayer
+                images={listing.images}
+                musicUrl={selectedMusic}
+                isPlaying={isPlaying}
+                currentIndex={currentIndex}
+                onIndexChange={setCurrentIndex}
               />
             )}
-            {error && <p className="text-sm text-red-500">{error}</p>}
+          </div>
+
+          <div className="grid gap-4">
+            <MusicSelector
+              musics={[
+                { id: "music-1", name: "Musique 1", url: "/background-music.mp3" },
+                { id: "music-2", name: "Musique 2", url: "/background-music-2.mp3" },
+              ]}
+              selectedMusic={selectedMusic}
+              onMusicChange={setSelectedMusic}
+            />
+
+            <div className="space-y-2">
+              <label htmlFor="message" className="text-sm font-medium">
+                Message de la publication
+              </label>
+              <Textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={onClose}>
+                Annuler
+              </Button>
+              <Button onClick={handlePublish} disabled={isPublishing}>
+                {isPublishing ? "Publication en cours..." : "Publier sur Facebook"}
+              </Button>
+            </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button onClick={handlePublish} disabled={isPublishing}>
-            {isPublishing ? "Publication en cours..." : "Publier sur Facebook"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
