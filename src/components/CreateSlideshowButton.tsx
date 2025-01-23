@@ -12,7 +12,7 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isLoading, videoUrl } = useSlideshow({ 
+  const { isLoading } = useSlideshow({ 
     listing,
     images: listing.images || []
   });
@@ -31,7 +31,7 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
 
   const handlePublish = async (message: string) => {
     try {
-      // Vérifier si nous avons une URL vidéo valide dans le listing
+      // Vérification de base de l'existence de l'URL vidéo
       if (!listing.video_url) {
         toast({
           title: "Erreur de publication",
@@ -41,17 +41,18 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         return false;
       }
 
-      // Vérifier si l'URL est une URL Supabase Storage
-      if (!listing.video_url.includes('supabase.co/storage')) {
+      // S'assurer que l'URL est bien une URL Supabase Storage
+      const isSupabaseUrl = listing.video_url.includes('supabase.co/storage/v1/object/public/listings-images');
+      if (!isSupabaseUrl) {
         toast({
           title: "Erreur de publication",
-          description: "Le diaporama n'a pas été correctement généré. Veuillez réessayer.",
+          description: "L'URL du diaporama n'est pas valide. Veuillez régénérer le diaporama.",
           variant: "destructive",
         });
         return false;
       }
 
-      console.log("Tentative de publication avec l'URL:", listing.video_url);
+      console.log("Publication du diaporama avec l'URL:", listing.video_url);
       const success = await publishToFacebook(listing.video_url, message);
       
       if (success) {
