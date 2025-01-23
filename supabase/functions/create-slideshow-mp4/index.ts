@@ -77,13 +77,13 @@ serve(async (req) => {
       '-f', 'concat',
       '-safe', '0',
       '-i', 'files.txt',
-      '-framerate', '30',
+      '-framerate', '1',
       '-c:v', 'libx264',
-      '-preset', 'medium',
-      '-crf', '23',
+      '-preset', 'ultrafast',
+      '-crf', '28',
       '-movflags', '+faststart',
       '-pix_fmt', 'yuv420p',
-      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+      '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
       'output.mp4'
     ]);
 
