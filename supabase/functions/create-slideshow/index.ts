@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { corsHeaders } from './utils/cors.ts';
-import { createSlideshow } from './utils/ffmpeg.ts';
+import { initFFmpeg, createSlideshow } from './utils/ffmpeg.ts';
+import { uploadToStorage } from './utils/storage.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,33 +17,27 @@ serve(async (req) => {
       console.error('No listingId provided');
       return new Response(
         JSON.stringify({ error: 'listingId is required' }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Fetching listing data for ID:', listingId);
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    console.log('Fetching listing data for ID:', listingId);
     const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('*')
       .eq('id', listingId)
       .single();
 
-    if (listingError || !listing) {
+    if (listingError) {
       console.error('Error fetching listing:', listingError);
       return new Response(
         JSON.stringify({ error: 'Listing not found' }), 
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -51,37 +46,42 @@ serve(async (req) => {
       console.error('No images found for listing:', listingId);
       return new Response(
         JSON.stringify({ error: 'No images found for this listing' }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Creating slideshow...');
-    const videoUrl = await createSlideshow(images, listing);
-    console.log('Slideshow created successfully:', videoUrl);
+    // Limit the number of images to prevent resource exhaustion
+    const maxImages = 10;
+    const processedImages = images.slice(0, maxImages);
+    console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
 
-    return new Response(
-      JSON.stringify({ success: true, url: videoUrl }), 
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
-    );
+    try {
+      console.log('Initializing FFmpeg...');
+      const ffmpeg = await initFFmpeg();
+
+      console.log('Creating slideshow...');
+      const videoBlob = await createSlideshow(ffmpeg, processedImages, listing);
+
+      console.log('Uploading slideshow...');
+      const url = await uploadToStorage(videoBlob, listingId);
+
+      console.log('Slideshow created successfully:', url);
+      return new Response(
+        JSON.stringify({ success: true, url }), 
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (processingError) {
+      console.error('Processing error:', processingError);
+      return new Response(
+        JSON.stringify({ error: 'Error processing slideshow', details: processingError.message }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
   } catch (error) {
     console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'An unexpected error occurred',
-        stack: error.stack 
-      }), 
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ error: 'An unexpected error occurred', details: error.message }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

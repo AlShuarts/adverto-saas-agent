@@ -1,91 +1,101 @@
-// Nous allons utiliser Replicate au lieu de FFmpeg
-export const createSlideshow = async (images: string[], listing: any) => {
-  console.log('Starting slideshow creation with Replicate...');
-  
+import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
+import { backgroundMusic } from '../background-music.ts';
+
+export const initFFmpeg = async () => {
+  console.log('Initializing FFmpeg...');
+  const ffmpeg = new FFmpeg({
+    log: true,
+    mainName: 'main',
+    corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
+    workerPath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.worker.js'
+  });
+
   try {
-    // Nous utilisons toutes les images pour créer la vidéo
-    const imageUrls = images;
-    console.log('Processing images:', imageUrls);
-    
-    // Vérification de la clé API
-    const apiKey = Deno.env.get("REPLICATE_API_KEY");
-    if (!apiKey) {
-      throw new Error("REPLICATE_API_KEY is not set");
-    }
-
-    if (!imageUrls || imageUrls.length === 0) {
-      throw new Error("No images provided");
-    }
-    
-    // Utilisation du modèle image-to-video de Replicate
-    const response = await fetch("https://api.replicate.com/v1/predictions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${apiKey}`,
-      },
-      body: JSON.stringify({
-        // Using andreasjansson/stable-diffusion-animation model for slideshow
-        version: "ca1f5e306e5721e19c473e0fa7e09b61d2adb6e0562c9f8f81faa2744a5dd7bc",
-        input: {
-          prompt: "slideshow",
-          input_images: imageUrls,
-          animation_mode: "2D",
-          fps: 10,
-          num_interpolation_steps: 5,
-          output_format: "mp4",
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Replicate API error response:', error);
-      throw new Error(`Replicate API error: ${error.detail || response.statusText}`);
-    }
-
-    const prediction = await response.json();
-    console.log('Prediction created:', prediction);
-
-    // Attendre que la prédiction soit terminée
-    const pollInterval = 1000; // 1 seconde
-    let result;
-    while (!result) {
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-      
-      const pollResponse = await fetch(
-        `https://api.replicate.com/v1/predictions/${prediction.id}`,
-        {
-          headers: {
-            Authorization: `Token ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      
-      if (!pollResponse.ok) {
-        const error = await pollResponse.json();
-        console.error('Error polling prediction:', error);
-        throw new Error(`Polling error: ${error.detail || pollResponse.statusText}`);
-      }
-
-      const pollResult = await pollResponse.json();
-      console.log('Poll result:', pollResult);
-
-      if (pollResult.status === "succeeded") {
-        result = pollResult;
-        break;
-      } else if (pollResult.status === "failed") {
-        throw new Error(`Prediction failed: ${pollResult.error}`);
-      }
-      
-      console.log('Waiting for prediction to complete...');
-    }
-
-    console.log('Video generation completed:', result);
-    return result.output;
+    await ffmpeg.load();
+    console.log('FFmpeg loaded successfully');
+    return ffmpeg;
   } catch (error) {
-    console.error('Error in createSlideshow:', error);
+    console.error('Error loading FFmpeg:', error);
     throw error;
   }
 };
+
+export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
+  console.log('Starting slideshow creation with', images.length, 'images');
+  
+  // Limit to only 3 images maximum
+  const maxImages = 3;
+  const processedImages = images.slice(0, maxImages);
+  console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
+  
+  // Process images sequentially with lower quality
+  for (let i = 0; i < processedImages.length; i++) {
+    const imageUrl = processedImages[i];
+    console.log(`Processing image ${i + 1}/${processedImages.length}: ${imageUrl}`);
+    
+    try {
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch image ${i + 1}: ${imageResponse.statusText}`);
+      }
+      const imageData = await imageResponse.arrayBuffer();
+      await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
+      
+      // Optimize each image with lower resolution
+      await ffmpeg.exec([
+        '-i', `image${i}.jpg`,
+        '-vf', 'scale=640:360:force_original_aspect_ratio=decrease',
+        '-quality', '60',
+        `optimized${i}.jpg`
+      ]);
+    } catch (error) {
+      console.error(`Error processing image ${i + 1}:`, error);
+      throw error;
+    }
+  }
+
+  // Simplified text overlay
+  const textContent = listing.title;
+  await ffmpeg.writeFile('info.txt', textContent);
+
+  // Write background music
+  await ffmpeg.writeFile('background.mp3', backgroundMusic);
+
+  // Generate video with minimal settings
+  const command = [
+    '-framerate', '1/4',
+    '-pattern_type', 'sequence',
+    '-i', 'optimized%d.jpg',
+    '-i', 'background.mp3',
+    '-filter_complex',
+    '[0:v]scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=info.txt:fontcolor=white:fontsize=18:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-text_h-20[v]',
+    '-map', '[v]',
+    '-map', '1:a',
+    '-c:v', 'libx264',
+    '-preset', 'ultrafast',
+    '-crf', '35',
+    '-c:a', 'aac',
+    '-shortest',
+    '-movflags', '+faststart',
+    'output.mp4'
+  ];
+
+  console.log('Executing FFmpeg command:', command.join(' '));
+  await ffmpeg.exec(command);
+
+  const outputData = await ffmpeg.readFile('output.mp4');
+  if (!outputData) {
+    throw new Error('Failed to read output video');
+  }
+  
+  return new Blob([outputData], { type: 'video/mp4' });
+};
+
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat('fr-CA', {
+    style: 'currency',
+    currency: 'CAD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+}

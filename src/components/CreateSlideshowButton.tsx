@@ -2,9 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
-import { useVideoGeneration } from "@/hooks/useVideoGeneration";
+import { useSlideshow } from "@/hooks/useSlideshow";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
-import { useToast } from "@/hooks/use-toast";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -12,28 +11,19 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { toast } = useToast();
-  const { generateVideo, isLoading } = useVideoGeneration(listing.id);
+  const { isLoading, videoUrl } = useSlideshow({ 
+    listing,
+    images: listing.images || []
+  });
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
-  const handleCreateVideo = async () => {
-    const videoUrl = await generateVideo();
-    if (videoUrl) {
-      setIsOpen(true);
-    }
+  const handleCreateSlideshow = async () => {
+    // Pour le moment, on ouvre directement la prévisualisation sans générer de musique
+    setIsOpen(true);
   };
 
   const handlePublish = async () => {
-    if (!listing.video_url) {
-      toast({
-        title: "Erreur",
-        description: "Aucune vidéo n'a été générée",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const success = await publishToFacebook(listing.video_url);
+    const success = await publishToFacebook(videoUrl);
     if (success) {
       setIsOpen(false);
     }
@@ -48,10 +38,10 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
       <Button
         variant="outline"
         size="sm"
-        onClick={handleCreateVideo}
+        onClick={handleCreateSlideshow}
         disabled={isLoading || isPublishing}
       >
-        {isLoading ? "Génération en cours..." : "Créer une vidéo"}
+        {isLoading ? "Génération en cours..." : "Prévisualiser le diaporama"}
       </Button>
 
       <SlideshowPreviewDialog
