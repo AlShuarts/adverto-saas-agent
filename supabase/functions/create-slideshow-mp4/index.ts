@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import ffmpeg from 'https://esm.sh/@ffmpeg/ffmpeg@0.10.1';
+import { createFFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.10.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -50,6 +50,7 @@ serve(async (req) => {
 
     // Initialize FFmpeg
     console.log('Loading FFmpeg...');
+    const ffmpeg = createFFmpeg({ log: true });
     try {
       await ffmpeg.load();
       console.log('FFmpeg loaded successfully');
@@ -68,7 +69,7 @@ serve(async (req) => {
           throw new Error(`Failed to fetch image ${i + 1}`);
         }
         const imageData = await imageResponse.arrayBuffer();
-        await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
+        ffmpeg.FS('writeFile', `image${i}.jpg`, new Uint8Array(imageData));
         console.log(`Successfully processed image ${i + 1}`);
       } catch (error) {
         console.error(`Error processing image ${i + 1}:`, error);
@@ -78,7 +79,7 @@ serve(async (req) => {
 
     // Create file list for FFmpeg
     const fileList = images.map((_, i) => `file 'image${i}.jpg'`).join('\n');
-    await ffmpeg.writeFile('files.txt', fileList);
+    ffmpeg.FS('writeFile', 'files.txt', fileList);
     console.log('Created file list:', fileList);
 
     console.log('Creating slideshow...');
@@ -101,7 +102,7 @@ serve(async (req) => {
     }
 
     console.log('Reading output video...');
-    const data = await ffmpeg.readFile('output.mp4');
+    const data = ffmpeg.FS('readFile', 'output.mp4');
     const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
 
     // Upload to Supabase Storage
