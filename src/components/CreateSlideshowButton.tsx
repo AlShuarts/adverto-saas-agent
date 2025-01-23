@@ -20,41 +20,47 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
   const { toast } = useToast();
 
   const handleCreateSlideshow = async () => {
+    if (!listing.video_url) {
+      toast({
+        title: "Génération du diaporama",
+        description: "Veuillez patienter pendant la génération du diaporama...",
+      });
+    }
     setIsOpen(true);
   };
 
   const handlePublish = async (message: string) => {
-    let parsedVideoUrl = null;
-    
     try {
-      console.log("Video URL avant parsing:", videoUrl);
-      
-      if (videoUrl) {
-        try {
-          // Essayer de parser si c'est une chaîne JSON
-          const parsed = JSON.parse(videoUrl);
-          parsedVideoUrl = Array.isArray(parsed) ? parsed[0] : parsed;
-        } catch {
-          // Si ce n'est pas du JSON valide, utiliser directement la chaîne
-          parsedVideoUrl = videoUrl;
-        }
-      }
+      // D'abord, vérifier si nous avons une URL vidéo dans le listing
+      let finalVideoUrl = listing.video_url || videoUrl;
+      console.log("URL vidéo disponible:", finalVideoUrl);
 
-      console.log("URL vidéo parsée:", parsedVideoUrl);
-
-      if (!parsedVideoUrl) {
+      if (!finalVideoUrl) {
         toast({
           title: "Erreur de publication",
-          description: "Aucune URL vidéo valide n'a été trouvée. Veuillez réessayer de générer le diaporama.",
+          description: "Aucune URL vidéo n'est disponible. Veuillez d'abord générer le diaporama.",
           variant: "destructive",
         });
         return false;
       }
 
-      console.log("Publication avec l'URL vidéo:", parsedVideoUrl);
-      const success = await publishToFacebook(parsedVideoUrl, message);
+      // Essayer de parser l'URL si c'est une chaîne JSON
+      try {
+        const parsed = JSON.parse(finalVideoUrl);
+        finalVideoUrl = Array.isArray(parsed) ? parsed[0] : parsed;
+      } catch {
+        // Si ce n'est pas du JSON valide, utiliser directement la chaîne
+        console.log("Utilisation de l'URL directe:", finalVideoUrl);
+      }
+
+      console.log("Tentative de publication avec l'URL:", finalVideoUrl);
+      const success = await publishToFacebook(finalVideoUrl, message);
       
       if (success) {
+        toast({
+          title: "Succès",
+          description: "Le diaporama a été publié sur Facebook avec succès.",
+        });
         setIsOpen(false);
         return true;
       } else {
