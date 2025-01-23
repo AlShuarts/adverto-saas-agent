@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
+import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.12.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,23 +49,20 @@ serve(async (req) => {
       }
     );
 
-    // Create temporary directory for images
-    const tempDir = await Deno.makeTempDir();
-    console.log('Created temporary directory:', tempDir);
+    // Initialize FFmpeg
+    console.log('Initializing FFmpeg...');
+    const ffmpeg = new FFmpeg();
+    await ffmpeg.load();
+    console.log('FFmpeg loaded successfully');
 
-    // Download and save images
-    console.log('Starting image processing...');
+    // Download and process images
+    console.log('Processing images...');
     for (let i = 0; i < images.length; i++) {
       console.log(`Processing image ${i + 1}/${images.length}: ${images[i]}`);
       try {
-        const imageResponse = await fetch(images[i]);
-        if (!imageResponse.ok) {
-          throw new Error(`Failed to fetch image ${i + 1}`);
-        }
-        const imageData = await imageResponse.arrayBuffer();
-        const imagePath = `${tempDir}/image${i}.jpg`;
-        await Deno.writeFile(imagePath, new Uint8Array(imageData));
-        console.log(`Successfully saved image ${i + 1} to ${imagePath}`);
+        const imageData = await fetchFile(images[i]);
+        await ffmpeg.writeFile(`image${i}.jpg`, imageData);
+        console.log(`Successfully processed image ${i + 1}`);
       } catch (error) {
         console.error(`Error processing image ${i + 1}:`, error);
         throw error;
@@ -71,43 +70,32 @@ serve(async (req) => {
     }
 
     // Create file list for FFmpeg
-    const fileListPath = `${tempDir}/files.txt`;
-    const fileList = images.map((_, i) => `file '${tempDir}/image${i}.jpg'`).join('\n');
-    await Deno.writeTextFile(fileListPath, fileList);
+    const fileList = images.map((_, i) => `file 'image${i}.jpg'`).join('\n');
+    await ffmpeg.writeFile('files.txt', fileList);
     console.log('Created file list:', fileList);
 
-    // Create output video using FFmpeg command
-    const outputPath = `${tempDir}/output.mp4`;
-    const ffmpegCmd = new Deno.Command("ffmpeg", {
-      args: [
-        '-f', 'concat',
-        '-safe', '0',
-        '-i', fileListPath,
-        '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
-        '-c:v', 'libx264',
-        '-preset', 'ultrafast',
-        '-pix_fmt', 'yuv420p',
-        outputPath
-      ]
-    });
-
-    console.log('Running FFmpeg command...');
-    const ffmpegResult = await ffmpegCmd.output();
-    
-    if (!ffmpegResult.success) {
-      console.error('FFmpeg command failed:', new TextDecoder().decode(ffmpegResult.stderr));
-      throw new Error('Failed to create video');
-    }
+    // Create slideshow
+    console.log('Creating slideshow...');
+    await ffmpeg.exec([
+      '-f', 'concat',
+      '-safe', '0',
+      '-i', 'files.txt',
+      '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
+      '-c:v', 'libx264',
+      '-preset', 'ultrafast',
+      '-pix_fmt', 'yuv420p',
+      'output.mp4'
+    ]);
 
     console.log('Reading output video...');
-    const videoData = await Deno.readFile(outputPath);
-    const videoBlob = new Blob([videoData], { type: 'video/mp4' });
+    const data = await ffmpeg.readFile('output.mp4');
+    const videoBlob = new Blob([data], { type: 'video/mp4' });
 
     // Upload to Supabase Storage
     const fileName = `slideshow-${listingId}-${Date.now()}.mp4`;
     console.log('Uploading to Supabase Storage:', fileName);
     
-    const { error: uploadError, data: uploadData } = await supabase
+    const { error: uploadError } = await supabase
       .storage
       .from('listings-images')
       .upload(fileName, videoBlob, {
@@ -136,15 +124,6 @@ serve(async (req) => {
     if (updateError) {
       console.error('Error updating listing:', updateError);
       throw updateError;
-    }
-
-    // Cleanup temporary files
-    try {
-      await Deno.remove(tempDir, { recursive: true });
-      console.log('Cleaned up temporary directory');
-    } catch (error) {
-      console.error('Error cleaning up temporary directory:', error);
-      // Don't throw here as the main operation succeeded
     }
 
     console.log('Listing updated successfully');
