@@ -41,20 +41,8 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         return false;
       }
 
-      // Nettoyage de l'URL si elle est au format JSON
-      let videoUrl = listing.video_url;
-      try {
-        const parsed = JSON.parse(videoUrl);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          videoUrl = parsed[0];
-        }
-      } catch (e) {
-        // Si ce n'est pas du JSON, on garde l'URL telle quelle
-        console.log("L'URL n'est pas au format JSON");
-      }
-
       // Vérification que c'est une URL Supabase Storage
-      const isSupabaseUrl = videoUrl.includes('supabase.co/storage/v1/object/public/listings-images');
+      const isSupabaseUrl = listing.video_url.includes('supabase.co/storage/v1/object/public/listings-images');
       if (!isSupabaseUrl) {
         toast({
           title: "Erreur de publication",
@@ -64,8 +52,8 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         return false;
       }
 
-      console.log("Publication du diaporama avec l'URL:", videoUrl);
-      const success = await publishToFacebook(videoUrl, message);
+      console.log("Publication du diaporama avec l'URL:", listing.video_url);
+      const success = await publishToFacebook(listing.video_url, message);
       
       if (success) {
         toast({
