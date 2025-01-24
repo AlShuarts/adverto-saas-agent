@@ -9,7 +9,7 @@ type UseSlideshowProps = {
 
 export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(listing?.video_url || null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [currentIndex, setCurrentIndex] = useState(0);

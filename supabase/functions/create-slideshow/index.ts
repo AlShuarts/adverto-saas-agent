@@ -54,7 +54,7 @@ serve(async (req) => {
       .from('listings-videos')
       .getPublicUrl(fileName)
 
-    // Update the listing with the video URL - store as a direct string
+    // Update the listing with the video URL
     const { error: updateError } = await supabaseClient
       .from('listings')
       .update({ video_url: publicUrl.publicUrl })
