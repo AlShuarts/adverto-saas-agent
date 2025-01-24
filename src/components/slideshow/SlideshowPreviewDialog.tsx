@@ -25,29 +25,36 @@ export const SlideshowPreviewDialog = ({
   const { toast } = useToast();
 
   const handleDownload = async () => {
-    if (listing.video_url) {
-      try {
-        const response = await fetch(listing.video_url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `diaporama-${listing.id}.mp4`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } catch (error) {
-        console.error('Erreur lors du téléchargement:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de télécharger la vidéo. Veuillez réessayer.",
-          variant: "destructive",
-        });
+    if (!listing.video_url) {
+      toast({
+        title: "Erreur",
+        description: "Aucune vidéo n'est disponible pour ce diaporama",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(listing.video_url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `diaporama-${listing.id}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger la vidéo. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
   };
 
