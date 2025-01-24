@@ -1,22 +1,20 @@
 import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
+import { toBlobURL } from 'https://esm.sh/@ffmpeg/util@0.12.0';
 
 export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
-  const ffmpeg = new FFmpeg({
-    log: true,
-    mainName: 'main',
-    corePath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
-    workerPath: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.worker.js'
+  const ffmpeg = new FFmpeg();
+  
+  console.log('Loading FFmpeg...');
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  
+  await ffmpeg.load({
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
   });
-
-  try {
-    await ffmpeg.load();
-    console.log('FFmpeg loaded successfully');
-    return ffmpeg;
-  } catch (error) {
-    console.error('Error loading FFmpeg:', error);
-    throw error;
-  }
+  
+  console.log('FFmpeg loaded successfully');
+  return ffmpeg;
 };
 
 export const generateSlideshow = async (images: string[]) => {
