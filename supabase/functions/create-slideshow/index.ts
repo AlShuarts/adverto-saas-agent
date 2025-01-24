@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { generateSlideshow } from './utils/ffmpeg.ts'
+import Replicate from "https://esm.sh/replicate@0.25.2"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,10 +10,7 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
-      headers: {
-        ...corsHeaders,
-        'Access-Control-Max-Age': '86400',
-      }
+      headers: corsHeaders
     });
   }
 
@@ -49,36 +46,42 @@ serve(async (req) => {
       throw new Error('No images found for this listing');
     }
 
-    console.log('Generating video...');
-    const videoBuffer = await generateSlideshow(listing.images);
-    console.log('Video generated successfully');
-
-    const fileName = `${listing.id}-${Date.now()}.mp4`;
-    console.log('Uploading video:', fileName);
-    
-    const { error: storageError } = await supabaseClient
-      .storage
-      .from('listings-videos')
-      .upload(fileName, videoBuffer, {
-        contentType: 'video/mp4',
-        cacheControl: '3600',
-        upsert: true
-      });
-
-    if (storageError) {
-      console.error('Storage error:', storageError);
-      throw storageError;
+    const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY')
+    if (!REPLICATE_API_KEY) {
+      throw new Error('REPLICATE_API_KEY is not set')
     }
 
-    const { data: { publicUrl } } = supabaseClient
-      .storage
-      .from('listings-videos')
-      .getPublicUrl(fileName);
+    const replicate = new Replicate({
+      auth: REPLICATE_API_KEY,
+    })
 
-    console.log('Updating listing with video URL:', publicUrl);
+    console.log('Creating slideshow with Replicate...');
+    const output = await replicate.run(
+      "andreasjansson/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+      {
+        input: {
+          images: listing.images,
+          frames_per_image: 30,
+          fps: 30,
+          sizing_strategy: "maintain_aspect_ratio",
+          motion_bucket_id: 127,
+          cond_aug: 0.02,
+          decoding_t: 14,
+          smooth_schedule: true
+        }
+      }
+    );
+
+    if (!output) {
+      throw new Error('No output received from Replicate');
+    }
+
+    console.log('Video generated:', output);
+
+    // Update listing with video URL
     const { error: updateError } = await supabaseClient
       .from('listings')
-      .update({ video_url: publicUrl })
+      .update({ video_url: output })
       .eq('id', listing.id);
 
     if (updateError) {
@@ -86,9 +89,8 @@ serve(async (req) => {
       throw updateError;
     }
 
-    console.log('Process completed successfully');
     return new Response(
-      JSON.stringify({ url: publicUrl }),
+      JSON.stringify({ url: output }),
       { 
         headers: { 
           ...corsHeaders,
