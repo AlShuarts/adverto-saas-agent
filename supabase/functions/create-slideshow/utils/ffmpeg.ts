@@ -1,5 +1,4 @@
 import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
-import { backgroundMusic } from '../background-music.ts';
 
 export const initFFmpeg = async () => {
   console.log('Initializing FFmpeg...');
@@ -20,8 +19,9 @@ export const initFFmpeg = async () => {
   }
 };
 
-export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
-  console.log('Starting slideshow creation with', images.length, 'images');
+export const generateSlideshow = async (images: string[]) => {
+  console.log('Starting slideshow generation with', images.length, 'images');
+  const ffmpeg = await initFFmpeg();
   
   // Process images sequentially
   for (let i = 0; i < images.length; i++) {
@@ -51,24 +51,17 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
     }
   }
 
-  console.log('Writing background music...');
-  await ffmpeg.writeFile('background.mp3', backgroundMusic);
-
   // Generate video with transitions
   const command = [
     '-framerate', '1/3',  // Each image shows for 3 seconds
     '-pattern_type', 'sequence',
     '-i', 'optimized%d.jpg',
-    '-i', 'background.mp3',
     '-filter_complex',
     `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,format=yuv420p[v];[v]fade=t=in:st=0:d=1,fade=t=out:st=2:d=1[fv]`,
     '-map', '[fv]',
-    '-map', '1:a',
     '-c:v', 'libx264',
     '-preset', 'medium',
     '-crf', '23',
-    '-c:a', 'aac',
-    '-shortest',
     '-movflags', '+faststart',
     'output.mp4'
   ];
@@ -83,5 +76,5 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
   }
   console.log('Video file read successfully, size:', outputData.length);
   
-  return new Blob([outputData], { type: 'video/mp4' });
+  return new Uint8Array(outputData.buffer);
 };
