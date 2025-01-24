@@ -1,138 +1,87 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.7';
-import { fetchFile } from 'https://esm.sh/@ffmpeg/util@0.12.1';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from './utils/cors.ts';
+import { initFFmpeg, createSlideshow } from './utils/ffmpeg.ts';
+import { uploadToStorage } from './utils/storage.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { images, listingId } = await req.json();
-    console.log('Received request with images:', images);
-
-    if (!images || !Array.isArray(images) || images.length === 0) {
-      throw new Error('No images provided');
-    }
-
+    console.log('Starting slideshow creation process...');
+    const { listingId } = await req.json();
+    
     if (!listingId) {
-      throw new Error('No listing ID provided');
-    }
-
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase environment variables');
+      console.error('No listingId provided');
+      return new Response(
+        JSON.stringify({ error: 'listingId is required' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const supabase = createClient(
-      supabaseUrl,
-      supabaseKey,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      }
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Initialize FFmpeg
-    const ffmpeg = new FFmpeg();
-    await ffmpeg.load();
-    console.log('FFmpeg loaded successfully');
-
-    // Download and process each image
-    console.log('Processing images...');
-    for (let i = 0; i < images.length; i++) {
-      console.log(`Downloading image ${i + 1}/${images.length}`);
-      const imageResponse = await fetch(images[i]);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to fetch image ${i + 1}`);
-      }
-      const imageData = await imageResponse.arrayBuffer();
-      await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
-    }
-
-    // Create a file list for FFmpeg
-    const fileList = images.map((_, i) => `file 'image${i}.jpg'`).join('\n');
-    await ffmpeg.writeFile('files.txt', fileList);
-
-    console.log('Creating slideshow...');
-    // Create slideshow with transitions and better quality settings for Facebook
-    await ffmpeg.exec([
-      '-f', 'concat',
-      '-safe', '0',
-      '-i', 'files.txt',
-      '-framerate', '30',
-      '-c:v', 'libx264',
-      '-preset', 'medium',
-      '-crf', '23',
-      '-movflags', '+faststart',
-      '-pix_fmt', 'yuv420p',
-      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
-      'output.mp4'
-    ]);
-
-    console.log('Reading output video...');
-    const data = await ffmpeg.readFile('output.mp4');
-    const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
-
-    // Upload to Supabase Storage
-    const fileName = `slideshow-${listingId}-${Date.now()}.mp4`;
-    console.log('Uploading to Supabase Storage:', fileName);
-    
-    const { error: uploadError, data: uploadData } = await supabase
-      .storage
-      .from('listings-images')
-      .upload(fileName, videoBlob, {
-        contentType: 'video/mp4',
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error('Error uploading video:', uploadError);
-      throw new Error('Failed to upload video');
-    }
-
-    const { data: { publicUrl } } = supabase
-      .storage
-      .from('listings-images')
-      .getPublicUrl(fileName);
-
-    console.log('Video uploaded successfully:', publicUrl);
-
-    // Update the listing with the video URL
-    const { error: updateError } = await supabase
+    console.log('Fetching listing data for ID:', listingId);
+    const { data: listing, error: listingError } = await supabase
       .from('listings')
-      .update({ video_url: publicUrl })
-      .eq('id', listingId);
+      .select('*')
+      .eq('id', listingId)
+      .single();
 
-    if (updateError) {
-      throw updateError;
+    if (listingError) {
+      console.error('Error fetching listing:', listingError);
+      return new Response(
+        JSON.stringify({ error: 'Listing not found' }), 
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('Listing updated successfully');
+    const images = listing.images || [];
+    if (images.length === 0) {
+      console.error('No images found for listing:', listingId);
+      return new Response(
+        JSON.stringify({ error: 'No images found for this listing' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    return new Response(
-      JSON.stringify({ success: true, url: publicUrl }), 
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Limit the number of images to prevent resource exhaustion
+    const maxImages = 10;
+    const processedImages = images.slice(0, maxImages);
+    console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
+
+    try {
+      console.log('Initializing FFmpeg...');
+      const ffmpeg = await initFFmpeg();
+
+      console.log('Creating slideshow...');
+      const videoBlob = await createSlideshow(ffmpeg, processedImages, listing);
+
+      console.log('Uploading slideshow...');
+      const url = await uploadToStorage(videoBlob, listingId);
+
+      console.log('Slideshow created successfully:', url);
+      return new Response(
+        JSON.stringify({ success: true, url }), 
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (processingError) {
+      console.error('Processing error:', processingError);
+      return new Response(
+        JSON.stringify({ error: 'Error processing slideshow', details: processingError.message }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
   } catch (error) {
-    console.error('Error in create-slideshow function:', error);
+    console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }), 
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ error: 'An unexpected error occurred', details: error.message }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

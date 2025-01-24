@@ -46,48 +46,17 @@ serve(async (req) => {
     if (video) {
       // Publication d'une vidéo
       console.log("Tentative de publication de la vidéo:", video);
-      
-      // Télécharger d'abord la vidéo
-      console.log("Téléchargement de la vidéo...");
-      const videoResponse = await fetch(video);
-      if (!videoResponse.ok) {
-        throw new Error("Impossible de télécharger la vidéo");
-      }
-      const videoBlob = await videoResponse.blob();
-      
-      // Créer un FormData pour l'upload
-      const formData = new FormData();
-      formData.append("access_token", accessToken);
-      formData.append("description", message);
-      formData.append("source", videoBlob, "video.mp4");
-
-      console.log("Envoi de la vidéo à Facebook...");
-      const uploadResponse = await fetch(
-        `https://graph-video.facebook.com/v18.0/${pageId}/videos`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error("Erreur lors de l'upload de la vidéo:", errorText);
-        throw new Error("Erreur lors de l'upload de la vidéo sur Facebook");
-      }
-
-      const responseData = await uploadResponse.json();
-      console.log("Réponse de l'upload vidéo:", responseData);
-
-      return new Response(JSON.stringify({ id: responseData.id }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } else {
+      endpoint = `https://graph.facebook.com/v18.0/${pageId}/videos`;
+      postData = {
+        description: message,
+        file_url: video,
+        access_token: accessToken,
+      };
+    } else if (images && images.length > 0) {
       // Publication d'images
-      console.log(`Début du téléchargement des images`);
+      console.log(`Début du téléchargement de ${images.length} image(s)`);
       const imageIds = [];
-      
-      for (const imageUrl of images || []) {
+      for (const imageUrl of images) {
         if (!imageUrl) continue;
         
         const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}/photos`, {
@@ -124,34 +93,40 @@ serve(async (req) => {
         access_token: accessToken,
         attached_media: imageIds,
       };
-
-      console.log("Tentative de publication avec endpoint:", endpoint);
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(postData),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Erreur lors de la publication. Réponse:", errorText);
-        throw new Error("Erreur lors de la publication sur Facebook. Veuillez réessayer.");
-      }
-
-      const responseData = await response.json();
-      if (responseData.error) {
-        console.error("Erreur lors de la publication:", responseData.error);
-        throw new Error(responseData.error?.message || "Erreur lors de la publication sur Facebook");
-      }
-
-      console.log("Publication réussie avec l'ID:", responseData.id);
-
-      return new Response(JSON.stringify({ id: responseData.id }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    } else {
+      endpoint = `https://graph.facebook.com/v18.0/${pageId}/feed`;
+      postData = {
+        message,
+        access_token: accessToken,
+      };
     }
+
+    console.log("Tentative de publication avec endpoint:", endpoint);
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Erreur lors de la publication. Réponse:", errorText);
+      throw new Error("Erreur lors de la publication sur Facebook. Veuillez réessayer.");
+    }
+
+    const responseData = await response.json();
+    if (responseData.error) {
+      console.error("Erreur lors de la publication:", responseData.error);
+      throw new Error(responseData.error?.message || "Erreur lors de la publication sur Facebook");
+    }
+
+    console.log("Publication réussie avec l'ID:", responseData.id);
+
+    return new Response(JSON.stringify({ id: responseData.id }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Erreur détaillée:", error);
     return new Response(

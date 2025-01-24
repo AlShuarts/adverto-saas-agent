@@ -16,7 +16,6 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
 
   return {
     isLoading,
-    setIsLoading,
     videoUrl,
     setVideoUrl,
     isPlaying,

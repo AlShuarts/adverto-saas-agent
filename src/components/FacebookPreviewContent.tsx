@@ -18,12 +18,12 @@ export const FacebookPreviewContent = ({
   onTextChange,
 }: FacebookPreviewContentProps) => {
   return (
-    <div className="glass border border-border/40 rounded-lg p-4">
+    <div className="border rounded-lg p-4 bg-white">
       <div className="flex items-center space-x-2 mb-3">
         <div className="w-10 h-10 bg-blue-600 rounded-full" />
         <div>
-          <p className="font-semibold text-foreground">Votre Page Facebook</p>
-          <p className="text-sm text-muted-foreground">Maintenant</p>
+          <p className="font-semibold text-gray-900">Votre Page Facebook</p>
+          <p className="text-sm text-gray-500">Maintenant</p>
         </div>
       </div>
       {isLoading ? (

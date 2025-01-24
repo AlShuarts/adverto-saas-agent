@@ -10,7 +10,7 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const publishToFacebook = async (videoUrl: string | null, message: string) => {
+  const publishToFacebook = async (videoUrl: string | null) => {
     if (!videoUrl) return;
     
     try {
@@ -39,7 +39,7 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
       console.log("Tentative de publication de la vidéo sur Facebook");
       const { data: responseData, error: functionError } = await supabase.functions.invoke("facebook-publish", {
         body: {
-          message,
+          message: `${listing.title}\n${listing.price ? new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(listing.price) : "Prix sur demande"}\n${listing.bedrooms || 0} chambre(s) | ${listing.bathrooms || 0} salle(s) de bain\n${[listing.address, listing.city].filter(Boolean).join(", ")}`,
           video: videoUrl,
           pageId: profile.facebook_page_id,
           accessToken: profile.facebook_access_token,
