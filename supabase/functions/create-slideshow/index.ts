@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import Replicate from "https://esm.sh/replicate@0.25.2"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,14 +9,10 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: corsHeaders
-    });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    console.log('Starting slideshow creation process...');
-    
     const { listingId } = await req.json();
     if (!listingId) {
       throw new Error('listingId is required');
@@ -46,42 +42,34 @@ serve(async (req) => {
       throw new Error('No images found for this listing');
     }
 
-    const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY')
-    if (!REPLICATE_API_KEY) {
-      throw new Error('REPLICATE_API_KEY is not set')
+    const HUGGING_FACE_TOKEN = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN')
+    if (!HUGGING_FACE_TOKEN) {
+      throw new Error('HUGGING_FACE_ACCESS_TOKEN is not set')
     }
 
-    const replicate = new Replicate({
-      auth: REPLICATE_API_KEY,
-    })
+    const hf = new HfInference(HUGGING_FACE_TOKEN)
 
-    console.log('Creating slideshow with Replicate...');
-    const output = await replicate.run(
-      "andreasjansson/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
-      {
-        input: {
-          images: listing.images,
-          frames_per_image: 30,
-          fps: 30,
-          sizing_strategy: "maintain_aspect_ratio",
-          motion_bucket_id: 127,
-          cond_aug: 0.02,
-          decoding_t: 14,
-          smooth_schedule: true
-        }
-      }
-    );
+    console.log('Creating video with Hugging Face...');
+    const video = await hf.textToVideo({
+      inputs: `Create a video slideshow from these images: ${listing.images.join(', ')}`,
+      model: "damo-vilab/text-to-video-ms-1.7b",
+    });
 
-    if (!output) {
-      throw new Error('No output received from Replicate');
+    if (!video) {
+      throw new Error('No video generated from Hugging Face');
     }
 
-    console.log('Video generated:', output);
+    // Convert video blob to base64
+    const arrayBuffer = await video.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const videoUrl = `data:video/mp4;base64,${base64}`;
+
+    console.log('Video generated successfully');
 
     // Update listing with video URL
     const { error: updateError } = await supabaseClient
       .from('listings')
-      .update({ video_url: output })
+      .update({ video_url: videoUrl })
       .eq('id', listing.id);
 
     if (updateError) {
@@ -90,7 +78,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ url: output }),
+      JSON.stringify({ url: videoUrl }),
       { 
         headers: { 
           ...corsHeaders,
