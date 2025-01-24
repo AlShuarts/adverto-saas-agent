@@ -11,10 +11,17 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Max-Age': '86400',
+      }
+    });
   }
 
   try {
+    console.log('Starting slideshow creation...');
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -32,8 +39,13 @@ serve(async (req) => {
       .eq('id', listingId)
       .single()
 
-    if (listingError) throw listingError
-    if (!listing) throw new Error('Listing not found')
+    if (listingError) {
+      console.error('Error fetching listing:', listingError);
+      throw listingError;
+    }
+    if (!listing) {
+      throw new Error('Listing not found')
+    }
     if (!listing.images || listing.images.length === 0) {
       throw new Error('No images found for this listing')
     }
@@ -52,7 +64,10 @@ serve(async (req) => {
         upsert: true
       })
 
-    if (storageError) throw storageError
+    if (storageError) {
+      console.error('Error uploading video:', storageError);
+      throw storageError;
+    }
 
     // Get the public URL
     const { data: publicUrl } = supabaseClient
@@ -66,14 +81,19 @@ serve(async (req) => {
       .update({ video_url: publicUrl.publicUrl })
       .eq('id', listing.id)
 
-    if (updateError) throw updateError
+    if (updateError) {
+      console.error('Error updating listing:', updateError);
+      throw updateError;
+    }
+
+    console.log('Successfully created and uploaded video:', publicUrl.publicUrl);
 
     return new Response(
       JSON.stringify({ url: publicUrl.publicUrl }),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         } 
       }
     )
@@ -81,11 +101,14 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in create-slideshow:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }),
       { 
         headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         },
         status: 500 
       }

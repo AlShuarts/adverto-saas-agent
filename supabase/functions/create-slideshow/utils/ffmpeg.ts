@@ -9,36 +9,37 @@ export const generateSlideshow = async (images: string[]) => {
       corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
     });
     
+    console.log('Initializing FFmpeg...');
     await ffmpeg.load();
     console.log('FFmpeg loaded successfully');
 
-    // Process images sequentially with optimized settings
+    // Process images sequentially with optimized settings and better error handling
     for (let i = 0; i < images.length; i++) {
       const imageUrl = images[i];
       console.log(`Processing image ${i + 1}/${images.length}: ${imageUrl}`);
       
       try {
-        const imageResponse = await fetch(imageUrl);
-        if (!imageResponse.ok) {
-          throw new Error(`Failed to fetch image ${i + 1}: ${imageResponse.statusText}`);
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image ${i + 1}: ${response.statusText}`);
         }
-        const imageData = await imageResponse.arrayBuffer();
+        const imageData = await response.arrayBuffer();
         ffmpeg.FS('writeFile', `image${i}.jpg`, new Uint8Array(imageData));
         console.log(`Image ${i + 1} downloaded and written to FFmpeg`);
       } catch (error) {
         console.error(`Error processing image ${i + 1}:`, error);
-        throw error;
+        throw new Error(`Failed to process image ${i + 1}: ${error.message}`);
       }
     }
 
     // Generate video with optimized settings for faster processing
     const command = [
-      '-framerate', '1/2',  // Faster processing: 2 seconds per image instead of 3
+      '-framerate', '1/2',
       '-i', 'image%d.jpg',
-      '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',  // Lower resolution for faster processing
+      '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',
       '-c:v', 'libx264',
-      '-preset', 'ultrafast',  // Fastest encoding
-      '-crf', '28',  // Slightly lower quality for faster processing
+      '-preset', 'ultrafast',
+      '-crf', '28',
       '-pix_fmt', 'yuv420p',
       'output.mp4'
     ];
