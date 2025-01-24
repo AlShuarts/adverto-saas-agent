@@ -4,6 +4,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
 import { useSlideshow } from "@/hooks/useSlideshow";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -11,15 +13,44 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isLoading, videoUrl } = useSlideshow({ 
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
+  const { videoUrl } = useSlideshow({ 
     listing,
     images: listing.images || []
   });
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
   const handleCreateSlideshow = async () => {
-    // Pour le moment, on ouvre directement la prévisualisation sans générer de musique
-    setIsOpen(true);
+    if (!listing.video_url) {
+      setIsGenerating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('create-slideshow', {
+          body: { listingId: listing.id }
+        });
+
+        if (error) throw error;
+
+        if (data.url) {
+          toast({
+            title: "Succès",
+            description: "Le diaporama a été généré avec succès",
+          });
+          setIsOpen(true);
+        }
+      } catch (error) {
+        console.error('Error generating slideshow:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la génération du diaporama",
+          variant: "destructive",
+        });
+      } finally {
+        setIsGenerating(false);
+      }
+    } else {
+      setIsOpen(true);
+    }
   };
 
   const handlePublish = async () => {
@@ -39,9 +70,9 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         variant="outline"
         size="sm"
         onClick={handleCreateSlideshow}
-        disabled={isLoading || isPublishing}
+        disabled={isGenerating || isPublishing}
       >
-        {isLoading ? "Génération en cours..." : "Prévisualiser le diaporama"}
+        {isGenerating ? "Génération en cours..." : "Prévisualiser le diaporama"}
       </Button>
 
       <SlideshowPreviewDialog

@@ -23,15 +23,10 @@ export const initFFmpeg = async () => {
 export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing: any) => {
   console.log('Starting slideshow creation with', images.length, 'images');
   
-  // Limit to only 3 images maximum
-  const maxImages = 3;
-  const processedImages = images.slice(0, maxImages);
-  console.log(`Processing ${processedImages.length} images out of ${images.length} total`);
-  
-  // Process images sequentially with lower quality
-  for (let i = 0; i < processedImages.length; i++) {
-    const imageUrl = processedImages[i];
-    console.log(`Processing image ${i + 1}/${processedImages.length}: ${imageUrl}`);
+  // Process images sequentially
+  for (let i = 0; i < images.length; i++) {
+    const imageUrl = images[i];
+    console.log(`Processing image ${i + 1}/${images.length}: ${imageUrl}`);
     
     try {
       const imageResponse = await fetch(imageUrl);
@@ -41,11 +36,11 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
       const imageData = await imageResponse.arrayBuffer();
       await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
       
-      // Optimize each image with lower resolution
+      // Optimize each image
       await ffmpeg.exec([
         '-i', `image${i}.jpg`,
-        '-vf', 'scale=640:360:force_original_aspect_ratio=decrease',
-        '-quality', '60',
+        '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+        '-quality', '90',
         `optimized${i}.jpg`
       ]);
     } catch (error) {
@@ -54,26 +49,22 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
     }
   }
 
-  // Simplified text overlay
-  const textContent = listing.title;
-  await ffmpeg.writeFile('info.txt', textContent);
-
   // Write background music
   await ffmpeg.writeFile('background.mp3', backgroundMusic);
 
-  // Generate video with minimal settings
+  // Generate video with transitions
   const command = [
-    '-framerate', '1/4',
+    '-framerate', '1/3',  // Each image shows for 3 seconds
     '-pattern_type', 'sequence',
     '-i', 'optimized%d.jpg',
     '-i', 'background.mp3',
     '-filter_complex',
-    '[0:v]scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=info.txt:fontcolor=white:fontsize=18:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-text_h-20[v]',
-    '-map', '[v]',
+    `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,format=yuv420p[v];[v]fade=t=in:st=0:d=1,fade=t=out:st=2:d=1[fv]`,
+    '-map', '[fv]',
     '-map', '1:a',
     '-c:v', 'libx264',
-    '-preset', 'ultrafast',
-    '-crf', '35',
+    '-preset', 'medium',  // Better quality preset
+    '-crf', '23',  // Better quality (lower value = higher quality, 23 is default)
     '-c:a', 'aac',
     '-shortest',
     '-movflags', '+faststart',
@@ -90,12 +81,3 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
   
   return new Blob([outputData], { type: 'video/mp4' });
 };
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat('fr-CA', {
-    style: 'currency',
-    currency: 'CAD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
