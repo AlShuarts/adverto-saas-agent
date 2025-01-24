@@ -24,7 +24,15 @@ export const SlideshowPreviewDialog = ({
   const handleDownload = async () => {
     if (listing.video_url) {
       try {
-        const response = await fetch(listing.video_url);
+        // Parse l'URL de la vidéo si elle est stockée comme une chaîne JSON
+        const videoUrl = listing.video_url.startsWith('[') 
+          ? JSON.parse(listing.video_url)[0]
+          : listing.video_url;
+
+        const response = await fetch(videoUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
