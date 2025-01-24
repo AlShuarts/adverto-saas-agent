@@ -12,7 +12,7 @@ export const generateSlideshow = async (images: string[]) => {
     await ffmpeg.load();
     console.log('FFmpeg loaded successfully');
 
-    // Process images sequentially
+    // Process images sequentially with optimized settings
     for (let i = 0; i < images.length; i++) {
       const imageUrl = images[i];
       console.log(`Processing image ${i + 1}/${images.length}: ${imageUrl}`);
@@ -31,15 +31,15 @@ export const generateSlideshow = async (images: string[]) => {
       }
     }
 
-    // Generate video with transitions
+    // Generate video with optimized settings for faster processing
     const command = [
-      '-framerate', '1/3',
+      '-framerate', '1/2',  // Faster processing: 2 seconds per image instead of 3
       '-i', 'image%d.jpg',
-      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+      '-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2',  // Lower resolution for faster processing
       '-c:v', 'libx264',
+      '-preset', 'ultrafast',  // Fastest encoding
+      '-crf', '28',  // Slightly lower quality for faster processing
       '-pix_fmt', 'yuv420p',
-      '-preset', 'medium',
-      '-crf', '23',
       'output.mp4'
     ];
 
