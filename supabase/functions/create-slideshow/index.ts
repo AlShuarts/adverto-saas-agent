@@ -1,113 +1,80 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { corsHeaders } from './utils/cors.ts';
-import { initFFmpeg, createSlideshow } from './utils/ffmpeg.ts';
-import { uploadToStorage } from './utils/storage.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { corsHeaders } from './utils/cors.ts'
+import { generateSlideshow } from './utils/ffmpeg.ts'
 
 serve(async (req) => {
-  // Log début de la requête
-  console.log('Starting slideshow creation process...');
-
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { listingId } = await req.json();
-    console.log('Received request for listing:', listingId);
-    
-    if (!listingId) {
-      console.error('No listingId provided');
-      return new Response(
-        JSON.stringify({ error: 'listingId is required' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const supabase = createClient(
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    console.log('Fetching listing data...');
-    const { data: listing, error: listingError } = await supabase
+    const { listingId } = await req.json()
+    if (!listingId) {
+      throw new Error('listingId is required')
+    }
+
+    console.log('Fetching listing:', listingId)
+    const { data: listing, error: listingError } = await supabaseClient
       .from('listings')
       .select('*')
       .eq('id', listingId)
-      .single();
+      .single()
 
-    if (listingError) {
-      console.error('Error fetching listing:', listingError);
-      return new Response(
-        JSON.stringify({ error: 'Listing not found' }), 
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (listingError) throw listingError
+    if (!listing) throw new Error('Listing not found')
+    if (!listing.images || listing.images.length === 0) {
+      throw new Error('No images found for this listing')
     }
 
-    console.log('Found listing:', listing.title);
-    const images = listing.images || [];
-    console.log('Number of images:', images.length);
+    console.log('Generating slideshow for listing:', listing.id)
+    const videoBuffer = await generateSlideshow(listing.images)
+    
+    // Upload to Supabase Storage
+    const fileName = `${listing.id}-${Date.now()}.mp4`
+    const { data: storageData, error: storageError } = await supabaseClient
+      .storage
+      .from('listings-videos')
+      .upload(fileName, videoBuffer, {
+        contentType: 'video/mp4',
+        cacheControl: '3600',
+        upsert: true
+      })
 
-    if (images.length === 0) {
-      console.error('No images found for listing:', listingId);
-      return new Response(
-        JSON.stringify({ error: 'No images found for this listing' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    if (storageError) throw storageError
 
-    try {
-      console.log('Initializing FFmpeg...');
-      const ffmpeg = await initFFmpeg();
-      console.log('FFmpeg initialized successfully');
+    // Get the public URL
+    const { data: publicUrl } = supabaseClient
+      .storage
+      .from('listings-videos')
+      .getPublicUrl(fileName)
 
-      console.log('Starting slideshow creation...');
-      const videoBlob = await createSlideshow(ffmpeg, images, listing);
-      console.log('Slideshow created successfully, size:', videoBlob.size);
+    // Update the listing with the video URL
+    const { error: updateError } = await supabaseClient
+      .from('listings')
+      .update({ video_url: publicUrl.publicUrl })
+      .eq('id', listing.id)
 
-      console.log('Uploading slideshow to storage...');
-      const url = await uploadToStorage(videoBlob, listingId);
-      console.log('Slideshow uploaded successfully:', url);
+    if (updateError) throw updateError
 
-      // Update the listing with the video URL
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({ video_url: url })
-        .eq('id', listingId);
-
-      if (updateError) {
-        console.error('Error updating listing with video URL:', updateError);
-        return new Response(
-          JSON.stringify({ error: 'Error updating listing' }), 
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      console.log('Process completed successfully');
-      return new Response(
-        JSON.stringify({ success: true, url }), 
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (processingError) {
-      console.error('Processing error:', processingError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Error processing slideshow', 
-          details: processingError.message,
-          stack: processingError.stack 
-        }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-  } catch (error) {
-    console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: 'An unexpected error occurred', 
-        details: error.message,
-        stack: error.stack 
-      }), 
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ url: publicUrl.publicUrl }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error in create-slideshow:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    )
   }
-});
+})

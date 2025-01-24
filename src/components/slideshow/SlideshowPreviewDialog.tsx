@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { SlideshowPlayer } from "./SlideshowPlayer";
 import { Tables } from "@/integrations/supabase/types";
 import { Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type SlideshowPreviewDialogProps = {
   isOpen: boolean;
@@ -21,15 +22,12 @@ export const SlideshowPreviewDialog = ({
   listing,
   musicUrl,
 }: SlideshowPreviewDialogProps) => {
+  const { toast } = useToast();
+
   const handleDownload = async () => {
     if (listing.video_url) {
       try {
-        // Parse l'URL de la vidéo si elle est stockée comme une chaîne JSON
-        const videoUrl = listing.video_url.startsWith('[') 
-          ? JSON.parse(listing.video_url)[0]
-          : listing.video_url;
-
-        const response = await fetch(videoUrl);
+        const response = await fetch(listing.video_url);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -44,6 +42,11 @@ export const SlideshowPreviewDialog = ({
         document.body.removeChild(a);
       } catch (error) {
         console.error('Erreur lors du téléchargement:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de télécharger la vidéo. Veuillez réessayer.",
+          variant: "destructive",
+        });
       }
     }
   };
