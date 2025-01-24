@@ -1,32 +1,34 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-export const uploadToStorage = async (videoBlob: Blob, listingId: string) => {
-  console.log('Uploading to Supabase Storage...');
+export const uploadToStorage = async (videoBlob: Blob, listingId: string): Promise<string> => {
+  console.log('Starting video upload to storage...');
   
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   );
 
-  const fileName = `slideshow-${listingId}-${Date.now()}.mp4`;
-  
-  const { error: uploadError } = await supabase
-    .storage
+  const filename = `slideshow-${listingId}.mp4`;
+  console.log('Uploading file:', filename);
+
+  const { data, error } = await supabase.storage
     .from('listings-images')
-    .upload(fileName, videoBlob, {
+    .upload(filename, videoBlob, {
       contentType: 'video/mp4',
-      upsert: false
+      upsert: true
     });
 
-  if (uploadError) {
-    console.error('Upload error:', uploadError);
-    throw new Error('Failed to upload video');
+  if (error) {
+    console.error('Error uploading to storage:', error);
+    throw error;
   }
 
-  const { data: { publicUrl } } = supabase
-    .storage
-    .from('listings-images')
-    .getPublicUrl(fileName);
+  console.log('Upload successful:', data.path);
 
+  const { data: { publicUrl } } = supabase.storage
+    .from('listings-images')
+    .getPublicUrl(filename);
+
+  console.log('Public URL generated:', publicUrl);
   return publicUrl;
 };

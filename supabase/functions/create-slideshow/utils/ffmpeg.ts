@@ -35,6 +35,7 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
       }
       const imageData = await imageResponse.arrayBuffer();
       await ffmpeg.writeFile(`image${i}.jpg`, new Uint8Array(imageData));
+      console.log(`Image ${i + 1} downloaded and written to FFmpeg`);
       
       // Optimize each image
       await ffmpeg.exec([
@@ -43,13 +44,14 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
         '-quality', '90',
         `optimized${i}.jpg`
       ]);
+      console.log(`Image ${i + 1} optimized`);
     } catch (error) {
       console.error(`Error processing image ${i + 1}:`, error);
       throw error;
     }
   }
 
-  // Write background music
+  console.log('Writing background music...');
   await ffmpeg.writeFile('background.mp3', backgroundMusic);
 
   // Generate video with transitions
@@ -63,8 +65,8 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
     '-map', '[fv]',
     '-map', '1:a',
     '-c:v', 'libx264',
-    '-preset', 'medium',  // Better quality preset
-    '-crf', '23',  // Better quality (lower value = higher quality, 23 is default)
+    '-preset', 'medium',
+    '-crf', '23',
     '-c:a', 'aac',
     '-shortest',
     '-movflags', '+faststart',
@@ -73,11 +75,13 @@ export const createSlideshow = async (ffmpeg: FFmpeg, images: string[], listing:
 
   console.log('Executing FFmpeg command:', command.join(' '));
   await ffmpeg.exec(command);
+  console.log('FFmpeg command executed successfully');
 
   const outputData = await ffmpeg.readFile('output.mp4');
   if (!outputData) {
     throw new Error('Failed to read output video');
   }
+  console.log('Video file read successfully, size:', outputData.length);
   
   return new Blob([outputData], { type: 'video/mp4' });
 };
