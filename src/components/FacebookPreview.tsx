@@ -19,9 +19,9 @@ export const FacebookPreview = ({
   onClose,
   onPublish,
 }: FacebookPreviewProps) => {
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
   const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
-  const { generatedText, isLoading, error } = useListingText(listing, isOpen, selectedTemplateId);
+  const { generatedText, isLoading, error } = useListingText(listing, isOpen, selectedTemplateId === "none" ? undefined : selectedTemplateId);
   const [editedText, setEditedText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const displayImages = listing.images || [];
@@ -70,7 +70,7 @@ export const FacebookPreview = ({
                 <SelectValue placeholder="Sélectionner un template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun template</SelectItem>
+                <SelectItem value="none">Aucun template</SelectItem>
                 {templates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
