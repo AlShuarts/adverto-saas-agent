@@ -1,31 +1,36 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    console.log('Starting slideshow creation process...');
     const { listingId } = await req.json();
+    
     if (!listingId) {
-      throw new Error('listingId is required');
+      console.error('No listingId provided');
+      return new Response(
+        JSON.stringify({ error: 'listingId is required' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('Creating Supabase client...');
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Fetching listing:', listingId);
-    const { data: listing, error: listingError } = await supabaseClient
+    console.log('Fetching listing data for ID:', listingId);
+    const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('*')
       .eq('id', listingId)
@@ -33,74 +38,65 @@ serve(async (req) => {
 
     if (listingError) {
       console.error('Error fetching listing:', listingError);
-      throw listingError;
-    }
-    if (!listing) {
-      throw new Error('Listing not found');
-    }
-    if (!listing.images || listing.images.length === 0) {
-      throw new Error('No images found for this listing');
+      return new Response(
+        JSON.stringify({ error: 'Listing not found' }), 
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const HUGGING_FACE_TOKEN = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN')
-    if (!HUGGING_FACE_TOKEN) {
-      throw new Error('HUGGING_FACE_ACCESS_TOKEN is not set')
+    const images = listing.images || [];
+    if (images.length === 0) {
+      console.error('No images found for listing:', listingId);
+      return new Response(
+        JSON.stringify({ error: 'No images found for this listing' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const hf = new HfInference(HUGGING_FACE_TOKEN)
+    const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY');
+    if (!REPLICATE_API_KEY) {
+      throw new Error('REPLICATE_API_KEY is not set');
+    }
 
-    console.log('Creating video with Hugging Face...');
-    const video = await hf.textToVideo({
-      inputs: `Create a video slideshow from these images: ${listing.images.join(', ')}`,
-      model: "damo-vilab/text-to-video-ms-1.7b",
+    const replicate = new Replicate({
+      auth: REPLICATE_API_KEY,
     });
 
-    if (!video) {
-      throw new Error('No video generated from Hugging Face');
-    }
-
-    // Convert video blob to base64
-    const arrayBuffer = await video.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    const videoUrl = `data:video/mp4;base64,${base64}`;
-
-    console.log('Video generated successfully');
-
-    // Update listing with video URL
-    const { error: updateError } = await supabaseClient
-      .from('listings')
-      .update({ video_url: videoUrl })
-      .eq('id', listing.id);
-
-    if (updateError) {
-      console.error('Error updating listing:', updateError);
-      throw updateError;
-    }
-
-    return new Response(
-      JSON.stringify({ url: videoUrl }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
+    console.log('Creating slideshow with Replicate...');
+    const output = await replicate.run(
+      "andreasjansson/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
+      {
+        input: {
+          images: images,
+          frames_per_image: 30,
+          output_format: "mp4",
+          fps: 30,
+          transition_frames: 10,
+        }
       }
     );
 
-  } catch (error) {
-    console.error('Error in create-slideshow function:', error);
+    console.log('Slideshow created successfully:', output);
+
+    // Update the listing with the video URL
+    const { error: updateError } = await supabase
+      .from('listings')
+      .update({ video_url: output })
+      .eq('id', listingId);
+
+    if (updateError) {
+      console.error('Error updating listing with video URL:', updateError);
+    }
+
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error.toString()
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
-        status: 500 
-      }
+      JSON.stringify({ success: true, url: output }), 
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error creating slideshow:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

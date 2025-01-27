@@ -2,13 +2,15 @@ import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { SlideshowPlayer } from "./SlideshowPlayer";
 import { Tables } from "@/integrations/supabase/types";
-import { Download } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useListingText } from "@/hooks/useListingText";
+import { useState, useEffect } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
 type SlideshowPreviewDialogProps = {
   isOpen: boolean;
   onClose: () => void;
-  onPublish: () => void;
+  onPublish: (message: string) => void;
   isPublishing: boolean;
   listing: Tables<"listings">;
   musicUrl: string | null;
@@ -22,41 +24,14 @@ export const SlideshowPreviewDialog = ({
   listing,
   musicUrl,
 }: SlideshowPreviewDialogProps) => {
-  const { toast } = useToast();
+  const { generatedText, isLoading, error } = useListingText(listing, isOpen);
+  const [editedText, setEditedText] = useState("");
 
-  const handleDownload = async () => {
-    if (!listing.video_url) {
-      toast({
-        title: "Erreur",
-        description: "Aucune vidéo n'est disponible pour ce diaporama",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    if (generatedText) {
+      setEditedText(generatedText);
     }
-
-    try {
-      const response = await fetch(listing.video_url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `diaporama-${listing.id}.mp4`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Erreur lors du téléchargement:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de télécharger la vidéo. Veuillez réessayer.",
-        variant: "destructive",
-      });
-    }
-  };
+  }, [generatedText]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -69,24 +44,28 @@ export const SlideshowPreviewDialog = ({
               musicUrl={musicUrl}
             />
           )}
-        </div>
-        <DialogFooter className="flex justify-between">
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Annuler
-            </Button>
-            {listing.video_url && (
-              <Button 
-                variant="outline" 
-                onClick={handleDownload}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Télécharger
-              </Button>
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Message de la publication</h3>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+            ) : (
+              <Textarea
+                value={editedText}
+                onChange={(e) => setEditedText(e.target.value)}
+                className="min-h-[150px]"
+                placeholder="Entrez votre texte ici..."
+              />
             )}
+            {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
-          <Button onClick={onPublish} disabled={isPublishing}>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button onClick={() => onPublish(editedText)} disabled={isPublishing}>
             {isPublishing ? "Publication en cours..." : "Publier sur Facebook"}
           </Button>
         </DialogFooter>

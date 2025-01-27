@@ -1,7 +1,4 @@
 project_id = "msmuyhmxlrkcjthugcxd"
 
-[functions.scrape-centris]
-verify_jwt = false
-
-[functions.generate-music]
+[functions.create-slideshow]
 verify_jwt = false
