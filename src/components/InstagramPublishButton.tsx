@@ -17,7 +17,7 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const publishToInstagram = async (message: string) => {
+  const publishToInstagram = async (message: string, selectedImages: string[]) => {
     try {
       setIsPublishing(true);
       console.log("Début de la publication sur Instagram");
@@ -51,7 +51,7 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
       const { data, error } = await supabase.functions.invoke('instagram-publish', {
         body: {
           message,
-          images: listing.images || [],
+          images: selectedImages,
           listingId: listing.id,
         },
       });

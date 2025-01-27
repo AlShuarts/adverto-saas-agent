@@ -8,7 +8,7 @@ type InstagramPreviewProps = {
   listing: Tables<"listings">;
   isOpen: boolean;
   onClose: () => void;
-  onPublish: (message: string) => void;
+  onPublish: (message: string, selectedImages: string[]) => void;
 };
 
 export const InstagramPreview = ({
@@ -19,6 +19,7 @@ export const InstagramPreview = ({
 }: InstagramPreviewProps) => {
   const { generatedText, isLoading, error } = useListingText(listing, isOpen);
   const [editedText, setEditedText] = useState("");
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const displayImages = listing.images ? listing.images.slice(0, 10) : [];
 
   useEffect(() => {
@@ -26,6 +27,12 @@ export const InstagramPreview = ({
       setEditedText(generatedText);
     }
   }, [generatedText]);
+
+  useEffect(() => {
+    if (displayImages.length > 0) {
+      setSelectedImages([displayImages[0]]);
+    }
+  }, [displayImages]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -40,6 +47,8 @@ export const InstagramPreview = ({
             generatedText={editedText}
             images={displayImages}
             onTextChange={setEditedText}
+            selectedImages={selectedImages}
+            onSelectedImagesChange={setSelectedImages}
           />
           <div className="flex justify-end space-x-2">
             <button
@@ -49,9 +58,9 @@ export const InstagramPreview = ({
               Annuler
             </button>
             <button
-              onClick={() => onPublish(editedText)}
+              onClick={() => onPublish(editedText, selectedImages)}
               className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700"
-              disabled={isLoading}
+              disabled={isLoading || selectedImages.length === 0}
             >
               Publier
             </button>
