@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { FeaturesSection } from "@/components/FeaturesSection";
-import { PricingSection } from "@/components/PricingSection";
 import { ListingsSection } from "@/components/ListingsSection";
 import { useFacebookSDK } from "@/hooks/useFacebookSDK";
 import { useProfile } from "@/hooks/useProfile";
@@ -26,7 +25,6 @@ const Index = () => {
       />
       {profile?.facebook_page_id && <ListingsSection />}
       <FeaturesSection />
-      <PricingSection />
     </div>
   );
 };
