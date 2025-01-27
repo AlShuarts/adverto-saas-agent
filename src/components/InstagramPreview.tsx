@@ -3,6 +3,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { InstagramPreviewContent } from "./InstagramPreviewContent";
 import { useListingText } from "@/hooks/useListingText";
 import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 type InstagramPreviewProps = {
   listing: Tables<"listings">;
@@ -20,21 +21,29 @@ export const InstagramPreview = ({
   const { generatedText, isLoading, error } = useListingText(listing, isOpen);
   const [editedText, setEditedText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [isPublishing, setIsPublishing] = useState(false);
   const displayImages = listing.images || [];
 
-  // Réinitialiser le texte quand le texte généré change
   useEffect(() => {
     if (generatedText) {
       setEditedText(generatedText);
     }
   }, [generatedText]);
 
-  // Réinitialiser les images sélectionnées uniquement à l'ouverture de la modal
   useEffect(() => {
     if (isOpen && displayImages.length > 0) {
       setSelectedImages([displayImages[0]]);
     }
-  }, [isOpen]); // Ne dépend que de isOpen
+  }, [isOpen]);
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      await onPublish(editedText, selectedImages);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,14 +65,16 @@ export const InstagramPreview = ({
             <button
               onClick={onClose}
               className="px-4 py-2 border rounded-md hover:bg-gray-100"
+              disabled={isPublishing}
             >
               Annuler
             </button>
             <button
-              onClick={() => onPublish(editedText, selectedImages)}
-              className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700"
-              disabled={isLoading || selectedImages.length === 0}
+              onClick={handlePublish}
+              className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 disabled:opacity-50 flex items-center gap-2"
+              disabled={isLoading || selectedImages.length === 0 || isPublishing}
             >
+              {isPublishing && <Loader2 className="w-4 h-4 animate-spin" />}
               Publier
             </button>
           </div>
