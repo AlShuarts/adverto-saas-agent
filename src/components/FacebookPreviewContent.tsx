@@ -5,11 +5,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type FacebookPreviewContentProps = {
   isLoading: boolean;
@@ -19,12 +18,6 @@ type FacebookPreviewContentProps = {
   onTextChange: (text: string) => void;
   selectedImages: string[];
   onSelectedImagesChange: (images: string[]) => void;
-};
-
-type Template = {
-  id: string;
-  name: string;
-  content: string;
 };
 
 export const FacebookPreviewContent = ({
@@ -40,30 +33,6 @@ export const FacebookPreviewContent = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
-
-  const fetchTemplates = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('facebook_templates')
-        .select('id, name, content');
-
-      if (error) throw error;
-      setTemplates(data || []);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les templates",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleImageSelect = (image: string) => {
     const isSelected = selectedImages.includes(image);
@@ -110,7 +79,6 @@ export const FacebookPreviewContent = ({
 
       setIsTemplateDialogOpen(false);
       setTemplateName("");
-      fetchTemplates();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du template:', error);
       toast({
@@ -120,14 +88,6 @@ export const FacebookPreviewContent = ({
       });
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleTemplateChange = (templateId: string) => {
-    setSelectedTemplate(templateId);
-    const template = templates.find(t => t.id === templateId);
-    if (template) {
-      onTextChange(template.content);
     }
   };
 
@@ -146,19 +106,7 @@ export const FacebookPreviewContent = ({
         </div>
       ) : (
         <>
-          <div className="flex justify-between items-center mb-2">
-            <Select value={selectedTemplate || ""} onValueChange={handleTemplateChange}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Choisir un template" />
-              </SelectTrigger>
-              <SelectContent>
-                {templates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex justify-end mb-2">
             <Button
               variant="outline"
               size="sm"
