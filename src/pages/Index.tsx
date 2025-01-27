@@ -23,47 +23,58 @@ const Index = () => {
 
   const loadFacebookSDK = async () => {
     try {
-      // Attendre que le script Facebook soit chargé
+      // Create and append the Facebook SDK script
+      const script = document.createElement('script');
+      script.src = 'https://connect.facebook.net/fr_FR/sdk.js';
+      script.async = true;
+      script.defer = true;
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+
+      // Wait for the script to load and FB to be defined
       await new Promise<void>((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://connect.facebook.net/fr_FR/sdk.js';
-        script.async = true;
-        script.defer = true;
-        script.crossOrigin = "anonymous";
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Failed to load Facebook SDK'));
-        document.head.appendChild(script);
-      });
+        script.onload = () => {
+          // Check for FB object periodically
+          const checkFB = setInterval(() => {
+            if (window.FB) {
+              clearInterval(checkFB);
+              try {
+                window.FB.init({
+                  appId: '3819439438267773',
+                  version: 'v18.0',
+                  cookie: true,
+                  xfbml: true
+                });
+                setFbInitialized(true);
+                console.log('Facebook SDK initialized successfully');
+                resolve();
+              } catch (initError) {
+                console.error('Error during FB.init:', initError);
+                reject(initError);
+              }
+            }
+          }, 100);
 
-      // Attendre que FB soit défini
-      await new Promise<void>((resolve) => {
-        const checkFB = () => {
-          if (window.FB) {
-            resolve();
-          } else {
-            setTimeout(checkFB, 100);
-          }
+          // Timeout after 10 seconds
+          setTimeout(() => {
+            clearInterval(checkFB);
+            reject(new Error('Facebook SDK initialization timed out'));
+          }, 10000);
         };
-        checkFB();
+
+        script.onerror = () => reject(new Error('Failed to load Facebook SDK script'));
       });
 
-      // Initialiser le SDK
-      window.FB.init({
-        appId: '3819439438267773',
-        version: 'v18.0',
-        cookie: true,
-        xfbml: true
-      });
-
-      setFbInitialized(true);
-      console.log('Facebook SDK initialized successfully');
     } catch (error) {
       console.error('Error initializing Facebook SDK:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'initialiser Facebook. Veuillez réessayer.",
-        variant: "destructive",
-      });
+      // Only show toast for actual errors, not for content blocker related issues
+      if (error.message !== "Failed to call url") {
+        toast({
+          title: "Avertissement",
+          description: "L'initialisation de Facebook pourrait être bloquée par votre navigateur. La connexion pourrait ne pas fonctionner correctement.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -102,10 +113,10 @@ const Index = () => {
   };
 
   const connectFacebook = async () => {
-    if (!fbInitialized) {
+    if (!window.FB) {
       toast({
         title: "Erreur",
-        description: "Le SDK Facebook n'est pas encore initialisé. Veuillez réessayer.",
+        description: "Le SDK Facebook n'est pas disponible. Veuillez désactiver votre bloqueur de publicités et rafraîchir la page.",
         variant: "destructive",
       });
       return;
