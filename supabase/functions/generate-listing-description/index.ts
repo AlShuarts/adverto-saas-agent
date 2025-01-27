@@ -51,10 +51,28 @@ serve(async (req) => {
     1. Être accrocheur et professionnel
     2. Mettre en valeur les points forts de la propriété
     3. Inclure le prix et l'adresse
-    4. Ne pas dépasser 300 caractères
-    5. Inclure des émojis pertinents
-    6. Mentionner le courtier à la fin
-    7. Terminer par "Plus de détails sur ${listing.centris_url}"`;
+    4. Utiliser des sauts de ligne pour aérer le texte
+    5. Séparer clairement les différentes sections (description, caractéristiques, prix, etc.)
+    6. Inclure des émojis pertinents au début de chaque section
+    7. Mentionner le courtier à la fin
+    8. Terminer par "Plus de détails sur ${listing.centris_url}"
+    
+    Format souhaité:
+    [Titre accrocheur avec émoji]
+    
+    [Description courte et accrocheuse]
+    
+    ✨ Caractéristiques principales:
+    • [Point 1]
+    • [Point 2]
+    • [Point 3]
+    
+    💰 Prix: [prix]
+    📍 Emplacement: [adresse]
+    
+    👤 [Mention du courtier]
+    
+    [Lien pour plus de détails]`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -65,7 +83,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs.' },
+          { role: 'system', content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs avec une mise en page claire et aérée.' },
           { role: 'user', content: prompt }
         ],
       }),
