@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { Share, ExternalLink } from "lucide-react";
+import { Share } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { InstagramPreview } from "./InstagramPreview";
@@ -47,12 +47,24 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
         return;
       }
 
-      // TODO: Implémenter la publication sur Instagram via une fonction Edge
+      // Appeler la fonction Edge pour publier sur Instagram
+      const { data, error } = await supabase.functions.invoke('instagram-publish', {
+        body: {
+          message,
+          images: listing.images || [],
+          listingId: listing.id,
+        },
+      });
+
+      if (error) throw error;
+
       toast({
-        title: "Fonctionnalité à venir",
-        description: "La publication sur Instagram sera bientôt disponible",
+        title: "Publication réussie",
+        description: "Votre annonce a été publiée sur Instagram",
       });
       
+      // Rafraîchir les données
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
       setShowPreview(false);
     } catch (error) {
       console.error("Erreur détaillée de publication:", error);
