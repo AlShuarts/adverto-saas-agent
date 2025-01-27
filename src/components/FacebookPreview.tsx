@@ -19,13 +19,22 @@ export const FacebookPreview = ({
 }: FacebookPreviewProps) => {
   const { generatedText, isLoading, error } = useListingText(listing, isOpen);
   const [editedText, setEditedText] = useState("");
-  const displayImages = listing.images ? listing.images.slice(0, 2) : [];
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const displayImages = listing.images || [];
 
+  // Réinitialiser le texte quand le texte généré change
   useEffect(() => {
     if (generatedText) {
       setEditedText(generatedText);
     }
   }, [generatedText]);
+
+  // Réinitialiser les images sélectionnées quand la modal s'ouvre/se ferme
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedImages([]);
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -40,6 +49,8 @@ export const FacebookPreview = ({
             generatedText={editedText}
             images={displayImages}
             onTextChange={setEditedText}
+            selectedImages={selectedImages}
+            onSelectedImagesChange={setSelectedImages}
           />
           <div className="flex justify-end space-x-2">
             <button
@@ -51,7 +62,7 @@ export const FacebookPreview = ({
             <button
               onClick={() => onPublish(editedText)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              disabled={isLoading}
+              disabled={isLoading || selectedImages.length === 0}
             >
               Publier
             </button>
