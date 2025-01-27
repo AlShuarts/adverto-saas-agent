@@ -2,6 +2,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { Loader2, Instagram } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type InstagramPreviewContentProps = {
   isLoading: boolean;
@@ -58,27 +59,29 @@ export const InstagramPreviewContent = ({
         <>
           {images.length > 0 && (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                {images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Image ${index + 1}`}
-                      className="w-full aspect-square object-cover rounded"
-                    />
-                    <div className="absolute top-2 left-2">
-                      <Checkbox
-                        checked={selectedImages.includes(image)}
-                        onCheckedChange={() => handleImageSelect(image)}
-                        disabled={!selectedImages.includes(image) && selectedImages.length >= 10}
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                  {images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Image ${index + 1}`}
+                        className="w-full aspect-square object-cover rounded"
                       />
+                      <div className="absolute top-2 left-2">
+                        <Checkbox
+                          checked={selectedImages.includes(image)}
+                          onCheckedChange={() => handleImageSelect(image)}
+                          disabled={!selectedImages.includes(image) && selectedImages.length >= 10}
+                        />
+                      </div>
+                      <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-xs">
+                        {index + 1}/{images.length}
+                      </div>
                     </div>
-                    <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-xs">
-                      {index + 1}/{images.length}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </ScrollArea>
               <p className="text-sm text-muted-foreground mb-4">
                 {selectedImages.length}/10 images sélectionnées
               </p>

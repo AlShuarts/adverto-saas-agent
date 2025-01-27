@@ -20,7 +20,7 @@ export const InstagramPreview = ({
   const { generatedText, isLoading, error } = useListingText(listing, isOpen);
   const [editedText, setEditedText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const displayImages = listing.images ? listing.images.slice(0, 10) : [];
+  const displayImages = listing.images || [];
 
   // Réinitialiser le texte quand le texte généré change
   useEffect(() => {
