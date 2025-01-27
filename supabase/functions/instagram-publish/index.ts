@@ -55,25 +55,73 @@ Deno.serve(async (req) => {
     }
 
     // Publier sur Instagram
-    const firstImage = images[0]
-    if (!firstImage) {
-      throw new Error('No image provided')
+    if (!images.length) {
+      throw new Error('No images provided')
     }
 
-    // 1. Créer un conteneur média
-    const containerResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
-      {
-        method: 'POST',
-        body: new URLSearchParams({
-          image_url: firstImage,
-          caption: message,
-          access_token: profile.instagram_access_token,
-        }),
-      }
-    )
+    let containerData;
+    
+    if (images.length === 1) {
+      // Publication d'une seule image
+      const containerResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
+        {
+          method: 'POST',
+          body: new URLSearchParams({
+            image_url: images[0],
+            caption: message,
+            access_token: profile.instagram_access_token,
+          }),
+        }
+      )
 
-    const containerData = await containerResponse.json()
+      containerData = await containerResponse.json()
+    } else {
+      // Publication de plusieurs images (carousel)
+      // 1. Créer les conteneurs média pour chaque image
+      const mediaResponses = await Promise.all(
+        images.map(async (imageUrl) => {
+          const response = await fetch(
+            `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
+            {
+              method: 'POST',
+              body: new URLSearchParams({
+                image_url: imageUrl,
+                is_carousel_item: 'true',
+                access_token: profile.instagram_access_token,
+              }),
+            }
+          )
+          return response.json()
+        })
+      )
+
+      console.log('Media container responses:', mediaResponses)
+
+      // Vérifier si tous les conteneurs ont été créés avec succès
+      const mediaIds = mediaResponses.map(response => response.id)
+      if (mediaIds.some(id => !id)) {
+        console.error('Failed to create some media containers:', mediaResponses)
+        throw new Error('Failed to process some images')
+      }
+
+      // 2. Créer le carousel avec tous les médias
+      const carouselResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
+        {
+          method: 'POST',
+          body: new URLSearchParams({
+            media_type: 'CAROUSEL',
+            caption: message,
+            children: mediaIds.join(','),
+            access_token: profile.instagram_access_token,
+          }),
+        }
+      )
+
+      containerData = await carouselResponse.json()
+    }
+
     console.log('Container creation response:', containerData)
 
     if (!containerData.id) {
@@ -81,7 +129,7 @@ Deno.serve(async (req) => {
       throw new Error(containerData.error?.message || 'Failed to create media container')
     }
 
-    // 2. Publier le conteneur
+    // 3. Publier le conteneur
     const publishResponse = await fetch(
       `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media_publish`,
       {
