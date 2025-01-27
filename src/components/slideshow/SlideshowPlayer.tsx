@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
 import { Volume2, VolumeX, Play, Pause } from "lucide-react";
 import { useSlideshow } from "@/hooks/useSlideshow";
 
@@ -14,9 +15,11 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
   const {
     isPlaying,
     volume,
+    currentIndex,
     setIsPlaying,
-    setVolume
-  } = useSlideshow(images, musicUrl);
+    setVolume,
+    setCurrentIndex
+  } = useSlideshow({ images, musicUrl });
 
   const togglePlay = useCallback(() => {
     console.log('Toggling play state from:', isPlaying, 'to:', !isPlaying);
@@ -31,6 +34,16 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
     setVolume(value[0]);
   }, [setVolume]);
 
+  const handleProgressClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const percentage = x / rect.width;
+    const newIndex = Math.floor(percentage * images.length);
+    setCurrentIndex(Math.min(Math.max(0, newIndex), images.length - 1));
+  };
+
+  const progress = ((currentIndex + 1) / images.length) * 100;
+
   if (!musicUrl) {
     return null;
   }
@@ -43,9 +56,18 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
           musicUrl={musicUrl}
           isPlaying={isPlaying}
           volume={volume}
+          currentIndex={currentIndex}
+          onIndexChange={setCurrentIndex}
         />
       </div>
       
+      <div 
+        className="w-full h-2 bg-secondary rounded-full cursor-pointer"
+        onClick={handleProgressClick}
+      >
+        <Progress value={progress} className="h-full" />
+      </div>
+
       <div className="flex items-center space-x-4">
         <Button
           variant="ghost"

@@ -29,6 +29,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          video_url: string | null
         }
         Insert: {
           address?: string | null
@@ -49,6 +50,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          video_url?: string | null
         }
         Update: {
           address?: string | null
@@ -69,6 +71,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -86,6 +89,7 @@ export type Database = {
           created_at: string
           facebook_access_token: string | null
           facebook_page_id: string | null
+          facebook_post_example: string | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -97,6 +101,7 @@ export type Database = {
           created_at?: string
           facebook_access_token?: string | null
           facebook_page_id?: string | null
+          facebook_post_example?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -108,6 +113,7 @@ export type Database = {
           created_at?: string
           facebook_access_token?: string | null
           facebook_page_id?: string | null
+          facebook_post_example?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null

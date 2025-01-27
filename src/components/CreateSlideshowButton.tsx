@@ -1,11 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
-import { getBackgroundMusics, BackgroundMusic } from "./slideshow/backgroundMusic";
-import { MusicSelector } from "./slideshow/MusicSelector";
-import { SlideshowPlayer } from "./slideshow/SlideshowPlayer";
+import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
+import { useSlideshow } from "@/hooks/useSlideshow";
+import { useFacebookPublish } from "@/hooks/useFacebookPublish";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -13,55 +11,21 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [musics, setMusics] = useState<BackgroundMusic[]>([]);
-  const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { isLoading, videoUrl } = useSlideshow({ 
+    listing,
+    images: listing.images || []
+  });
+  const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
-  useEffect(() => {
-    const loadMusics = async () => {
-      try {
-        const availableMusics = await getBackgroundMusics();
-        setMusics(availableMusics);
-        if (availableMusics.length > 0) {
-          setSelectedMusic(availableMusics[0].url);
-        }
-      } catch (error) {
-        console.error('Error loading background music:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les musiques de fond",
-          variant: "destructive",
-        });
-      }
-    };
-
-    loadMusics();
-  }, [toast]);
-
-  const handleCreateSlideshow = () => {
-    if (!listing.images || listing.images.length === 0) {
-      toast({
-        title: "Erreur",
-        description: "Aucune image disponible pour le diaporama",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedMusic) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner une musique de fond",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleCreateSlideshow = async () => {
     setIsOpen(true);
-    toast({
-      title: "Succès",
-      description: "Le diaporama a été créé avec succès",
-    });
+  };
+
+  const handlePublish = async (message: string) => {
+    const success = await publishToFacebook(videoUrl, message);
+    if (success) {
+      setIsOpen(false);
+    }
   };
 
   if (!listing.images || listing.images.length === 0) {
@@ -74,27 +38,19 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         variant="outline"
         size="sm"
         onClick={handleCreateSlideshow}
+        disabled={isLoading || isPublishing}
       >
-        Créer un diaporama
+        {isLoading ? "Génération en cours..." : "Prévisualiser le diaporama"}
       </Button>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl">
-          <div className="space-y-4">
-            <MusicSelector
-              musics={musics}
-              selectedMusic={selectedMusic}
-              onMusicChange={setSelectedMusic}
-            />
-            {listing.images && (
-              <SlideshowPlayer
-                images={listing.images}
-                musicUrl={selectedMusic}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <SlideshowPreviewDialog
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onPublish={handlePublish}
+        isPublishing={isPublishing}
+        listing={listing}
+        musicUrl="/background-music.mp3"
+      />
     </>
   );
 };

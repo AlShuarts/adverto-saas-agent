@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -56,6 +57,7 @@ const Profile = () => {
         last_name: profile.last_name,
         company_name: profile.company_name,
         phone: profile.phone,
+        facebook_post_example: profile.facebook_post_example,
         updated_at: new Date().toISOString(),
       };
 
@@ -128,6 +130,16 @@ const Profile = () => {
                     type="tel"
                     value={profile?.phone || ""}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="facebook_post_example">Exemple d'annonce Facebook</Label>
+                  <Textarea
+                    id="facebook_post_example"
+                    placeholder="Collez ici un exemple d'une de vos annonces Facebook pour que nous puissions reproduire votre style..."
+                    value={profile?.facebook_post_example || ""}
+                    onChange={(e) => setProfile({ ...profile, facebook_post_example: e.target.value })}
+                    className="min-h-[150px]"
                   />
                 </div>
                 <Button type="submit" disabled={loading}>

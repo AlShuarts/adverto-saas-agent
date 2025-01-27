@@ -8,7 +8,6 @@ const corsHeaders = {
 serve(async (req) => {
   console.log("Fonction Facebook-publish appelée");
   
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     console.log("Requête OPTIONS reçue");
     return new Response(null, { headers: corsHeaders });
@@ -16,10 +15,11 @@ serve(async (req) => {
 
   try {
     console.log("Début du traitement de la requête");
-    const { message, images, pageId, accessToken } = await req.json();
+    const { message, images, video, pageId, accessToken } = await req.json();
     console.log("Données reçues:", { 
       messageLength: message?.length,
       imagesCount: images?.length,
+      hasVideo: !!video,
       pageId: pageId ? "présent" : "manquant",
       accessToken: accessToken ? "présent" : "manquant"
     });
@@ -40,14 +40,25 @@ serve(async (req) => {
       throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
     }
 
-    // Publier d'abord les images
-    const imageIds = [];
-    if (images && images.length > 0) {
+    let postData;
+    let endpoint;
+
+    if (video) {
+      // Publication d'une vidéo
+      console.log("Tentative de publication de la vidéo:", video);
+      endpoint = `https://graph.facebook.com/v18.0/${pageId}/videos`;
+      postData = {
+        description: message,
+        file_url: video,
+        access_token: accessToken,
+      };
+    } else if (images && images.length > 0) {
+      // Publication d'images
       console.log(`Début du téléchargement de ${images.length} image(s)`);
+      const imageIds = [];
       for (const imageUrl of images) {
         if (!imageUrl) continue;
         
-        console.log("Tentative de téléchargement de l'image:", imageUrl);
         const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}/photos`, {
           method: "POST",
           headers: {
@@ -75,23 +86,23 @@ serve(async (req) => {
         console.log("Image téléchargée avec succès, ID:", responseData.id);
         imageIds.push({ media_fbid: responseData.id });
       }
+
+      endpoint = `https://graph.facebook.com/v18.0/${pageId}/feed`;
+      postData = {
+        message,
+        access_token: accessToken,
+        attached_media: imageIds,
+      };
+    } else {
+      endpoint = `https://graph.facebook.com/v18.0/${pageId}/feed`;
+      postData = {
+        message,
+        access_token: accessToken,
+      };
     }
 
-    // Créer la publication avec les images
-    console.log("Tentative de création de la publication avec", imageIds.length, "images");
-    const postData = {
-      message,
-      access_token: accessToken,
-      ...(imageIds.length > 0 && { attached_media: imageIds }),
-    };
-
-    console.log("Données de la publication:", {
-      messageLength: message?.length,
-      hasAttachedMedia: imageIds.length > 0,
-      numberOfImages: imageIds.length
-    });
-
-    const response = await fetch(`https://graph.facebook.com/v18.0/${pageId}/feed`, {
+    console.log("Tentative de publication avec endpoint:", endpoint);
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

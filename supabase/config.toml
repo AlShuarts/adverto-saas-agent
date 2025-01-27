@@ -1,4 +1,4 @@
 project_id = "msmuyhmxlrkcjthugcxd"
 
-[functions.scrape-centris]
+[functions.create-slideshow]
 verify_jwt = false
