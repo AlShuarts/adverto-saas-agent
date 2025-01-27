@@ -141,9 +141,9 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
 
   return (
     <>
-      <div className="flex gap-2 items-center">
+      <div className="flex items-center gap-2 w-full">
         <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[180px] flex-shrink-0">
             <SelectValue placeholder="Sélectionner un template" />
           </SelectTrigger>
           <SelectContent>
@@ -158,12 +158,12 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         <Button
           variant="outline"
           size="sm"
-          className="w-full"
+          className="w-full min-w-0"
           onClick={() => setShowPreview(true)}
           disabled={isPublishing}
         >
-          <Share className="w-4 h-4 mr-2" />
-          Prévisualiser et publier sur Facebook
+          <Share className="w-4 h-4 mr-2 flex-shrink-0" />
+          <span className="truncate">Prévisualiser et publier sur Facebook</span>
         </Button>
       </div>
 
