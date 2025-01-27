@@ -1,49 +1,58 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
-import { FacebookPreviewContent } from "./FacebookPreviewContent";
+import { InstagramPreviewContent } from "./InstagramPreviewContent";
 import { useListingText } from "@/hooks/useListingText";
 import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
-type FacebookPreviewProps = {
+type InstagramPreviewProps = {
   listing: Tables<"listings">;
   isOpen: boolean;
   onClose: () => void;
-  onPublish: (message: string) => void;
+  onPublish: (message: string, selectedImages: string[]) => void;
 };
 
-export const FacebookPreview = ({
+export const InstagramPreview = ({
   listing,
   isOpen,
   onClose,
   onPublish,
-}: FacebookPreviewProps) => {
+}: InstagramPreviewProps) => {
   const { generatedText, isLoading, error } = useListingText(listing, isOpen);
   const [editedText, setEditedText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [isPublishing, setIsPublishing] = useState(false);
   const displayImages = listing.images || [];
 
-  // Réinitialiser le texte quand le texte généré change
   useEffect(() => {
     if (generatedText) {
       setEditedText(generatedText);
     }
   }, [generatedText]);
 
-  // Réinitialiser les images sélectionnées quand la modal s'ouvre/se ferme
   useEffect(() => {
-    if (!isOpen) {
-      setSelectedImages([]);
+    if (isOpen && displayImages.length > 0) {
+      setSelectedImages([displayImages[0]]);
     }
   }, [isOpen]);
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      await onPublish(editedText, selectedImages);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Prévisualisation Facebook</DialogTitle>
+          <DialogTitle>Prévisualisation Instagram</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <FacebookPreviewContent
+          <InstagramPreviewContent
             isLoading={isLoading}
             error={error}
             generatedText={editedText}
@@ -56,14 +65,16 @@ export const FacebookPreview = ({
             <button
               onClick={onClose}
               className="px-4 py-2 border rounded-md hover:bg-gray-100"
+              disabled={isPublishing}
             >
               Annuler
             </button>
             <button
-              onClick={() => onPublish(editedText)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              disabled={isLoading || selectedImages.length === 0}
+              onClick={handlePublish}
+              className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 disabled:opacity-50 flex items-center gap-2"
+              disabled={isLoading || selectedImages.length === 0 || isPublishing}
             >
+              {isPublishing && <Loader2 className="w-4 h-4 animate-spin" />}
               Publier
             </button>
           </div>

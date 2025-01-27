@@ -22,10 +22,12 @@ export type Database = {
           facebook_post_id: string | null
           id: string
           images: string[] | null
+          instagram_post_id: string | null
           postal_code: string | null
           price: number | null
           property_type: string | null
           published_to_facebook: boolean | null
+          published_to_instagram: boolean | null
           title: string
           updated_at: string
           user_id: string
@@ -43,10 +45,12 @@ export type Database = {
           facebook_post_id?: string | null
           id?: string
           images?: string[] | null
+          instagram_post_id?: string | null
           postal_code?: string | null
           price?: number | null
           property_type?: string | null
           published_to_facebook?: boolean | null
+          published_to_instagram?: boolean | null
           title: string
           updated_at?: string
           user_id: string
@@ -64,10 +68,12 @@ export type Database = {
           facebook_post_id?: string | null
           id?: string
           images?: string[] | null
+          instagram_post_id?: string | null
           postal_code?: string | null
           price?: number | null
           property_type?: string | null
           published_to_facebook?: boolean | null
+          published_to_instagram?: boolean | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -92,6 +98,8 @@ export type Database = {
           facebook_post_example: string | null
           first_name: string | null
           id: string
+          instagram_access_token: string | null
+          instagram_user_id: string | null
           last_name: string | null
           phone: string | null
           updated_at: string
@@ -104,6 +112,8 @@ export type Database = {
           facebook_post_example?: string | null
           first_name?: string | null
           id: string
+          instagram_access_token?: string | null
+          instagram_user_id?: string | null
           last_name?: string | null
           phone?: string | null
           updated_at?: string
@@ -116,6 +126,8 @@ export type Database = {
           facebook_post_example?: string | null
           first_name?: string | null
           id?: string
+          instagram_access_token?: string | null
+          instagram_user_id?: string | null
           last_name?: string | null
           phone?: string | null
           updated_at?: string

@@ -1,72 +1,67 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Facebook, RefreshCw } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
+import { Tables } from "@/integrations/supabase/types";
+import { useToast } from "@/hooks/use-toast";
 
-interface HeroSectionProps {
-  profile: any;
+type HeroSectionProps = {
+  profile: Tables<"profiles"> | null;
   loading: boolean;
   onConnectFacebook: () => void;
-}
+  onConnectInstagram?: () => void;
+};
 
-export const HeroSection = ({ profile, loading, onConnectFacebook }: HeroSectionProps) => {
-  const navigate = useNavigate();
+export const HeroSection = ({ profile, loading, onConnectFacebook, onConnectInstagram }: HeroSectionProps) => {
+  const { toast } = useToast();
+
+  const handleInstagramConnect = () => {
+    if (!profile?.facebook_page_id) {
+      toast({
+        title: "Facebook requis",
+        description: "Vous devez d'abord connecter votre page Facebook avant de pouvoir connecter Instagram",
+        variant: "destructive",
+      });
+      return;
+    }
+    onConnectInstagram?.();
+  };
 
   return (
-    <section className="pt-32 pb-16 px-4">
-      <div className="container mx-auto text-center">
-        <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-          {profile ? `Bienvenue ${profile.first_name || ""}` : "Automatisez vos publicités immobilières sur Facebook"}
-        </h1>
-        <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-          Transformez vos annonces Centris en publicités Facebook attrayantes en quelques clics. Gagnez du temps et augmentez votre visibilité.
-        </p>
-        <div className="flex justify-center space-x-4">
-          {!profile ? (
-            <>
-              <Button size="lg" className="animate-float" onClick={() => navigate("/auth")}>
-                Essayer gratuitement
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button size="lg" variant="outline">
-                Voir la démo
-              </Button>
-            </>
-          ) : (
-            <div className="space-y-4">
-              {!profile.facebook_page_id ? (
-                <Button 
-                  size="lg" 
-                  className="animate-float"
-                  onClick={onConnectFacebook}
-                  disabled={loading}
-                >
-                  <Facebook className="mr-2 h-4 w-4" />
-                  {loading ? "Connexion en cours..." : "Connecter ma page Facebook"}
-                </Button>
-              ) : (
-                <div className="space-y-4">
-                  <Button size="lg">
-                    Commencer à publier
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                  <div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={onConnectFacebook}
-                      disabled={loading}
-                      className="mt-2"
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      {loading ? "Reconnexion en cours..." : "Reconnecter Facebook"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+    <div className="relative isolate px-6 pt-14 lg:px-8">
+      <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
+            Automatisez vos publications immobilières
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-muted-foreground">
+            Importez vos annonces Centris et publiez-les automatiquement sur Facebook et Instagram avec des descriptions générées par IA.
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button
+              size="lg"
+              className="w-full sm:w-auto"
+              onClick={onConnectFacebook}
+              disabled={loading}
+            >
+              <Facebook className="w-5 h-5 mr-2" />
+              {profile?.facebook_page_id
+                ? "Page Facebook connectée"
+                : "Connecter votre page Facebook"}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={handleInstagramConnect}
+              disabled={loading || !onConnectInstagram}
+            >
+              <Instagram className="w-5 h-5 mr-2" />
+              {profile?.instagram_user_id
+                ? "Compte Instagram connecté"
+                : "Connecter votre compte Instagram"}
+            </Button>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
