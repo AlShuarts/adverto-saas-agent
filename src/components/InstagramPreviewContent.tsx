@@ -2,7 +2,6 @@ import { Tables } from "@/integrations/supabase/types";
 import { Loader2, Instagram } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
 
 type InstagramPreviewContentProps = {
   isLoading: boolean;
@@ -24,15 +23,20 @@ export const InstagramPreviewContent = ({
   onSelectedImagesChange,
 }: InstagramPreviewContentProps) => {
   const handleImageSelect = (image: string) => {
-    if (selectedImages.includes(image)) {
-      // Si l'image est déjà sélectionnée, on la retire
-      onSelectedImagesChange(selectedImages.filter((i) => i !== image));
+    const isSelected = selectedImages.includes(image);
+    let newSelectedImages: string[];
+
+    if (isSelected) {
+      newSelectedImages = selectedImages.filter((i) => i !== image);
     } else {
-      // Si l'image n'est pas sélectionnée et qu'on n'a pas atteint la limite
       if (selectedImages.length < 10) {
-        onSelectedImagesChange([...selectedImages, image]);
+        newSelectedImages = [...selectedImages, image];
+      } else {
+        return; // Ne rien faire si on a déjà 10 images
       }
     }
+
+    onSelectedImagesChange(newSelectedImages);
   };
 
   return (

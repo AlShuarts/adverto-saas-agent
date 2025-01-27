@@ -22,17 +22,19 @@ export const InstagramPreview = ({
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const displayImages = listing.images ? listing.images.slice(0, 10) : [];
 
+  // Mettre à jour le texte édité uniquement lorsque le texte généré change
   useEffect(() => {
     if (generatedText) {
       setEditedText(generatedText);
     }
   }, [generatedText]);
 
+  // Initialiser les images sélectionnées une seule fois à l'ouverture
   useEffect(() => {
-    if (displayImages.length > 0) {
+    if (isOpen && displayImages.length > 0) {
       setSelectedImages([displayImages[0]]);
     }
-  }, [displayImages]);
+  }, [isOpen, displayImages]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
