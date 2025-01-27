@@ -23,14 +23,19 @@ export const InstagramPreviewContent = ({
   onSelectedImagesChange,
 }: InstagramPreviewContentProps) => {
   const handleImageSelect = (image: string) => {
+    console.log("Image sélectionnée:", image);
+    console.log("Images actuellement sélectionnées:", selectedImages);
+    
     const isSelected = selectedImages.includes(image);
     
     if (isSelected) {
-      // Retirer l'image si elle est déjà sélectionnée
-      onSelectedImagesChange(selectedImages.filter((i) => i !== image));
+      const newSelection = selectedImages.filter((i) => i !== image);
+      console.log("Nouvelle sélection après retrait:", newSelection);
+      onSelectedImagesChange(newSelection);
     } else if (selectedImages.length < 10) {
-      // Ajouter l'image si la limite n'est pas atteinte
-      onSelectedImagesChange([...selectedImages, image]);
+      const newSelection = [...selectedImages, image];
+      console.log("Nouvelle sélection après ajout:", newSelection);
+      onSelectedImagesChange(newSelection);
     }
   };
 

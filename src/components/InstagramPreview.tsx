@@ -22,17 +22,19 @@ export const InstagramPreview = ({
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const displayImages = listing.images ? listing.images.slice(0, 10) : [];
 
-  // Réinitialiser l'état lorsque le modal s'ouvre
+  // Réinitialiser le texte quand le texte généré change
   useEffect(() => {
-    if (isOpen) {
-      if (generatedText) {
-        setEditedText(generatedText);
-      }
-      if (displayImages.length > 0) {
-        setSelectedImages([displayImages[0]]);
-      }
+    if (generatedText) {
+      setEditedText(generatedText);
     }
-  }, [isOpen, generatedText, displayImages]);
+  }, [generatedText]);
+
+  // Réinitialiser les images sélectionnées uniquement à l'ouverture de la modal
+  useEffect(() => {
+    if (isOpen && displayImages.length > 0) {
+      setSelectedImages([displayImages[0]]);
+    }
+  }, [isOpen]); // Ne dépend que de isOpen
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
