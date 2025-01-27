@@ -16,7 +16,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
         <ListingImageCarousel images={listing.images || []} />
         <div className="p-4 space-y-2">
           <h3 className="text-lg font-semibold">{listing.title}</h3>
-          <p className="text-2xl font-bold text-primary">
+          <p className="text-2xl font-bold text-white">
             {formatPrice(listing.price)}
           </p>
           <p className="text-sm text-muted-foreground">{listing.address}</p>
