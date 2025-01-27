@@ -52,8 +52,7 @@ const Index = () => {
         appId: '3819439438267773',
         version: 'v18.0',
         cookie: true,
-        xfbml: true,
-        status: true
+        xfbml: true
       });
 
       setFbInitialized(true);
