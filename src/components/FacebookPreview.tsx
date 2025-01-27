@@ -3,14 +3,13 @@ import { Tables } from "@/integrations/supabase/types";
 import { FacebookPreviewContent } from "./FacebookPreviewContent";
 import { useListingText } from "@/hooks/useListingText";
 import { useState, useEffect } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 
 type FacebookPreviewProps = {
   listing: Tables<"listings">;
   isOpen: boolean;
   onClose: () => void;
   onPublish: (message: string) => void;
+  selectedTemplateId: string;
 };
 
 export const FacebookPreview = ({
@@ -18,9 +17,8 @@ export const FacebookPreview = ({
   isOpen,
   onClose,
   onPublish,
+  selectedTemplateId,
 }: FacebookPreviewProps) => {
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
-  const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
   const { generatedText, isLoading, error } = useListingText(listing, isOpen, selectedTemplateId === "none" ? undefined : selectedTemplateId);
   const [editedText, setEditedText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
@@ -38,25 +36,6 @@ export const FacebookPreview = ({
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      const { data, error } = await supabase
-        .from('facebook_templates')
-        .select('id, name');
-      
-      if (error) {
-        console.error('Error fetching templates:', error);
-        return;
-      }
-      
-      setTemplates(data || []);
-    };
-
-    if (isOpen) {
-      fetchTemplates();
-    }
-  }, [isOpen]);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -64,21 +43,6 @@ export const FacebookPreview = ({
           <DialogTitle>Prévisualisation Facebook</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="w-full">
-            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un template" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Aucun template</SelectItem>
-                {templates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <FacebookPreviewContent
             isLoading={isLoading}
             error={error}

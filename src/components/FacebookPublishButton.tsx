@@ -3,9 +3,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Share, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FacebookPreview } from "./FacebookPreview";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type FacebookPublishButtonProps = {
   listing: Tables<"listings">;
@@ -14,8 +15,27 @@ type FacebookPublishButtonProps = {
 export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
+  const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      const { data, error } = await supabase
+        .from('facebook_templates')
+        .select('id, name');
+      
+      if (error) {
+        console.error('Error fetching templates:', error);
+        return;
+      }
+      
+      setTemplates(data || []);
+    };
+
+    fetchTemplates();
+  }, []);
 
   const publishToFacebook = async (message: string) => {
     try {
@@ -121,22 +141,38 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full"
-        onClick={() => setShowPreview(true)}
-        disabled={isPublishing}
-      >
-        <Share className="w-4 h-4 mr-2" />
-        Prévisualiser et publier sur Facebook
-      </Button>
+      <div className="flex gap-2 items-center">
+        <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Sélectionner un template" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Aucun template</SelectItem>
+            {templates.map((template) => (
+              <SelectItem key={template.id} value={template.id}>
+                {template.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => setShowPreview(true)}
+          disabled={isPublishing}
+        >
+          <Share className="w-4 h-4 mr-2" />
+          Prévisualiser et publier sur Facebook
+        </Button>
+      </div>
 
       <FacebookPreview
         listing={listing}
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
         onPublish={publishToFacebook}
+        selectedTemplateId={selectedTemplateId}
       />
     </>
   );
