@@ -15,17 +15,18 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
       setError(null);
       
       try {
-        // Récupérer le template de l'utilisateur
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('facebook_post_template')
-          .single();
+        // Récupérer le template sélectionné de l'utilisateur
+        const { data: templates } = await supabase
+          .from('facebook_templates')
+          .select('content')
+          .limit(1)
+          .maybeSingle();
 
         // Si un template existe, l'utiliser comme base pour la génération
         const { data, error } = await supabase.functions.invoke('generate-listing-description', {
           body: { 
             listing,
-            template: profile?.facebook_post_template || undefined
+            template: templates?.content || undefined
           },
         });
 

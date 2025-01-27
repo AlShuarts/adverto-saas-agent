@@ -5,8 +5,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type FacebookPreviewContentProps = {
   isLoading: boolean;
@@ -16,6 +19,12 @@ type FacebookPreviewContentProps = {
   onTextChange: (text: string) => void;
   selectedImages: string[];
   onSelectedImagesChange: (images: string[]) => void;
+};
+
+type Template = {
+  id: string;
+  name: string;
+  content: string;
 };
 
 export const FacebookPreviewContent = ({
@@ -29,25 +38,53 @@ export const FacebookPreviewContent = ({
 }: FacebookPreviewContentProps) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('facebook_templates')
+        .select('id, name, content');
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les templates",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleImageSelect = (image: string) => {
-    console.log("Image sélectionnée:", image);
-    console.log("Images actuellement sélectionnées:", selectedImages);
-    
     const isSelected = selectedImages.includes(image);
     
     if (isSelected) {
-      const newSelection = selectedImages.filter((i) => i !== image);
-      console.log("Nouvelle sélection après retrait:", newSelection);
-      onSelectedImagesChange(newSelection);
+      onSelectedImagesChange(selectedImages.filter((i) => i !== image));
     } else {
-      const newSelection = [...selectedImages, image];
-      console.log("Nouvelle sélection après ajout:", newSelection);
-      onSelectedImagesChange(newSelection);
+      onSelectedImagesChange([...selectedImages, image]);
     }
   };
 
   const saveAsTemplate = async () => {
+    if (!templateName.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer un nom pour le template",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -56,17 +93,24 @@ export const FacebookPreviewContent = ({
         throw new Error("Utilisateur non connecté");
       }
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ facebook_post_template: generatedText })
-        .eq('id', user.id);
+      const { error: insertError } = await supabase
+        .from('facebook_templates')
+        .insert({
+          user_id: user.id,
+          name: templateName,
+          content: generatedText
+        });
 
-      if (updateError) throw updateError;
+      if (insertError) throw insertError;
 
       toast({
         title: "Template sauvegardé",
         description: "Votre template a été sauvegardé avec succès",
       });
+
+      setIsTemplateDialogOpen(false);
+      setTemplateName("");
+      fetchTemplates();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du template:', error);
       toast({
@@ -76,6 +120,14 @@ export const FacebookPreviewContent = ({
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      onTextChange(template.content);
     }
   };
 
@@ -94,18 +146,26 @@ export const FacebookPreviewContent = ({
         </div>
       ) : (
         <>
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-between items-center mb-2">
+            <Select value={selectedTemplate || ""} onValueChange={handleTemplateChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Choisir un template" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
               variant="outline"
               size="sm"
-              onClick={saveAsTemplate}
-              disabled={isSaving || !generatedText}
+              onClick={() => setIsTemplateDialogOpen(true)}
+              disabled={!generatedText}
             >
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
+              <Save className="w-4 h-4 mr-2" />
               Sauvegarder comme template
             </Button>
           </div>
@@ -147,6 +207,34 @@ export const FacebookPreviewContent = ({
           )}
         </>
       )}
+
+      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sauvegarder comme template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              placeholder="Nom du template"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={saveAsTemplate} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Sauvegarder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
