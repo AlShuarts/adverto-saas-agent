@@ -3,6 +3,11 @@ import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Save } from "lucide-react";
 
 type FacebookPreviewContentProps = {
   isLoading: boolean;
@@ -23,6 +28,9 @@ export const FacebookPreviewContent = ({
   selectedImages,
   onSelectedImagesChange,
 }: FacebookPreviewContentProps) => {
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleImageSelect = (image: string) => {
     console.log("Image sélectionnée:", image);
     console.log("Images actuellement sélectionnées:", selectedImages);
@@ -37,6 +45,32 @@ export const FacebookPreviewContent = ({
       const newSelection = [...selectedImages, image];
       console.log("Nouvelle sélection après ajout:", newSelection);
       onSelectedImagesChange(newSelection);
+    }
+  };
+
+  const saveAsTemplate = async () => {
+    try {
+      setIsSaving(true);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ facebook_post_template: generatedText })
+        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Template sauvegardé",
+        description: "Votre template a été sauvegardé avec succès",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du template:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le template",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -55,6 +89,21 @@ export const FacebookPreviewContent = ({
         </div>
       ) : (
         <>
+          <div className="flex justify-end mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={saveAsTemplate}
+              disabled={isSaving || !generatedText}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Sauvegarder comme template
+            </Button>
+          </div>
           <Textarea
             value={generatedText}
             onChange={(e) => onTextChange(e.target.value)}
