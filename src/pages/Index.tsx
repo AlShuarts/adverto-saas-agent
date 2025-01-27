@@ -18,11 +18,24 @@ const Index = () => {
 
   useEffect(() => {
     getProfile();
-    initFacebook();
+    loadFacebookSDK();
   }, []);
 
-  const initFacebook = async () => {
+  const loadFacebookSDK = async () => {
     try {
+      // Attendre que le script Facebook soit chargé
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://connect.facebook.net/fr_FR/sdk.js';
+        script.async = true;
+        script.defer = true;
+        script.crossOrigin = "anonymous";
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load Facebook SDK'));
+        document.head.appendChild(script);
+      });
+
+      // Attendre que FB soit défini
       await new Promise<void>((resolve) => {
         const checkFB = () => {
           if (window.FB) {
@@ -34,16 +47,24 @@ const Index = () => {
         checkFB();
       });
 
+      // Initialiser le SDK
       window.FB.init({
         appId: '3819439438267773',
         version: 'v18.0',
         cookie: true,
-        xfbml: true
+        xfbml: true,
+        status: true
       });
 
       setFbInitialized(true);
+      console.log('Facebook SDK initialized successfully');
     } catch (error) {
-      console.error('Erreur lors de l\'initialisation de Facebook:', error);
+      console.error('Error initializing Facebook SDK:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'initialiser Facebook. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -168,7 +189,6 @@ const Index = () => {
 
     setLoading(true);
     try {
-      // Récupérer le compte Instagram associé à la page Facebook
       const response = await fetch(
         `https://graph.facebook.com/v18.0/${profile.facebook_page_id}?fields=instagram_business_account&access_token=${profile.facebook_access_token}`
       );
@@ -188,7 +208,7 @@ const Index = () => {
         .from('profiles')
         .update({
           instagram_user_id: data.instagram_business_account.id,
-          instagram_access_token: profile.facebook_access_token // Instagram utilise le même token que Facebook
+          instagram_access_token: profile.facebook_access_token
         })
         .eq('id', profile.id);
 
