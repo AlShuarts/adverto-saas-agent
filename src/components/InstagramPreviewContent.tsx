@@ -24,16 +24,14 @@ export const InstagramPreviewContent = ({
   onSelectedImagesChange,
 }: InstagramPreviewContentProps) => {
   const handleImageSelect = (image: string) => {
-    onSelectedImagesChange((prev) => {
-      if (prev.includes(image)) {
-        return prev.filter((i) => i !== image);
-      } else {
-        if (prev.length >= 10) {
-          return prev;
-        }
-        return [...prev, image];
+    if (selectedImages.includes(image)) {
+      onSelectedImagesChange(selectedImages.filter((i) => i !== image));
+    } else {
+      if (selectedImages.length >= 10) {
+        return;
       }
-    });
+      onSelectedImagesChange([...selectedImages, image]);
+    }
   };
 
   return (
