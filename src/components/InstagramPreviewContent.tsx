@@ -10,6 +10,8 @@ type InstagramPreviewContentProps = {
   generatedText: string;
   images: string[];
   onTextChange: (text: string) => void;
+  selectedImages: string[];
+  onSelectedImagesChange: (images: string[]) => void;
 };
 
 export const InstagramPreviewContent = ({
@@ -18,11 +20,11 @@ export const InstagramPreviewContent = ({
   generatedText,
   images,
   onTextChange,
+  selectedImages,
+  onSelectedImagesChange,
 }: InstagramPreviewContentProps) => {
-  const [selectedImages, setSelectedImages] = useState<string[]>(images.slice(0, 1));
-
   const handleImageSelect = (image: string) => {
-    setSelectedImages((prev) => {
+    onSelectedImagesChange((prev) => {
       if (prev.includes(image)) {
         return prev.filter((i) => i !== image);
       } else {
