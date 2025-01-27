@@ -24,13 +24,15 @@ export const InstagramPreviewContent = ({
   onSelectedImagesChange,
 }: InstagramPreviewContentProps) => {
   const handleImageSelect = (image: string) => {
-    const newSelectedImages = selectedImages.includes(image)
-      ? selectedImages.filter((i) => i !== image)
-      : selectedImages.length >= 10
-      ? selectedImages
-      : [...selectedImages, image];
-    
-    onSelectedImagesChange(newSelectedImages);
+    if (selectedImages.includes(image)) {
+      // Si l'image est déjà sélectionnée, on la retire
+      onSelectedImagesChange(selectedImages.filter((i) => i !== image));
+    } else {
+      // Si l'image n'est pas sélectionnée et qu'on n'a pas atteint la limite
+      if (selectedImages.length < 10) {
+        onSelectedImagesChange([...selectedImages, image]);
+      }
+    }
   };
 
   return (
