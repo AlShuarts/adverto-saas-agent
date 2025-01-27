@@ -21,14 +21,37 @@ Deno.serve(async (req) => {
     const { message, images, listingId } = await req.json() as RequestBody
     console.log('Publishing to Instagram:', { message, images: images.length, listingId })
 
-    // Récupérer les informations du profil
+    // Récupérer les informations du profil de l'utilisateur qui fait la requête
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
+      req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
+    )
+
+    if (authError || !user) {
+      console.error('Auth error:', authError)
+      throw new Error('User not authenticated')
+    }
+
+    // Récupérer les informations du profil avec les tokens Instagram
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('instagram_user_id, instagram_access_token')
+      .eq('id', user.id)
       .single()
 
-    if (profileError || !profile?.instagram_user_id || !profile?.instagram_access_token) {
-      throw new Error('Instagram credentials not found')
+    console.log('Profile data:', { 
+      hasProfile: !!profile,
+      hasInstagramId: profile?.instagram_user_id,
+      hasInstagramToken: profile?.instagram_access_token,
+      error: profileError
+    })
+
+    if (profileError) {
+      console.error('Profile error:', profileError)
+      throw new Error('Failed to fetch profile')
+    }
+
+    if (!profile?.instagram_user_id || !profile?.instagram_access_token) {
+      throw new Error('Instagram credentials not found. Please connect your Instagram account in your profile.')
     }
 
     // Publier sur Instagram
@@ -51,9 +74,11 @@ Deno.serve(async (req) => {
     )
 
     const containerData = await containerResponse.json()
+    console.log('Container creation response:', containerData)
+
     if (!containerData.id) {
       console.error('Container creation failed:', containerData)
-      throw new Error('Failed to create media container')
+      throw new Error(containerData.error?.message || 'Failed to create media container')
     }
 
     // 2. Publier le conteneur
@@ -69,9 +94,11 @@ Deno.serve(async (req) => {
     )
 
     const publishData = await publishResponse.json()
+    console.log('Publish response:', publishData)
+
     if (!publishData.id) {
       console.error('Publishing failed:', publishData)
-      throw new Error('Failed to publish media')
+      throw new Error(publishData.error?.message || 'Failed to publish media')
     }
 
     // Mettre à jour le statut de publication dans la base de données
