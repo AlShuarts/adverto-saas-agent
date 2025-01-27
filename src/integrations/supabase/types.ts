@@ -22,10 +22,12 @@ export type Database = {
           facebook_post_id: string | null
           id: string
           images: string[] | null
+          instagram_post_id: string | null
           postal_code: string | null
           price: number | null
           property_type: string | null
           published_to_facebook: boolean | null
+          published_to_instagram: boolean | null
           title: string
           updated_at: string
           user_id: string
@@ -43,10 +45,12 @@ export type Database = {
           facebook_post_id?: string | null
           id?: string
           images?: string[] | null
+          instagram_post_id?: string | null
           postal_code?: string | null
           price?: number | null
           property_type?: string | null
           published_to_facebook?: boolean | null
+          published_to_instagram?: boolean | null
           title: string
           updated_at?: string
           user_id: string
@@ -64,10 +68,12 @@ export type Database = {
           facebook_post_id?: string | null
           id?: string
           images?: string[] | null
+          instagram_post_id?: string | null
           postal_code?: string | null
           price?: number | null
           property_type?: string | null
           published_to_facebook?: boolean | null
+          published_to_instagram?: boolean | null
           title?: string
           updated_at?: string
           user_id?: string

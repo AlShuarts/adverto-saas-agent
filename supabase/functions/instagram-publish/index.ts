@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
       .from('listings')
       .update({
         published_to_instagram: true,
-        instagram_post_id: publishData.id,
+        instagram_post_id: publishData.id
       })
       .eq('id', listingId)
 
