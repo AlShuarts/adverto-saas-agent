@@ -22,19 +22,17 @@ export const InstagramPreview = ({
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const displayImages = listing.images ? listing.images.slice(0, 10) : [];
 
-  // Mettre à jour le texte édité uniquement lorsque le texte généré change
+  // Réinitialiser l'état lorsque le modal s'ouvre
   useEffect(() => {
-    if (generatedText) {
-      setEditedText(generatedText);
+    if (isOpen) {
+      if (generatedText) {
+        setEditedText(generatedText);
+      }
+      if (displayImages.length > 0) {
+        setSelectedImages([displayImages[0]]);
+      }
     }
-  }, [generatedText]);
-
-  // Initialiser les images sélectionnées une seule fois à l'ouverture
-  useEffect(() => {
-    if (isOpen && displayImages.length > 0) {
-      setSelectedImages([displayImages[0]]);
-    }
-  }, [isOpen, displayImages]);
+  }, [isOpen, generatedText, displayImages]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
