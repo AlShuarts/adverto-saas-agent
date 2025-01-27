@@ -96,6 +96,7 @@ export type Database = {
           facebook_access_token: string | null
           facebook_page_id: string | null
           facebook_post_example: string | null
+          facebook_post_template: string | null
           first_name: string | null
           id: string
           instagram_access_token: string | null
@@ -110,6 +111,7 @@ export type Database = {
           facebook_access_token?: string | null
           facebook_page_id?: string | null
           facebook_post_example?: string | null
+          facebook_post_template?: string | null
           first_name?: string | null
           id: string
           instagram_access_token?: string | null
@@ -124,6 +126,7 @@ export type Database = {
           facebook_access_token?: string | null
           facebook_page_id?: string | null
           facebook_post_example?: string | null
+          facebook_post_template?: string | null
           first_name?: string | null
           id?: string
           instagram_access_token?: string | null

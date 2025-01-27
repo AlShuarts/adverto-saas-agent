@@ -1,4 +1,3 @@
-import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -51,10 +50,16 @@ export const FacebookPreviewContent = ({
   const saveAsTemplate = async () => {
     try {
       setIsSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Utilisateur non connecté");
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ facebook_post_template: generatedText })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
