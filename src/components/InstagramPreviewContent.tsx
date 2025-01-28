@@ -59,6 +59,11 @@ export const InstagramPreviewContent = ({
         <>
           {images.length > 0 && (
             <>
+              <div className="bg-secondary/10 rounded-lg p-4 mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Sélectionnez jusqu'à 10 images en cochant les cases. Les images sélectionnées seront publiées dans l'ordre de sélection.
+                </p>
+              </div>
               <ScrollArea className="h-[400px] pr-4">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                   {images.map((image, index) => (
