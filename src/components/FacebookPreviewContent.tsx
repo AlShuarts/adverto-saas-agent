@@ -126,19 +126,31 @@ export const FacebookPreviewContent = ({
           {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
           {images.length > 0 && (
             <>
+              <div className="mb-4 p-3 bg-secondary/10 rounded-lg">
+                <p className="text-sm font-medium mb-2">
+                  Sélectionnez les images à publier sur Facebook
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Cliquez sur la case à cocher pour sélectionner/désélectionner une image
+                </p>
+              </div>
               <ScrollArea className="h-[400px] pr-4">
                 <div className="grid grid-cols-2 gap-2">
                   {images.map((image, index) => (
-                    <div key={index} className="relative group">
+                    <div 
+                      key={index} 
+                      className="relative group border-2 border-transparent hover:border-primary rounded-lg transition-all duration-200"
+                    >
                       <img
                         src={image}
                         alt={`Image ${index + 1}`}
                         className="w-full h-48 object-cover rounded"
                       />
-                      <div className="absolute top-2 left-2">
+                      <div className="absolute top-2 left-2 bg-black/50 p-1.5 rounded">
                         <Checkbox
                           checked={selectedImages.includes(image)}
                           onCheckedChange={() => handleImageSelect(image)}
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </div>
                       <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-xs">
@@ -148,8 +160,8 @@ export const FacebookPreviewContent = ({
                   ))}
                 </div>
               </ScrollArea>
-              <p className="text-sm text-muted-foreground mt-4">
-                {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} sélectionnée{selectedImages.length !== 1 ? 's' : ''}
+              <p className="text-sm text-muted-foreground mt-4 font-medium">
+                {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} sélectionnée{selectedImages.length !== 1 ? 's' : ''} sur {images.length}
               </p>
             </>
           )}
