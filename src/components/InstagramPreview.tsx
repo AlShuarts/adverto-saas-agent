@@ -47,7 +47,7 @@ export const InstagramPreview = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="w-[95vw] max-w-2xl mx-auto h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Prévisualisation Instagram</DialogTitle>
         </DialogHeader>
