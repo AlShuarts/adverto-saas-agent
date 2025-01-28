@@ -1,8 +1,14 @@
-import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Save } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 type FacebookPreviewContentProps = {
   isLoading: boolean;
@@ -23,20 +29,65 @@ export const FacebookPreviewContent = ({
   selectedImages,
   onSelectedImagesChange,
 }: FacebookPreviewContentProps) => {
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+
   const handleImageSelect = (image: string) => {
-    console.log("Image sélectionnée:", image);
-    console.log("Images actuellement sélectionnées:", selectedImages);
-    
     const isSelected = selectedImages.includes(image);
     
     if (isSelected) {
-      const newSelection = selectedImages.filter((i) => i !== image);
-      console.log("Nouvelle sélection après retrait:", newSelection);
-      onSelectedImagesChange(newSelection);
+      onSelectedImagesChange(selectedImages.filter((i) => i !== image));
     } else {
-      const newSelection = [...selectedImages, image];
-      console.log("Nouvelle sélection après ajout:", newSelection);
-      onSelectedImagesChange(newSelection);
+      onSelectedImagesChange([...selectedImages, image]);
+    }
+  };
+
+  const saveAsTemplate = async () => {
+    if (!templateName.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer un nom pour le template",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Utilisateur non connecté");
+      }
+
+      const { error: insertError } = await supabase
+        .from('facebook_templates')
+        .insert({
+          user_id: user.id,
+          name: templateName,
+          content: generatedText
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Template sauvegardé",
+        description: "Votre template a été sauvegardé avec succès",
+      });
+
+      setIsTemplateDialogOpen(false);
+      setTemplateName("");
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du template:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le template",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -55,6 +106,17 @@ export const FacebookPreviewContent = ({
         </div>
       ) : (
         <>
+          <div className="flex justify-end mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTemplateDialogOpen(true)}
+              disabled={!generatedText}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Sauvegarder comme template
+            </Button>
+          </div>
           <Textarea
             value={generatedText}
             onChange={(e) => onTextChange(e.target.value)}
@@ -64,19 +126,31 @@ export const FacebookPreviewContent = ({
           {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
           {images.length > 0 && (
             <>
+              <div className="mb-4 p-3 bg-secondary/10 rounded-lg">
+                <p className="text-sm font-medium mb-2">
+                  Sélectionnez les images à publier sur Facebook
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Cliquez sur la case à cocher pour sélectionner/désélectionner une image
+                </p>
+              </div>
               <ScrollArea className="h-[400px] pr-4">
                 <div className="grid grid-cols-2 gap-2">
                   {images.map((image, index) => (
-                    <div key={index} className="relative group">
+                    <div 
+                      key={index} 
+                      className="relative group border-2 border-transparent hover:border-primary rounded-lg transition-all duration-200"
+                    >
                       <img
                         src={image}
                         alt={`Image ${index + 1}`}
                         className="w-full h-48 object-cover rounded"
                       />
-                      <div className="absolute top-2 left-2">
+                      <div className="absolute top-2 left-2 bg-black/50 p-1.5 rounded">
                         <Checkbox
                           checked={selectedImages.includes(image)}
                           onCheckedChange={() => handleImageSelect(image)}
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </div>
                       <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-xs">
@@ -86,13 +160,41 @@ export const FacebookPreviewContent = ({
                   ))}
                 </div>
               </ScrollArea>
-              <p className="text-sm text-muted-foreground mt-4">
-                {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} sélectionnée{selectedImages.length !== 1 ? 's' : ''}
+              <p className="text-sm text-muted-foreground mt-4 font-medium">
+                {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} sélectionnée{selectedImages.length !== 1 ? 's' : ''} sur {images.length}
               </p>
             </>
           )}
         </>
       )}
+
+      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sauvegarder comme template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              placeholder="Nom du template"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={saveAsTemplate} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Sauvegarder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

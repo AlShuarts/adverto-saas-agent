@@ -26,9 +26,11 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex flex-col gap-2">
-        <FacebookPublishButton listing={listing} />
-        <InstagramPublishButton listing={listing} />
+      <CardFooter className="p-4 pt-0 flex flex-col gap-2 w-full">
+        <div className="w-full grid grid-cols-1 gap-2">
+          <FacebookPublishButton listing={listing} />
+          <InstagramPublishButton listing={listing} />
+        </div>
       </CardFooter>
     </Card>
   );

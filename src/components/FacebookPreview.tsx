@@ -9,6 +9,7 @@ type FacebookPreviewProps = {
   isOpen: boolean;
   onClose: () => void;
   onPublish: (message: string) => void;
+  selectedTemplateId: string;
 };
 
 export const FacebookPreview = ({
@@ -16,20 +17,19 @@ export const FacebookPreview = ({
   isOpen,
   onClose,
   onPublish,
+  selectedTemplateId,
 }: FacebookPreviewProps) => {
-  const { generatedText, isLoading, error } = useListingText(listing, isOpen);
+  const { generatedText, isLoading, error } = useListingText(listing, isOpen, selectedTemplateId === "none" ? undefined : selectedTemplateId);
   const [editedText, setEditedText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const displayImages = listing.images || [];
 
-  // Réinitialiser le texte quand le texte généré change
   useEffect(() => {
     if (generatedText) {
       setEditedText(generatedText);
     }
   }, [generatedText]);
 
-  // Réinitialiser les images sélectionnées quand la modal s'ouvre/se ferme
   useEffect(() => {
     if (!isOpen) {
       setSelectedImages([]);

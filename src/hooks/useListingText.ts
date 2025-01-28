@@ -2,7 +2,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => {
+export const useListingText = (listing: Tables<"listings">, isOpen: boolean, selectedTemplateId?: string) => {
   const [generatedText, setGeneratedText] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,8 +15,25 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
       setError(null);
       
       try {
+        // Récupérer le template sélectionné
+        let templateContent = null;
+        if (selectedTemplateId) {
+          const { data: template } = await supabase
+            .from('facebook_templates')
+            .select('content')
+            .eq('id', selectedTemplateId)
+            .single();
+          
+          if (template) {
+            templateContent = template.content;
+          }
+        }
+
         const { data, error } = await supabase.functions.invoke('generate-listing-description', {
-          body: { listing },
+          body: { 
+            listing,
+            template: templateContent
+          },
         });
 
         if (error) throw error;
@@ -32,7 +49,7 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean) => 
     };
 
     generateText();
-  }, [isOpen, listing]);
+  }, [isOpen, listing, selectedTemplateId]);
 
   return { generatedText, isLoading, error };
 };
