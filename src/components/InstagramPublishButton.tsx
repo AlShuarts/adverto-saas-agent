@@ -87,8 +87,8 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
         onClick={() => setShowPreview(true)}
         disabled={isPublishing}
       >
-        <Share className="w-4 h-4 mr-2" />
-        Prévisualiser et publier sur Instagram
+        <Share className="w-4 h-4 mr-2 flex-shrink-0" />
+        <span className="truncate">Prévisualiser et publier sur Instagram</span>
       </Button>
 
       <InstagramPreview
