@@ -163,7 +163,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
           disabled={isPublishing}
         >
           <Share className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span className="truncate">Prévisualiser et publier sur Facebook</span>
+          <span className="truncate">Générer le texte</span>
         </Button>
       </div>
 
