@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
@@ -5,10 +6,12 @@ import { FeaturesSection } from "@/components/FeaturesSection";
 import { ListingsSection } from "@/components/ListingsSection";
 import { useFacebookSDK } from "@/hooks/useFacebookSDK";
 import { useProfile } from "@/hooks/useProfile";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { fbInitialized } = useFacebookSDK();
   const { profile, loading, getProfile, connectFacebook, connectInstagram } = useProfile();
+  const { toast } = useToast();
 
   useEffect(() => {
     getProfile();
@@ -23,7 +26,7 @@ const Index = () => {
         onConnectFacebook={connectFacebook}
         onConnectInstagram={connectInstagram}
       />
-      {profile?.facebook_page_id && <ListingsSection />}
+      <ListingsSection />
       <FeaturesSection />
     </div>
   );

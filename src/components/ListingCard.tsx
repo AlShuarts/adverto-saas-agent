@@ -1,15 +1,30 @@
+
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { ListingImageCarousel } from "./ListingImageCarousel";
 import { FacebookPublishButton } from "./FacebookPublishButton";
 import { InstagramPublishButton } from "./InstagramPublishButton";
 import { formatPrice } from "@/utils/priceFormatter";
+import { useProfile } from "@/hooks/useProfile";
+import { Button } from "@/components/ui/button";
+import { Share } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
 };
 
 export const ListingCard = ({ listing }: ListingCardProps) => {
+  const { profile } = useProfile();
+  const { toast } = useToast();
+
+  const handleConnectReminder = () => {
+    toast({
+      title: "Connexion requise",
+      description: "Connectez votre page Facebook depuis votre profil pour publier sur Facebook/Instagram",
+    });
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
@@ -28,8 +43,22 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
       </CardContent>
       <CardFooter className="p-4 pt-0 flex flex-col gap-2 w-full">
         <div className="w-full grid grid-cols-1 gap-2">
-          <FacebookPublishButton listing={listing} />
-          <InstagramPublishButton listing={listing} />
+          {profile?.facebook_page_id ? (
+            <>
+              <FacebookPublishButton listing={listing} />
+              <InstagramPublishButton listing={listing} />
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleConnectReminder}
+              className="w-full"
+            >
+              <Share className="w-4 h-4 mr-2" />
+              Connecter une page pour publier
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>
