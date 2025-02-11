@@ -7,11 +7,11 @@ import { InstagramPublishButton } from "./InstagramPublishButton";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Share, Play } from "lucide-react";
+import { Share } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
-import { useSlideshow } from "@/hooks/useSlideshow";
+import { FacebookPreview } from "./FacebookPreview";
+import { InstagramPreview } from "./InstagramPreview";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -20,19 +20,8 @@ type ListingCardProps = {
 export const ListingCard = ({ listing }: ListingCardProps) => {
   const { profile } = useProfile();
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
-  const { isLoading, videoUrl } = useSlideshow({ 
-    listing,
-    images: listing.images || []
-  });
-
-  const handleOpenPreview = () => {
-    setIsOpen(true);
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
+  const [showFacebookPreview, setShowFacebookPreview] = useState(false);
+  const [showInstagramPreview, setShowInstagramPreview] = useState(false);
 
   const handlePublishAttempt = () => {
     toast({
@@ -69,27 +58,43 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
               <InstagramPublishButton listing={listing} />
             </>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleOpenPreview}
-              className="w-full"
-              disabled={isLoading}
-            >
-              <Play className="w-4 h-4 mr-2" />
-              {isLoading ? "Génération en cours..." : "Générer une publicité"}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFacebookPreview(true)}
+                className="w-full"
+              >
+                <Share className="w-4 h-4 mr-2" />
+                Prévisualiser sur Facebook
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowInstagramPreview(true)}
+                className="w-full"
+              >
+                <Share className="w-4 h-4 mr-2" />
+                Prévisualiser sur Instagram
+              </Button>
+            </>
           )}
         </div>
       </CardFooter>
 
-      <SlideshowPreviewDialog
-        isOpen={isOpen}
-        onClose={handleClose}
-        onPublish={handlePublishAttempt}
-        isPublishing={false}
+      <FacebookPreview
         listing={listing}
-        musicUrl="/background-music.mp3"
+        isOpen={showFacebookPreview}
+        onClose={() => setShowFacebookPreview(false)}
+        onPublish={handlePublishAttempt}
+        selectedTemplateId="none"
+      />
+
+      <InstagramPreview
+        listing={listing}
+        isOpen={showInstagramPreview}
+        onClose={() => setShowInstagramPreview(false)}
+        onPublish={handlePublishAttempt}
       />
     </Card>
   );
