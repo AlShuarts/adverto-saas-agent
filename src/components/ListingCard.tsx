@@ -7,8 +7,11 @@ import { InstagramPublishButton } from "./InstagramPublishButton";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Share } from "lucide-react";
+import { Share, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
+import { useSlideshow } from "@/hooks/useSlideshow";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -17,13 +20,30 @@ type ListingCardProps = {
 export const ListingCard = ({ listing }: ListingCardProps) => {
   const { profile } = useProfile();
   const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const { isLoading, videoUrl } = useSlideshow({ 
+    listing,
+    images: listing.images || []
+  });
 
-  const handleConnectReminder = () => {
+  const handleOpenPreview = () => {
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  const handlePublishAttempt = () => {
     toast({
       title: "Connexion requise",
       description: "Connectez votre page Facebook depuis votre profil pour publier sur Facebook/Instagram",
     });
   };
+
+  if (!listing.images || listing.images.length === 0) {
+    return null;
+  }
 
   return (
     <Card className="overflow-hidden">
@@ -52,15 +72,25 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleConnectReminder}
+              onClick={handleOpenPreview}
               className="w-full"
+              disabled={isLoading}
             >
-              <Share className="w-4 h-4 mr-2" />
-              Connecter une page pour publier
+              <Play className="w-4 h-4 mr-2" />
+              {isLoading ? "Génération en cours..." : "Générer une publicité"}
             </Button>
           )}
         </div>
       </CardFooter>
+
+      <SlideshowPreviewDialog
+        isOpen={isOpen}
+        onClose={handleClose}
+        onPublish={handlePublishAttempt}
+        isPublishing={false}
+        listing={listing}
+        musicUrl="/background-music.mp3"
+      />
     </Card>
   );
 };
