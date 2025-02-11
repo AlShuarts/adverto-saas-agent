@@ -1,15 +1,11 @@
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Save, Copy } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 
 type FacebookPreviewContentProps = {
   isLoading: boolean;
@@ -31,9 +27,6 @@ export const FacebookPreviewContent = ({
   onSelectedImagesChange,
 }: FacebookPreviewContentProps) => {
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
-  const [templateName, setTemplateName] = useState("");
 
   const handleImageSelect = (image: string) => {
     const isSelected = selectedImages.includes(image);
@@ -61,53 +54,6 @@ export const FacebookPreviewContent = ({
     }
   };
 
-  const saveAsTemplate = async () => {
-    if (!templateName.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer un nom pour le template",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Utilisateur non connecté");
-      }
-
-      const { error: insertError } = await supabase
-        .from('facebook_templates')
-        .insert({
-          user_id: user.id,
-          name: templateName,
-          content: generatedText
-        });
-
-      if (insertError) throw insertError;
-
-      toast({
-        title: "Template sauvegardé",
-        description: "Votre template a été sauvegardé avec succès",
-      });
-
-      setIsTemplateDialogOpen(false);
-      setTemplateName("");
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde du template:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder le template",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <div className="glass border border-border/40 rounded-lg p-4">
       <div className="flex items-center space-x-2 mb-3">
@@ -132,15 +78,6 @@ export const FacebookPreviewContent = ({
             >
               <Copy className="w-4 h-4 mr-2" />
               Copier le texte
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsTemplateDialogOpen(true)}
-              disabled={!generatedText}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Sauvegarder comme template
             </Button>
           </div>
           <Textarea
@@ -193,34 +130,6 @@ export const FacebookPreviewContent = ({
           )}
         </>
       )}
-
-      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Sauvegarder comme template</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Input
-              placeholder="Nom du template"
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={saveAsTemplate} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              Sauvegarder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
