@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -56,7 +55,7 @@ serve(async (req) => {
     5. Séparer clairement les différentes sections (description, caractéristiques, prix, etc.)
     6. Inclure des émojis pertinents au début de chaque section
     7. Mentionner le courtier à la fin
-    8. Terminer avec une SEULE fois le lien "Plus de détails sur ${listing.centris_url}"
+    8. Terminer par "Plus de détails sur ${listing.centris_url}"
     
     Format souhaité:
     [Titre accrocheur avec émoji]
@@ -73,7 +72,7 @@ serve(async (req) => {
     
     👤 [Mention du courtier]
     
-    Plus de détails sur ${listing.centris_url}`;
+    [Lien pour plus de détails]`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -84,7 +83,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs avec une mise en page claire et aérée. Tu ne dois jamais répéter le lien Centris deux fois.' },
+          { role: 'system', content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs avec une mise en page claire et aérée.' },
           { role: 'user', content: prompt }
         ],
       }),

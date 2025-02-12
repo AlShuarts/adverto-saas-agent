@@ -31,16 +31,14 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-secondary">
       <Navbar />
-      <div className="pt-4">
-        <HeroSection 
-          profile={profile} 
-          loading={loading} 
-          onConnectFacebook={connectFacebook}
-          onConnectInstagram={connectInstagram}
-        />
-        <ListingsSection />
-        <FeaturesSection />
-      </div>
+      <HeroSection 
+        profile={profile} 
+        loading={loading} 
+        onConnectFacebook={connectFacebook}
+        onConnectInstagram={connectInstagram}
+      />
+      <ListingsSection />
+      <FeaturesSection />
     </div>
   );
 };
