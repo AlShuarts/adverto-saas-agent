@@ -3,8 +3,6 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,7 +15,9 @@ serve(async (req) => {
   }
 
   try {
-    const { listing, template } = await req.json();
+    const { listing, templateContent } = await req.json();
+
+    console.log("Received template content:", templateContent); // Debug log
 
     const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
 
@@ -31,8 +31,8 @@ serve(async (req) => {
     ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
     - Courtier: ${listing.title}`;
 
-    if (template) {
-      prompt += `\n\nVoici un exemple du style d'annonce à suivre. Essaie de reproduire ce style:\n${template}`;
+    if (templateContent) {
+      prompt += `\n\nVoici un exemple du style d'annonce à suivre. REPRODUIS EXACTEMENT CE STYLE DE RÉDACTION:\n${templateContent}`;
     }
 
     prompt += `\n\nLe texte doit:
@@ -64,6 +64,8 @@ serve(async (req) => {
 
     IMPORTANT: Ne pas répéter le lien Centris dans le texte, il doit apparaître uniquement à la fin.`;
 
+    console.log("Sending prompt to OpenAI:", prompt); // Debug log
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -75,10 +77,11 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs avec une mise en page claire et aérée. Ne jamais répéter le lien Centris, il doit apparaître une seule fois à la fin du texte.' 
+            content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs. Ta tâche est de reproduire EXACTEMENT le style du template fourni tout en adaptant le contenu aux informations de la propriété.' 
           },
           { role: 'user', content: prompt }
         ],
+        temperature: 0.7, // Ajout d'un peu de créativité tout en restant fidèle au style
       }),
     });
 

@@ -30,10 +30,13 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
           }
         }
 
+        console.log("Template content being sent:", templateContent); // Debug log
+
         const { data, error } = await supabase.functions.invoke('generate-listing-description', {
           body: { 
             listing,
-            template: templateContent
+            selectedTemplateId,
+            templateContent, // Envoyer le contenu du template directement
           },
         });
 
