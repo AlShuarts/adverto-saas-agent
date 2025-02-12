@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,7 +164,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
           disabled={isPublishing}
         >
           <Share className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span className="truncate">Générer le texte</span>
+          <span className="truncate">Prévisualiser sur Facebook</span>
         </Button>
       </div>
 

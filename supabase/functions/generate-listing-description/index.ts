@@ -17,19 +17,32 @@ serve(async (req) => {
   }
 
   try {
-    const { listing } = await req.json();
+    const { listing, selectedTemplateId } = await req.json();
 
-    // Initialize Supabase client with service role key to bypass RLS
     const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
 
-    // Fetch user's profile to get their example post
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('facebook_post_example')
-      .eq('id', listing.user_id)
-      .single();
+    let templateContent = '';
+    if (selectedTemplateId && selectedTemplateId !== 'none') {
+      const { data: template } = await supabase
+        .from('facebook_templates')
+        .select('content')
+        .eq('id', selectedTemplateId)
+        .single();
+      
+      if (template) {
+        templateContent = template.content;
+      }
+    } else {
+      // Fetch user's profile to get their example post
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('facebook_post_example')
+        .eq('id', listing.user_id)
+        .single();
 
-    // Créer un titre descriptif basé sur les caractéristiques de la propriété
+      templateContent = profile?.facebook_post_example || '';
+    }
+
     const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
 
     let prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
@@ -42,9 +55,8 @@ serve(async (req) => {
     ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
     - Courtier: ${listing.title}`;
 
-    // Add example post to prompt if available
-    if (profile?.facebook_post_example) {
-      prompt += `\n\nVoici un exemple du style d'annonce que le courtier utilise habituellement. Essaie de reproduire ce style:\n${profile.facebook_post_example}`;
+    if (templateContent) {
+      prompt += `\n\nVoici un exemple du style d'annonce à suivre. Essaie de reproduire ce style:\n${templateContent}`;
     }
 
     prompt += `\n\nLe texte doit:
@@ -55,7 +67,7 @@ serve(async (req) => {
     5. Séparer clairement les différentes sections (description, caractéristiques, prix, etc.)
     6. Inclure des émojis pertinents au début de chaque section
     7. Mentionner le courtier à la fin
-    8. Terminer par "Plus de détails sur ${listing.centris_url}"
+    8. Terminer uniquement avec "Plus de détails sur ${listing.centris_url}"
     
     Format souhaité:
     [Titre accrocheur avec émoji]
@@ -72,7 +84,9 @@ serve(async (req) => {
     
     👤 [Mention du courtier]
     
-    [Lien pour plus de détails]`;
+    Plus de détails sur ${listing.centris_url}
+
+    IMPORTANT: Ne pas répéter le lien Centris dans le texte, il doit apparaître uniquement à la fin.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -83,7 +97,10 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs avec une mise en page claire et aérée.' },
+          { 
+            role: 'system', 
+            content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs avec une mise en page claire et aérée. Ne jamais répéter le lien Centris, il doit apparaître une seule fois à la fin du texte.' 
+          },
           { role: 'user', content: prompt }
         ],
       }),
