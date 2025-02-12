@@ -17,54 +17,55 @@ serve(async (req) => {
   try {
     const { listing, templateContent } = await req.json();
 
-    console.log("Received template content:", templateContent); // Debug log
+    console.log("Received template content:", templateContent);
 
     const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
 
-    let prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
-    Utilise ces informations:
-    - Type: ${propertyTitle}
-    - Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
-    - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
-    ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
-    ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
-    ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
-    - Courtier: ${listing.title}`;
-
+    let prompt;
     if (templateContent) {
-      prompt += `\n\nVoici un exemple du style d'annonce à suivre. REPRODUIS EXACTEMENT CE STYLE DE RÉDACTION:\n${templateContent}`;
+      prompt = `Voici un template de texte pour une annonce immobilière:
+
+${templateContent}
+
+Utilise EXACTEMENT le même format, la même structure et le même style que ce template, mais remplace les informations par celles de cette propriété:
+- Type: ${propertyTitle}
+- Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
+- Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
+${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
+${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
+${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
+- Courtier: ${listing.title}
+
+INSTRUCTIONS IMPORTANTES:
+1. Garde EXACTEMENT la même structure que le template
+2. Utilise les mêmes émojis aux mêmes endroits
+3. Garde le même style d'écriture et le même ton
+4. Remplace uniquement les informations spécifiques à la propriété
+5. Termine avec "Plus de détails sur ${listing.centris_url}"`;
+    } else {
+      // Si pas de template, utiliser le format par défaut
+      prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
+      Utilise ces informations:
+      - Type: ${propertyTitle}
+      - Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
+      - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
+      ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
+      ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
+      ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
+      - Courtier: ${listing.title}
+
+      Le texte doit:
+      1. Être accrocheur et professionnel
+      2. Mettre en valeur les points forts de la propriété
+      3. Inclure le prix et l'adresse
+      4. Utiliser des sauts de ligne pour aérer le texte
+      5. Séparer clairement les différentes sections
+      6. Inclure des émojis pertinents au début de chaque section
+      7. Mentionner le courtier à la fin
+      8. Terminer avec "Plus de détails sur ${listing.centris_url}"`;
     }
 
-    prompt += `\n\nLe texte doit:
-    1. Être accrocheur et professionnel
-    2. Mettre en valeur les points forts de la propriété
-    3. Inclure le prix et l'adresse
-    4. Utiliser des sauts de ligne pour aérer le texte
-    5. Séparer clairement les différentes sections (description, caractéristiques, prix, etc.)
-    6. Inclure des émojis pertinents au début de chaque section
-    7. Mentionner le courtier à la fin
-    8. Terminer uniquement avec "Plus de détails sur ${listing.centris_url}"
-    
-    Format souhaité:
-    [Titre accrocheur avec émoji]
-    
-    [Description courte et accrocheuse]
-    
-    ✨ Caractéristiques principales:
-    • [Point 1]
-    • [Point 2]
-    • [Point 3]
-    
-    💰 Prix: [prix]
-    📍 Emplacement: [adresse]
-    
-    👤 [Mention du courtier]
-    
-    Plus de détails sur ${listing.centris_url}
-
-    IMPORTANT: Ne pas répéter le lien Centris dans le texte, il doit apparaître uniquement à la fin.`;
-
-    console.log("Sending prompt to OpenAI:", prompt); // Debug log
+    console.log("Sending prompt to OpenAI:", prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -77,11 +78,13 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs. Ta tâche est de reproduire EXACTEMENT le style du template fourni tout en adaptant le contenu aux informations de la propriété.' 
+            content: templateContent 
+              ? 'Tu es un expert en immobilier qui doit adapter un template existant en remplaçant uniquement les informations spécifiques tout en gardant EXACTEMENT la même structure, le même style et le même format. Ne change pas la mise en forme, les émojis ou le style d\'écriture du template.' 
+              : 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs.'
           },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.7, // Ajout d'un peu de créativité tout en restant fidèle au style
+        temperature: templateContent ? 0.3 : 0.7, // Température plus basse pour mieux suivre le template
       }),
     });
 
