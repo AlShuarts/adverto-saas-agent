@@ -1,6 +1,6 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -17,31 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { listing, selectedTemplateId } = await req.json();
-
-    const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
-
-    let templateContent = '';
-    if (selectedTemplateId && selectedTemplateId !== 'none') {
-      const { data: template } = await supabase
-        .from('facebook_templates')
-        .select('content')
-        .eq('id', selectedTemplateId)
-        .single();
-      
-      if (template) {
-        templateContent = template.content;
-      }
-    } else {
-      // Fetch user's profile to get their example post
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('facebook_post_example')
-        .eq('id', listing.user_id)
-        .single();
-
-      templateContent = profile?.facebook_post_example || '';
-    }
+    const { listing, template } = await req.json();
 
     const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
 
@@ -55,8 +31,8 @@ serve(async (req) => {
     ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
     - Courtier: ${listing.title}`;
 
-    if (templateContent) {
-      prompt += `\n\nVoici un exemple du style d'annonce à suivre. Essaie de reproduire ce style:\n${templateContent}`;
+    if (template) {
+      prompt += `\n\nVoici un exemple du style d'annonce à suivre. Essaie de reproduire ce style:\n${template}`;
     }
 
     prompt += `\n\nLe texte doit:
@@ -95,7 +71,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
