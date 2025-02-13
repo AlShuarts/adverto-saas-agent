@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +10,39 @@ export const useProfile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Écouter les changements d'état d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setProfile(null);
+        navigate('/auth');
+      } else if (event === 'SIGNED_IN') {
+        getProfile();
+      }
+    });
+
+    // Vérifier la session au chargement
+    checkSession();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const checkSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      await getProfile();
+    } catch (error) {
+      console.error("Error checking session:", error);
+      navigate("/auth");
+    }
+  };
 
   const getProfile = async () => {
     try {
@@ -25,6 +59,7 @@ export const useProfile = () => {
         .single();
 
       if (error) {
+        console.error("Error fetching profile:", error);
         toast({
           title: "Erreur",
           description: "Impossible de charger votre profil",

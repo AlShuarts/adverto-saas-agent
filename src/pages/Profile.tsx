@@ -1,20 +1,43 @@
+
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
+import { ProfileForm } from "@/components/profile/ProfileForm";
+import { TemplateManager } from "@/components/profile/TemplateManager";
+
+type Template = Tables<"facebook_templates">;
 
 const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     getProfile();
+    getTemplates();
   }, []);
+
+  const getTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("facebook_templates")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les templates",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getProfile = async () => {
     try {
@@ -43,110 +66,31 @@ const Profile = () => {
     }
   };
 
-  const updateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error("No user found");
-
-      const updates = {
-        id: user.id,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        company_name: profile.company_name,
-        phone: profile.phone,
-        facebook_post_example: profile.facebook_post_example,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from("profiles")
-        .upsert(updates);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "Votre profil a été mis à jour",
-      });
-    } catch (error) {
-      console.error("Error:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour votre profil",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-secondary">
       <Navbar />
       <div className="container mx-auto px-4 pt-24">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Mon Profil</h1>
+        <div className="max-w-2xl mx-auto space-y-8">
+          <h1 className="text-3xl font-bold">Mon Profil</h1>
+          
           <div className="glass p-6 rounded-lg">
             {loading ? (
               <div className="flex justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
-              <form onSubmit={updateProfile} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">Prénom</Label>
-                  <Input
-                    id="first_name"
-                    type="text"
-                    value={profile?.first_name || ""}
-                    onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Nom</Label>
-                  <Input
-                    id="last_name"
-                    type="text"
-                    value={profile?.last_name || ""}
-                    onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">Nom de l'entreprise</Label>
-                  <Input
-                    id="company_name"
-                    type="text"
-                    value={profile?.company_name || ""}
-                    onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={profile?.phone || ""}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="facebook_post_example">Exemple d'annonce Facebook</Label>
-                  <Textarea
-                    id="facebook_post_example"
-                    placeholder="Collez ici un exemple d'une de vos annonces Facebook pour que nous puissions reproduire votre style..."
-                    value={profile?.facebook_post_example || ""}
-                    onChange={(e) => setProfile({ ...profile, facebook_post_example: e.target.value })}
-                    className="min-h-[150px]"
-                  />
-                </div>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Mise à jour..." : "Mettre à jour"}
-                </Button>
-              </form>
+              <ProfileForm 
+                profile={profile} 
+                onProfileUpdate={setProfile}
+              />
             )}
+          </div>
+
+          <div className="glass p-6 rounded-lg">
+            <TemplateManager 
+              templates={templates}
+              onTemplatesUpdate={getTemplates}
+            />
           </div>
         </div>
       </div>

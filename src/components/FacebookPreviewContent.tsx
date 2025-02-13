@@ -1,3 +1,4 @@
+
 import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Save } from "lucide-react";
+import { Save, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
@@ -41,6 +42,22 @@ export const FacebookPreviewContent = ({
       onSelectedImagesChange(selectedImages.filter((i) => i !== image));
     } else {
       onSelectedImagesChange([...selectedImages, image]);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedText);
+      toast({
+        title: "Texte copié",
+        description: "Le texte a été copié dans le presse-papiers",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de copier le texte",
+        variant: "destructive",
+      });
     }
   };
 
@@ -106,7 +123,16 @@ export const FacebookPreviewContent = ({
         </div>
       ) : (
         <>
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-end gap-2 mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyToClipboard}
+              disabled={!generatedText}
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Copier le texte
+            </Button>
             <Button
               variant="outline"
               size="sm"

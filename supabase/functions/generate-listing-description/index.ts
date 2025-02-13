@@ -1,10 +1,8 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,62 +15,57 @@ serve(async (req) => {
   }
 
   try {
-    const { listing } = await req.json();
+    const { listing, templateContent } = await req.json();
 
-    // Initialize Supabase client with service role key to bypass RLS
-    const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
+    console.log("Received template content:", templateContent);
 
-    // Fetch user's profile to get their example post
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('facebook_post_example')
-      .eq('id', listing.user_id)
-      .single();
-
-    // Créer un titre descriptif basé sur les caractéristiques de la propriété
     const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
 
-    let prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
-    Utilise ces informations:
-    - Type: ${propertyTitle}
-    - Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
-    - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
-    ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
-    ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
-    ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
-    - Courtier: ${listing.title}`;
+    let prompt;
+    if (templateContent) {
+      prompt = `Voici un template de texte pour une annonce immobilière:
 
-    // Add example post to prompt if available
-    if (profile?.facebook_post_example) {
-      prompt += `\n\nVoici un exemple du style d'annonce que le courtier utilise habituellement. Essaie de reproduire ce style:\n${profile.facebook_post_example}`;
+${templateContent}
+
+Utilise EXACTEMENT le même format, la même structure et le même style que ce template, mais remplace les informations par celles de cette propriété:
+- Type: ${propertyTitle}
+- Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
+- Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
+${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
+${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
+${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
+- Courtier: ${listing.title}
+
+INSTRUCTIONS IMPORTANTES:
+1. Garde EXACTEMENT la même structure que le template
+2. Utilise les mêmes émojis aux mêmes endroits
+3. Garde le même style d'écriture et le même ton
+4. Remplace uniquement les informations spécifiques à la propriété
+5. Termine avec "Plus de détails sur ${listing.centris_url}"`;
+    } else {
+      // Si pas de template, utiliser le format par défaut
+      prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
+      Utilise ces informations:
+      - Type: ${propertyTitle}
+      - Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
+      - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
+      ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
+      ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
+      ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
+      - Courtier: ${listing.title}
+
+      Le texte doit:
+      1. Être accrocheur et professionnel
+      2. Mettre en valeur les points forts de la propriété
+      3. Inclure le prix et l'adresse
+      4. Utiliser des sauts de ligne pour aérer le texte
+      5. Séparer clairement les différentes sections
+      6. Inclure des émojis pertinents au début de chaque section
+      7. Mentionner le courtier à la fin
+      8. Terminer avec "Plus de détails sur ${listing.centris_url}"`;
     }
 
-    prompt += `\n\nLe texte doit:
-    1. Être accrocheur et professionnel
-    2. Mettre en valeur les points forts de la propriété
-    3. Inclure le prix et l'adresse
-    4. Utiliser des sauts de ligne pour aérer le texte
-    5. Séparer clairement les différentes sections (description, caractéristiques, prix, etc.)
-    6. Inclure des émojis pertinents au début de chaque section
-    7. Mentionner le courtier à la fin
-    8. Terminer par "Plus de détails sur ${listing.centris_url}"
-    
-    Format souhaité:
-    [Titre accrocheur avec émoji]
-    
-    [Description courte et accrocheuse]
-    
-    ✨ Caractéristiques principales:
-    • [Point 1]
-    • [Point 2]
-    • [Point 3]
-    
-    💰 Prix: [prix]
-    📍 Emplacement: [adresse]
-    
-    👤 [Mention du courtier]
-    
-    [Lien pour plus de détails]`;
+    console.log("Sending prompt to OpenAI:", prompt);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -81,11 +74,17 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs avec une mise en page claire et aérée.' },
+          { 
+            role: 'system', 
+            content: templateContent 
+              ? 'Tu es un expert en immobilier qui doit adapter un template existant en remplaçant uniquement les informations spécifiques tout en gardant EXACTEMENT la même structure, le même style et le même format. Ne change pas la mise en forme, les émojis ou le style d\'écriture du template.' 
+              : 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs.'
+          },
           { role: 'user', content: prompt }
         ],
+        temperature: templateContent ? 0.3 : 0.7, // Température plus basse pour mieux suivre le template
       }),
     });
 

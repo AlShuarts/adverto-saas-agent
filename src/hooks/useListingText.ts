@@ -1,3 +1,4 @@
+
 import { Tables } from "@/integrations/supabase/types";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
       try {
         // Récupérer le template sélectionné
         let templateContent = null;
-        if (selectedTemplateId) {
+        if (selectedTemplateId && selectedTemplateId !== "none") {
           const { data: template } = await supabase
             .from('facebook_templates')
             .select('content')
@@ -29,10 +30,13 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
           }
         }
 
+        console.log("Template content being sent:", templateContent); // Debug log
+
         const { data, error } = await supabase.functions.invoke('generate-listing-description', {
           body: { 
             listing,
-            template: templateContent
+            selectedTemplateId,
+            templateContent, // Envoyer le contenu du template directement
           },
         });
 
