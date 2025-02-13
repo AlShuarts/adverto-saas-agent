@@ -1,14 +1,17 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { importCentrisListing } from "@/services/centrisImportService";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const CentrisImport = () => {
   const { toast } = useToast();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleImport = async () => {
     if (!url.includes("centris.ca")) {
@@ -32,6 +35,9 @@ export const CentrisImport = () => {
         title: "Succès",
         description: "L'annonce a été importée avec succès",
       });
+
+      // Rafraîchir la liste des annonces
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
 
       setUrl("");
     } catch (error) {
