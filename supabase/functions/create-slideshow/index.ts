@@ -1,102 +1,150 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import Replicate from "https://esm.sh/replicate@0.25.2";
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import Shotstack from 'https://esm.sh/shotstack@0.2.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('Starting slideshow creation process...');
-    const { listingId } = await req.json();
-    
-    if (!listingId) {
-      console.error('No listingId provided');
+    const { listingId, config } = await req.json()
+
+    if (!listingId || !config) {
       return new Response(
-        JSON.stringify({ error: 'listingId is required' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        JSON.stringify({ error: 'Missing required parameters' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    )
 
-    console.log('Fetching listing data for ID:', listingId);
+    // Fetch listing
     const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('*')
       .eq('id', listingId)
-      .single();
+      .single()
 
-    if (listingError) {
-      console.error('Error fetching listing:', listingError);
+    if (listingError || !listing) {
       return new Response(
-        JSON.stringify({ error: 'Listing not found' }), 
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        JSON.stringify({ error: 'Listing not found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      )
     }
 
-    const images = listing.images || [];
-    if (images.length === 0) {
-      console.error('No images found for listing:', listingId);
-      return new Response(
-        JSON.stringify({ error: 'No images found for this listing' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Initialize Shotstack
+    const client = new Shotstack({
+      apiKey: Deno.env.get('SHOTSTACK_API_KEY') ?? '',
+      host: 'api.shotstack.io',
+      stage: 'production'
+    })
 
-    const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY');
-    if (!REPLICATE_API_KEY) {
-      throw new Error('REPLICATE_API_KEY is not set');
-    }
-
-    const replicate = new Replicate({
-      auth: REPLICATE_API_KEY,
-    });
-
-    console.log('Creating slideshow with Replicate...');
-    const output = await replicate.run(
-      "andreasjansson/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438",
-      {
-        input: {
-          images: images,
-          frames_per_image: 30,
-          output_format: "mp4",
-          fps: 30,
-          transition_frames: 10,
-        }
+    // Create timeline with images
+    const clips = (listing.images || []).map((imageUrl, index) => ({
+      asset: {
+        type: 'image',
+        src: imageUrl,
+      },
+      start: index * config.imageDuration,
+      length: config.imageDuration,
+      effect: config.transition || 'fade',
+      transition: {
+        in: 'fade',
+        out: 'fade'
       }
-    );
+    }))
 
-    console.log('Slideshow created successfully:', output);
+    // Add overlay for price and details if configured
+    if (config.showPrice || config.showDetails) {
+      const text = []
+      if (config.showPrice) {
+        text.push(`$${listing.price.toLocaleString()}`)
+      }
+      if (config.showDetails) {
+        text.push(`${listing.bedrooms} ch. | ${listing.bathrooms} sdb.`)
+      }
+      
+      clips.push({
+        asset: {
+          type: 'html',
+          html: `<p style="color: white; font-size: 32px; text-align: center">${text.join('<br>')}</p>`,
+          width: 800,
+          height: 200,
+          background: 'transparent'
+        },
+        position: 'bottom',
+        offset: {
+          y: 0.1
+        },
+        start: 0,
+        length: clips.length * config.imageDuration
+      })
+    }
 
-    // Update the listing with the video URL
-    const { error: updateError } = await supabase
-      .from('listings')
-      .update({ video_url: output })
-      .eq('id', listingId);
+    const timeline = {
+      background: '#000000',
+      tracks: [{ clips }]
+    }
 
-    if (updateError) {
-      console.error('Error updating listing with video URL:', updateError);
+    // Add soundtrack if provided
+    if (config.musicUrl) {
+      timeline.soundtrack = {
+        src: config.musicUrl,
+        effect: 'fadeIn',
+        volume: config.musicVolume || 0.5
+      }
+    }
+
+    const output = {
+      format: 'mp4',
+      resolution: 'hd'
+    }
+
+    // Submit render job
+    const render = await client.render({
+      timeline,
+      output,
+      callback: `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook`
+    })
+
+    // Save render status
+    const { error: renderError } = await supabase
+      .from('slideshow_renders')
+      .insert({
+        listing_id: listingId,
+        user_id: req.headers.get('x-user-id'),
+        render_id: render.response.id,
+        status: 'pending'
+      })
+
+    if (renderError) {
+      console.error('Error saving render status:', renderError)
     }
 
     return new Response(
-      JSON.stringify({ success: true, url: output }), 
+      JSON.stringify({ 
+        success: true,
+        renderId: render.response.id,
+        message: 'Video rendering started'
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    )
+
   } catch (error) {
-    console.error('Error creating slideshow:', error);
+    console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }), 
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
   }
-});
+})

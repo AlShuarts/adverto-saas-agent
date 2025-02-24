@@ -1,0 +1,8 @@
+
+project_id = "msmuyhmxlrkcjthugcxd"
+
+[create-slideshow]
+verify_jwt = true
+
+[shotstack-webhook]
+verify_jwt = false
