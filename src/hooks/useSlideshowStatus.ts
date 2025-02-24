@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
+type SlideshowRender = Tables<"slideshow_renders">;
+
 export const useSlideshowStatus = (listingId: string) => {
-  return useQuery<Tables<"slideshow_renders">>({
+  return useQuery<SlideshowRender>({
     queryKey: ["slideshow-status", listingId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -18,7 +20,8 @@ export const useSlideshowStatus = (listingId: string) => {
       if (error) throw error;
       return data;
     },
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const data = query.data;
       if (!data || data.status === "completed" || data.status === "error") {
         return false;
       }
