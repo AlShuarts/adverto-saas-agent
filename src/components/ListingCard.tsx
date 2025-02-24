@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { ListingImageCarousel } from "./ListingImageCarousel";
@@ -15,6 +14,7 @@ import { InstagramPreview } from "./InstagramPreview";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateSlideshowDialog } from "./CreateSlideshowDialog";
+import { SlideshowStatus } from "./SlideshowStatus";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -126,6 +126,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
             <Video className="w-4 h-4 mr-2" />
             Créer un diaporama
           </Button>
+          <SlideshowStatus listing={listing} />
         </div>
       </CardFooter>
 
