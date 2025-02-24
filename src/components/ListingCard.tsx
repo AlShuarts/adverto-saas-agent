@@ -7,13 +7,14 @@ import { InstagramPublishButton } from "./InstagramPublishButton";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Share } from "lucide-react";
+import { Share, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { FacebookPreview } from "./FacebookPreview";
 import { InstagramPreview } from "./InstagramPreview";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { CreateSlideshowDialog } from "./CreateSlideshowDialog";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -24,6 +25,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
   const { toast } = useToast();
   const [showFacebookPreview, setShowFacebookPreview] = useState(false);
   const [showInstagramPreview, setShowInstagramPreview] = useState(false);
+  const [showSlideshowDialog, setShowSlideshowDialog] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
   const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
 
@@ -115,6 +117,15 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
               </Button>
             </>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSlideshowDialog(true)}
+            className="w-full"
+          >
+            <Video className="w-4 h-4 mr-2" />
+            Créer un diaporama
+          </Button>
         </div>
       </CardFooter>
 
@@ -131,6 +142,12 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
         isOpen={showInstagramPreview}
         onClose={() => setShowInstagramPreview(false)}
         onPublish={handlePublishAttempt}
+      />
+
+      <CreateSlideshowDialog
+        listing={listing}
+        isOpen={showSlideshowDialog}
+        onClose={() => setShowSlideshowDialog(false)}
       />
     </Card>
   );
