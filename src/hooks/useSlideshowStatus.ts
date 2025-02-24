@@ -20,8 +20,9 @@ export const useSlideshowStatus = (listingId: string) => {
       if (error) throw error;
       return data;
     },
-    refetchInterval: (state) => {
-      if (!state.data || state.data.status === "completed" || state.data.status === "error") {
+    refetchInterval: ({ state }) => {
+      const data = state.data as SlideshowRender | undefined;
+      if (!data || data.status === "completed" || data.status === "error") {
         return false;
       }
       return 5000;
