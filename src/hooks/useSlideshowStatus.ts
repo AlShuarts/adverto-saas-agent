@@ -1,9 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
 export const useSlideshowStatus = (listingId: string) => {
-  return useQuery({
+  return useQuery<Tables<"slideshow_renders">>({
     queryKey: ["slideshow-status", listingId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -18,7 +19,7 @@ export const useSlideshowStatus = (listingId: string) => {
       return data;
     },
     refetchInterval: (data) => {
-      if (data?.status === "completed" || data?.status === "error") {
+      if (!data || data.status === "completed" || data.status === "error") {
         return false;
       }
       return 5000; // Rafraîchir toutes les 5 secondes si en cours
