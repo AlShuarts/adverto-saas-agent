@@ -120,7 +120,9 @@ serve(async (req) => {
     }
 
     console.log('Submitting render job to Shotstack')
-    const response = await fetch('https://api.shotstack.io/stage/render', {
+    console.log('Render payload:', JSON.stringify(renderPayload, null, 2))
+    
+    const response = await fetch('https://api.shotstack.io/v1/render', {
       method: 'POST',
       headers: {
         'x-api-key': shotstackApiKey,
@@ -129,11 +131,14 @@ serve(async (req) => {
       body: JSON.stringify(renderPayload),
     })
 
+    const responseBody = await response.text()
+    console.log('Shotstack response:', responseBody)
+
     if (!response.ok) {
-      throw new Error(`Shotstack API error: ${response.statusText}`)
+      throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${responseBody}`)
     }
 
-    const render = await response.json()
+    const render = JSON.parse(responseBody)
     console.log('Render job submitted:', render.response.id)
 
     // Save render status
