@@ -27,8 +27,8 @@ serve(async (req) => {
       )
     }
 
-    const apiKey = Deno.env.get('SHOTSTACK_API_KEY')
-    if (!apiKey) {
+    const shotstackApiKey = Deno.env.get('SHOTSTACK_API_KEY')
+    if (!shotstackApiKey) {
       console.error('SHOTSTACK_API_KEY is not configured')
       return new Response(
         JSON.stringify({ error: 'SHOTSTACK_API_KEY is not configured' }),
@@ -57,8 +57,8 @@ serve(async (req) => {
     }
 
     console.log('Initializing Shotstack client')
-    const client = new Shotstack({
-      apiKey,
+    const shotstack = new Shotstack({
+      apiKey: shotstackApiKey,
       host: 'api.shotstack.io',
       stage: 'production'
     })
@@ -125,7 +125,7 @@ serve(async (req) => {
     }
 
     console.log('Submitting render job to Shotstack')
-    const render = await client.render({
+    const render = await shotstack.render({
       timeline,
       output,
       callback: `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook`
