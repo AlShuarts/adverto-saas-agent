@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -8,13 +7,32 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     console.log('Starting create-slideshow function')
+    
+    // Get the JWT token from the request headers
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Get the user from the JWT token
+    const jwt = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt)
+    
+    if (userError || !user) {
+      throw new Error('Invalid user token')
+    }
+
     const { listingId, config } = await req.json()
     console.log('Received request with listingId:', listingId)
     console.log('Config:', config)
@@ -39,13 +57,6 @@ serve(async (req) => {
 
     console.log('Using Shotstack API key:', shotstackApiKey.substring(0, 5) + '...')
 
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Fetch listing data
     console.log('Fetching listing data')
     const { data: listing, error: listingError } = await supabase
       .from('listings')
@@ -138,8 +149,6 @@ serve(async (req) => {
 
     // Submit render job to Shotstack
     console.log('Submitting render job to Shotstack')
-    console.log('Render payload:', JSON.stringify(renderPayload, null, 2))
-    
     const response = await fetch('https://api.shotstack.io/stage/render', {
       method: 'POST',
       headers: {
@@ -156,7 +165,6 @@ serve(async (req) => {
       throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${responseBody}`)
     }
 
-    // Parse response and get render ID
     let renderId;
     try {
       const render = JSON.parse(responseBody)
@@ -167,13 +175,14 @@ serve(async (req) => {
       throw new Error('Invalid response from Shotstack')
     }
 
-    // Save render status in database
+    // Save render status with user_id
     const { error: renderError } = await supabase
       .from('slideshow_renders')
       .insert({
         listing_id: listingId,
         render_id: renderId,
-        status: 'pending'
+        status: 'pending',
+        user_id: user.id  // Ajout du user_id
       })
 
     if (renderError) {
