@@ -58,6 +58,8 @@ export type Database = {
           id: string
           images: string[] | null
           instagram_post_id: string | null
+          is_published: boolean | null
+          is_sold: boolean | null
           postal_code: string | null
           price: number | null
           property_type: string | null
@@ -67,6 +69,7 @@ export type Database = {
           updated_at: string
           user_id: string
           video_url: string | null
+          wistia_hash_id: string | null
         }
         Insert: {
           address?: string | null
@@ -81,6 +84,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           instagram_post_id?: string | null
+          is_published?: boolean | null
+          is_sold?: boolean | null
           postal_code?: string | null
           price?: number | null
           property_type?: string | null
@@ -90,6 +95,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           video_url?: string | null
+          wistia_hash_id?: string | null
         }
         Update: {
           address?: string | null
@@ -104,6 +110,8 @@ export type Database = {
           id?: string
           images?: string[] | null
           instagram_post_id?: string | null
+          is_published?: boolean | null
+          is_sold?: boolean | null
           postal_code?: string | null
           price?: number | null
           property_type?: string | null
@@ -113,6 +121,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           video_url?: string | null
+          wistia_hash_id?: string | null
         }
         Relationships: [
           {
@@ -171,6 +180,112 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      slideshow_configs: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          music_url: string | null
+          music_volume: number | null
+          show_address: boolean
+          show_agent: boolean
+          show_details: boolean
+          show_price: boolean
+          template: string
+          transition_duration: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          music_url?: string | null
+          music_volume?: number | null
+          show_address?: boolean
+          show_agent?: boolean
+          show_details?: boolean
+          show_price?: boolean
+          template?: string
+          transition_duration?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          music_url?: string | null
+          music_volume?: number | null
+          show_address?: boolean
+          show_agent?: boolean
+          show_details?: boolean
+          show_price?: boolean
+          template?: string
+          transition_duration?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slideshow_configs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wistia_configs: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          show_address: boolean
+          show_agent: boolean
+          show_details: boolean
+          show_price: boolean
+          template: string
+          transition_duration: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          show_address?: boolean
+          show_agent?: boolean
+          show_details?: boolean
+          show_price?: boolean
+          template?: string
+          transition_duration?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          show_address?: boolean
+          show_agent?: boolean
+          show_details?: boolean
+          show_price?: boolean
+          template?: string
+          transition_duration?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wistia_configs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
