@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import Shotstack from 'https://esm.sh/shotstack@0.2.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,13 +55,6 @@ serve(async (req) => {
       )
     }
 
-    console.log('Initializing Shotstack client')
-    const shotstack = new Shotstack({
-      apiKey: shotstackApiKey,
-      host: 'api.shotstack.io',
-      stage: 'production'
-    })
-
     // Create timeline with images
     const clips = (listing.images || []).map((imageUrl: string, index: number) => ({
       asset: {
@@ -110,27 +102,38 @@ serve(async (req) => {
       tracks: [{ clips }]
     }
 
-    // Add soundtrack if volume is set
+    const renderPayload = {
+      timeline,
+      output: {
+        format: 'mp4',
+        resolution: 'hd'
+      },
+      callback: `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook`
+    }
+
     if (config.musicVolume > 0) {
-      timeline.soundtrack = {
+      renderPayload.timeline.soundtrack = {
         src: 'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/music/unminus/berlin.mp3',
         effect: 'fadeIn',
         volume: config.musicVolume
       }
     }
 
-    const output = {
-      format: 'mp4',
-      resolution: 'hd'
-    }
-
     console.log('Submitting render job to Shotstack')
-    const render = await shotstack.render({
-      timeline,
-      output,
-      callback: `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook`
+    const response = await fetch('https://api.shotstack.io/stage/render', {
+      method: 'POST',
+      headers: {
+        'x-api-key': shotstackApiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(renderPayload),
     })
 
+    if (!response.ok) {
+      throw new Error(`Shotstack API error: ${response.statusText}`)
+    }
+
+    const render = await response.json()
     console.log('Render job submitted:', render.response.id)
 
     // Save render status
