@@ -36,6 +36,9 @@ serve(async (req) => {
       )
     }
 
+    console.log('Updating render status:', webhook.status)
+    console.log('Video URL:', webhook.url)
+
     // Update render status
     const { error: updateError } = await supabase
       .from('slideshow_renders')
@@ -56,6 +59,7 @@ serve(async (req) => {
 
     // If render is complete, update the listing
     if (webhook.status === 'done' && webhook.url) {
+      console.log('Render completed, updating listing with video URL')
       const { error: listingError } = await supabase
         .from('listings')
         .update({ 
