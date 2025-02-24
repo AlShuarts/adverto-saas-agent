@@ -35,6 +35,8 @@ serve(async (req) => {
       )
     }
 
+    console.log('Using Shotstack API key:', shotstackApiKey.substring(0, 5) + '...')
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -55,8 +57,16 @@ serve(async (req) => {
       )
     }
 
+    if (!listing.images || listing.images.length === 0) {
+      console.error('No images found for listing')
+      return new Response(
+        JSON.stringify({ error: 'No images found for listing' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
     // Create timeline with images
-    const clips = (listing.images || []).map((imageUrl: string, index: number) => ({
+    const clips = listing.images.map((imageUrl: string, index: number) => ({
       asset: {
         type: 'image',
         src: imageUrl,
@@ -76,25 +86,27 @@ serve(async (req) => {
       if (config.showPrice) {
         text.push(`${listing.price.toLocaleString()} $`)
       }
-      if (config.showDetails) {
+      if (config.showDetails && listing.bedrooms && listing.bathrooms) {
         text.push(`${listing.bedrooms} ch. | ${listing.bathrooms} sdb.`)
       }
       
-      clips.push({
-        asset: {
-          type: 'html',
-          html: `<p style="color: white; font-size: 32px; text-align: center">${text.join('<br>')}</p>`,
-          width: 800,
-          height: 200,
-          background: 'transparent'
-        },
-        position: 'bottom',
-        offset: {
-          y: 0.1
-        },
-        start: 0,
-        length: clips.length * config.imageDuration
-      })
+      if (text.length > 0) {
+        clips.push({
+          asset: {
+            type: 'html',
+            html: `<p style="color: white; font-size: 32px; text-align: center">${text.join('<br>')}</p>`,
+            width: 800,
+            height: 200,
+            background: 'transparent'
+          },
+          position: 'bottom',
+          offset: {
+            y: 0.1
+          },
+          start: 0,
+          length: clips.length * config.imageDuration
+        })
+      }
     }
 
     const timeline = {
@@ -122,7 +134,7 @@ serve(async (req) => {
     console.log('Submitting render job to Shotstack')
     console.log('Render payload:', JSON.stringify(renderPayload, null, 2))
     
-    const response = await fetch('https://api.shotstack.io/v1/render', {
+    const response = await fetch('https://api.shotstack.io/stage/render', {
       method: 'POST',
       headers: {
         'x-api-key': shotstackApiKey,
@@ -138,15 +150,22 @@ serve(async (req) => {
       throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${responseBody}`)
     }
 
-    const render = JSON.parse(responseBody)
-    console.log('Render job submitted:', render.response.id)
+    let renderId;
+    try {
+      const render = JSON.parse(responseBody)
+      renderId = render.response.id
+      console.log('Render job submitted:', renderId)
+    } catch (error) {
+      console.error('Error parsing Shotstack response:', error)
+      throw new Error('Invalid response from Shotstack')
+    }
 
     // Save render status
     const { error: renderError } = await supabase
       .from('slideshow_renders')
       .insert({
         listing_id: listingId,
-        render_id: render.response.id,
+        render_id: renderId,
         status: 'pending'
       })
 
@@ -161,7 +180,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        renderId: render.response.id,
+        renderId: renderId,
         message: 'Video rendering started'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
