@@ -237,6 +237,47 @@ export type Database = {
           },
         ]
       }
+      slideshow_renders: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          render_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          render_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          render_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slideshow_renders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wistia_configs: {
         Row: {
           created_at: string
