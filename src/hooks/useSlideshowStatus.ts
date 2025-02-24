@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
 export const useSlideshowStatus = (listingId: string) => {
-  return useQuery({
+  return useQuery<Tables<"slideshow_renders">>({
     queryKey: ["slideshow-status", listingId],
     queryFn: async () => {
       const { data, error } = await supabase
