@@ -19,6 +19,7 @@ serve(async (req) => {
     console.log('Received request with listingId:', listingId)
     console.log('Config:', config)
 
+    // Validate required parameters
     if (!listingId || !config) {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
@@ -26,6 +27,7 @@ serve(async (req) => {
       )
     }
 
+    // Get Shotstack API key
     const shotstackApiKey = Deno.env.get('SHOTSTACK_API_KEY')
     if (!shotstackApiKey) {
       console.error('SHOTSTACK_API_KEY is not configured')
@@ -37,11 +39,13 @@ serve(async (req) => {
 
     console.log('Using Shotstack API key:', shotstackApiKey.substring(0, 5) + '...')
 
+    // Initialize Supabase client
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Fetch listing data
     console.log('Fetching listing data')
     const { data: listing, error: listingError } = await supabase
       .from('listings')
@@ -65,7 +69,7 @@ serve(async (req) => {
       )
     }
 
-    // Create timeline with images
+    // Create clips with images
     const clips = listing.images.map((imageUrl: string, index: number) => ({
       asset: {
         type: 'image',
@@ -73,14 +77,14 @@ serve(async (req) => {
       },
       start: index * config.imageDuration,
       length: config.imageDuration,
-      effect: config.transition || 'fade',
+      effect: 'zoomIn',
       transition: {
         in: 'fade',
         out: 'fade'
       }
     }))
 
-    // Add overlay for price and details if configured
+    // Add text overlays if configured
     if (config.showPrice || config.showDetails) {
       const text = []
       if (config.showPrice) {
@@ -94,7 +98,7 @@ serve(async (req) => {
         clips.push({
           asset: {
             type: 'html',
-            html: `<p style="color: white; font-size: 32px; text-align: center">${text.join('<br>')}</p>`,
+            html: `<p style="color: white; font-size: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${text.join('<br>')}</p>`,
             width: 800,
             height: 200,
             background: 'transparent'
@@ -104,33 +108,35 @@ serve(async (req) => {
             y: 0.1
           },
           start: 0,
-          length: clips.length * config.imageDuration
+          length: listing.images.length * config.imageDuration
         })
       }
     }
 
-    const timeline = {
-      background: '#000000',
-      tracks: [{ clips }]
-    }
-
+    // Create render payload
     const renderPayload = {
-      timeline,
+      timeline: {
+        background: '#000000',
+        tracks: [{ clips }]
+      },
       output: {
         format: 'mp4',
         resolution: 'hd'
       },
-      callback: `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook`
+      // Use msmuyhmxlrkcjthugcxd as project ID
+      callback: `https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/shotstack-webhook`
     }
 
+    // Add music if volume > 0
     if (config.musicVolume > 0) {
       renderPayload.timeline.soundtrack = {
         src: 'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/music/unminus/berlin.mp3',
-        effect: 'fadeIn',
+        effect: 'fadeInFadeOut',
         volume: config.musicVolume
       }
     }
 
+    // Submit render job to Shotstack
     console.log('Submitting render job to Shotstack')
     console.log('Render payload:', JSON.stringify(renderPayload, null, 2))
     
@@ -150,6 +156,7 @@ serve(async (req) => {
       throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${responseBody}`)
     }
 
+    // Parse response and get render ID
     let renderId;
     try {
       const render = JSON.parse(responseBody)
@@ -160,7 +167,7 @@ serve(async (req) => {
       throw new Error('Invalid response from Shotstack')
     }
 
-    // Save render status
+    // Save render status in database
     const { error: renderError } = await supabase
       .from('slideshow_renders')
       .insert({
