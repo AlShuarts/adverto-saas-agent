@@ -9,12 +9,16 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    console.log('Starting create-slideshow function')
     const { listingId, config } = await req.json()
+    console.log('Received request with listingId:', listingId)
+    console.log('Config:', config)
 
     if (!listingId || !config) {
       return new Response(
@@ -23,12 +27,21 @@ serve(async (req) => {
       )
     }
 
+    const apiKey = Deno.env.get('SHOTSTACK_API_KEY')
+    if (!apiKey) {
+      console.error('SHOTSTACK_API_KEY is not configured')
+      return new Response(
+        JSON.stringify({ error: 'SHOTSTACK_API_KEY is not configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch listing
+    console.log('Fetching listing data')
     const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('*')
@@ -36,21 +49,22 @@ serve(async (req) => {
       .single()
 
     if (listingError || !listing) {
+      console.error('Error fetching listing:', listingError)
       return new Response(
         JSON.stringify({ error: 'Listing not found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       )
     }
 
-    // Initialize Shotstack
+    console.log('Initializing Shotstack client')
     const client = new Shotstack({
-      apiKey: Deno.env.get('SHOTSTACK_API_KEY') ?? '',
+      apiKey,
       host: 'api.shotstack.io',
       stage: 'production'
     })
 
     // Create timeline with images
-    const clips = (listing.images || []).map((imageUrl, index) => ({
+    const clips = (listing.images || []).map((imageUrl: string, index: number) => ({
       asset: {
         type: 'image',
         src: imageUrl,
@@ -68,7 +82,7 @@ serve(async (req) => {
     if (config.showPrice || config.showDetails) {
       const text = []
       if (config.showPrice) {
-        text.push(`$${listing.price.toLocaleString()}`)
+        text.push(`${listing.price.toLocaleString()} $`)
       }
       if (config.showDetails) {
         text.push(`${listing.bedrooms} ch. | ${listing.bathrooms} sdb.`)
@@ -96,12 +110,12 @@ serve(async (req) => {
       tracks: [{ clips }]
     }
 
-    // Add soundtrack if provided
-    if (config.musicUrl) {
+    // Add soundtrack if volume is set
+    if (config.musicVolume > 0) {
       timeline.soundtrack = {
-        src: config.musicUrl,
+        src: 'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/music/unminus/berlin.mp3',
         effect: 'fadeIn',
-        volume: config.musicVolume || 0.5
+        volume: config.musicVolume
       }
     }
 
@@ -110,25 +124,30 @@ serve(async (req) => {
       resolution: 'hd'
     }
 
-    // Submit render job
+    console.log('Submitting render job to Shotstack')
     const render = await client.render({
       timeline,
       output,
       callback: `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook`
     })
 
+    console.log('Render job submitted:', render.response.id)
+
     // Save render status
     const { error: renderError } = await supabase
       .from('slideshow_renders')
       .insert({
         listing_id: listingId,
-        user_id: req.headers.get('x-user-id'),
         render_id: render.response.id,
         status: 'pending'
       })
 
     if (renderError) {
       console.error('Error saving render status:', renderError)
+      return new Response(
+        JSON.stringify({ error: 'Error saving render status' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
     }
 
     return new Response(
@@ -141,7 +160,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Unexpected error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
