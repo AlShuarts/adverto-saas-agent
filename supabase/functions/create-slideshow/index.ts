@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -48,8 +47,7 @@ serve(async (req) => {
     }
 
     const { listingId, config } = await req.json()
-    console.log('Received request with listingId:', listingId)
-    console.log('Config:', config)
+    const { selectedImages, infoDisplayConfig } = config
 
     if (!listingId || !config) {
       return new Response(
@@ -92,83 +90,98 @@ serve(async (req) => {
       )
     }
 
-    // Create clips with images and overlays
+    // Create clips array
     const clips = [];
-    listing.images.forEach((imageUrl: string, index: number) => {
+    let totalDuration = 0;
+
+    // Add image clips
+    selectedImages.forEach((imageUrl: string, index: number) => {
       const transition = transitions[index % transitions.length];
-      
-      // Image clip
       clips.push({
         asset: {
           type: 'image',
           src: imageUrl,
         },
-        start: index * config.imageDuration,
+        start: totalDuration,
         length: config.imageDuration,
         effect: index % 2 === 0 ? 'zoomIn' : 'zoomOut',
         transition,
       });
+      totalDuration += config.imageDuration;
+    });
 
-      // Information overlays
-      if (config.showDetails) {
-        // Price overlay
-        if (config.showPrice) {
-          clips.push({
-            asset: {
-              type: 'html',
-              html: `<p style="color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${formatPrice(listing.price)}</p>`,
-              width: 800,
-              height: 100,
-            },
-            start: index * config.imageDuration,
-            length: config.imageDuration,
-            position: "center",
-            offset: {
-              y: -0.2
-            }
-          });
-        }
+    // Calculate info display timing based on position
+    let infoStartTime = 0;
+    switch (infoDisplayConfig.position) {
+      case 'start':
+        infoStartTime = 0;
+        break;
+      case 'middle':
+        infoStartTime = totalDuration / 2 - infoDisplayConfig.duration / 2;
+        break;
+      case 'end':
+        infoStartTime = totalDuration - infoDisplayConfig.duration;
+        break;
+    }
 
-        // Address overlay
+    // Add information overlays
+    if (config.showDetails) {
+      if (config.showPrice) {
         clips.push({
           asset: {
             type: 'html',
-            html: `<p style="color: white; font-size: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${listing.address}</p>`,
+            html: `<p style="color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${formatPrice(listing.price)}</p>`,
             width: 800,
-            height: 80,
+            height: 100,
           },
-          start: index * config.imageDuration,
-          length: config.imageDuration,
+          start: infoStartTime,
+          length: infoDisplayConfig.duration,
           position: "center",
           offset: {
-            y: 0
+            y: -0.2
           }
         });
-
-        // Details overlay (bedrooms, bathrooms, etc.)
-        const details = [];
-        if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
-        if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
-        if (listing.lot_size) details.push(`${listing.lot_size} pi²`);
-
-        if (details.length > 0) {
-          clips.push({
-            asset: {
-              type: 'html',
-              html: `<p style="color: white; font-size: 28px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${details.join(' | ')}</p>`,
-              width: 800,
-              height: 60,
-            },
-            start: index * config.imageDuration,
-            length: config.imageDuration,
-            position: "center",
-            offset: {
-              y: 0.2
-            }
-          });
-        }
       }
-    });
+
+      // Address overlay
+      clips.push({
+        asset: {
+          type: 'html',
+          html: `<p style="color: white; font-size: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${listing.address}</p>`,
+          width: 800,
+          height: 80,
+        },
+        start: infoStartTime,
+        length: infoDisplayConfig.duration,
+        position: "center",
+        offset: {
+          y: 0
+        }
+      });
+
+      // Details overlay
+      const details = [];
+      if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
+      if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
+      if (listing.lot_size) details.push(`${listing.lot_size} pi²`);
+
+      if (details.length > 0) {
+        clips.push({
+          asset: {
+            type: 'html',
+            html: `<p style="color: white; font-size: 28px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${details.join(' | ')}</p>`,
+            width: 800,
+            height: 60,
+          },
+          start: infoStartTime,
+          length: infoDisplayConfig.duration,
+          position: "center",
+          offset: {
+            y: 0.2
+          }
+        });
+      }
+    }
 
     // Construct webhook URL with authentication
     const webhookUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/shotstack-webhook?auth=${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
