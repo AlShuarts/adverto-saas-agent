@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -148,7 +147,7 @@ serve(async (req) => {
     }
 
     console.log('Submitting render job to Shotstack with webhook URL:', webhookUrl)
-    const response = await fetch('https://api.shotstack.io/stage/render', {
+    const response = await fetch('https://api.shotstack.io/v1/render', {
       method: 'POST',
       headers: {
         'x-api-key': shotstackApiKey,
