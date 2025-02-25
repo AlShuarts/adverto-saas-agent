@@ -11,7 +11,6 @@ const transitions = [
   { in: "slideLeft", out: "slideRight" },
   { in: "slideUp", out: "slideDown" },
   { in: "wipeLeft", out: "wipeRight" },
-  { in: "fade", out: "fade" },
 ];
 
 const formatPrice = (price: number) => {
