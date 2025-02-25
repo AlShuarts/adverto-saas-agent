@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -5,6 +6,22 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const transitions = [
+  { in: "slideLeft", out: "slideRight" },
+  { in: "slideUp", out: "slideDown" },
+  { in: "wipeLeft", out: "wipeRight" },
+  { in: "fade", out: "fade" },
+];
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('fr-CA', {
+    style: 'currency',
+    currency: 'CAD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -35,7 +52,6 @@ serve(async (req) => {
     console.log('Received request with listingId:', listingId)
     console.log('Config:', config)
 
-    // Validate required parameters
     if (!listingId || !config) {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
@@ -77,49 +93,83 @@ serve(async (req) => {
       )
     }
 
-    // Create clips with images
-    const clips = listing.images.map((imageUrl: string, index: number) => ({
-      asset: {
-        type: 'image',
-        src: imageUrl,
-      },
-      start: index * config.imageDuration,
-      length: config.imageDuration,
-      effect: 'zoomIn',
-      transition: {
-        in: 'fade',
-        out: 'fade'
-      }
-    }))
-
-    // Add text overlays if configured
-    if (config.showPrice || config.showDetails) {
-      const text = []
-      if (config.showPrice) {
-        text.push(`${listing.price.toLocaleString()} $`)
-      }
-      if (config.showDetails && listing.bedrooms && listing.bathrooms) {
-        text.push(`${listing.bedrooms} ch. | ${listing.bathrooms} sdb.`)
-      }
+    // Create clips with images and overlays
+    const clips = [];
+    listing.images.forEach((imageUrl: string, index: number) => {
+      const transition = transitions[index % transitions.length];
       
-      if (text.length > 0) {
+      // Image clip
+      clips.push({
+        asset: {
+          type: 'image',
+          src: imageUrl,
+        },
+        start: index * config.imageDuration,
+        length: config.imageDuration,
+        effect: index % 2 === 0 ? 'zoomIn' : 'zoomOut',
+        transition,
+      });
+
+      // Information overlays
+      if (config.showDetails) {
+        // Price overlay
+        if (config.showPrice) {
+          clips.push({
+            asset: {
+              type: 'html',
+              html: `<p style="color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${formatPrice(listing.price)}</p>`,
+              width: 800,
+              height: 100,
+            },
+            start: index * config.imageDuration,
+            length: config.imageDuration,
+            position: "center",
+            offset: {
+              y: -0.2
+            }
+          });
+        }
+
+        // Address overlay
         clips.push({
           asset: {
             type: 'html',
-            html: `<p style="color: white; font-size: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">${text.join('<br>')}</p>`,
+            html: `<p style="color: white; font-size: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${listing.address}</p>`,
             width: 800,
-            height: 200,
-            background: 'transparent'
+            height: 80,
           },
-          position: 'bottom',
+          start: index * config.imageDuration,
+          length: config.imageDuration,
+          position: "center",
           offset: {
-            y: 0.1
-          },
-          start: 0,
-          length: listing.images.length * config.imageDuration
-        })
+            y: 0
+          }
+        });
+
+        // Details overlay (bedrooms, bathrooms, etc.)
+        const details = [];
+        if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
+        if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
+        if (listing.lot_size) details.push(`${listing.lot_size} pi²`);
+
+        if (details.length > 0) {
+          clips.push({
+            asset: {
+              type: 'html',
+              html: `<p style="color: white; font-size: 28px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${details.join(' | ')}</p>`,
+              width: 800,
+              height: 60,
+            },
+            start: index * config.imageDuration,
+            length: config.imageDuration,
+            position: "center",
+            offset: {
+              y: 0.2
+            }
+          });
+        }
       }
-    }
+    });
 
     // Construct webhook URL with authentication
     const webhookUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/shotstack-webhook?auth=${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
