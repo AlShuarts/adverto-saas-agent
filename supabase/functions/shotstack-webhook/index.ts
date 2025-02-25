@@ -13,13 +13,33 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const url = new URL(req.url);
+    const auth = url.searchParams.get('auth');
+    
+    if (auth !== Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+      console.error('Invalid authentication token');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
     const webhook = await req.json()
-    console.log('Received webhook:', webhook)
+    console.log('Received webhook payload:', JSON.stringify(webhook, null, 2))
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Map Shotstack status to our status
+    let status = webhook.status;
+    if (webhook.status === 'done') {
+      status = 'completed';
+    } else if (webhook.status === 'failed') {
+      status = 'error';
+    }
 
     // Find the render record
     const { data: render, error: renderError } = await supabase
@@ -36,14 +56,14 @@ serve(async (req) => {
       )
     }
 
-    console.log('Updating render status:', webhook.status)
+    console.log('Updating render status:', status)
     console.log('Video URL:', webhook.url)
 
     // Update render status
     const { error: updateError } = await supabase
       .from('slideshow_renders')
       .update({ 
-        status: webhook.status,
+        status: status,
         video_url: webhook.url,
         updated_at: new Date().toISOString()
       })
@@ -58,7 +78,7 @@ serve(async (req) => {
     }
 
     // If render is complete, update the listing
-    if (webhook.status === 'done' && webhook.url) {
+    if (status === 'completed' && webhook.url) {
       console.log('Render completed, updating listing with video URL')
       const { error: listingError } = await supabase
         .from('listings')

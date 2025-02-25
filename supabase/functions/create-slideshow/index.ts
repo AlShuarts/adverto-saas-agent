@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -14,7 +15,6 @@ serve(async (req) => {
   try {
     console.log('Starting create-slideshow function')
     
-    // Get the JWT token from the request headers
     const authHeader = req.headers.get('authorization')
     if (!authHeader) {
       throw new Error('No authorization header')
@@ -25,7 +25,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get the user from the JWT token
     const jwt = authHeader.replace('Bearer ', '')
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt)
     
@@ -45,7 +44,6 @@ serve(async (req) => {
       )
     }
 
-    // Get Shotstack API key
     const shotstackApiKey = Deno.env.get('SHOTSTACK_API_KEY')
     if (!shotstackApiKey) {
       console.error('SHOTSTACK_API_KEY is not configured')
@@ -124,6 +122,9 @@ serve(async (req) => {
       }
     }
 
+    // Construct webhook URL with authentication
+    const webhookUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/shotstack-webhook?auth=${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+
     // Create render payload
     const renderPayload = {
       timeline: {
@@ -134,8 +135,7 @@ serve(async (req) => {
         format: 'mp4',
         resolution: 'hd'
       },
-      // Use msmuyhmxlrkcjthugcxd as project ID
-      callback: `https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/shotstack-webhook`
+      callback: webhookUrl
     }
 
     // Add music if volume > 0
@@ -147,8 +147,7 @@ serve(async (req) => {
       }
     }
 
-    // Submit render job to Shotstack
-    console.log('Submitting render job to Shotstack')
+    console.log('Submitting render job to Shotstack with webhook URL:', webhookUrl)
     const response = await fetch('https://api.shotstack.io/stage/render', {
       method: 'POST',
       headers: {
@@ -182,7 +181,7 @@ serve(async (req) => {
         listing_id: listingId,
         render_id: renderId,
         status: 'pending',
-        user_id: user.id  // Ajout du user_id
+        user_id: user.id
       })
 
     if (renderError) {
