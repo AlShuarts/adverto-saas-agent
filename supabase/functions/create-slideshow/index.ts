@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -5,12 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-const transitions = [
-  { in: "slideLeft", out: "slideRight" },
-  { in: "slideUp", out: "slideDown" },
-  { in: "wipeLeft", out: "wipeRight" },
-];
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-CA', {
@@ -56,17 +51,6 @@ serve(async (req) => {
       )
     }
 
-    const shotstackApiKey = Deno.env.get('SHOTSTACK_API_KEY')
-    if (!shotstackApiKey) {
-      console.error('SHOTSTACK_API_KEY is not configured')
-      return new Response(
-        JSON.stringify({ error: 'SHOTSTACK_API_KEY is not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-
-    console.log('Using Shotstack API key:', shotstackApiKey.substring(0, 5) + '...')
-
     console.log('Fetching listing data')
     const { data: listing, error: listingError } = await supabase
       .from('listings')
@@ -82,21 +66,15 @@ serve(async (req) => {
       )
     }
 
-    if (!listing.images || listing.images.length === 0) {
-      console.error('No images found for listing')
-      return new Response(
-        JSON.stringify({ error: 'No images found for listing' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
     // Create clips array
     const clips = [];
     let totalDuration = 0;
 
-    // Add image clips
+    // Add image clips with subtle zoom effects
     selectedImages.forEach((imageUrl: string, index: number) => {
-      const transition = transitions[index % transitions.length];
+      const isZoomIn = index % 2 === 0;
+      const zoomDirection = isZoomIn ? 1.1 : 0.9; // Subtle zoom factor
+      
       clips.push({
         asset: {
           type: 'image',
@@ -104,8 +82,20 @@ serve(async (req) => {
         },
         start: totalDuration,
         length: config.imageDuration,
-        effect: index % 2 === 0 ? 'zoomIn' : 'zoomOut',
-        transition,
+        transition: {
+          in: "fade",
+          out: "fade"
+        },
+        transform: {
+          scale: {
+            from: isZoomIn ? 1 : zoomDirection,
+            to: isZoomIn ? zoomDirection : 1,
+          },
+          anchor: {
+            x: isZoomIn ? 0.4 : 0.6,  // Slight horizontal variation
+            y: isZoomIn ? 0.4 : 0.6,  // Slight vertical variation
+          }
+        }
       });
       totalDuration += config.imageDuration;
     });
@@ -124,7 +114,7 @@ serve(async (req) => {
         break;
     }
 
-    // Add information overlays
+    // Add information overlays with fade transitions
     if (config.showDetails) {
       if (config.showPrice) {
         clips.push({
@@ -139,11 +129,14 @@ serve(async (req) => {
           position: "center",
           offset: {
             y: -0.2
+          },
+          transition: {
+            in: "fade",
+            out: "fade"
           }
         });
       }
 
-      // Address overlay
       clips.push({
         asset: {
           type: 'html',
@@ -156,10 +149,13 @@ serve(async (req) => {
         position: "center",
         offset: {
           y: 0
+        },
+        transition: {
+          in: "fade",
+          out: "fade"
         }
       });
 
-      // Details overlay
       const details = [];
       if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
       if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
@@ -178,15 +174,17 @@ serve(async (req) => {
           position: "center",
           offset: {
             y: 0.2
+          },
+          transition: {
+            in: "fade",
+            out: "fade"
           }
         });
       }
     }
 
-    // Construct webhook URL with authentication
-    const webhookUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/functions/v1/shotstack-webhook?auth=${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook?auth=${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
 
-    // Create render payload
     const renderPayload = {
       timeline: {
         background: '#000000',
@@ -196,10 +194,13 @@ serve(async (req) => {
         format: 'mp4',
         resolution: 'hd'
       },
-      callback: webhookUrl
+      callback: webhookUrl,
+      metadata: {
+        userId: user.id,
+        listingId: listingId
+      }
     }
 
-    // Add music if volume > 0
     if (config.musicVolume > 0) {
       renderPayload.timeline.soundtrack = {
         src: 'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/music/unminus/berlin.mp3',
@@ -208,30 +209,25 @@ serve(async (req) => {
       }
     }
 
-    console.log('Submitting render job to Shotstack with webhook URL:', webhookUrl)
+    console.log('Submitting render job to Shotstack')
     const response = await fetch('https://api.shotstack.io/v1/render', {
       method: 'POST',
       headers: {
-        'x-api-key': shotstackApiKey,
+        'x-api-key': Deno.env.get('SHOTSTACK_API_KEY') ?? '',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(renderPayload),
     })
 
-    const responseBody = await response.text()
-    console.log('Shotstack response:', responseBody)
+    const responseData = await response.json()
+    console.log('Shotstack response:', responseData)
 
     if (!response.ok) {
-      throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${responseBody}`)
+      throw new Error(`Shotstack API error: ${response.status} ${response.statusText}`)
     }
 
-    let renderId;
-    try {
-      const render = JSON.parse(responseBody)
-      renderId = render.response.id
-      console.log('Render job submitted:', renderId)
-    } catch (error) {
-      console.error('Error parsing Shotstack response:', error)
+    const renderId = responseData.response?.id
+    if (!renderId) {
       throw new Error('Invalid response from Shotstack')
     }
 
