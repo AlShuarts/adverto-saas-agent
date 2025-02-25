@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -76,7 +75,6 @@ serve(async (req) => {
     // Add image clips with subtle zoom effects
     selectedImages.forEach((imageUrl: string, index: number) => {
       const isZoomIn = index % 2 === 0;
-      const zoomDirection = isZoomIn ? 1.1 : 0.9; // Subtle zoom factor
       
       clips.push({
         asset: {
@@ -90,13 +88,10 @@ serve(async (req) => {
           out: "fade"
         },
         transform: {
-          scale: {
-            from: isZoomIn ? 1 : zoomDirection,
-            to: isZoomIn ? zoomDirection : 1,
-          },
-          anchor: {
-            x: isZoomIn ? 0.4 : 0.6,  // Slight horizontal variation
-            y: isZoomIn ? 0.4 : 0.6,  // Slight vertical variation
+          zoom: isZoomIn ? 1.1 : 0.9, // Utilisation de zoom au lieu de scale
+          position: {
+            x: isZoomIn ? 0.4 : 0.6,  // Horizontal position
+            y: isZoomIn ? 0.4 : 0.6,  // Vertical position
           }
         }
       });
