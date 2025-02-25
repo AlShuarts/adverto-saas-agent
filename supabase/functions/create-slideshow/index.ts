@@ -51,6 +51,9 @@ serve(async (req) => {
       )
     }
 
+    console.log('Configuration reçue:', JSON.stringify(config, null, 2))
+    console.log('Images sélectionnées:', selectedImages)
+
     console.log('Fetching listing data')
     const { data: listing, error: listingError } = await supabase
       .from('listings')
@@ -209,6 +212,8 @@ serve(async (req) => {
       }
     }
 
+    console.log('Payload pour Shotstack:', JSON.stringify(renderPayload, null, 2))
+
     console.log('Submitting render job to Shotstack')
     const response = await fetch('https://api.shotstack.io/v1/render', {
       method: 'POST',
@@ -219,11 +224,12 @@ serve(async (req) => {
       body: JSON.stringify(renderPayload),
     })
 
+    console.log('Réponse Shotstack status:', response.status)
     const responseData = await response.json()
-    console.log('Shotstack response:', responseData)
+    console.log('Réponse Shotstack complète:', JSON.stringify(responseData, null, 2))
 
     if (!response.ok) {
-      throw new Error(`Shotstack API error: ${response.status} ${response.statusText}`)
+      throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`)
     }
 
     const renderId = responseData.response?.id
