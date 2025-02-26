@@ -72,7 +72,7 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
-    // Add image clips with crossfade transitions
+    // Add image clips with fade transitions
     selectedImages.forEach((imageUrl: string, index: number) => {
       const isZoomIn = index % 2 === 0;
       const isLastImage = index === selectedImages.length - 1;
@@ -86,8 +86,8 @@ serve(async (req) => {
         length: config.imageDuration,
         effect: isZoomIn ? 'zoomIn' : 'zoomOut',
         transition: {
-          in: index === 0 ? "fade" : "crossfade",
-          out: isLastImage ? "fade" : "crossfade"
+          in: "fade",
+          out: isLastImage ? "fade" : "none"
         }
       });
       totalDuration += config.imageDuration;

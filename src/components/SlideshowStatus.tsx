@@ -16,24 +16,31 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
 
   useEffect(() => {
     if (render && !hasNotified.current) {
-      if (render.status === "completed" && render.video_url) {
-        hasNotified.current = true;
-        toast("Diaporama prêt !", {
-          description: "Votre diaporama est prêt à être visionné.",
-          action: {
-            label: "Voir",
-            onClick: () => window.open(render.video_url, "_blank"),
-          },
-          duration: 10000, // Reste affiché 10 secondes
-        });
-      } else if (render.status === "error") {
-        hasNotified.current = true;
-        toast.error("Erreur de création", {
-          description: "Une erreur est survenue lors de la création du diaporama.",
-        });
+      const notificationKey = `slideshow-${listing.id}-${render.status}`;
+      const hasBeenNotified = localStorage.getItem(notificationKey);
+
+      if (!hasBeenNotified) {
+        if (render.status === "completed" && render.video_url) {
+          hasNotified.current = true;
+          localStorage.setItem(notificationKey, "true");
+          toast("Diaporama prêt !", {
+            description: "Votre diaporama est prêt à être visionné.",
+            action: {
+              label: "Voir",
+              onClick: () => window.open(render.video_url, "_blank"),
+            },
+            duration: 10000, // Reste affiché 10 secondes
+          });
+        } else if (render.status === "error") {
+          hasNotified.current = true;
+          localStorage.setItem(notificationKey, "true");
+          toast.error("Erreur de création", {
+            description: "Une erreur est survenue lors de la création du diaporama.",
+          });
+        }
       }
     }
-  }, [render]);
+  }, [render, listing.id]);
 
   if (isLoading || !render) return null;
 
