@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -187,11 +186,7 @@ serve(async (req) => {
         format: 'mp4',
         resolution: 'hd'
       },
-      callback: webhookUrl,
-      metadata: {
-        userId: user.id,
-        listingId: listingId
-      }
+      callback: webhookUrl
     }
 
     if (config.musicVolume > 0) {
