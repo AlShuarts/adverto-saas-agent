@@ -72,7 +72,7 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
-    // Add image clips with subtle pan and zoom effects
+    // Add image clips with crossfade transitions
     selectedImages.forEach((imageUrl: string, index: number) => {
       const isZoomIn = index % 2 === 0;
       
@@ -85,8 +85,8 @@ serve(async (req) => {
         length: config.imageDuration,
         effect: isZoomIn ? 'zoomIn' : 'zoomOut',
         transition: {
-          in: "fade",
-          out: "fade"
+          in: index === 0 ? "fade" : "crossfade", // Premier clip : fade, autres : crossfade
+          out: index === selectedImages.length - 1 ? "fade" : null // Dernier clip : fade, autres : pas de transition out
         }
       });
       totalDuration += config.imageDuration;
