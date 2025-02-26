@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
@@ -72,7 +73,7 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
-    // Add image clips with subtle zoom effects
+    // Add image clips with subtle pan and zoom effects
     selectedImages.forEach((imageUrl: string, index: number) => {
       const isZoomIn = index % 2 === 0;
       
@@ -83,16 +84,10 @@ serve(async (req) => {
         },
         start: totalDuration,
         length: config.imageDuration,
+        effect: isZoomIn ? 'zoomIn' : 'zoomOut',
         transition: {
           in: "fade",
           out: "fade"
-        },
-        transform: {
-          zoom: isZoomIn ? 1.1 : 0.9, // Utilisation de zoom au lieu de scale
-          position: {
-            x: isZoomIn ? 0.4 : 0.6,  // Horizontal position
-            y: isZoomIn ? 0.4 : 0.6,  // Vertical position
-          }
         }
       });
       totalDuration += config.imageDuration;
