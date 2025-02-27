@@ -86,7 +86,7 @@ serve(async (req) => {
         length: config.imageDuration,
         effect: isZoomIn ? 'zoomIn' : 'zoomOut',
         transition: {
-          in: "fade",
+          in: "reveal",
           out: isLastImage ? "fade" : "none"
         }
       });
