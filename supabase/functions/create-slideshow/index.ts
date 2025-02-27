@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -71,19 +72,24 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
-    // ✅ Ajout des images avec zoom progressif et fondu fluide
+    // Add image clips with fade transitions
     selectedImages.forEach((imageUrl: string, index: number) => {
       const isZoomIn = index % 2 === 0;
       const isLastImage = index === selectedImages.length - 1;
-
+      
       clips.push({
-        asset: { type: "image", src: imageUrl },
-        start: Math.max(totalDuration, 0),
+        asset: {
+          type: 'image',
+          src: imageUrl,
+        },
+        start: totalDuration,
         length: config.imageDuration,
-        effect: isZoomIn ? "zoomIn" : "zoomOut",
-        transition: isLastImage ? { in: "fade" } : { in: "fade", out: "fade" },
+        effect: isZoomIn ? 'zoomIn' : 'zoomOut',
+        transition: {
+          in: "fade",
+          out: isLastImage ? "fade" : "none"
+        }
       });
-
       totalDuration += config.imageDuration;
     });
 
@@ -100,7 +106,7 @@ serve(async (req) => {
         break;
     }
 
-    // ✅ Ajout des informations affichées avec fondu
+    // Informations display with fade
     if (config.showDetails) {
       if (config.showPrice) {
         clips.push({
@@ -119,7 +125,11 @@ serve(async (req) => {
       }
     }
 
-    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook?auth=${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+    // Construct a properly formatted webhook URL - use public API endpoint
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
+    const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
+    
+    console.log("🔗 URL du webhook configurée:", webhookUrl);
 
     const renderPayload = {
       timeline: { background: "#000000", tracks: [{ clips }] },
@@ -150,6 +160,23 @@ serve(async (req) => {
     const renderId = responseData.response?.id;
     if (!renderId) {
       throw new Error("❌ Réponse invalide de Shotstack.");
+    }
+    
+    // Create a record in our database to track this render
+    console.log("💾 Création d'un enregistrement pour le rendu:", renderId);
+    const { error: insertError } = await supabase
+      .from("slideshow_renders")
+      .insert({
+        listing_id: listingId,
+        render_id: renderId,
+        status: "pending",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      
+    if (insertError) {
+      console.error("❌ Erreur lors de l'enregistrement du rendu:", insertError);
+      throw new Error(`Erreur lors de l'enregistrement du rendu: ${insertError.message}`);
     }
 
     return new Response(

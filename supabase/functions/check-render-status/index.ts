@@ -13,93 +13,136 @@ serve(async (req) => {
   }
 
   try {
-    const { renderId } = await req.json()
-    if (!renderId) {
-      throw new Error('Missing renderId')
-    }
-
-    const shotstackApiKey = Deno.env.get('SHOTSTACK_API_KEY')
-    if (!shotstackApiKey) {
-      throw new Error('SHOTSTACK_API_KEY is not configured')
-    }
-
-    console.log('Checking render status for:', renderId)
+    console.log("🔍 Vérification du statut de rendu Shotstack");
     
+    const { renderId } = await req.json();
+    
+    if (!renderId) {
+      return new Response(
+        JSON.stringify({ error: 'ID de rendu manquant' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    console.log(`🔹 Vérification du statut pour le rendu: ${renderId}`);
+    
+    // Vérifier le statut du rendu via l'API Shotstack
     const response = await fetch(`https://api.shotstack.io/v1/render/${renderId}`, {
       method: 'GET',
       headers: {
-        'x-api-key': shotstackApiKey,
+        'x-api-key': Deno.env.get('SHOTSTACK_API_KEY') ?? '',
+        'Content-Type': 'application/json',
       },
-    })
-
+    });
+    
     if (!response.ok) {
-      throw new Error(`Shotstack API error: ${response.status}`)
+      const errorData = await response.text();
+      console.error(`❌ Erreur API Shotstack: ${response.status} ${response.statusText}`, errorData);
+      return new Response(
+        JSON.stringify({ error: `Erreur API Shotstack: ${response.status}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
+      );
     }
-
-    const data = await response.json()
-    console.log('Shotstack response:', JSON.stringify(data, null, 2))
-
+    
+    const shotstackData = await response.json();
+    console.log(`✅ Réponse Shotstack:`, JSON.stringify(shotstackData, null, 2));
+    
+    // Traiter le statut Shotstack
+    if (!shotstackData.response) {
+      return new Response(
+        JSON.stringify({ error: 'Réponse Shotstack invalide' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Map Shotstack status to our status
-    let status = data.response.status;
+    );
+    
+    // Mettre à jour notre base de données avec le nouveau statut
+    let status = shotstackData.response.status || 'unknown';
+    const videoUrl = shotstackData.response.url || null;
+    
     if (status === 'done') {
       status = 'completed';
     } else if (status === 'failed') {
       status = 'error';
+    } else if (status === 'rendering') {
+      status = 'processing';
     }
-
-    // Update render status in database
-    if (status === 'completed' || status === 'error') {
+    
+    // Vérifier si nous avons déjà un enregistrement pour ce rendu
+    const { data: render, error: renderError } = await supabase
+      .from('slideshow_renders')
+      .select('*')
+      .eq('render_id', renderId)
+      .single();
+      
+    if (renderError) {
+      console.error('❌ Erreur lors de la récupération du rendu:', renderError);
+      return new Response(
+        JSON.stringify({ error: 'Rendu non trouvé' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
+    
+    // Mettre à jour le statut uniquement s'il a changé
+    if (render.status !== status || (videoUrl && render.video_url !== videoUrl)) {
+      console.log(`📝 Mise à jour du statut du rendu: ${render.status} -> ${status}`);
+      
       const { error: updateError } = await supabase
         .from('slideshow_renders')
-        .update({ 
+        .update({
           status: status,
-          video_url: data.response.url,
+          video_url: videoUrl,
           updated_at: new Date().toISOString()
         })
-        .eq('render_id', renderId)
-
+        .eq('render_id', renderId);
+        
       if (updateError) {
-        throw new Error('Failed to update render status')
+        console.error('❌ Erreur lors de la mise à jour du statut:', updateError);
+        return new Response(
+          JSON.stringify({ error: 'Erreur lors de la mise à jour du statut' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
       }
-
-      // If render is complete, update the listing
-      if (status === 'completed' && data.response.url) {
-        const { data: render } = await supabase
-          .from('slideshow_renders')
-          .select('listing_id')
-          .eq('render_id', renderId)
-          .single()
-
-        if (render) {
-          await supabase
-            .from('listings')
-            .update({ 
-              video_url: data.response.url,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', render.listing_id)
+      
+      // Si le rendu est terminé et qu'une URL est disponible, mettre à jour le listing
+      if (status === 'completed' && videoUrl) {
+        console.log(`🎬 Mise à jour du listing avec l'URL vidéo`);
+        
+        const { error: listingError } = await supabase
+          .from('listings')
+          .update({ 
+            video_url: videoUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', render.listing_id);
+          
+        if (listingError) {
+          console.error('❌ Erreur lors de la mise à jour du listing:', listingError);
         }
       }
+    } else {
+      console.log(`ℹ️ Aucun changement de statut nécessaire: ${status}`);
     }
-
+    
     return new Response(
       JSON.stringify({ 
-        status: status,
-        url: data.response.url
+        success: true, 
+        status: status, 
+        videoUrl: videoUrl,
+        message: 'Statut du rendu vérifié avec succès'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
+    );
+    
   } catch (error) {
-    console.error('Error:', error)
+    console.error('❌ Erreur:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    );
   }
-})
+});

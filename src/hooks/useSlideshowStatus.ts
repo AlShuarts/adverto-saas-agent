@@ -21,8 +21,7 @@ export const useSlideshowStatus = (listingId: string) => {
 
         if (error) {
           console.error("Error fetching render status:", error);
-          toast.error("Erreur lors de la vérification du statut");
-          throw error;
+          return null;
         }
 
         if (render && (render.status === 'pending' || render.status === 'processing')) {
@@ -34,19 +33,28 @@ export const useSlideshowStatus = (listingId: string) => {
             
             if (response.error) {
               console.error('Error checking render status:', response.error);
-              throw response.error;
+            } else {
+              console.log('Render status check response:', response.data);
+              
+              // Si le statut a changé, mettons à jour le render local
+              if (response.data.status && response.data.status !== render.status) {
+                render.status = response.data.status;
+              }
+              
+              // Si une URL vidéo est disponible, mettons-la à jour
+              if (response.data.videoUrl && response.data.videoUrl !== render.video_url) {
+                render.video_url = response.data.videoUrl;
+              }
             }
-            console.log('Render status check response:', response.data);
           } catch (checkError) {
             console.error('Error checking render status:', checkError);
-            toast.error("Erreur lors de la vérification du statut de rendu");
           }
         }
 
         return render;
       } catch (error) {
         console.error("Error in useSlideshowStatus:", error);
-        throw error;
+        return null;
       }
     },
     refetchInterval: ({ state }) => {
@@ -54,7 +62,7 @@ export const useSlideshowStatus = (listingId: string) => {
       if (!data || data.status === "completed" || data.status === "error") {
         return false;
       }
-      return 5000;
+      return 10000; // Vérification toutes les 10 secondes
     },
   });
 };
