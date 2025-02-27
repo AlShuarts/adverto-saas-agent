@@ -71,16 +71,16 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
+    // ✅ Ajout des images avec mouvement fluide et zoom
     selectedImages.forEach((imageUrl, index) => {
       const isZoomIn = index % 2 === 0;
       const isSlideLeft = index % 2 === 0;
-
+      
       clips.push({
         asset: { type: "image", src: imageUrl },
-        start: Math.max(totalDuration, 0), // ✅ Correction pour éviter un start négatif
+        start: Math.max(totalDuration, 0),
         length: config.imageDuration,
         effect: isZoomIn ? "zoomIn" : "zoomOut",
-        transition: { in: "fade" }, // ✅ Transition fluide sans écran noir
         animate: [
           {
             scale: 1.05,
@@ -90,6 +90,25 @@ serve(async (req) => {
       });
       totalDuration += config.imageDuration;
     });
+
+    let infoStartTime = Math.max(0, totalDuration / 2 - infoDisplayConfig.duration / 2);
+    
+    if (config.showDetails) {
+      if (config.showPrice) {
+        clips.push({
+          asset: {
+            type: "html",
+            html: `<p style='color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);'>${formatPrice(listing.price)}</p>`,
+            width: 800,
+            height: 100,
+          },
+          start: infoStartTime,
+          length: infoDisplayConfig.duration,
+          position: "center",
+          offset: { y: -0.2 },
+        });
+      }
+    }
 
     const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook?auth=${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
 
@@ -143,7 +162,6 @@ serve(async (req) => {
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
     console.error("⚠️ Erreur:", error);
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
