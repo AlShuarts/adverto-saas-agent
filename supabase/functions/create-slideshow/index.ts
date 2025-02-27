@@ -71,26 +71,23 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
-    // ✅ Ajout des images avec mouvement fluide et zoom, sans transition noire
     selectedImages.forEach((imageUrl, index) => {
       const isZoomIn = index % 2 === 0;
       const isSlideLeft = index % 2 === 0;
-      const isLastImage = index === selectedImages.length - 1;
 
       clips.push({
         asset: { type: "image", src: imageUrl },
-        start: totalDuration - 0.5, // ✅ Débute légèrement avant la fin de l'image précédente
-        length: config.imageDuration + 0.5, // ✅ Légèrement plus long pour éviter les coupures
+        start: Math.max(totalDuration, 0), // ✅ Correction pour éviter un start négatif
+        length: config.imageDuration,
         effect: isZoomIn ? "zoomIn" : "zoomOut",
-        transition: { in: "fade" }, // ✅ Supprimé "out: fade" pour éviter le noir
+        transition: { in: "fade" }, // ✅ Transition fluide sans écran noir
         animate: [
           {
-            scale: 1.08, // ✅ Zoom fluide
-            offset: { x: isSlideLeft ? -0.03 : 0.03, y: 0 }, // ✅ Mouvement léger latéral
+            scale: 1.05,
+            offset: { x: isSlideLeft ? -0.05 : 0.05, y: 0 },
           },
         ],
       });
-
       totalDuration += config.imageDuration;
     });
 
@@ -146,6 +143,7 @@ serve(async (req) => {
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     console.error("⚠️ Erreur:", error);
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
