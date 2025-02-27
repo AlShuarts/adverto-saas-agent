@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const formatPrice = (price) => {
+const formatPrice = (price: number) => {
   return new Intl.NumberFormat("fr-CA", {
     style: "currency",
     currency: "CAD",
@@ -71,34 +71,42 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
-    // ✅ Ajout des images avec mouvement fluide et zoom
-    selectedImages.forEach((imageUrl, index) => {
+    // ✅ Ajout des images avec zoom progressif et fondu fluide
+    selectedImages.forEach((imageUrl: string, index: number) => {
       const isZoomIn = index % 2 === 0;
-      const isSlideLeft = index % 2 === 0;
-      
+      const isLastImage = index === selectedImages.length - 1;
+
       clips.push({
         asset: { type: "image", src: imageUrl },
         start: Math.max(totalDuration, 0),
         length: config.imageDuration,
         effect: isZoomIn ? "zoomIn" : "zoomOut",
-        animate: [
-          {
-            scale: 1.05,
-            offset: { x: isSlideLeft ? -0.05 : 0.05, y: 0 },
-          },
-        ],
+        transition: isLastImage ? { in: "fade" } : { in: "fade", out: "fade" },
       });
+
       totalDuration += config.imageDuration;
     });
 
-    let infoStartTime = Math.max(0, totalDuration / 2 - infoDisplayConfig.duration / 2);
-    
+    let infoStartTime = 0;
+    switch (infoDisplayConfig.position) {
+      case "start":
+        infoStartTime = 0;
+        break;
+      case "middle":
+        infoStartTime = totalDuration / 2 - infoDisplayConfig.duration / 2;
+        break;
+      case "end":
+        infoStartTime = totalDuration - infoDisplayConfig.duration;
+        break;
+    }
+
+    // ✅ Ajout des informations affichées avec fondu
     if (config.showDetails) {
       if (config.showPrice) {
         clips.push({
           asset: {
             type: "html",
-            html: `<p style='color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);'>${formatPrice(listing.price)}</p>`,
+            html: `<p style="color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${formatPrice(listing.price)}</p>`,
             width: 800,
             height: 100,
           },
@@ -106,6 +114,7 @@ serve(async (req) => {
           length: infoDisplayConfig.duration,
           position: "center",
           offset: { y: -0.2 },
+          transition: { in: "fade" },
         });
       }
     }
@@ -117,14 +126,6 @@ serve(async (req) => {
       output: { format: "mp4", resolution: "hd" },
       callback: webhookUrl,
     };
-
-    if (config.musicVolume > 0) {
-      renderPayload.timeline.soundtrack = {
-        src: "https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/music/unminus/berlin.mp3",
-        effect: "fadeInFadeOut",
-        volume: config.musicVolume,
-      };
-    }
 
     console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
 
@@ -151,17 +152,11 @@ serve(async (req) => {
       throw new Error("❌ Réponse invalide de Shotstack.");
     }
 
-    await supabase.from("slideshow_renders").insert({
-      listing_id: listingId,
-      render_id: renderId,
-      status: "pending",
-      user_id: user.id,
-    });
-
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     console.error("⚠️ Erreur:", error);
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
