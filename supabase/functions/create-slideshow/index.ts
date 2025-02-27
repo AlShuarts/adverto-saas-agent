@@ -87,10 +87,7 @@ serve(async (req) => {
         length: config.imageDuration,
         effect: effect,    
         
-        transition: {
-          
-          out: "fade" 
-        }
+        
       });
       totalDuration += config.imageDuration;
     });
