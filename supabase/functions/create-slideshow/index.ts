@@ -75,8 +75,8 @@ serve(async (req) => {
     // Add image clips with fade transitions
     selectedImages.forEach((imageUrl: string, index: number) => {
       const effect = effects[index % effects.length];
-      //const isZoomIn = index % 2 === 0;
-      //const isLastImage = index === selectedImages.length - 1;
+      
+      
       
       clips.push({
         asset: {
@@ -85,11 +85,11 @@ serve(async (req) => {
         },
         start: totalDuration,
         length: config.imageDuration,
-        effect: effect,    //isZoomIn ? 'zoomIn' : 'zoomOut',
-        //"offset": { "x": -0.05, "y": 0.02 }
+        effect: effect,    
+        
         transition: {
-          //in: "reveal",
-          out: "fade", //isLastImage ? "fade" : "none"
+          
+          out: "fade" 
         }
       });
       totalDuration += config.imageDuration;
