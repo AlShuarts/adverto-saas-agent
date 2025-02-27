@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const formatPrice = (price: number) => {
+const formatPrice = (price) => {
   return new Intl.NumberFormat("fr-CA", {
     style: "currency",
     currency: "CAD",
@@ -71,74 +71,28 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
 
-    // ✅ Ajout des images avec mouvement fluide et zoom
-    selectedImages.forEach((imageUrl: string, index: number) => {
+    // ✅ Ajout des images avec mouvement fluide et zoom, sans transition noire
+    selectedImages.forEach((imageUrl, index) => {
       const isZoomIn = index % 2 === 0;
       const isSlideLeft = index % 2 === 0;
       const isLastImage = index === selectedImages.length - 1;
 
       clips.push({
         asset: { type: "image", src: imageUrl },
-        start: totalDuration,
-        length: config.imageDuration,
+        start: totalDuration - 0.5, // ✅ Débute légèrement avant la fin de l'image précédente
+        length: config.imageDuration + 0.5, // ✅ Légèrement plus long pour éviter les coupures
         effect: isZoomIn ? "zoomIn" : "zoomOut",
-        transition: { in: "fade" }, // ✅ Transition uniquement à l'entrée pour éviter le noir
+        transition: { in: "fade" }, // ✅ Supprimé "out: fade" pour éviter le noir
         animate: [
           {
-            scale: 1.05,
-            offset: { x: isSlideLeft ? -0.05 : 0.05, y: 0 },
+            scale: 1.08, // ✅ Zoom fluide
+            offset: { x: isSlideLeft ? -0.03 : 0.03, y: 0 }, // ✅ Mouvement léger latéral
           },
         ],
       });
 
       totalDuration += config.imageDuration;
     });
-
-    let infoStartTime = 0;
-    switch (infoDisplayConfig.position) {
-      case "start":
-        infoStartTime = 0;
-        break;
-      case "middle":
-        infoStartTime = totalDuration / 2 - infoDisplayConfig.duration / 2;
-        break;
-      case "end":
-        infoStartTime = totalDuration - infoDisplayConfig.duration;
-        break;
-    }
-
-    // ✅ Ajout des informations affichées avec fondu
-    if (config.showDetails) {
-      if (config.showPrice) {
-        clips.push({
-          asset: {
-            type: "html",
-            html: `<p style="color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${formatPrice(listing.price)}</p>`,
-            width: 800,
-            height: 100,
-          },
-          start: infoStartTime,
-          length: infoDisplayConfig.duration,
-          position: "center",
-          offset: { y: -0.2 },
-          transition: { in: "fade" },
-        });
-      }
-
-      clips.push({
-        asset: {
-          type: "html",
-          html: `<p style="color: white; font-size: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${listing.address}</p>`,
-          width: 800,
-          height: 80,
-        },
-        start: infoStartTime,
-        length: infoDisplayConfig.duration,
-        position: "center",
-        offset: { y: 0 },
-        transition: { in: "fade" },
-      });
-    }
 
     const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook?auth=${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
 
@@ -192,7 +146,6 @@ serve(async (req) => {
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
     console.error("⚠️ Erreur:", error);
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
