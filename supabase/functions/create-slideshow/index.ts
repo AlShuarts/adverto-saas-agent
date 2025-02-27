@@ -1,118 +1,118 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('fr-CA', {
-    style: 'currency',
-    currency: 'CAD',
+  return new Intl.NumberFormat("fr-CA", {
+    style: "currency",
+    currency: "CAD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(price);
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    console.log('Starting create-slideshow function')
-    
-    const authHeader = req.headers.get('authorization')
+    console.log("🔹 Démarrage de la fonction create-slideshow");
+
+    const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      throw new Error('No authorization header')
+      throw new Error("❌ Pas d'en-tête d'autorisation.");
     }
 
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    const jwt = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt)
-    
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+
     if (userError || !user) {
-      throw new Error('Invalid user token')
+      throw new Error("❌ Jeton utilisateur invalide.");
     }
 
-    const { listingId, config } = await req.json()
-    const { selectedImages, infoDisplayConfig } = config
+    const { listingId, config } = await req.json();
+    const { selectedImages, infoDisplayConfig } = config;
 
     if (!listingId || !config) {
       return new Response(
-        JSON.stringify({ error: 'Missing required parameters' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+        JSON.stringify({ error: "❌ Paramètres requis manquants." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
-    console.log('Configuration reçue:', JSON.stringify(config, null, 2))
-    console.log('Images sélectionnées:', selectedImages)
+    console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
+    console.log("🖼️ Images sélectionnées:", selectedImages);
 
-    console.log('Fetching listing data')
+    console.log("📡 Récupération des données du listing.");
     const { data: listing, error: listingError } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('id', listingId)
-      .single()
+      .from("listings")
+      .select("*")
+      .eq("id", listingId)
+      .single();
 
     if (listingError || !listing) {
-      console.error('Error fetching listing:', listingError)
+      console.error("❌ Erreur lors de la récupération du listing:", listingError);
       return new Response(
-        JSON.stringify({ error: 'Listing not found' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
-      )
+        JSON.stringify({ error: "❌ Listing non trouvé." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+      );
     }
 
-    // Create clips array
     const clips = [];
     let totalDuration = 0;
 
-    // Add image clips with fade transitions
+    // ✅ Ajout des images avec mouvement fluide et zoom
     selectedImages.forEach((imageUrl: string, index: number) => {
       const isZoomIn = index % 2 === 0;
+      const isSlideLeft = index % 2 === 0;
       const isLastImage = index === selectedImages.length - 1;
-      
+
       clips.push({
-        asset: {
-          type: 'image',
-          src: imageUrl,
-        },
+        asset: { type: "image", src: imageUrl },
         start: totalDuration,
         length: config.imageDuration,
-        effect: isZoomIn ? 'zoomIn' : 'zoomOut',
-        transition: {
-          in: "fade",
-          out: isLastImage ? "fade" : "none"
-        }
+        effect: isZoomIn ? "zoomIn" : "zoomOut",
+        transition: { in: "fade" }, // ✅ Transition uniquement à l'entrée pour éviter le noir
+        animate: [
+          {
+            scale: 1.05,
+            offset: { x: isSlideLeft ? -0.05 : 0.05, y: 0 },
+          },
+        ],
       });
+
       totalDuration += config.imageDuration;
     });
 
-    // Calculate info display timing based on position
     let infoStartTime = 0;
     switch (infoDisplayConfig.position) {
-      case 'start':
+      case "start":
         infoStartTime = 0;
         break;
-      case 'middle':
+      case "middle":
         infoStartTime = totalDuration / 2 - infoDisplayConfig.duration / 2;
         break;
-      case 'end':
+      case "end":
         infoStartTime = totalDuration - infoDisplayConfig.duration;
         break;
     }
 
-    // Add information overlays with fade transitions
+    // ✅ Ajout des informations affichées avec fondu
     if (config.showDetails) {
       if (config.showPrice) {
         clips.push({
           asset: {
-            type: 'html',
+            type: "html",
             html: `<p style="color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${formatPrice(listing.price)}</p>`,
             width: 800,
             height: 100,
@@ -120,19 +120,14 @@ serve(async (req) => {
           start: infoStartTime,
           length: infoDisplayConfig.duration,
           position: "center",
-          offset: {
-            y: -0.2
-          },
-          transition: {
-            in: "fade",
-            out: "fade"
-          }
+          offset: { y: -0.2 },
+          transition: { in: "fade" },
         });
       }
 
       clips.push({
         asset: {
-          type: 'html',
+          type: "html",
           html: `<p style="color: white; font-size: 32px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${listing.address}</p>`,
           width: 800,
           height: 80,
@@ -140,121 +135,66 @@ serve(async (req) => {
         start: infoStartTime,
         length: infoDisplayConfig.duration,
         position: "center",
-        offset: {
-          y: 0
-        },
-        transition: {
-          in: "fade",
-          out: "fade"
-        }
+        offset: { y: 0 },
+        transition: { in: "fade" },
       });
-
-      const details = [];
-      if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
-      if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
-      if (listing.lot_size) details.push(`${listing.lot_size} pi²`);
-
-      if (details.length > 0) {
-        clips.push({
-          asset: {
-            type: 'html',
-            html: `<p style="color: white; font-size: 28px; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${details.join(' | ')}</p>`,
-            width: 800,
-            height: 60,
-          },
-          start: infoStartTime,
-          length: infoDisplayConfig.duration,
-          position: "center",
-          offset: {
-            y: 0.2
-          },
-          transition: {
-            in: "fade",
-            out: "fade"
-          }
-        });
-      }
     }
 
-    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/shotstack-webhook?auth=${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook?auth=${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
 
     const renderPayload = {
-      timeline: {
-        background: '#000000',
-        tracks: [{ clips }]
-      },
-      output: {
-        format: 'mp4',
-        resolution: 'hd'
-      },
-      callback: webhookUrl
-    }
+      timeline: { background: "#000000", tracks: [{ clips }] },
+      output: { format: "mp4", resolution: "hd" },
+      callback: webhookUrl,
+    };
 
     if (config.musicVolume > 0) {
       renderPayload.timeline.soundtrack = {
-        src: 'https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/music/unminus/berlin.mp3',
-        effect: 'fadeInFadeOut',
-        volume: config.musicVolume
-      }
+        src: "https://shotstack-assets.s3.ap-southeast-2.amazonaws.com/music/unminus/berlin.mp3",
+        effect: "fadeInFadeOut",
+        volume: config.musicVolume,
+      };
     }
 
-    console.log('Payload pour Shotstack:', JSON.stringify(renderPayload, null, 2))
+    console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
 
-    console.log('Submitting render job to Shotstack')
-    const response = await fetch('https://api.shotstack.io/v1/render', {
-      method: 'POST',
+    console.log("🚀 Envoi du rendu à Shotstack.");
+    const response = await fetch("https://api.shotstack.io/v1/render", {
+      method: "POST",
       headers: {
-        'x-api-key': Deno.env.get('SHOTSTACK_API_KEY') ?? '',
-        'Content-Type': 'application/json',
+        "x-api-key": Deno.env.get("SHOTSTACK_API_KEY") ?? "",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(renderPayload),
-    })
+    });
 
-    console.log('Réponse Shotstack status:', response.status)
-    const responseData = await response.json()
-    console.log('Réponse Shotstack complète:', JSON.stringify(responseData, null, 2))
+    console.log("✅ Shotstack status:", response.status);
+    const responseData = await response.json();
+    console.log("📝 Shotstack response:", JSON.stringify(responseData, null, 2));
 
     if (!response.ok) {
-      throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`)
+      throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
     }
 
-    const renderId = responseData.response?.id
+    const renderId = responseData.response?.id;
     if (!renderId) {
-      throw new Error('Invalid response from Shotstack')
+      throw new Error("❌ Réponse invalide de Shotstack.");
     }
 
-    // Save render status with user_id
-    const { error: renderError } = await supabase
-      .from('slideshow_renders')
-      .insert({
-        listing_id: listingId,
-        render_id: renderId,
-        status: 'pending',
-        user_id: user.id
-      })
-
-    if (renderError) {
-      console.error('Error saving render status:', renderError)
-      return new Response(
-        JSON.stringify({ error: 'Error saving render status' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
+    await supabase.from("slideshow_renders").insert({
+      listing_id: listingId,
+      render_id: renderId,
+      status: "pending",
+      user_id: user.id,
+    });
 
     return new Response(
-      JSON.stringify({ 
-        success: true,
-        renderId: renderId,
-        message: 'Video rendering started'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    console.error("⚠️ Erreur:", error);
+    return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
   }
-})
+});
