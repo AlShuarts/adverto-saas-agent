@@ -85,10 +85,10 @@ serve(async (req) => {
         start: totalDuration,
         length: config.imageDuration,
         effect: isZoomIn ? 'zoomIn' : 'zoomOut',
-        transition: {
-          in: "reveal",
-          out: isLastImage ? "fade" : "none"
-        }
+        //transition: {
+          //in: "reveal",
+          //out: isLastImage ? "fade" : "none"
+        //}
       });
       totalDuration += config.imageDuration;
     });
