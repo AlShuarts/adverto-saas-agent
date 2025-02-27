@@ -120,7 +120,7 @@ serve(async (req) => {
           length: infoDisplayConfig.duration,
           position: "center",
           offset: { y: -0.2 },
-          transition: { in: "fade" },
+          //transition: { in: "fade" },
         });
       }
     }
