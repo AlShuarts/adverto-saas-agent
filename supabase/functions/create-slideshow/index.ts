@@ -85,6 +85,7 @@ serve(async (req) => {
         start: totalDuration,
         length: config.imageDuration,
         effect: isZoomIn ? 'zoomIn' : 'zoomOut',
+        "offset": { "x": -0.05, "y": 0.02 }
         //transition: {
           //in: "reveal",
           //out: isLastImage ? "fade" : "none"
