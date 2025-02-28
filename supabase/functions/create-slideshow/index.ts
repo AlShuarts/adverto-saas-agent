@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -72,108 +71,80 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
     const effects = ["slideLeftSlow", "slideRightSlow"];
-    // Add image clips with fade transitions
+    const textElements = [];
+
+    // Préparer les informations à afficher
+    if (config.showDetails) {
+      if (config.showPrice && listing.price) {
+        textElements.push(formatPrice(listing.price));
+      }
+      if (config.showAddress && listing.address) {
+        let address = listing.address;
+        if (listing.city) {
+          address += `, ${listing.city}`;
+        }
+        if (listing.postal_code) {
+          address += ` ${listing.postal_code}`;
+        }
+        textElements.push(address);
+      }
+      const details = [];
+      if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
+      if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
+      if (listing.property_type) details.push(listing.property_type);
+      if (details.length > 0) {
+        textElements.push(details.join(" | "));
+      }
+    }
+
+    // Ajouter les images et les textes associés
     selectedImages.forEach((imageUrl: string, index: number) => {
       const effect = effects[index % effects.length];
-      
-      
-      
-      clips.push({
+      const imageClip = {
         asset: {
           type: 'image',
           src: imageUrl,
         },
         start: totalDuration,
         length: config.imageDuration,
-        effect: effect,    
-        
-        
-      });
+        effect: effect,
+      };
+      clips.push(imageClip);
+
+      // Ajouter le texte correspondant si disponible
+      if (textElements[index]) {
+        const textClip = {
+          asset: {
+            type: "text",
+            text: textElements[index],
+            width: 1920,
+            height: 200,
+            font: {
+              family: "Open Sans",
+              color: "#ffffff",
+              opacity: 0.8,
+              size: 48,
+              weight: 400,
+              lineHeight: 1.0,
+            },
+            background: {
+              color: "#000000",
+              opacity: 0.5,
+            },
+            alignment: {
+              horizontal: "center",
+              vertical: "bottom",
+            },
+          },
+          start: totalDuration,
+          length: config.imageDuration,
+        };
+        clips.push(textClip);
+      }
+
       totalDuration += config.imageDuration;
     });
 
-    let infoStartTime = 0;
-    switch (infoDisplayConfig.position) {
-      case "start":
-        infoStartTime = 0;
-        break;
-      case "middle":
-        infoStartTime = totalDuration / 2 - infoDisplayConfig.duration / 2;
-        break;
-      case "end":
-        infoStartTime = totalDuration - infoDisplayConfig.duration;
-        break;
-    }
-
-    // Informations display with fade
-    if (config.showDetails) {
-      const textElements = [];
-
-      // Ajoute le prix si coché
-      if (config.showPrice && listing.price) {
-        textElements.push(formatPrice(listing.price));
-      }
-
-      // Ajoute l'adresse si coché
-      if (config.showAddress && listing.address) {
-        textElements.push(listing.address);
-        if (listing.city) {
-          textElements[textElements.length - 1] += `, ${listing.city}`;
-        }
-        if (listing.postal_code) {
-          textElements[textElements.length - 1] += ` ${listing.postal_code}`;
-        }
-      }
-
-      // Ajoute les détails (chambres, salles de bain, type de propriété) si coché
-      const details = [];
-      if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
-      if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
-      if (listing.property_type) details.push(listing.property_type);
-
-      if (details.length > 0) {
-        textElements.push(details.join(" | "));
-      }
-
-      // Vérifie s'il y a du texte à afficher
-      if (textElements.length > 0) {
-        clips.push({
-          asset: {
-            type: "text",
-            text: textElements.join("\n"), // Sépare les infos sur plusieurs lignes
-            alignment: {
-                horizontal: "center",
-                vertical: "center"
-              },
-            font: {
-                color: "#000000",
-                family: "Sue Ellen Francisco ",
-                size: 72,
-                lineHeight: 1
-              },
-              width: 1027,
-              height: 200,
-              stroke: {
-                color: "#000000",
-                width: 0
-              },
-            background: {
-                borderRadius: 39,
-                padding: 100,
-                color: "#d6d1d1",
-                opacity: 0.3
-              }
-          },
-          
-          start: infoStartTime,
-          length: infoDisplayConfig.duration,
-          position: "center",
-          offset: { y: 0 },
-        });
-      }
-    }
-
-    // Construct a properly formatted webhook URL - use public API endpoint
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
     const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
     
@@ -186,7 +157,6 @@ serve(async (req) => {
     };
 
     console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
-
     console.log("🚀 Envoi du rendu à Shotstack.");
     const response = await fetch("https://api.shotstack.io/v1/render", {
       method: "POST",
@@ -197,12 +167,12 @@ serve(async (req) => {
       body: JSON.stringify(renderPayload),
     });
 
-    console.log("✅ Shotstack status:", response.status);
+    console.log("✅ Statut de Shotstack:", response.status);
     const responseData = await response.json();
-    console.log("📝 Shotstack response:", JSON.stringify(responseData, null, 2));
+    console.log("📝 Réponse de Shotstack:", JSON.stringify(responseData, null, 2));
 
     if (!response.ok) {
-      throw new Error(`Shotstack API error: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
+      throw new Error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
     }
 
     const renderId = responseData.response?.id;
@@ -210,7 +180,7 @@ serve(async (req) => {
       throw new Error("❌ Réponse invalide de Shotstack.");
     }
     
-    // Create a record in our database to track this render
+    // Créer un enregistrement dans notre base de données pour suivre ce rendu
     console.log("💾 Création d'un enregistrement pour le rendu:", renderId);
     const { error: insertError } = await supabase
       .from("slideshow_renders")
