@@ -26,6 +26,9 @@ type SlideshowConfig = {
   showPrice: boolean;
   showDetails: boolean;
   showAddress: boolean;
+  showBedrooms: boolean;
+  showBathrooms: boolean;
+  showPropertyType: boolean;
   transition: string;
   musicVolume: number;
   selectedImages: string[];
@@ -51,6 +54,9 @@ export const CreateSlideshowDialog = ({
     showPrice: true,
     showDetails: true,
     showAddress: true,
+    showBedrooms: true,
+    showBathrooms: true,
+    showPropertyType: true,
     transition: "fade",
     musicVolume: 0.5,
     selectedImages: listing.images || [],
@@ -275,17 +281,6 @@ export const CreateSlideshowDialog = ({
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="showDetails">Afficher les détails (chambres, SDB, type)</Label>
-              <Switch
-                id="showDetails"
-                checked={config.showDetails}
-                onCheckedChange={(checked) =>
-                  setConfig({ ...config, showDetails: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
               <Label htmlFor="showAddress">Afficher l'adresse</Label>
               <Switch
                 id="showAddress"
@@ -294,6 +289,41 @@ export const CreateSlideshowDialog = ({
                   setConfig({ ...config, showAddress: checked })
                 }
               />
+            </div>
+
+            <div className="space-y-4 ml-4 border-l-2 pl-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="showBedrooms">Afficher le nombre de chambres</Label>
+                <Switch
+                  id="showBedrooms"
+                  checked={config.showBedrooms}
+                  onCheckedChange={(checked) =>
+                    setConfig({ ...config, showBedrooms: checked })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="showBathrooms">Afficher le nombre de salles de bain</Label>
+                <Switch
+                  id="showBathrooms"
+                  checked={config.showBathrooms}
+                  onCheckedChange={(checked) =>
+                    setConfig({ ...config, showBathrooms: checked })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="showPropertyType">Afficher le type de propriété</Label>
+                <Switch
+                  id="showPropertyType"
+                  checked={config.showPropertyType}
+                  onCheckedChange={(checked) =>
+                    setConfig({ ...config, showPropertyType: checked })
+                  }
+                />
+              </div>
             </div>
           </div>
 
