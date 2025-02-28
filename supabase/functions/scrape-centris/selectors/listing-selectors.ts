@@ -1,3 +1,4 @@
+
 export const listingSelectors = {
   title: [
     'h1.text-center',
@@ -19,7 +20,8 @@ export const listingSelectors = {
     '.property-price',
     '.price',
     'span[itemprop="price"]',
-    '.price-container'
+    '.price-container',
+    'span.d-block.text-nowrap'
   ],
   description: [
     '.description-text',
@@ -28,7 +30,8 @@ export const listingSelectors = {
     '[data-qaid="description"]',
     '.property-description',
     '.description',
-    '[itemprop="description"]'
+    '[itemprop="description"]',
+    'div.cac-featured div.teaser'
   ],
   address: [
     '.listing-address',
@@ -37,7 +40,9 @@ export const listingSelectors = {
     '[data-qaid="address"]',
     '.property-address',
     '.address',
-    '[itemprop="streetAddress"]'
+    '[itemprop="streetAddress"]',
+    'span[data-id="PageTitle"]',
+    'div.address'
   ],
   city: [
     '.listing-city',
@@ -46,7 +51,9 @@ export const listingSelectors = {
     '[data-qaid="city"]',
     '.property-city',
     '.city',
-    '[itemprop="addressLocality"]'
+    '[itemprop="addressLocality"]',
+    '.city-name',
+    'div.address span.city'
   ],
   bedrooms: [
     '.listing-bedrooms',
@@ -55,7 +62,9 @@ export const listingSelectors = {
     '[data-qaid="bedrooms"]',
     '.property-bedrooms',
     '.bedrooms',
-    '[itemprop="numberOfRooms"]'
+    '[itemprop="numberOfRooms"]',
+    'div.cac',
+    'div.tetiere span.cac'
   ],
   bathrooms: [
     '.listing-bathrooms',
@@ -63,6 +72,29 @@ export const listingSelectors = {
     '[data-qaid="property-bathrooms"]',
     '[data-qaid="bathrooms"]',
     '.property-bathrooms',
-    '.bathrooms'
+    '.bathrooms',
+    'div.sdb',
+    'div.tetiere span.sdb'
+  ],
+  postal_code: [
+    '.postal-code',
+    '[itemprop="postalCode"]',
+    '.property-postal-code',
+    '[data-qaid="property-postal-code"]',
+    'div.address span.postal-code'
+  ],
+  property_type: [
+    '.property-type',
+    '[data-qaid="property-type"]',
+    '[itemprop="propertyType"]',
+    '.tetiere span.category',
+    'div.category'
+  ],
+  features: [
+    '.property-features',
+    '.features',
+    '[data-qaid="property-features"]',
+    '.property-characteristics',
+    'ul.characteristics'
   ]
 };
