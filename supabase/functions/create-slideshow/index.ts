@@ -139,14 +139,12 @@ serve(async (req) => {
       if (textElements.length > 0) {
         clips.push({
           asset: {
-            type: "html",
-            html: `<div style="padding: 20px; background-color: rgba(0,0,0,0.6); border-radius: 10px;">
-                    <p style="color: white; font-size: 28px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); margin-bottom: 10px;">
-                      ${textElements.join("</p><p style=\"color: white; font-size: 24px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); margin-bottom: 8px;\">")}
-                    </p>
-                  </div>`,
-            width: 800,
-            height: 300,
+            type: "text",
+            text: textElements.join("\n"), // Sépare les infos sur plusieurs lignes
+            style: "bold",
+            size: "medium", // Ajuste la taille automatiquement
+            color: "#ffffff",
+            background: "rgba(0, 0, 0, 0.5)", // Fond semi-transparent pour lisibilité
           },
           start: infoStartTime,
           length: infoDisplayConfig.duration,
