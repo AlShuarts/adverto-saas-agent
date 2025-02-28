@@ -141,15 +141,27 @@ serve(async (req) => {
           asset: {
             type: "text",
             text: textElements.join("\n"), // Sépare les infos sur plusieurs lignes
-            style: "bold",
-            size: "medium", // Ajuste la taille automatiquement
-            color: "#ffffff",
-            //background: "rgba(0, 0, 0, 0.5)", // Fond semi-transparent pour lisibilité
+            alignment: {
+                horizontal: "center",
+                vertical: "center"
+              },
+            font: {
+                color: "#000000",
+                family: "Sue Ellen Francisco ",
+                size: 72,
+                lineHeight: 1
+              },
+              width: 1027,
+              height: 200,
+              stroke: {
+                color: "#000000",
+                width: 0
+              },
             background: {
-                "borderRadius": 39,
-                "padding": 100,
-                "color": "#d6d1d1",
-                "opacity": 0.3
+                borderRadius: 39,
+                padding: 100,
+                color: "#d6d1d1",
+                opacity: 0.3
               }
           },
           
