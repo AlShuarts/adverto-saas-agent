@@ -71,7 +71,7 @@ serve(async (req) => {
 
     const clips = [];
     let totalDuration = 0;
-    const effects = ["zoomIn", "slideLeft", "zoomOut",  "slideRight"];
+    const effects = ["slideLeft", "slideRight"];
     // Add image clips with fade transitions
     selectedImages.forEach((imageUrl: string, index: number) => {
       const effect = effects[index % effects.length];
