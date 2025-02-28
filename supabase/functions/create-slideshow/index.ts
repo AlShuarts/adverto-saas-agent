@@ -144,8 +144,15 @@ serve(async (req) => {
             style: "bold",
             size: "medium", // Ajuste la taille automatiquement
             color: "#ffffff",
-            background: "rgba(0, 0, 0, 0.5)", // Fond semi-transparent pour lisibilité
+            //background: "rgba(0, 0, 0, 0.5)", // Fond semi-transparent pour lisibilité
+            background: {
+                "borderRadius": 39,
+                "padding": 100,
+                "color": "#d6d1d1",
+                "opacity": 0.3
+              }
           },
+          
           start: infoStartTime,
           length: infoDisplayConfig.duration,
           position: "center",
