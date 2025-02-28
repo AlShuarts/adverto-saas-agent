@@ -107,19 +107,51 @@ serve(async (req) => {
 
     // Informations display with fade
     if (config.showDetails) {
-      if (config.showPrice) {
+      const textElements = [];
+
+      // Ajoute le prix si coché
+      if (config.showPrice && listing.price) {
+        textElements.push(formatPrice(listing.price));
+      }
+
+      // Ajoute l'adresse si coché
+      if (config.showAddress && listing.address) {
+        textElements.push(listing.address);
+        if (listing.city) {
+          textElements[textElements.length - 1] += `, ${listing.city}`;
+        }
+        if (listing.postal_code) {
+          textElements[textElements.length - 1] += ` ${listing.postal_code}`;
+        }
+      }
+
+      // Ajoute les détails (chambres, salles de bain, type de propriété) si coché
+      const details = [];
+      if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
+      if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
+      if (listing.property_type) details.push(listing.property_type);
+
+      if (details.length > 0) {
+        textElements.push(details.join(" | "));
+      }
+
+      // Vérifie s'il y a du texte à afficher
+      if (textElements.length > 0) {
         clips.push({
           asset: {
             type: "html",
-            html: `<p style="color: white; font-size: 48px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">${formatPrice(listing.price)}</p>`,
+            html: `<div style="padding: 20px; background-color: rgba(0,0,0,0.6); border-radius: 10px;">
+                    <p style="color: white; font-size: 28px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); margin-bottom: 10px;">
+                      ${textElements.join("</p><p style=\"color: white; font-size: 24px; text-align: center; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); margin-bottom: 8px;\">")}
+                    </p>
+                  </div>`,
             width: 800,
-            height: 100,
+            height: 300,
           },
           start: infoStartTime,
           length: infoDisplayConfig.duration,
           position: "center",
-          offset: { y: -0.2 },
-          //transition: { in: "fade" },
+          offset: { y: 0 },
         });
       }
     }

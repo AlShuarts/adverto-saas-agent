@@ -25,6 +25,7 @@ type SlideshowConfig = {
   infoPosition: "start" | "middle" | "end";
   showPrice: boolean;
   showDetails: boolean;
+  showAddress: boolean;
   transition: string;
   musicVolume: number;
   selectedImages: string[];
@@ -49,6 +50,7 @@ export const CreateSlideshowDialog = ({
     infoPosition: "start",
     showPrice: true,
     showDetails: true,
+    showAddress: true,
     transition: "fade",
     musicVolume: 0.5,
     selectedImages: listing.images || [],
@@ -258,26 +260,41 @@ export const CreateSlideshowDialog = ({
             </Select>
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="showPrice">Afficher le prix</Label>
-            <Switch
-              id="showPrice"
-              checked={config.showPrice}
-              onCheckedChange={(checked) =>
-                setConfig({ ...config, showPrice: checked })
-              }
-            />
-          </div>
+          <div className="space-y-4 p-4 border rounded-md">
+            <h3 className="font-medium">Informations à afficher</h3>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showPrice">Afficher le prix</Label>
+              <Switch
+                id="showPrice"
+                checked={config.showPrice}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, showPrice: checked })
+                }
+              />
+            </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="showDetails">Afficher les détails</Label>
-            <Switch
-              id="showDetails"
-              checked={config.showDetails}
-              onCheckedChange={(checked) =>
-                setConfig({ ...config, showDetails: checked })
-              }
-            />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showDetails">Afficher les détails (chambres, SDB, type)</Label>
+              <Switch
+                id="showDetails"
+                checked={config.showDetails}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, showDetails: checked })
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showAddress">Afficher l'adresse</Label>
+              <Switch
+                id="showAddress"
+                checked={config.showAddress}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, showAddress: checked })
+                }
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
