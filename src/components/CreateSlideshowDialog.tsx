@@ -16,13 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Image, MoveVertical } from "lucide-react";
+import { MoveVertical } from "lucide-react";
 
 type SlideshowConfig = {
-  imageDuration: number;
-  infoDisplayDuration: number;
-  infoPosition: "start" | "middle" | "end";
   showPrice: boolean;
   showDetails: boolean;
   showAddress: boolean;
@@ -48,9 +44,6 @@ export const CreateSlideshowDialog = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [config, setConfig] = useState<SlideshowConfig>({
-    imageDuration: 3,
-    infoDisplayDuration: 5,
-    infoPosition: "start",
     showPrice: true,
     showDetails: true,
     showAddress: true,
@@ -76,9 +69,11 @@ export const CreateSlideshowDialog = ({
           config: {
             ...config,
             selectedImages: config.selectedImages,
+            // Fixed values for the previously configurable options
+            imageDuration: 3,
             infoDisplayConfig: {
-              duration: config.infoDisplayDuration,
-              position: config.infoPosition,
+              duration: 5,
+              position: "start",
             },
           },
         },
@@ -210,60 +205,6 @@ export const CreateSlideshowDialog = ({
                 </DragDropContext>
               </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duration">Durée par image (secondes)</Label>
-              <Input
-                id="duration"
-                type="number"
-                min={1}
-                max={10}
-                value={config.imageDuration}
-                onChange={(e) =>
-                  setConfig({ ...config, imageDuration: Number(e.target.value) })
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="infoDisplayDuration">
-                Durée d'affichage des informations (secondes)
-              </Label>
-              <Input
-                id="infoDisplayDuration"
-                type="number"
-                min={3}
-                max={15}
-                value={config.infoDisplayDuration}
-                onChange={(e) =>
-                  setConfig({
-                    ...config,
-                    infoDisplayDuration: Number(e.target.value),
-                  })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="infoPosition">Position des informations</Label>
-            <Select
-              value={config.infoPosition}
-              onValueChange={(value: "start" | "middle" | "end") =>
-                setConfig({ ...config, infoPosition: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Choisir la position" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="start">Début du diaporama</SelectItem>
-                <SelectItem value="middle">Milieu du diaporama</SelectItem>
-                <SelectItem value="end">Fin du diaporama</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-4 p-4 border rounded-md">
