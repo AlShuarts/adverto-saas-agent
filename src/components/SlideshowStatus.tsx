@@ -63,12 +63,9 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
     );
   }
 
+  // Don't show any status message when there's no render
   if (!render) {
-    return (
-      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-        Aucun diaporama en cours pour ce listing
-      </div>
-    );
+    return null;
   }
 
   if (render.status === "error") {
