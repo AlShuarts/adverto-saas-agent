@@ -117,8 +117,8 @@ serve(async (req) => {
           asset: {
             type: "text",
             text: textElements[index],
-            width: 1920,
-            height: 200,
+            width: 882,
+            height: 72,
             font: {
               family: "Open Sans",
               color: "#ffffff",
@@ -133,11 +133,15 @@ serve(async (req) => {
             },
             alignment: {
               horizontal: "center",
-              vertical: "bottom",
+              vertical: "center",
             },
           },
           start: totalDuration,
           length: config.imageDuration,
+          offset: {
+              x: 0,
+              y: -0.30
+            },
         };
         clips.push(textClip);
       }
