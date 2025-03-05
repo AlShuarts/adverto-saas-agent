@@ -120,7 +120,7 @@ serve(async (req) => {
             width: 882,
             height: 72,
             font: {
-              family: "Open Sans",
+              family: "Poppins",
               color: "#ffffff",
               opacity: 0.8,
               size: 48,
@@ -140,7 +140,7 @@ serve(async (req) => {
           length: config.imageDuration,
           offset: {
               x: 0,
-              y: -0.30
+              y: -0.15
             },
         };
         clips.push(textClip);
