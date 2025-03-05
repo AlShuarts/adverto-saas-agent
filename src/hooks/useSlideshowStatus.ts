@@ -7,22 +7,31 @@ import { toast } from "sonner";
 type SlideshowRender = Tables<"slideshow_renders">;
 
 export const useSlideshowStatus = (listingId: string) => {
-  return useQuery<SlideshowRender>({
+  return useQuery<SlideshowRender | null>({
     queryKey: ["slideshow-status", listingId],
     queryFn: async () => {
       try {
-        const { data: render, error } = await supabase
+        console.log("Fetching slideshow status for listing ID:", listingId);
+        
+        const { data: renders, error } = await supabase
           .from("slideshow_renders")
           .select("*")
           .eq("listing_id", listingId)
           .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+          .limit(1);
 
         if (error) {
           console.error("Error fetching render status:", error);
           return null;
         }
+
+        if (!renders || renders.length === 0) {
+          console.log("No render found for listing ID:", listingId);
+          return null;
+        }
+        
+        const render = renders[0];
+        console.log("Retrieved render status:", render);
 
         if (render && (render.status === 'pending' || render.status === 'processing')) {
           try {
