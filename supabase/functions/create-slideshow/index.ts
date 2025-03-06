@@ -117,13 +117,13 @@ serve(async (req) => {
           asset: {
             type: "text",
             text: textElements[index],
-            width: 882,
-            height: 72,
+            width: 1000,
+            height: 100,
             font: {
               family: "Poppins",
               color: "#ffffff",
               opacity: 0.8,
-              size: 48,
+              size: 40,
               weight: 400,
               lineHeight: 1.0,
             },
@@ -140,7 +140,7 @@ serve(async (req) => {
           length: config.imageDuration,
           offset: {
               x: 0,
-              y: -0.15
+              y: -0.05
             },
         };
         clips.push(textClip);
