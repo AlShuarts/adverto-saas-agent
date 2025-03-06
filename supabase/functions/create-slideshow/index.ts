@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -111,25 +112,26 @@ serve(async (req) => {
       };
       clips.push(imageClip);
 
-      // Ajouter le texte correspondant si disponible
-      if (textElements[index]) {
+      // Créer un élément de texte combiné pour toutes les informations
+      if (textElements.length > 0 && config.showDetails) {
+        const combinedText = textElements.join("\n");
         const textClip = {
           asset: {
             type: "text",
-            text: textElements[index],
+            text: combinedText,
             width: 1000,
-            height: 100,
+            height: 200, // Augmenté pour tenir plus de texte
             font: {
               family: "Poppins",
               color: "#ffffff",
-              opacity: 0.8,
+              opacity: 0.9, // Augmenté pour meilleure visibilité
               size: 40,
-              weight: 400,
-              lineHeight: 1.0,
+              weight: 600, // Plus épais pour meilleure visibilité
+              lineHeight: 1.2, // Augmenté pour l'espacement des lignes
             },
             background: {
               color: "#000000",
-              opacity: 0.5,
+              opacity: 0.7, // Augmenté pour meilleure visibilité
             },
             alignment: {
               horizontal: "center",
@@ -139,9 +141,9 @@ serve(async (req) => {
           start: totalDuration,
           length: config.imageDuration,
           offset: {
-              x: 0,
-              y: -0.05
-            },
+            x: 0,
+            y: 0.4 // Positif déplace le texte vers le bas de l'image
+          },
         };
         clips.push(textClip);
       }
