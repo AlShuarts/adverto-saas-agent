@@ -69,11 +69,11 @@ export const CreateSlideshowDialog = ({
           config: {
             ...config,
             selectedImages: config.selectedImages,
-            // Fixed values for the previously configurable options
+            // Fixed values for previously configurable options
             imageDuration: 3,
             infoDisplayConfig: {
               duration: 5,
-              position: "start",
+              position: "bottom",
             },
           },
         },
@@ -209,6 +209,17 @@ export const CreateSlideshowDialog = ({
 
           <div className="space-y-4 p-4 border rounded-md">
             <h3 className="font-medium">Informations à afficher</h3>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showDetails">Afficher les informations</Label>
+              <Switch
+                id="showDetails"
+                checked={config.showDetails}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, showDetails: checked })
+                }
+              />
+            </div>
             
             <div className="flex items-center justify-between">
               <Label htmlFor="showPrice">Afficher le prix</Label>

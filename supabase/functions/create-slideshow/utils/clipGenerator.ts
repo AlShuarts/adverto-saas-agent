@@ -17,9 +17,9 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     };
     clips.push(imageClip);
 
-    // Ajouter une seule information à la fois, en alternant entre les différentes informations
+    // Add text information for each image if textElements exist and showDetails is enabled
     if (textElements.length > 0 && config.showDetails) {
-      // Choisir un élément de texte différent pour chaque image (en rotation)
+      // Choose a different text element for each image (rotating through the available elements)
       const textIndex = index % textElements.length;
       const textToShow = textElements[textIndex];
       
@@ -28,18 +28,18 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
           type: "text",
           text: textToShow,
           width: 1000,
-          height: 100,
+          height: 120,
           font: {
             family: "Poppins",
             color: "#ffffff",
-            opacity: 0.9, 
+            opacity: 1.0, 
             size: 40,
-            weight: 600,
-            lineHeight: 1.2,
+            weight: 700,
+            lineHeight: 1.4,
           },
           background: {
             color: "#000000",
-            opacity: 0.7,
+            opacity: 0.8,
           },
           alignment: {
             horizontal: "center",
@@ -50,7 +50,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         length: config.imageDuration,
         offset: {
           x: 0,
-          y: 0.4 // Positionne le texte vers le bas de l'image
+          y: 0.4 // Position text towards the bottom of the image
         },
       };
       clips.push(textClip);

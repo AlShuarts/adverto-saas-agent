@@ -51,12 +51,20 @@ serve(async (req) => {
 
     // Récupérer les données du listing
     const listing = await getListingById(supabase, listingId);
+    console.log("📋 Données du listing:", JSON.stringify(listing, null, 2));
 
     // Préparer les éléments de texte
     const textElements = prepareTextElements(listing, config);
+    console.log("📝 Éléments de texte préparés:", textElements);
+
+    // Vérifier si nous avons des éléments de texte
+    if (textElements.length === 0) {
+      console.log("⚠️ Aucun élément de texte n'a été généré - vérifiez les données du listing et la configuration");
+    }
 
     // Générer les clips pour le diaporama
     const { clips, totalDuration } = generateSlideShowClips(selectedImages, textElements, config);
+    console.log("🎬 Nombre de clips générés:", clips.length);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
     const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
