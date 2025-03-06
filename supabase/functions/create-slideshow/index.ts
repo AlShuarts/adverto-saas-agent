@@ -72,9 +72,9 @@ serve(async (req) => {
     const clips = [];
     let totalDuration = 0;
     const effects = ["slideLeftSlow", "slideRightSlow"];
-    const textElements = [];
-
+    
     // Préparer les informations à afficher
+    const textElements = [];
     if (config.showDetails) {
       if (config.showPrice && listing.price) {
         textElements.push(formatPrice(listing.price));
@@ -112,26 +112,29 @@ serve(async (req) => {
       };
       clips.push(imageClip);
 
-      // Créer un élément de texte combiné pour toutes les informations
+      // Ajouter une seule information à la fois, en alternant entre les différentes informations
       if (textElements.length > 0 && config.showDetails) {
-        const combinedText = textElements.join("\n");
+        // Choisir un élément de texte différent pour chaque image (en rotation)
+        const textIndex = index % textElements.length;
+        const textToShow = textElements[textIndex];
+        
         const textClip = {
           asset: {
             type: "text",
-            text: combinedText,
+            text: textToShow,
             width: 1000,
-            height: 200, // Augmenté pour tenir plus de texte
+            height: 100,
             font: {
               family: "Poppins",
               color: "#ffffff",
-              opacity: 0.9, // Augmenté pour meilleure visibilité
+              opacity: 0.9, 
               size: 40,
-              weight: 600, // Plus épais pour meilleure visibilité
-              lineHeight: 1.2, // Augmenté pour l'espacement des lignes
+              weight: 600,
+              lineHeight: 1.2,
             },
             background: {
               color: "#000000",
-              opacity: 0.7, // Augmenté pour meilleure visibilité
+              opacity: 0.7,
             },
             alignment: {
               horizontal: "center",
@@ -142,7 +145,7 @@ serve(async (req) => {
           length: config.imageDuration,
           offset: {
             x: 0,
-            y: 0.4 // Positif déplace le texte vers le bas de l'image
+            y: 0.4 // Positionne le texte vers le bas de l'image
           },
         };
         clips.push(textClip);

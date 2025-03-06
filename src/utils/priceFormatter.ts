@@ -1,3 +1,4 @@
+
 export const formatPrice = (price: any): number | null => {
   if (!price) return null;
   try {
@@ -9,7 +10,8 @@ export const formatPrice = (price: any): number | null => {
       return null;
     }
     return numericPrice;
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Erreur lors du formatage du prix:", error);
     return null;
   }
