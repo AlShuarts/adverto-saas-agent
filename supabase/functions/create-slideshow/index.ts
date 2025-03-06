@@ -1,19 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { prepareTextElements } from "./utils/textElements.ts";
+import { generateSlideShowClips } from "./utils/clipGenerator.ts";
+import { renderWithShotstack } from "./services/shotstackService.ts";
+import { getListingById, saveRenderRecord } from "./services/databaseService.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat("fr-CA", {
-    style: "currency",
-    currency: "CAD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
 };
 
 serve(async (req) => {
@@ -54,105 +49,14 @@ serve(async (req) => {
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", selectedImages);
 
-    console.log("📡 Récupération des données du listing.");
-    const { data: listing, error: listingError } = await supabase
-      .from("listings")
-      .select("*")
-      .eq("id", listingId)
-      .single();
+    // Récupérer les données du listing
+    const listing = await getListingById(supabase, listingId);
 
-    if (listingError || !listing) {
-      console.error("❌ Erreur lors de la récupération du listing:", listingError);
-      return new Response(
-        JSON.stringify({ error: "❌ Listing non trouvé." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
-      );
-    }
+    // Préparer les éléments de texte
+    const textElements = prepareTextElements(listing, config);
 
-    const clips = [];
-    let totalDuration = 0;
-    const effects = ["slideLeftSlow", "slideRightSlow"];
-    
-    // Préparer les informations à afficher
-    const textElements = [];
-    if (config.showDetails) {
-      if (config.showPrice && listing.price) {
-        textElements.push(formatPrice(listing.price));
-      }
-      if (config.showAddress && listing.address) {
-        let address = listing.address;
-        if (listing.city) {
-          address += `, ${listing.city}`;
-        }
-        if (listing.postal_code) {
-          address += ` ${listing.postal_code}`;
-        }
-        textElements.push(address);
-      }
-      const details = [];
-      if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
-      if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
-      if (listing.property_type) details.push(listing.property_type);
-      if (details.length > 0) {
-        textElements.push(details.join(" | "));
-      }
-    }
-
-    // Ajouter les images et les textes associés
-    selectedImages.forEach((imageUrl: string, index: number) => {
-      const effect = effects[index % effects.length];
-      const imageClip = {
-        asset: {
-          type: 'image',
-          src: imageUrl,
-        },
-        start: totalDuration,
-        length: config.imageDuration,
-        effect: effect,
-      };
-      clips.push(imageClip);
-
-      // Ajouter une seule information à la fois, en alternant entre les différentes informations
-      if (textElements.length > 0 && config.showDetails) {
-        // Choisir un élément de texte différent pour chaque image (en rotation)
-        const textIndex = index % textElements.length;
-        const textToShow = textElements[textIndex];
-        
-        const textClip = {
-          asset: {
-            type: "text",
-            text: textToShow,
-            width: 1000,
-            height: 100,
-            font: {
-              family: "Poppins",
-              color: "#ffffff",
-              opacity: 0.9, 
-              size: 40,
-              weight: 600,
-              lineHeight: 1.2,
-            },
-            background: {
-              color: "#000000",
-              opacity: 0.7,
-            },
-            alignment: {
-              horizontal: "center",
-              vertical: "center",
-            },
-          },
-          start: totalDuration,
-          length: config.imageDuration,
-          offset: {
-            x: 0,
-            y: 0.4 // Positionne le texte vers le bas de l'image
-          },
-        };
-        clips.push(textClip);
-      }
-
-      totalDuration += config.imageDuration;
-    });
+    // Générer les clips pour le diaporama
+    const { clips, totalDuration } = generateSlideShowClips(selectedImages, textElements, config);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
     const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
@@ -166,46 +70,16 @@ serve(async (req) => {
     };
 
     console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
-    console.log("🚀 Envoi du rendu à Shotstack.");
-    const response = await fetch("https://api.shotstack.io/v1/render", {
-      method: "POST",
-      headers: {
-        "x-api-key": Deno.env.get("SHOTSTACK_API_KEY") ?? "",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(renderPayload),
-    });
-
-    console.log("✅ Statut de Shotstack:", response.status);
-    const responseData = await response.json();
-    console.log("📝 Réponse de Shotstack:", JSON.stringify(responseData, null, 2));
-
-    if (!response.ok) {
-      throw new Error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
-    }
-
-    const renderId = responseData.response?.id;
-    if (!renderId) {
-      throw new Error("❌ Réponse invalide de Shotstack.");
-    }
     
-    // Créer un enregistrement dans notre base de données pour suivre ce rendu
-    console.log("💾 Création d'un enregistrement pour le rendu:", renderId);
-    const { error: insertError } = await supabase
-      .from("slideshow_renders")
-      .insert({
-        listing_id: listingId,
-        render_id: renderId,
-        status: "pending",
-        user_id: user.id,  // Ajout de l'ID utilisateur
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-      
-    if (insertError) {
-      console.error("❌ Erreur lors de l'enregistrement du rendu:", insertError);
-      throw new Error(`Erreur lors de l'enregistrement du rendu: ${insertError.message}`);
-    }
+    // Faire le rendu avec Shotstack
+    const renderId = await renderWithShotstack(renderPayload);
+    
+    // Enregistrer les informations du rendu dans la base de données
+    await saveRenderRecord(supabase, {
+      listingId,
+      renderId,
+      userId: user.id
+    });
 
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),
