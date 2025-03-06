@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -63,18 +62,17 @@ export const CreateSlideshowDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      console.log("Configuration envoyée:", config);
+
       const response = await supabase.functions.invoke("create-slideshow", {
         body: {
           listingId: listing.id,
           config: {
-            ...config,
-            selectedImages: config.selectedImages,
-            // Fixed values for previously configurable options
             imageDuration: 3,
-            infoDisplayConfig: {
-              duration: 5,
-              position: "bottom",
-            },
+            showDetails: config.showDetails,
+            showPrice: config.showPrice,
+            showAddress: config.showAddress,
+            selectedImages: config.selectedImages,
           },
         },
       });
@@ -229,6 +227,7 @@ export const CreateSlideshowDialog = ({
                 onCheckedChange={(checked) =>
                   setConfig({ ...config, showPrice: checked })
                 }
+                disabled={!config.showDetails}
               />
             </div>
 
@@ -240,42 +239,8 @@ export const CreateSlideshowDialog = ({
                 onCheckedChange={(checked) =>
                   setConfig({ ...config, showAddress: checked })
                 }
+                disabled={!config.showDetails}
               />
-            </div>
-
-            <div className="space-y-4 ml-4 border-l-2 pl-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showBedrooms">Afficher le nombre de chambres</Label>
-                <Switch
-                  id="showBedrooms"
-                  checked={config.showBedrooms}
-                  onCheckedChange={(checked) =>
-                    setConfig({ ...config, showBedrooms: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showBathrooms">Afficher le nombre de salles de bain</Label>
-                <Switch
-                  id="showBathrooms"
-                  checked={config.showBathrooms}
-                  onCheckedChange={(checked) =>
-                    setConfig({ ...config, showBathrooms: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="showPropertyType">Afficher le type de propriété</Label>
-                <Switch
-                  id="showPropertyType"
-                  checked={config.showPropertyType}
-                  onCheckedChange={(checked) =>
-                    setConfig({ ...config, showPropertyType: checked })
-                  }
-                />
-              </div>
             </div>
           </div>
 

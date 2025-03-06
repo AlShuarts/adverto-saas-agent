@@ -4,6 +4,9 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   let totalDuration = 0;
   const effects = ["slideLeftSlow", "slideRightSlow"];
 
+  console.log(`Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
+  console.log(`Configuration showDetails: ${config.showDetails}, showPrice: ${config.showPrice}, showAddress: ${config.showAddress}`);
+
   selectedImages.forEach((imageUrl: string, index: number) => {
     const effect = effects[index % effects.length];
     const imageClip = {
@@ -12,7 +15,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         src: imageUrl,
       },
       start: totalDuration,
-      length: config.imageDuration,
+      length: config.imageDuration || 3,
       effect: effect,
     };
     clips.push(imageClip);
@@ -23,17 +26,19 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       const textIndex = index % textElements.length;
       const textToShow = textElements[textIndex];
       
+      console.log(`Ajout du texte pour l'image ${index}: ${textToShow}`);
+      
       const textClip = {
         asset: {
           type: "text",
           text: textToShow,
           width: 1000,
-          height: 120,
+          height: 150,
           font: {
             family: "Poppins",
             color: "#ffffff",
             opacity: 1.0, 
-            size: 40,
+            size: 50,
             weight: 700,
             lineHeight: 1.4,
           },
@@ -45,19 +50,23 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
             horizontal: "center",
             vertical: "center",
           },
+          padding: 20,
         },
         start: totalDuration,
-        length: config.imageDuration,
+        length: config.imageDuration || 3,
         offset: {
           x: 0,
           y: 0.4 // Position text towards the bottom of the image
         },
       };
       clips.push(textClip);
+    } else {
+      console.log(`Aucun texte ajouté pour l'image ${index}. showDetails: ${config.showDetails}, textElements.length: ${textElements.length}`);
     }
 
-    totalDuration += config.imageDuration;
+    totalDuration += config.imageDuration || 3;
   });
 
+  console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   return { clips, totalDuration };
 };

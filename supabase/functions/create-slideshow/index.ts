@@ -36,9 +36,11 @@ serve(async (req) => {
       throw new Error("❌ Jeton utilisateur invalide.");
     }
 
-    const { listingId, config } = await req.json();
-    const { selectedImages, infoDisplayConfig } = config;
-
+    const requestData = await req.json();
+    console.log("📝 Données de la requête:", JSON.stringify(requestData, null, 2));
+    
+    const { listingId, config } = requestData;
+    
     if (!listingId || !config) {
       return new Response(
         JSON.stringify({ error: "❌ Paramètres requis manquants." }),
@@ -47,7 +49,7 @@ serve(async (req) => {
     }
 
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
-    console.log("🖼️ Images sélectionnées:", selectedImages);
+    console.log("🖼️ Images sélectionnées:", config.selectedImages);
 
     // Récupérer les données du listing
     const listing = await getListingById(supabase, listingId);
@@ -63,7 +65,7 @@ serve(async (req) => {
     }
 
     // Générer les clips pour le diaporama
-    const { clips, totalDuration } = generateSlideShowClips(selectedImages, textElements, config);
+    const { clips, totalDuration } = generateSlideShowClips(config.selectedImages, textElements, config);
     console.log("🎬 Nombre de clips générés:", clips.length);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
