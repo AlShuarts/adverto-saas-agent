@@ -9,20 +9,9 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
 
   selectedImages.forEach((imageUrl: string, index: number) => {
     const effect = effects[index % effects.length];
-    const imageClip = {
-      asset: {
-        type: 'image',
-        src: imageUrl,
-      },
-      start: totalDuration,
-      length: config.imageDuration || 3,
-      effect: effect,
-    };
-    clips.push(imageClip);
-
-    // Add text information for each image if textElements exist and showDetails is enabled
+    
+    // First, add text information if textElements exist and showDetails is enabled
     if (textElements.length > 0 && config.showDetails) {
-      // Choose a different text element for each image (rotating through the available elements)
       const textIndex = index % textElements.length;
       const textToShow = textElements[textIndex];
       
@@ -64,9 +53,26 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       console.log(`Aucun texte ajouté pour l'image ${index}. showDetails: ${config.showDetails}, textElements.length: ${textElements.length}`);
     }
 
+    // Then add the image clip
+    const imageClip = {
+      asset: {
+        type: 'image',
+        src: imageUrl,
+      },
+      start: totalDuration,
+      length: config.imageDuration || 3,
+      effect: effect,
+      fit: "cover",
+      scale: 1.0,
+      position: "center",
+      opacity: 1.0
+    };
+    clips.push(imageClip);
+
     totalDuration += config.imageDuration || 3;
   });
 
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   return { clips, totalDuration };
 };
+
