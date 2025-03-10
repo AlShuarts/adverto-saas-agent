@@ -21,19 +21,19 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         asset: {
           type: "text",
           text: textToShow,
-          width: 1000,
-          height: 150,
+          width: 500,
+          height: 100,
           font: {
             family: "Poppins",
             color: "#ffffff",
             opacity: 1.0, 
-            size: 50,
-            weight: 700,
+            size: 30,
+            weight: 400,
             lineHeight: 1.4,
           },
           background: {
             color: "#000000",
-            opacity: 0.8,
+            opacity: 0.4,
           },
           alignment: {
             horizontal: "center",
@@ -45,7 +45,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         length: config.imageDuration || 3,
         offset: {
           x: 0,
-          y: 0.4 // Position text towards the bottom of the image
+          y: -15 // Position text towards the bottom of the image
         },
       };
       clips.push(textClip);
