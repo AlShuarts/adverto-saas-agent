@@ -63,7 +63,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         length: config.imageDuration || 3,
         offset: {
           x: 0,
-          y: -1
+          y: -0.4
         },
       };
       clips.push(textClip);
