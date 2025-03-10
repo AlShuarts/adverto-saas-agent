@@ -14,21 +14,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   selectedImages.forEach((imageUrl: string, index: number) => {
     const effect = effects[index % effects.length];
     
-    // Ajout du clip d'image
-    const imageClip = {
-      asset: {
-        type: 'image',
-        src: imageUrl,
-      },
-      start: totalDuration,
-      length: config.imageDuration || 3,
-      effect: effect,
-      fit: "cover",
-      scale: 1.0,
-      position: "center",
-      opacity: 1.0
-    };
-    clips.push(imageClip);
+    
     
     // Ajout du texte uniquement si on n'a pas encore utilisé tous les textes
     if (index < maxTextElements && config.showDetails) {
@@ -63,14 +49,32 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         length: config.imageDuration || 3,
         offset: {
           x: 0,
-          y: 0.4
+          y: -0.4
         },
       };
       clips.push(textClip);
     }
+      // Ajout du clip d'image
+    const imageClip = {
+      asset: {
+        type: 'image',
+        src: imageUrl,
+      },
+      start: totalDuration,
+      length: config.imageDuration || 3,
+      effect: effect,
+      fit: "cover",
+      scale: 1.0,
+      position: "center",
+      opacity: 1.0
+    };
+    clips.push(imageClip);
+
 
     totalDuration += config.imageDuration || 3;
   });
+
+  
 
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   return { clips, totalDuration };
