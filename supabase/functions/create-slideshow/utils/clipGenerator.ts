@@ -27,18 +27,18 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
           type: "text",
           text: textToShow,
           width: 500,
-          height: 150,
+          height: 50,
           font: {
             family: "Poppins",
             color: "#ffffff",
             opacity: 1.0,
             size: 30,
-            weight: 600,
+            weight: 500,
             lineHeight: 1.5,
           },
           background: {
             color: "#000000",
-            opacity: 0.6,
+            opacity: 0.3,
           },
           alignment: {
             horizontal: "center",
