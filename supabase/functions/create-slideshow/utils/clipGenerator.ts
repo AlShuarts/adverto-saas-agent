@@ -39,7 +39,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
             horizontal: "center",
             vertical: "center",
           },
-          padding: 20,
+          // Removing the 'padding' property that's causing the error
         },
         start: totalDuration,
         length: config.imageDuration || 3,
@@ -75,4 +75,3 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   return { clips, totalDuration };
 };
-
