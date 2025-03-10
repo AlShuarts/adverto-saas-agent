@@ -2,13 +2,16 @@
 import { formatPrice } from "./formatter.ts";
 
 export const prepareTextElements = (listing: any, config: any) => {
-  const textElements = [];
+  // On ne génère qu'un seul élément de texte qui contient toutes les informations
+  const textInfos = [];
   
   if (config.showDetails) {
+    // Prix si disponible et activé
     if (config.showPrice && listing.price) {
-      textElements.push(formatPrice(listing.price));
+      textInfos.push(formatPrice(listing.price));
     }
     
+    // Adresse si disponible et activée
     if (config.showAddress && listing.address) {
       let address = listing.address;
       if (listing.city) {
@@ -17,17 +20,19 @@ export const prepareTextElements = (listing: any, config: any) => {
       if (listing.postal_code) {
         address += ` ${listing.postal_code}`;
       }
-      textElements.push(address);
+      textInfos.push(address);
     }
     
+    // Informations sur les chambres et salles de bain
     const details = [];
     if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
     if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
-    if (listing.property_type) details.push(listing.property_type);
+    
     if (details.length > 0) {
-      textElements.push(details.join(" | "));
+      textInfos.push(details.join(" | "));
     }
   }
   
-  return textElements;
+  // Retourne un tableau avec un seul élément qui contient toutes les infos
+  return textInfos.length > 0 ? [textInfos.join("\n")] : [];
 };

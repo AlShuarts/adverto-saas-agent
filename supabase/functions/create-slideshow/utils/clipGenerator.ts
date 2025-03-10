@@ -7,53 +7,54 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   console.log(`Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
   console.log(`Configuration showDetails: ${config.showDetails}, showPrice: ${config.showPrice}, showAddress: ${config.showAddress}`);
 
+  // On ajoute d'abord un seul élément texte au début du diaporama
+  // qui apparaîtra sur toutes les images
+  if (textElements.length > 0 && config.showDetails) {
+    const textToShow = textElements[0]; // On utilise uniquement le premier (et seul) élément
+    
+    console.log(`Ajout du texte pour tout le diaporama: ${textToShow}`);
+    
+    const textClip = {
+      asset: {
+        type: "text",
+        text: textToShow,
+        width: 500,
+        height: 150, // Augmenté pour accommoder plusieurs lignes
+        font: {
+          family: "Poppins",
+          color: "#ffffff",
+          opacity: 1.0, 
+          size: 30,
+          weight: 600, // Un peu plus gras pour meilleure lisibilité
+          lineHeight: 1.5, // Augmenté pour l'espacement des lignes
+        },
+        background: {
+          color: "#000000",
+          opacity: 0.6, // Plus opaque pour meilleur contraste
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center",
+        },
+        // Padding est supprimé car non supporté par l'API
+      },
+      start: 0, // Commence au début
+      length: totalDuration + (selectedImages.length * (config.imageDuration || 3)), // Dure pendant tout le diaporama
+      offset: {
+        x: 0,
+        y: -15 // Position vers le bas de l'image
+      },
+    };
+    clips.push(textClip);
+  } else {
+    console.log(`Aucun texte ajouté. showDetails: ${config.showDetails}, textElements.length: ${textElements.length}`);
+  }
+
+  // Ensuite on ajoute les clips d'images
   selectedImages.forEach((imageUrl: string, index: number) => {
     const effect = effects[index % effects.length];
     
-    // First, add text information if textElements exist and showDetails is enabled
-    if (textElements.length > 0 && config.showDetails) {
-      const textIndex = index % textElements.length;
-      const textToShow = textElements[textIndex];
-      
-      console.log(`Ajout du texte pour l'image ${index}: ${textToShow}`);
-      
-      const textClip = {
-        asset: {
-          type: "text",
-          text: textToShow,
-          width: 500,
-          height: 100,
-          font: {
-            family: "Poppins",
-            color: "#ffffff",
-            opacity: 1.0, 
-            size: 30,
-            weight: 400,
-            lineHeight: 1.4,
-          },
-          background: {
-            color: "#000000",
-            opacity: 0.4,
-          },
-          alignment: {
-            horizontal: "center",
-            vertical: "center",
-          },
-          // Removing the 'padding' property that's causing the error
-        },
-        start: totalDuration,
-        length: config.imageDuration || 3,
-        offset: {
-          x: 0,
-          y: -15 // Position text towards the bottom of the image
-        },
-      };
-      clips.push(textClip);
-    } else {
-      console.log(`Aucun texte ajouté pour l'image ${index}. showDetails: ${config.showDetails}, textElements.length: ${textElements.length}`);
-    }
-
-    // Then add the image clip
+    // Ajout du clip d'image
     const imageClip = {
       asset: {
         type: 'image',
