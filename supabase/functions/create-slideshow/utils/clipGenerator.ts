@@ -7,7 +7,10 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   console.log(`Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
   console.log(`Configuration showDetails: ${config.showDetails}, showPrice: ${config.showPrice}, showAddress: ${config.showAddress}`);
 
-  // On ajoute les clips d'images et de texte en alternance
+  // On ajoute les clips d'images et de texte
+  // On s'assure de ne pas dépasser le nombre d'éléments de texte disponibles
+  const maxTextElements = Math.min(selectedImages.length, textElements.length);
+
   selectedImages.forEach((imageUrl: string, index: number) => {
     const effect = effects[index % effects.length];
     
@@ -27,13 +30,11 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     };
     clips.push(imageClip);
     
-    // Ajout du texte correspondant à cette image
-    // On utilise modulo pour faire tourner les textes si on a plus d'images que de textes
-    if (textElements.length > 0 && config.showDetails) {
-      const textIndex = index % textElements.length;
-      const textToShow = textElements[textIndex];
+    // Ajout du texte uniquement si on n'a pas encore utilisé tous les textes
+    if (index < maxTextElements && config.showDetails) {
+      const textToShow = textElements[index];
       
-      console.log(`Ajout du texte pour l'image ${index}: ${textToShow} (index texte: ${textIndex})`);
+      console.log(`Ajout du texte pour l'image ${index}: ${textToShow}`);
       
       const textClip = {
         asset: {
@@ -66,8 +67,6 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         },
       };
       clips.push(textClip);
-    } else {
-      console.log(`Aucun texte ajouté pour l'image ${index}. showDetails: ${config.showDetails}, textElements.length: ${textElements.length}`);
     }
 
     totalDuration += config.imageDuration || 3;
@@ -76,3 +75,4 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   return { clips, totalDuration };
 };
+
