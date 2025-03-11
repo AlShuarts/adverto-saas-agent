@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -16,15 +15,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Image, MoveVertical } from "lucide-react";
+import { MoveVertical } from "lucide-react";
 
 type SlideshowConfig = {
-  imageDuration: number;
-  infoDisplayDuration: number;
-  infoPosition: "start" | "middle" | "end";
   showPrice: boolean;
   showDetails: boolean;
+  showAddress: boolean;
+  showBedrooms: boolean;
+  showBathrooms: boolean;
+  showPropertyType: boolean;
   transition: string;
   musicVolume: number;
   selectedImages: string[];
@@ -44,11 +43,12 @@ export const CreateSlideshowDialog = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [config, setConfig] = useState<SlideshowConfig>({
-    imageDuration: 3,
-    infoDisplayDuration: 5,
-    infoPosition: "start",
     showPrice: true,
     showDetails: true,
+    showAddress: true,
+    showBedrooms: true,
+    showBathrooms: true,
+    showPropertyType: true,
     transition: "fade",
     musicVolume: 0.5,
     selectedImages: listing.images || [],
@@ -62,16 +62,17 @@ export const CreateSlideshowDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      console.log("Configuration envoyée:", config);
+
       const response = await supabase.functions.invoke("create-slideshow", {
         body: {
           listingId: listing.id,
           config: {
-            ...config,
+            imageDuration: 3,
+            showDetails: config.showDetails,
+            showPrice: config.showPrice,
+            showAddress: config.showAddress,
             selectedImages: config.selectedImages,
-            infoDisplayConfig: {
-              duration: config.infoDisplayDuration,
-              position: config.infoPosition,
-            },
           },
         },
       });
@@ -204,80 +205,41 @@ export const CreateSlideshowDialog = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duration">Durée par image (secondes)</Label>
-              <Input
-                id="duration"
-                type="number"
-                min={1}
-                max={10}
-                value={config.imageDuration}
-                onChange={(e) =>
-                  setConfig({ ...config, imageDuration: Number(e.target.value) })
+          <div className="space-y-4 p-4 border rounded-md">
+            <h3 className="font-medium">Informations à afficher</h3>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showAddress">Afficher l'adresse</Label>
+              <Switch
+                id="showAddress"
+                checked={config.showAddress}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, showAddress: checked })
+                }
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showPrice">Afficher le prix</Label>
+              <Switch
+                id="showPrice"
+                checked={config.showPrice}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, showPrice: checked })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="infoDisplayDuration">
-                Durée d'affichage des informations (secondes)
-              </Label>
-              <Input
-                id="infoDisplayDuration"
-                type="number"
-                min={3}
-                max={15}
-                value={config.infoDisplayDuration}
-                onChange={(e) =>
-                  setConfig({
-                    ...config,
-                    infoDisplayDuration: Number(e.target.value),
-                  })
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showDetails">Afficher les détails (chambres/SDB)</Label>
+              <Switch
+                id="showDetails"
+                checked={config.showDetails}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, showDetails: checked })
                 }
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="infoPosition">Position des informations</Label>
-            <Select
-              value={config.infoPosition}
-              onValueChange={(value: "start" | "middle" | "end") =>
-                setConfig({ ...config, infoPosition: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Choisir la position" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="start">Début du diaporama</SelectItem>
-                <SelectItem value="middle">Milieu du diaporama</SelectItem>
-                <SelectItem value="end">Fin du diaporama</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="showPrice">Afficher le prix</Label>
-            <Switch
-              id="showPrice"
-              checked={config.showPrice}
-              onCheckedChange={(checked) =>
-                setConfig({ ...config, showPrice: checked })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="showDetails">Afficher les détails</Label>
-            <Switch
-              id="showDetails"
-              checked={config.showDetails}
-              onCheckedChange={(checked) =>
-                setConfig({ ...config, showDetails: checked })
-              }
-            />
           </div>
 
           <div className="space-y-2">

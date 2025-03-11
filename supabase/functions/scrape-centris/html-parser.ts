@@ -33,16 +33,20 @@ export class HtmlParser {
     const title = this.textParser.getTextFromSelectors(listingSelectors.title);
     const priceText = this.textParser.getTextFromSelectors(listingSelectors.price);
     const description = this.textParser.getTextFromSelectors(listingSelectors.description);
-    const address = this.textParser.getTextFromSelectors(listingSelectors.address);
+    const rawAddress = this.textParser.getTextFromSelectors(listingSelectors.address);
     const cityFromSelector = this.textParser.getTextFromSelectors(listingSelectors.city);
     const bedroomsText = this.textParser.getTextFromSelectors(listingSelectors.bedrooms);
     const bathroomsText = this.textParser.getTextFromSelectors(listingSelectors.bathrooms);
     const propertyTypeText = this.textParser.getTextFromSelectors(listingSelectors.property_type);
     const postalCodeText = this.textParser.getTextFromSelectors(listingSelectors.postal_code);
 
+    // Nettoyage de l'adresse pour enlever des préfixes comme "Duplex à vendre"
+    const address = this.textParser.cleanAddress(rawAddress);
+
     console.log('Raw extracted data:', {
       title,
       priceText,
+      rawAddress,
       address,
       cityFromSelector,
       bedroomsText,

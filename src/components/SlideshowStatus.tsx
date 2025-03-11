@@ -2,7 +2,7 @@
 import { Tables } from "@/integrations/supabase/types";
 import { useSlideshowStatus } from "@/hooks/useSlideshowStatus";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 
@@ -11,10 +11,12 @@ type SlideshowStatusProps = {
 };
 
 export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
-  const { data: render, isLoading } = useSlideshowStatus(listing.id);
+  const { data: render, isLoading, error } = useSlideshowStatus(listing.id);
   const hasNotified = useRef(false);
 
   useEffect(() => {
+    console.log("SlideshowStatus render data:", render);
+    
     if (render && !hasNotified.current) {
       const notificationKey = `slideshow-${listing.id}-${render.status}`;
       const hasBeenNotified = localStorage.getItem(notificationKey);
@@ -42,11 +44,34 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
     }
   }, [render, listing.id]);
 
-  if (isLoading || !render) return null;
+  if (isLoading) {
+    return (
+      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Vérification du statut du diaporama...
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Error in SlideshowStatus:", error);
+    return (
+      <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
+        <AlertTriangle className="h-4 w-4" />
+        Erreur lors de la vérification du statut
+      </div>
+    );
+  }
+
+  // Don't show any status message when there's no render
+  if (!render) {
+    return null;
+  }
 
   if (render.status === "error") {
     return (
-      <div className="mt-2 text-sm text-destructive">
+      <div className="mt-2 text-sm text-destructive flex items-center gap-2">
+        <AlertTriangle className="h-4 w-4" />
         Une erreur est survenue lors de la création du diaporama
       </div>
     );
