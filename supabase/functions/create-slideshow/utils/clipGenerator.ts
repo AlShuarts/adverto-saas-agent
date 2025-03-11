@@ -7,14 +7,17 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   console.log(`Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
   console.log(`Configuration showDetails: ${config.showDetails}, showPrice: ${config.showPrice}, showAddress: ${config.showAddress}`);
 
-  selectedImages.forEach((imageUrl: string, index: number) => {
-    const effect = effects[index % effects.length];
+  // First, we'll add one text element per image, until we've shown all text elements
+  // This ensures each piece of information appears only once, in order
+  for (let i = 0; i < selectedImages.length; i++) {
+    const imageUrl = selectedImages[i];
+    const effect = effects[i % effects.length];
     
-    // On ajoute le texte correspondant uniquement si on n'a pas encore montré tous les textes
-    if (index < textElements.length && config.showDetails) {
-      const textToShow = textElements[index];
+    // Add text only if we have text elements left to show
+    if (i < textElements.length) {
+      const textToShow = textElements[i];
       
-      console.log(`Ajout du texte pour l'image ${index}: ${textToShow}`);
+      console.log(`Ajout du texte pour l'image ${i}: ${textToShow}`);
       
       const textClip = {
         asset: {
@@ -49,7 +52,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       clips.push(textClip);
     }
 
-    // Ajout du clip d'image
+    // Add the image clip
     const imageClip = {
       asset: {
         type: 'image',
@@ -66,9 +69,8 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     clips.push(imageClip);
 
     totalDuration += config.imageDuration || 3;
-  });
+  }
 
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   return { clips, totalDuration };
 };
-

@@ -209,12 +209,12 @@ export const CreateSlideshowDialog = ({
             <h3 className="font-medium">Informations à afficher</h3>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="showDetails">Afficher les informations</Label>
+              <Label htmlFor="showAddress">Afficher l'adresse</Label>
               <Switch
-                id="showDetails"
-                checked={config.showDetails}
+                id="showAddress"
+                checked={config.showAddress}
                 onCheckedChange={(checked) =>
-                  setConfig({ ...config, showDetails: checked })
+                  setConfig({ ...config, showAddress: checked })
                 }
               />
             </div>
@@ -227,19 +227,17 @@ export const CreateSlideshowDialog = ({
                 onCheckedChange={(checked) =>
                   setConfig({ ...config, showPrice: checked })
                 }
-                disabled={!config.showDetails}
               />
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="showAddress">Afficher l'adresse</Label>
+              <Label htmlFor="showDetails">Afficher les détails (chambres/SDB)</Label>
               <Switch
-                id="showAddress"
-                checked={config.showAddress}
+                id="showDetails"
+                checked={config.showDetails}
                 onCheckedChange={(checked) =>
-                  setConfig({ ...config, showAddress: checked })
+                  setConfig({ ...config, showDetails: checked })
                 }
-                disabled={!config.showDetails}
               />
             </div>
           </div>

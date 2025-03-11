@@ -4,25 +4,19 @@ import { formatPrice } from "./formatter.ts";
 export const prepareTextElements = (listing: any, config: any) => {
   const textElements = [];
   
-  if (config.showDetails) {
-    // Adresse en premier si disponible et activée
-    if (config.showAddress && listing.address) {
-      let address = listing.address;
-      if (listing.city) {
-        address += `, ${listing.city}`;
-      }
-      if (listing.postal_code) {
-        address += ` ${listing.postal_code}`;
-      }
-      textElements.push(address);
-    }
+  // Address (only if enabled)
+  if (config.showAddress && listing.address) {
+    // Only use the address field without appending city or postal code
+    textElements.push(listing.address);
+  }
 
-    // Prix en deuxième si disponible et activé
-    if (config.showPrice && listing.price) {
-      textElements.push(formatPrice(listing.price));
-    }
-    
-    // Chambres et salles de bain en dernier
+  // Price (only if enabled)
+  if (config.showPrice && listing.price) {
+    textElements.push(formatPrice(listing.price));
+  }
+  
+  // Bedrooms and bathrooms (only if enabled)
+  if (config.showDetails) {
     const details = [];
     if (listing.bedrooms) details.push(`${listing.bedrooms} ch.`);
     if (listing.bathrooms) details.push(`${listing.bathrooms} sdb.`);
