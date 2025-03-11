@@ -23,7 +23,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       const isAddress = config.showAddress && i === 0;
       
       // Utiliser une hauteur plus grande pour les adresses
-      const textHeight = isAddress ? 200 : 50;
+      const textHeight = isAddress ? 150 : 50;
       
       const textClip = {
         asset: {
