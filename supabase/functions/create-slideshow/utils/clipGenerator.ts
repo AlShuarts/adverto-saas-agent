@@ -7,17 +7,11 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   console.log(`Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
   console.log(`Configuration showDetails: ${config.showDetails}, showPrice: ${config.showPrice}, showAddress: ${config.showAddress}`);
 
-  // On ajoute les clips d'images et de texte
-  // On s'assure de ne pas dépasser le nombre d'éléments de texte disponibles
-  const maxTextElements = Math.min(selectedImages.length, textElements.length);
-
   selectedImages.forEach((imageUrl: string, index: number) => {
     const effect = effects[index % effects.length];
     
-    
-    
-    // Ajout du texte uniquement si on n'a pas encore utilisé tous les textes
-    if (index < maxTextElements && config.showDetails) {
+    // On ajoute le texte correspondant uniquement si on n'a pas encore montré tous les textes
+    if (index < textElements.length && config.showDetails) {
       const textToShow = textElements[index];
       
       console.log(`Ajout du texte pour l'image ${index}: ${textToShow}`);
@@ -54,7 +48,8 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       };
       clips.push(textClip);
     }
-      // Ajout du clip d'image
+
+    // Ajout du clip d'image
     const imageClip = {
       asset: {
         type: 'image',
@@ -70,11 +65,8 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     };
     clips.push(imageClip);
 
-
     totalDuration += config.imageDuration || 3;
   });
-
-  
 
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   return { clips, totalDuration };
