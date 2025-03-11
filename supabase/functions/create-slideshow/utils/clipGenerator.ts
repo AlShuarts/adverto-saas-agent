@@ -19,12 +19,18 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       
       console.log(`Ajout du texte pour l'image ${i}: ${textToShow}`);
       
+      // Déterminer si ce texte est une adresse (premier élément si showAddress est activé)
+      const isAddress = config.showAddress && i === 0;
+      
+      // Utiliser une hauteur plus grande pour les adresses
+      const textHeight = isAddress ? 200 : 50;
+      
       const textClip = {
         asset: {
           type: "text",
           text: textToShow,
           width: 500,
-          height: 50,
+          height: textHeight,
           font: {
             family: "Poppins",
             color: "#ffffff",
