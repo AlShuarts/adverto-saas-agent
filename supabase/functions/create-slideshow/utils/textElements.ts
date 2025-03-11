@@ -33,4 +33,3 @@ export const prepareTextElements = (listing: any, config: any) => {
   
   return textElements;
 };
-

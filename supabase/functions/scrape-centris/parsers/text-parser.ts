@@ -40,6 +40,31 @@ export class TextParser {
     return numStr ? parseInt(numStr) : null;
   }
 
+  cleanAddress(text: string): string {
+    if (!text) return "";
+    
+    // Supprimer les descriptifs comme "Duplex à vendre" au début de l'adresse
+    // Motifs courants à supprimer
+    const patternsToRemove = [
+      /^(maison|condo|duplex|triplex|quadruplex|multiplex|chalet|fermette|terrain|propriété)\s+[àa]\s+vendre\s*[:,-]?\s*/i,
+      /^(maison|condo|duplex|triplex|quadruplex|multiplex|chalet|fermette|terrain|propriété)\s+[àa]\s+louer\s*[:,-]?\s*/i,
+      /^(résidence|appartement|loft|studio)\s+[àa]\s+vendre\s*[:,-]?\s*/i,
+      /^(résidence|appartement|loft|studio)\s+[àa]\s+louer\s*[:,-]?\s*/i
+    ];
+    
+    let cleanedText = text;
+    for (const pattern of patternsToRemove) {
+      cleanedText = cleanedText.replace(pattern, '');
+    }
+    
+    // Nettoyer les espaces multiples
+    cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+    
+    console.log(`Adresse nettoyée: "${text}" -> "${cleanedText}"`);
+    
+    return cleanedText;
+  }
+
   extractPostalCode(text: string): string | null {
     // Format canadien: A1A 1A1
     const postalCodeRegex = /[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d/;
