@@ -87,11 +87,10 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       },
       start: 0,
       length: totalDuration,
-      // Retirer l'effet fadeIn qui n'est pas supporté
-      volume: config.musicVolume || 0.5
+      // Aucun effet ou volume spécifié car non supportés par l'API Shotstack
     };
     clips.push(audioClip);
-    console.log(`Clip audio ajouté: ${config.selectedMusic}, durée: ${totalDuration}s, volume: ${config.musicVolume || 0.5}`);
+    console.log(`Clip audio ajouté: ${config.selectedMusic}, durée: ${totalDuration}s`);
   }
 
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);

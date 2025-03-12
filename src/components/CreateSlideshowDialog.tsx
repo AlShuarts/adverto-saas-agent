@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -68,7 +67,6 @@ export const CreateSlideshowDialog = ({
     selectedMusic: undefined,
   });
 
-  // Récupérer la liste des musiques disponibles
   useEffect(() => {
     const fetchMusic = async () => {
       try {
@@ -89,7 +87,6 @@ export const CreateSlideshowDialog = ({
           
           setMusicList(musicFiles);
           
-          // Si la liste n'est pas vide, sélectionner la première musique par défaut
           if (musicFiles.length > 0 && !config.selectedMusic) {
             setConfig(prev => ({ ...prev, selectedMusic: musicFiles[0] }));
           }
@@ -200,7 +197,6 @@ export const CreateSlideshowDialog = ({
     }
   };
 
-  // S'assurer d'arrêter la lecture audio quand le dialogue se ferme
   useEffect(() => {
     if (!isOpen) {
       stopAudio();
@@ -373,7 +369,7 @@ export const CreateSlideshowDialog = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="musicVolume">Volume de la musique</Label>
+              <Label htmlFor="musicVolume">Volume de la musique (prévisualisation uniquement)</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="musicVolume"
@@ -395,6 +391,7 @@ export const CreateSlideshowDialog = ({
                   {Math.round(config.musicVolume * 100)}%
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground">Note: Ce réglage affecte uniquement la prévisualisation. Le volume dans le diaporama final sera défini automatiquement.</p>
             </div>
           </div>
 
