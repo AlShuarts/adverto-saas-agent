@@ -50,6 +50,12 @@ serve(async (req) => {
 
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
+    
+    if (config.selectedMusic) {
+      console.log("🎵 Musique sélectionnée:", config.selectedMusic);
+    } else {
+      console.log("🔇 Aucune musique sélectionnée");
+    }
 
     // Récupérer les données du listing
     const listing = await getListingById(supabase, listingId);

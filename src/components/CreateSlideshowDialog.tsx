@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MoveVertical } from "lucide-react";
+import { MoveVertical, Play, Pause } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type SlideshowConfig = {
   showPrice: boolean;
@@ -27,6 +35,7 @@ type SlideshowConfig = {
   transition: string;
   musicVolume: number;
   selectedImages: string[];
+  selectedMusic?: string;
 };
 
 type CreateSlideshowDialogProps = {
@@ -42,6 +51,10 @@ export const CreateSlideshowDialog = ({
 }: CreateSlideshowDialogProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [musicList, setMusicList] = useState<string[]>([]);
+  const [audioPlaying, setAudioPlaying] = useState<HTMLAudioElement | null>(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  
   const [config, setConfig] = useState<SlideshowConfig>({
     showPrice: true,
     showDetails: true,
@@ -52,7 +65,42 @@ export const CreateSlideshowDialog = ({
     transition: "fade",
     musicVolume: 0.5,
     selectedImages: listing.images || [],
+    selectedMusic: undefined,
   });
+
+  // Récupérer la liste des musiques disponibles
+  useEffect(() => {
+    const fetchMusic = async () => {
+      try {
+        const { data, error } = await supabase
+          .storage
+          .from('background-music')
+          .list();
+        
+        if (error) {
+          console.error("Erreur lors de la récupération des musiques:", error);
+          return;
+        }
+        
+        if (data) {
+          const musicFiles = data
+            .filter(file => !file.name.startsWith('.')) // Filtrer les fichiers cachés
+            .map(file => file.name);
+          
+          setMusicList(musicFiles);
+          
+          // Si la liste n'est pas vide, sélectionner la première musique par défaut
+          if (musicFiles.length > 0 && !config.selectedMusic) {
+            setConfig(prev => ({ ...prev, selectedMusic: musicFiles[0] }));
+          }
+        }
+      } catch (error) {
+        console.error("Erreur:", error);
+      }
+    };
+    
+    fetchMusic();
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +121,7 @@ export const CreateSlideshowDialog = ({
             showPrice: config.showPrice,
             showAddress: config.showAddress,
             selectedImages: config.selectedImages,
+            selectedMusic: config.selectedMusic,
           },
         },
       });
@@ -119,6 +168,48 @@ export const CreateSlideshowDialog = ({
       });
     }
   };
+
+  const handleMusicChange = (value: string) => {
+    stopAudio();
+    setConfig({ ...config, selectedMusic: value });
+  };
+
+  const previewMusic = (musicName: string) => {
+    if (currentlyPlaying === musicName) {
+      stopAudio();
+      return;
+    }
+    
+    stopAudio();
+    
+    const audio = new Audio();
+    audio.src = `${supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl}`;
+    audio.volume = config.musicVolume;
+    audio.play();
+    
+    setAudioPlaying(audio);
+    setCurrentlyPlaying(musicName);
+  };
+
+  const stopAudio = () => {
+    if (audioPlaying) {
+      audioPlaying.pause();
+      audioPlaying.currentTime = 0;
+      setAudioPlaying(null);
+      setCurrentlyPlaying(null);
+    }
+  };
+
+  // S'assurer d'arrêter la lecture audio quand le dialogue se ferme
+  useEffect(() => {
+    if (!isOpen) {
+      stopAudio();
+    }
+    
+    return () => {
+      stopAudio();
+    };
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -242,19 +333,69 @@ export const CreateSlideshowDialog = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="musicVolume">Volume de la musique</Label>
-            <Input
-              id="musicVolume"
-              type="range"
-              min={0}
-              max={1}
-              step={0.1}
-              value={config.musicVolume}
-              onChange={(e) =>
-                setConfig({ ...config, musicVolume: Number(e.target.value) })
-              }
-            />
+          <div className="space-y-4 p-4 border rounded-md">
+            <h3 className="font-medium">Musique de fond</h3>
+            
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="selectedMusic">Sélectionner une musique</Label>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={config.selectedMusic}
+                  onValueChange={handleMusicChange}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Sélectionner une musique" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {musicList.map((music) => (
+                      <SelectItem key={music} value={music}>
+                        {music.replace(/\.[^/.]+$/, "")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {config.selectedMusic && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => previewMusic(config.selectedMusic!)}
+                  >
+                    {currentlyPlaying === config.selectedMusic ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="musicVolume">Volume de la musique</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="musicVolume"
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={config.musicVolume}
+                  onChange={(e) => {
+                    const newVolume = Number(e.target.value);
+                    setConfig({ ...config, musicVolume: newVolume });
+                    if (audioPlaying) {
+                      audioPlaying.volume = newVolume;
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <span className="text-sm w-10 text-right">
+                  {Math.round(config.musicVolume * 100)}%
+                </span>
+              </div>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>

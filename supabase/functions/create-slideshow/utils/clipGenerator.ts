@@ -6,6 +6,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
 
   console.log(`Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
   console.log(`Configuration showDetails: ${config.showDetails}, showPrice: ${config.showPrice}, showAddress: ${config.showAddress}`);
+  console.log(`Musique sélectionnée: ${config.selectedMusic || 'aucune'}`);
 
   // First, we'll add one text element per image, until we've shown all text elements
   // This ensures each piece of information appears only once, in order
@@ -22,8 +23,8 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       // Déterminer si ce texte est une adresse (premier élément si showAddress est activé)
       const isAddress = config.showAddress && i === 0;
       
-      // Utiliser une hauteur plus grande pour les adresses
-      const textHeight = isAddress ? 150 : 50;
+      // Utiliser une hauteur plus grande pour les adresses (200px) et normale (50px) pour les autres textes
+      const textHeight = isAddress ? 200 : 50;
       
       const textClip = {
         asset: {
@@ -75,6 +76,22 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     clips.push(imageClip);
 
     totalDuration += config.imageDuration || 3;
+  }
+
+  // Ajouter un clip audio si une musique est sélectionnée
+  if (config.selectedMusic) {
+    const audioClip = {
+      asset: {
+        type: 'audio',
+        src: `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`,
+      },
+      start: 0,
+      length: totalDuration,
+      effect: 'fadeIn',
+      volume: config.musicVolume || 0.5
+    };
+    clips.push(audioClip);
+    console.log(`Clip audio ajouté: ${config.selectedMusic}, durée: ${totalDuration}s, volume: ${config.musicVolume || 0.5}`);
   }
 
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
