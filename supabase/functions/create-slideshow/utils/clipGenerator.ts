@@ -87,7 +87,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       },
       start: 0,
       length: totalDuration,
-      effect: 'fadeIn',
+      // Retirer l'effet fadeIn qui n'est pas supporté
       volume: config.musicVolume || 0.5
     };
     clips.push(audioClip);
