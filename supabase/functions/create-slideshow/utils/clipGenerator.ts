@@ -35,7 +35,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   // Reset totalDuration to add text clips that match image timing
   totalDuration = 0;
 
-  // Then add text clips on top of images (they'll have a higher z-index)
+  // Then add text clips on top of images (with proper z-index)
   for (let i = 0; i < selectedImages.length; i++) {
     // Add text only if we have text elements left to show
     if (i < textElements.length) {
@@ -43,11 +43,21 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       
       console.log(`Ajout du texte pour l'image ${i}: ${textToShow}`);
       
-      // Déterminer si ce texte est une adresse (premier élément si showAddress est activé)
+      // Déterminer le type de texte basé sur l'index
       const isAddress = config.showAddress && i === 0;
+      const isPrice = config.showPrice && i === 1;
+      const isDetails = config.showDetails && i === 2;
       
-      // Utiliser une hauteur plus grande pour les adresses (200px) et normale (50px) pour les autres textes
+      // Hauteur basée sur le type de texte
       const textHeight = isAddress ? 150 : 50;
+      
+      // Position verticale déterminée par le type de texte
+      let verticalOffset = -0.4; // Position par défaut
+      if (isPrice) {
+        verticalOffset = -0.4; // Même position que l'adresse mais sur la deuxième diapo
+      } else if (isDetails) {
+        verticalOffset = -0.4; // Même position que les autres mais sur la troisième diapo
+      }
       
       const textClip = {
         asset: {
@@ -76,9 +86,9 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         length: config.imageDuration || 3,
         offset: {
           x: 0,
-          y: -0.4
+          y: verticalOffset
         },
-        //zIndex: 10, // Ensure text appears above images
+        zIndex: 10, // Explicitly set zIndex to ensure text appears above images
       };
       clips.push(textClip);
     }
@@ -101,6 +111,9 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     console.log(`Clip audio ajouté: ${config.selectedMusic}, durée: ${totalDuration}s`);
   }
 
+  // Vérifie si tous les éléments de texte ont été utilisés
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
+  console.log(`Éléments de texte utilisés: ${Math.min(selectedImages.length, textElements.length)} sur ${textElements.length} disponibles`);
+  
   return { clips, totalDuration };
 };
