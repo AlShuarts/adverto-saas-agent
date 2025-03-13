@@ -91,9 +91,10 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         //zIndex: 10, // Explicitly set zIndex to ensure text appears above images
       };
       clips.push(textClip);
+    totalDuration += 3 //config.imageDuration || 3;
     }
 
-    totalDuration += 3 //config.imageDuration || 3;
+    
   }
 
   // Add audio clip last (after both images and text)
