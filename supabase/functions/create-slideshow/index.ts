@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
@@ -50,6 +49,12 @@ serve(async (req) => {
 
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
+    
+    if (config.selectedMusic) {
+      console.log("🎵 Musique sélectionnée:", config.selectedMusic);
+    } else {
+      console.log("🔇 Aucune musique sélectionnée");
+    }
 
     // Récupérer les données du listing
     const listing = await getListingById(supabase, listingId);
@@ -58,11 +63,6 @@ serve(async (req) => {
     // Préparer les éléments de texte
     const textElements = prepareTextElements(listing, config);
     console.log("📝 Éléments de texte préparés:", textElements);
-
-    // Vérifier si nous avons des éléments de texte
-    if (textElements.length === 0) {
-      console.log("⚠️ Aucun élément de texte n'a été généré - vérifiez les données du listing et la configuration");
-    }
 
     // Générer les clips pour le diaporama
     const { clips, totalDuration } = generateSlideShowClips(config.selectedImages, textElements, config);
@@ -74,7 +74,12 @@ serve(async (req) => {
     console.log("🔗 URL du webhook configurée:", webhookUrl);
 
     const renderPayload = {
-      timeline: { background: "#000000", tracks: [{ clips }] },
+      timeline: {
+        background: "#000000",
+        tracks: [
+          { clips }, // Track des images et des textes
+        ],
+      },
       output: { format: "mp4", resolution: "hd" },
       callback: webhookUrl,
     };

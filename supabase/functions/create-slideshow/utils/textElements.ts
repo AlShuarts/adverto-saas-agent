@@ -12,7 +12,9 @@ export const prepareTextElements = (listing: any, config: any) => {
 
   // Price (only if enabled)
   if (config.showPrice && listing.price) {
-    textElements.push(formatPrice(listing.price));
+    const formattedPrice = formatPrice(listing.price);
+    console.log(`Prix formaté: ${formattedPrice} depuis ${listing.price}`);
+    textElements.push(formattedPrice);
   }
   
   // Bedrooms and bathrooms (only if enabled)
@@ -25,5 +27,6 @@ export const prepareTextElements = (listing: any, config: any) => {
     }
   }
   
+  console.log(`Éléments de texte préparés: ${JSON.stringify(textElements)}`);
   return textElements;
 };
