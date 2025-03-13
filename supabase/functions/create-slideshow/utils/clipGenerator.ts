@@ -88,7 +88,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
           x: 0,
           y: verticalOffset
         },
-        zIndex: 10, // Explicitly set zIndex to ensure text appears above images
+        //zIndex: 10, // Explicitly set zIndex to ensure text appears above images
       };
       clips.push(textClip);
     }
