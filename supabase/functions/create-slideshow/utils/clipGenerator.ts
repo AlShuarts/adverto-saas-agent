@@ -1,7 +1,6 @@
 
 export const generateSlideShowClips = (selectedImages: string[], textElements: string[], config: any) => {
   const clips = [];
-  const clips2 = [];
   let totalDuration = 0;
   const effects = ["slideLeftSlow", "slideRightSlow"];
 
@@ -91,7 +90,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
         },
         
       };
-      clips2.push(textClip);
+      clips.push(textClip);
     console.log(`durée Diaporama Bitch: ${totalDuration}s`);
     totalDuration += config.imageDuration || 3;
     }
@@ -118,5 +117,5 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
   console.log(`Éléments de texte utilisés: ${Math.min(selectedImages.length, textElements.length)} sur ${textElements.length} disponibles`);
   
-  return { clips, clips2, totalDuration };
+  return { clips, totalDuration };
 };
