@@ -33,7 +33,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   }
 
   // Reset totalDuration to add text clips that match image timing
-  //totalDuration = 0;
+  totalDuration = 0;
 
   // Then add text clips on top of images (with proper z-index)
   for (let i = 0; i < selectedImages.length; i++) {
@@ -83,7 +83,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
           },
         },
         start: totalDuration,
-        length: config.imageDuration || 3,
+        length: 3 //config.imageDuration || 3,
         offset: {
           x: 0,
           y: verticalOffset
@@ -93,7 +93,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       clips.push(textClip);
     }
 
-    totalDuration += config.imageDuration || 3;
+    totalDuration += 3 //config.imageDuration || 3;
   }
 
   // Add audio clip last (after both images and text)
