@@ -83,15 +83,16 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
           },
         },
         start: totalDuration,
-        length: 3 //config.imageDuration || 3,
+        length: config.imageDuration || 3,
         offset: {
           x: 0,
           y: verticalOffset
         },
-        //zIndex: 10, // Explicitly set zIndex to ensure text appears above images
+        
       };
       clips.push(textClip);
-    totalDuration += 3 //config.imageDuration || 3;
+    console.log(`durée Diaporama Bitch: ${totalDuration}s`);
+    totalDuration += config.imageDuration || 3;
     }
 
     
