@@ -1,24 +1,17 @@
-
 export const generateSlideShowClips = (selectedImages: string[], textElements: string[], config: any) => {
   const clips = [];
   let totalDuration = 0;
   const effects = ["slideLeftSlow", "slideRightSlow"];
 
-  console.log(`Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
-  console.log(`Configuration showDetails: ${config.showDetails}, showPrice: ${config.showPrice}, showAddress: ${config.showAddress}`);
-  console.log(`Musique sélectionnée: ${config.selectedMusic || 'aucune'}`);
+  console.log(`📸 Génération de clips pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
 
-  // Add all image clips first with respective durations
+  // Ajouter toutes les images
   for (let i = 0; i < selectedImages.length; i++) {
     const imageUrl = selectedImages[i];
     const effect = effects[i % effects.length];
-    
-    // Add the image clip
+
     const imageClip = {
-      asset: {
-        type: 'image',
-        src: imageUrl,
-      },
+      asset: { type: 'image', src: imageUrl },
       start: totalDuration,
       length: config.imageDuration || 3,
       effect: effect,
@@ -29,40 +22,14 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     };
     clips.push(imageClip);
 
-    totalDuration += config.imageDuration || 3;
-  }
-
-  // Reset totalDuration to add text clips that match image timing
-  totalDuration = 0;
-
-  // Then add text clips on top of images (with proper z-index)
-  for (let i = 0; i < selectedImages.length; i++) {
-    // Add text only if we have text elements left to show
-    if (i < textElements.length) {
-      const textToShow = textElements[i];
-      
-      console.log(`Ajout du texte pour l'image ${i}: ${textToShow}`);
-      
-      // Déterminer le type de texte basé sur l'index
-      const isAddress = config.showAddress && i === 0;
-      const isPrice = config.showPrice && i === 1;
-      const isDetails = config.showDetails && i === 2;
-      
-      // Hauteur basée sur le type de texte
-      const textHeight = isAddress ? 150 : 50;
-      
-      // Position verticale déterminée par le type de texte
-      let verticalOffset = -0.4; // Position par défaut
-      if (isPrice) {
-        verticalOffset = -0.4; // Même position que l'adresse mais sur la deuxième diapo
-      } else if (isDetails) {
-        verticalOffset = -0.4; // Même position que les autres mais sur la troisième diapo
-      }
-      
+    // Ajouter le texte correspondant sous l'image
+    if (textElements[i]) {
+      console.log(`📝 Ajout du texte pour l'image ${i}: ${textElements[i]}`);
+    const textHeight = isAddress ? 150 : 50;
       const textClip = {
         asset: {
           type: "text",
-          text: textToShow,
+          text: textElements[i],
           width: 500,
           height: textHeight,
           font: {
@@ -71,51 +38,39 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
             opacity: 1.0,
             size: 30,
             weight: 500,
-            lineHeight: 1.5,
+            lineHeight: 1.5
           },
           background: {
             color: "#000000",
-            opacity: 0.3,
+            opacity: 0.3
           },
           alignment: {
             horizontal: "center",
-            vertical: "center",
-          },
+            vertical: "center"
+          }
         },
         start: totalDuration,
         length: config.imageDuration || 3,
-        offset: {
-          x: 0,
-          y: verticalOffset
-        },
-        
+        offset: { x: 0, y: -0.4 }
       };
       clips.push(textClip);
-    console.log(`durée Diaporama Bitch: ${totalDuration}s`);
-    totalDuration += config.imageDuration || 3;
     }
 
-    
+    totalDuration += config.imageDuration || 3;
   }
 
-  // Add audio clip last (after both images and text)
+  // Ajouter un clip audio si une musique est sélectionnée
   if (config.selectedMusic) {
     const audioClip = {
-      asset: {
-        type: 'audio',
-        src: `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`,
-      },
+      asset: { type: 'audio', src: `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}` },
       start: 0,
-      length: totalDuration,
-      // Aucun effet ou volume spécifié car non supportés par l'API Shotstack
+      length: totalDuration
     };
     clips.push(audioClip);
-    console.log(`Clip audio ajouté: ${config.selectedMusic}, durée: ${totalDuration}s`);
+    console.log(`🎵 Clip audio ajouté: ${config.selectedMusic}, durée: ${totalDuration}s`);
   }
 
-  // Vérifie si tous les éléments de texte ont été utilisés
-  console.log(`Total clips générés: ${clips.length} avec durée totale de ${totalDuration} secondes`);
-  console.log(`Éléments de texte utilisés: ${Math.min(selectedImages.length, textElements.length)} sur ${textElements.length} disponibles`);
-  
+  console.log(`✅ Total clips générés: ${clips.length} avec une durée totale de ${totalDuration} secondes`);
+
   return { clips, totalDuration };
 };
