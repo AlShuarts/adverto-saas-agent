@@ -71,7 +71,7 @@ serve(async (req) => {
     }
 
     // Générer les clips pour le diaporama
-    const { clips, totalDuration } = generateSlideShowClips(config.selectedImages, textElements, config);
+    const { clips, clips2, totalDuration } = generateSlideShowClips(config.selectedImages, textElements, config);
     console.log("🎬 Nombre de clips générés:", clips.length);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
@@ -80,7 +80,7 @@ serve(async (req) => {
     console.log("🔗 URL du webhook configurée:", webhookUrl);
 
     const renderPayload = {
-      timeline: { background: "#000000", tracks: [{ clips }] },
+      timeline: { background: "#000000", tracks: [{ clips, clips2 }] },
       output: { format: "mp4", resolution: "hd" },
       callback: webhookUrl,
     };
