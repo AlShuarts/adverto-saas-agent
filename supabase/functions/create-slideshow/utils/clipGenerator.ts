@@ -33,7 +33,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   }
 
   // Reset totalDuration to add text clips that match image timing
-  totalDuration = 0;
+  //totalDuration = 0;
 
   // Then add text clips on top of images (with proper z-index)
   for (let i = 0; i < selectedImages.length; i++) {
