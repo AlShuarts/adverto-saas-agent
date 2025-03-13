@@ -78,7 +78,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
           x: 0,
           y: -0.4
         },
-        zIndex: 10, // Ensure text appears above images
+        //zIndex: 10, // Ensure text appears above images
       };
       clips.push(textClip);
     }
