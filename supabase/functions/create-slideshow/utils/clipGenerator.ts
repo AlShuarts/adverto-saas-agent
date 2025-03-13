@@ -25,7 +25,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     // Ajouter le texte correspondant sous l'image
     if (textElements[i]) {
       console.log(`📝 Ajout du texte pour l'image ${i}: ${textElements[i]}`);
-    const textHeight = isAddress ? 150 : 50;
+    const textHeight = textElements[0] ? 150 : 50;
       const textClip = {
         asset: {
           type: "text",
