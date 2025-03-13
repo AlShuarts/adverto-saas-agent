@@ -45,8 +45,8 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
       
       // Déterminer le type de texte basé sur l'index
       const isAddress = config.showAddress && i === 0;
-      const isPrice = config.showPrice && i === 2;
-      const isDetails = config.showDetails && i === 1;
+      const isPrice = config.showPrice && i === 1;
+      const isDetails = config.showDetails && i === 2;
       
       // Hauteur basée sur le type de texte
       const textHeight = isAddress ? 150 : 50;
