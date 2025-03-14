@@ -278,6 +278,47 @@ export type Database = {
           },
         ]
       }
+      sold_banner_renders: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          listing_id: string
+          render_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          listing_id: string
+          render_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          listing_id?: string
+          render_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sold_banner_renders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wistia_configs: {
         Row: {
           created_at: string

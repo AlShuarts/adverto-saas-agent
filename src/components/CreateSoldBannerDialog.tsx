@@ -21,10 +21,12 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const { profile } = useProfile();
   const [selectedImage, setSelectedImage] = useState<string>(listing.images?.[0] || "");
   const [isCreating, setIsCreating] = useState(false);
-  const [brokerName, setBrokerName] = useState(profile?.full_name || "");
-  const [brokerEmail, setBrokerEmail] = useState(profile?.email || "");
+  const [brokerName, setBrokerName] = useState(
+    profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : ""
+  );
+  const [brokerEmail, setBrokerEmail] = useState("");
   const [brokerPhone, setBrokerPhone] = useState(profile?.phone || "");
-  const [brokerImage, setBrokerImage] = useState<string | null>(profile?.avatar_url || null);
+  const [brokerImage, setBrokerImage] = useState<string | null>(null);
   const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
   const [uploadingBrokerImage, setUploadingBrokerImage] = useState(false);
   const [uploadingAgencyLogo, setUploadingAgencyLogo] = useState(false);
