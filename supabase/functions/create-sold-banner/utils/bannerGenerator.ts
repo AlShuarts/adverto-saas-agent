@@ -93,7 +93,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       },
       start: 0,
       length: duration,
-      position: "bottom-left",
+      position: "bottomLeft",  // Correction: "bottom-left" -> "bottomLeft"
       offset: { x: 0.4, y: -0.3 },
       scale: 0.3,
       transition: {
@@ -111,7 +111,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       },
       start: 0,
       length: duration,
-      position: "bottom-right",
+      position: "bottomRight",  // Correction: "bottom-right" -> "bottomRight"
       offset: { x: -0.4, y: -0.3 },
       scale: 0.2,
       transition: {
