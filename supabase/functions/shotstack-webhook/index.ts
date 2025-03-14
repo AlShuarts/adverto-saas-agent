@@ -52,62 +52,97 @@ serve(async (req) => {
     }
 
     console.log(`🔍 Recherche du rendu avec ID: ${webhook.id}`);
-    // Trouver l'enregistrement de rendu
-    const { data: render, error: renderError } = await supabase
+    
+    // Vérifier si c'est un rendu de slideshow
+    const { data: slideshow, error: slideshowError } = await supabase
       .from('slideshow_renders')
       .select('*')
       .eq('render_id', webhook.id)
       .single();
 
-    if (renderError) {
-      console.error('❌ Rendu non trouvé:', webhook.id, renderError);
-      return new Response(
-        JSON.stringify({ error: 'Render not found', renderId: webhook.id }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
-      );
-    }
-
-    console.log(`✅ Rendu trouvé, mise à jour du statut: ${status}`);
-    console.log(`🎬 URL vidéo: ${webhook.url || 'Non disponible'}`);
-
-    // Mettre à jour le statut du rendu
-    const { error: updateError } = await supabase
-      .from('slideshow_renders')
-      .update({ 
-        status: status,
-        video_url: webhook.url || null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('render_id', webhook.id);
-
-    if (updateError) {
-      console.error('❌ Erreur lors de la mise à jour du rendu:', updateError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to update render status' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    // Si le rendu est terminé et qu'une URL de vidéo est disponible, mettre à jour le listing
-    if (status === 'completed' && webhook.url) {
-      console.log(`📝 Rendu terminé, mise à jour du listing ${render.listing_id} avec l'URL de la vidéo`);
+    if (!slideshowError) {
+      // C'est un slideshow
+      console.log(`✅ Rendu de slideshow trouvé, mise à jour du statut: ${status}`);
       
-      const { error: listingError } = await supabase
-        .from('listings')
+      const { error: updateError } = await supabase
+        .from('slideshow_renders')
         .update({ 
-          video_url: webhook.url,
+          status: status,
+          video_url: webhook.url || null,
           updated_at: new Date().toISOString()
         })
-        .eq('id', render.listing_id);
+        .eq('render_id', webhook.id);
 
-      if (listingError) {
-        console.error('❌ Erreur lors de la mise à jour du listing:', listingError);
+      if (updateError) {
+        console.error('❌ Erreur lors de la mise à jour du rendu de slideshow:', updateError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update render status' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
       }
-    }
 
+      // Si le rendu est terminé et qu'une URL de vidéo est disponible, mettre à jour le listing
+      if (status === 'completed' && webhook.url) {
+        console.log(`📝 Rendu terminé, mise à jour du listing ${slideshow.listing_id} avec l'URL de la vidéo`);
+        
+        const { error: listingError } = await supabase
+          .from('listings')
+          .update({ 
+            video_url: webhook.url,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', slideshow.listing_id);
+
+        if (listingError) {
+          console.error('❌ Erreur lors de la mise à jour du listing:', listingError);
+        }
+      }
+      
+      return new Response(
+        JSON.stringify({ success: true, message: 'Slideshow webhook processed successfully' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Vérifier si c'est un rendu de bannière VENDU
+    const { data: soldBanner, error: soldBannerError } = await supabase
+      .from('sold_banner_renders')
+      .select('*')
+      .eq('render_id', webhook.id)
+      .single();
+      
+    if (!soldBannerError) {
+      // C'est une bannière VENDU
+      console.log(`✅ Rendu de bannière VENDU trouvé, mise à jour du statut: ${status}`);
+      
+      const { error: updateError } = await supabase
+        .from('sold_banner_renders')
+        .update({ 
+          status: status,
+          image_url: webhook.url || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('render_id', webhook.id);
+
+      if (updateError) {
+        console.error('❌ Erreur lors de la mise à jour du rendu de bannière VENDU:', updateError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update sold banner render status' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ success: true, message: 'Sold banner webhook processed successfully' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Si on arrive ici, c'est que le rendu n'est ni un slideshow ni une bannière VENDU
+    console.error('❌ Rendu non trouvé:', webhook.id);
     return new Response(
-      JSON.stringify({ success: true, message: 'Webhook processed successfully' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Render not found', renderId: webhook.id }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
     );
 
   } catch (error) {

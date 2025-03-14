@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { ListingImageCarousel } from "./ListingImageCarousel";
@@ -6,7 +7,7 @@ import { InstagramPublishButton } from "./InstagramPublishButton";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Share, Video } from "lucide-react";
+import { Share, Video, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { FacebookPreview } from "./FacebookPreview";
@@ -15,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { CreateSlideshowDialog } from "./CreateSlideshowDialog";
 import { SlideshowStatus } from "./SlideshowStatus";
+import { CreateSoldBannerButton } from "./CreateSoldBannerButton";
+import { SoldBannerStatus } from "./SoldBannerStatus";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -127,6 +130,9 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
             Créer un diaporama
           </Button>
           <SlideshowStatus listing={listing} />
+          
+          <CreateSoldBannerButton listing={listing} />
+          <SoldBannerStatus listing={listing} />
         </div>
       </CardFooter>
 
