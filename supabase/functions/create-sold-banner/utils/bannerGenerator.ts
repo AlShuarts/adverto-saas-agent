@@ -1,4 +1,3 @@
-
 type SoldBannerConfig = {
   mainImage: string;
   brokerImage: string | null;
@@ -27,35 +26,48 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     fit: "cover"
   });
 
-  // 2. Texte "VENDU" centré
+  // 2. Bande noire en bas
+  clips.push({
+    asset: {
+      type: "rectangle",
+      width: 1920,
+      height: 400,
+      background: {
+        color: "#000000",
+        opacity: 1
+      }
+    },
+    start: 0,
+    length: duration,
+    position: "bottom"
+  });
+
+  // 3. Texte "VENDU" centré dans la bande noire
   clips.push({
     asset: {
       type: "text",
       text: "VENDU",
       width: 1000,
-      height: 200,
+      height: 100,
       font: {
         family: "Poppins",
         color: "#ffffff",
         opacity: 1.0,
-        size: 60,
+        size: 80,
         weight: 700
-      },
-      background: {
-        color: "#000000",
-        opacity: 0.8
       },
       alignment: {
         horizontal: "center",
-        vertical: "center"
+        vertical: "top"
       }
     },
     start: 0,
     length: duration,
-    position: "center"
+    position: "bottom",
+    offset: { x: 0, y: 0.25 }
   });
 
-  // 3. Informations du courtier
+  // 4. Informations du courtier sous "VENDU"
   const brokerInfo = `${params.brokerName}\n${params.brokerEmail}\n${params.brokerPhone}`;
   clips.push({
     asset: {
@@ -67,12 +79,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
         family: "Poppins",
         color: "#ffffff",
         opacity: 1.0,
-        size: 25,
+        size: 30,
         weight: 400
-      },
-      background: {
-        color: "#000000",
-        opacity: 0.8
       },
       alignment: {
         horizontal: "center",
@@ -81,10 +89,11 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     },
     start: 0,
     length: duration,
-    offset: { x: 0, y: -0.15 }
+    position: "bottom",
+    offset: { x: 0, y: -0.2 }
   });
 
-  // 4. Photo du courtier (si fournie)
+  // 5. Photo du courtier (si fournie)
   if (params.brokerImage) {
     clips.push({
       asset: { 
@@ -93,16 +102,16 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       },
       start: 0,
       length: duration,
-      position: "bottomLeft",  // Correction: "bottom-left" -> "bottomLeft"
-      offset: { x: 0.4, y: -0.3 },
-      scale: 0.3,
+      position: "bottomLeft",
+      offset: { x: 0.15, y: -0.25 },
+      scale: 0.35,
       transition: {
         in: "fade"
       }
     });
   }
 
-  // 5. Logo de l'agence (si fourni)
+  // 6. Logo de l'agence (si fourni)
   if (params.agencyLogo) {
     clips.push({
       asset: { 
@@ -111,8 +120,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       },
       start: 0,
       length: duration,
-      position: "bottomRight",  // Correction: "bottom-right" -> "bottomRight"
-      offset: { x: -0.4, y: -0.3 },
+      position: "bottomRight",
+      offset: { x: -0.15, y: -0.25 },
       scale: 0.2,
       transition: {
         in: "fade"
@@ -120,24 +129,20 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     });
   }
 
-  // 6. Adresse de la propriété
+  // 7. Adresse de la propriété
   if (params.address) {
     clips.push({
       asset: {
         type: "text",
         text: params.address,
         width: 1000,
-        height: 80,
+        height: 50,
         font: {
           family: "Poppins",
           color: "#ffffff",
           opacity: 1.0,
           size: 30,
           weight: 500
-        },
-        background: {
-          color: "#000000",
-          opacity: 0.8
         },
         alignment: {
           horizontal: "center",
@@ -146,8 +151,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       },
       start: 0,
       length: duration,
-      position: "top",
-      offset: { x: 0, y: 0.35 }
+      position: "bottom",
+      offset: { x: 0, y: 0.1 }
     });
   }
 
