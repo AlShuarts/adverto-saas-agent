@@ -12,6 +12,7 @@ type SoldBannerConfig = {
 export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   const clips = [];
   const duration = 5; // Durée statique car c'est une image
+  const bannerHeight = 250; // Hauteur de la bannière réduite
 
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
 
@@ -26,21 +27,21 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     fit: "cover"
   });
 
-  // 2. Rectangle noir en bas simulant une bannière
+  // 2. Rectangle noir en bas pour la bannière
   clips.push({
     asset: {
       type: "shape",
       shape: "rectangle",
-      width: 1920, // Largeur en pixels
-      height: 350, // Hauteur ajustée pour la bannière
+      width: 1920, 
+      height: bannerHeight, 
       fill: {
         color: "#000000",
         opacity: 1
       },
       rectangle: {
         width: 1920,
-        height: 350,
-        cornerRadius: 0 // Pas d’arrondi sur les coins
+        height: bannerHeight,
+        cornerRadius: 0
       }
     },
     start: 0,
@@ -59,7 +60,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
         family: "Poppins",
         color: "#ffffff",
         opacity: 1.0,
-        size: 80,
+        size: 90,
         weight: 700
       },
       alignment: {
@@ -70,7 +71,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     start: 0,
     length: duration,
     position: "bottom",
-    offset: { x: 0, y: 0.15 }
+    offset: { x: 0, y: 0.25 }
   });
 
   // 4. Informations du courtier sous "VENDU"
@@ -85,18 +86,18 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
         family: "Poppins",
         color: "#ffffff",
         opacity: 1.0,
-        size: 30,
+        size: 28,
         weight: 400
       },
       alignment: {
-        horizontal: "center",
+        horizontal: "left",
         vertical: "bottom"
       }
     },
     start: 0,
     length: duration,
-    position: "bottom",
-    offset: { x: 0, y: -0.1 }
+    position: "bottomLeft",
+    offset: { x: 0.2, y: 0.05 }
   });
 
   // 5. Photo du courtier (si fournie)
@@ -109,11 +110,11 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomLeft",
-      offset: { x: 0.2, y: -0.2 },
-      scale: 0.3,
-      transition: {
-        in: "fade"
-      }
+      offset: { x: 0.1, y: 0.05 },
+      scale: 0.35,
+      //transition: {
+        //in: "fade"
+      //}
     });
   }
 
@@ -127,11 +128,11 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomRight",
-      offset: { x: -0.2, y: -0.2 },
+      offset: { x: -0.1, y: 0.05 },
       scale: 0.15,
-      transition: {
-        in: "fade"
-      }
+      //transition: {
+        //in: "fade"
+      //}
     });
   }
 
@@ -141,7 +142,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       asset: {
         type: "text",
         text: params.address,
-        width: 800,
+        width: 1000,
         height: 50,
         font: {
           family: "Poppins",
