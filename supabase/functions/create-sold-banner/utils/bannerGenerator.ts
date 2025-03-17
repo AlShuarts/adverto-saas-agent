@@ -40,6 +40,11 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
         fill: {
           color: "#000000",
           opacity: 1
+        },
+      rectangle: {  // ✅ Correction ici : Ajout de l'objet rectangle
+      width: 1920,
+      height: bannerHeight,
+      cornerRadius: 0
         }
       },
       start: 0,
