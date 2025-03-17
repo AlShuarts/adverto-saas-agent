@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { renderWithShotstack } from "./services/shotstackService.ts";
@@ -69,8 +68,8 @@ serve(async (req) => {
       console.warn("⚠️ Profil utilisateur non trouvé, utilisation des valeurs par défaut");
     }
 
-    // Générer les clips pour la bannière
-    const { clips, totalDuration } = generateSoldBannerClip({
+    // Générer les pistes pour la bannière
+    const { tracks, totalDuration } = generateSoldBannerClip({
       mainImage: config.mainImage,
       brokerImage: config.brokerImage || null,
       agencyLogo: config.agencyLogo || null,
@@ -86,12 +85,11 @@ serve(async (req) => {
     
     console.log("🔗 URL du webhook configurée:", webhookUrl);
 
+    // 📌 Correction : Utilisation de `tracks` au lieu de `{ clips }`
     const renderPayload = {
       timeline: {
         background: "#000000",
-        tracks: [
-          { clips }
-        ],
+        tracks: tracks,  // Correction ici
       },
       output: { 
         format: "png", 
@@ -106,15 +104,26 @@ serve(async (req) => {
     // Faire le rendu avec Shotstack
     const renderId = await renderWithShotstack(renderPayload);
     
+    // Vérification avant d'insérer dans la base de données
+    if (!renderId) {
+      throw new Error("❌ Échec du rendu Shotstack, aucun ID de rendu reçu.");
+    }
+
     // Enregistrer les informations du rendu dans la base de données
-    await supabase
+    const { error: insertError } = await supabase
       .from("sold_banner_renders")
       .insert({
         listing_id: listingId,
         render_id: renderId,
         user_id: user.id,
-        status: "pending"
+        status: "pending",
+        created_at: new Date().toISOString()
       });
+
+    if (insertError) {
+      console.error("❌ Erreur lors de l'enregistrement en base:", insertError);
+      throw new Error(`Erreur lors de l'enregistrement du rendu: ${insertError.message}`);
+    }
 
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Bannière en cours de génération." }),
