@@ -4,7 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Loader2, Image, Download } from "lucide-react";
+import { Loader2, Image, Download, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 type SoldBannerStatusProps = {
@@ -23,13 +23,13 @@ type SoldBannerRender = {
 export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   const [renders, setRenders] = useState<SoldBannerRender[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
   const fetchRenders = async () => {
     try {
       setIsLoading(true);
       
-      // Nous devons d'abord vérifier si la table existe
       const { data, error } = await supabase
         .from("sold_banner_renders")
         .select("*")
@@ -41,11 +41,48 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
         return;
       }
       
+      console.log("Bannières récupérées:", data);
       setRenders(data || []);
     } catch (error) {
       console.error("Erreur lors de la récupération des bannières:", error);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  // Vérification manuelle du statut d'un rendu
+  const checkRenderStatus = async (renderId: string) => {
+    try {
+      setIsRefreshing(true);
+      
+      const { data, error } = await supabase.functions.invoke('check-render-status', {
+        body: { renderId }
+      });
+      
+      if (error) {
+        console.error('Erreur lors de la vérification du statut:', error);
+        return;
+      }
+      
+      console.log('Réponse de la vérification du statut:', data);
+      
+      // Si le statut a été mis à jour, actualiser la liste
+      if (data.status === "done" || data.videoUrl || data.url) {
+        fetchRenders();
+        
+        // Si la bannière est prête, afficher une notification
+        if (data.status === "done") {
+          toast.success("Votre bannière VENDU est prête !", {
+            description: "Vous pouvez maintenant la télécharger ou la partager.",
+          });
+        }
+      } else {
+        setIsRefreshing(false);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification du statut:', error);
+      setIsRefreshing(false);
     }
   };
 
@@ -90,6 +127,18 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     };
   }, [listing.id]);
 
+  // Vérifier périodiquement le statut des bannières en attente
+  useEffect(() => {
+    if (renders.length > 0 && renders[0].status === "pending") {
+      const checkInterval = setInterval(() => {
+        console.log("Vérification automatique du statut du rendu...");
+        checkRenderStatus(renders[0].render_id);
+      }, 15000); // Vérifier toutes les 15 secondes
+      
+      return () => clearInterval(checkInterval);
+    }
+  }, [renders]);
+
   // Si aucun render ou chargement
   if (isLoading) {
     return (
@@ -116,6 +165,20 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
           <p className="text-sm text-muted-foreground">
             Cela peut prendre quelques instants...
           </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-3"
+            onClick={() => checkRenderStatus(latestRender.render_id)}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Vérifier le statut
+          </Button>
         </div>
       </div>
     );
@@ -173,7 +236,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
         variant="outline"
         size="sm"
         className="mt-2"
-        onClick={fetchRenders}
+        onClick={() => fetchRenders()}
       >
         Réessayer
       </Button>

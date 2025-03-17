@@ -10,10 +10,10 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("💡 Shotstack webhook called with:", JSON.stringify(body, null, 2));
+    console.log("💡 Shotstack webhook appelé avec:", JSON.stringify(body, null, 2));
 
     if (!body.id || !body.status) {
-      throw new Error("Missing webhook data");
+      throw new Error("Données webhook manquantes");
     }
 
     const supabase = createClient(
@@ -25,8 +25,9 @@ serve(async (req) => {
     const status = body.status;
     
     console.log(`📊 Mise à jour du rendu ${renderId} au statut: ${status}`);
+    console.log(`📊 URL reçue: ${body.url || "aucune URL"}`);
 
-    // Check if this is a slideshow render
+    // Vérifier si c'est un rendu de diaporama
     const { data: slideshowData, error: slideshowError } = await supabase
       .from("slideshow_renders")
       .select("*")
@@ -40,9 +41,10 @@ serve(async (req) => {
       
       if (status === "done" && body.url) {
         updateData.video_url = body.url;
+        console.log(`✅ URL vidéo mise à jour: ${body.url}`);
       }
 
-      // Update the slideshow render status
+      // Mettre à jour le statut du rendu du diaporama
       const { data, error } = await supabase
         .from("slideshow_renders")
         .update(updateData)
@@ -59,7 +61,7 @@ serve(async (req) => {
       });
     }
 
-    // Check if this is a sold banner render
+    // Vérifier si c'est un rendu de bannière VENDU
     const { data: bannerData, error: bannerError } = await supabase
       .from("sold_banner_renders")
       .select("*")
@@ -78,7 +80,7 @@ serve(async (req) => {
         console.log("📸 URL de l'image récupérée:", body.url);
       }
 
-      // Update the banner render status
+      // Mettre à jour le statut du rendu de la bannière
       const { data, error } = await supabase
         .from("sold_banner_renders")
         .update(updateData)
