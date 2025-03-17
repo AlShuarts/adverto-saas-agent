@@ -1,4 +1,8 @@
+
 project_id = "msmuyhmxlrkcjthugcxd"
 
 [functions.create-slideshow]
+verify_jwt = false
+
+[functions.create-sold-banner]
 verify_jwt = false

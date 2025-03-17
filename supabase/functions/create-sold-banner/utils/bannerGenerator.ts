@@ -1,3 +1,4 @@
+
 type SoldBannerConfig = {
   mainImage: string;
   brokerImage: string | null;
@@ -45,21 +46,12 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   // 3. Texte "VENDU" centré dans la bande noire
   clips.push({
     asset: {
-      type: "text",
+      type: "title",
       text: "VENDU",
-      width: 1000,
-      height: 100,
-      font: {
-        family: "Poppins",
-        color: "#ffffff",
-        opacity: 1.0,
-        size: 80,
-        weight: 700
-      },
-      alignment: {
-        horizontal: "center",
-        vertical: "top"
-      }
+      style: "minimal",
+      size: "large",
+      position: "center",
+      color: "#ffffff"
     },
     start: 0,
     length: duration,
@@ -71,21 +63,12 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   const brokerInfo = `${params.brokerName}\n${params.brokerEmail}\n${params.brokerPhone}`;
   clips.push({
     asset: {
-      type: "text",
+      type: "title",
       text: brokerInfo,
-      width: 1000,
-      height: 150,
-      font: {
-        family: "Poppins",
-        color: "#ffffff",
-        opacity: 1.0,
-        size: 30,
-        weight: 400
-      },
-      alignment: {
-        horizontal: "center",
-        vertical: "bottom"
-      }
+      style: "minimal",
+      size: "small",
+      position: "center",
+      color: "#ffffff"
     },
     start: 0,
     length: duration,
@@ -104,10 +87,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       length: duration,
       position: "bottomLeft",
       offset: { x: 0.15, y: -0.25 },
-      scale: 0.35,
-      transition: {
-        in: "fade"
-      }
+      scale: 0.35
     });
   }
 
@@ -122,10 +102,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       length: duration,
       position: "bottomRight",
       offset: { x: -0.15, y: -0.25 },
-      scale: 0.2,
-      transition: {
-        in: "fade"
-      }
+      scale: 0.2
     });
   }
 
@@ -133,21 +110,12 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   if (params.address) {
     clips.push({
       asset: {
-        type: "text",
+        type: "title",
         text: params.address,
-        width: 1000,
-        height: 50,
-        font: {
-          family: "Poppins",
-          color: "#ffffff",
-          opacity: 1.0,
-          size: 30,
-          weight: 500
-        },
-        alignment: {
-          horizontal: "center",
-          vertical: "top"
-        }
+        style: "minimal",
+        size: "medium",
+        position: "center",
+        color: "#ffffff"
       },
       start: 0,
       length: duration,

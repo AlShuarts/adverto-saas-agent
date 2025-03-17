@@ -2,10 +2,19 @@
 export const renderWithShotstack = async (renderPayload: any) => {
   console.log("🚀 Envoi du rendu à Shotstack.");
   try {
+    // Vérification de la présence de la clé API
+    const apiKey = Deno.env.get("SHOTSTACK_API_KEY");
+    if (!apiKey) {
+      throw new Error("❌ Clé API Shotstack manquante dans les variables d'environnement.");
+    }
+
+    // Log complet du payload pour debugging
+    console.log("📝 Payload complet:", JSON.stringify(renderPayload, null, 2));
+
     const response = await fetch("https://api.shotstack.io/v1/render", {
       method: "POST",
       headers: {
-        "x-api-key": Deno.env.get("SHOTSTACK_API_KEY") ?? "",
+        "x-api-key": apiKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(renderPayload),
@@ -16,16 +25,14 @@ export const renderWithShotstack = async (renderPayload: any) => {
     console.log("📝 Réponse de Shotstack:", JSON.stringify(responseData, null, 2));
 
     if (!response.ok) {
-      // Log more detailed information about the validation error
-      if (responseData.response?.error?.details) {
-        console.error("❌ Détails de l'erreur de validation:", JSON.stringify(responseData.response.error.details, null, 2));
-      }
+      // Log plus détaillé de l'erreur
+      console.error("❌ Détails de l'erreur:", JSON.stringify(responseData, null, 2));
       throw new Error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
     }
 
     const renderId = responseData.response?.id;
     if (!renderId) {
-      throw new Error("❌ Réponse invalide de Shotstack.");
+      throw new Error("❌ Réponse invalide de Shotstack: ID de rendu manquant");
     }
     
     return renderId;
