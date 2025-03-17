@@ -12,7 +12,7 @@ type SoldBannerConfig = {
 export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   const clips = [];
   const duration = 5; // Durée statique car c'est une image
-  const bannerHeight = 250; // Hauteur de la bannière réduite
+  const bannerHeight = 200; // Hauteur ajustée
 
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
 
@@ -49,12 +49,12 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     position: "bottom"
   });
 
-  // 3. Texte "VENDU"
+  // 3. Texte "VENDU" centré
   clips.push({
     asset: {
       type: "text",
       text: "VENDU",
-      width: 800,
+      width: 500,
       height: 100,
       font: {
         family: "Poppins",
@@ -71,33 +71,33 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     start: 0,
     length: duration,
     position: "bottom",
-    offset: { x: 0, y: 0.25 }
+    offset: { x: 0, y: 0.2 }
   });
 
-  // 4. Informations du courtier sous "VENDU"
+  // 4. Informations du courtier à gauche
   const brokerInfo = `${params.brokerName}\n${params.brokerEmail}\n${params.brokerPhone}`;
   clips.push({
     asset: {
       type: "text",
       text: brokerInfo,
-      width: 800,
-      height: 150,
+      width: 400,
+      height: 100,
       font: {
         family: "Poppins",
         color: "#ffffff",
         opacity: 1.0,
-        size: 28,
+        size: 26,
         weight: 400
       },
       alignment: {
         horizontal: "left",
-        vertical: "bottom"
+        vertical: "center"
       }
     },
     start: 0,
     length: duration,
     position: "bottomLeft",
-    offset: { x: 0.2, y: 0.05 }
+    offset: { x: 0.2, y: 0.1 }
   });
 
   // 5. Photo du courtier (si fournie)
@@ -110,15 +110,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomLeft",
-      offset: { x: 0.1, y: 0.05 },
-      scale: 0.35,
-      //transition: {
-        //in: "fade"
-      //}
+      offset: { x: 0.1, y: 0.1 },
+      scale: 0.3, // Ajustement de la taille du courtier
+    
     });
   }
 
-  // 6. Logo de l'agence (si fourni)
+  // 6. Logo de l'agence à droite (si fourni)
   if (params.agencyLogo) {
     clips.push({
       asset: { 
@@ -128,38 +126,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomRight",
-      offset: { x: -0.1, y: 0.05 },
-      scale: 0.15,
-      //transition: {
-        //in: "fade"
-      //}
-    });
-  }
-
-  // 7. Adresse de la propriété
-  if (params.address) {
-    clips.push({
-      asset: {
-        type: "text",
-        text: params.address,
-        width: 1000,
-        height: 50,
-        font: {
-          family: "Poppins",
-          color: "#ffffff",
-          opacity: 1.0,
-          size: 30,
-          weight: 500
-        },
-        alignment: {
-          horizontal: "center",
-          vertical: "top"
-        }
-      },
-      start: 0,
-      length: duration,
-      position: "bottom",
-      offset: { x: 0, y: 0.1 }
+      offset: { x: -0.1, y: 0.1 },
+      scale: 0.2,
+    
     });
   }
 
