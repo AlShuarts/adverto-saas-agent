@@ -12,7 +12,7 @@ type SoldBannerConfig = {
 export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   const clips = [];
   const duration = 5; // Durée statique car c'est une image
-  const bannerHeight = 200; // Hauteur ajustée
+  const bannerHeight = 250; // Hauteur ajustée
 
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
 
@@ -27,7 +27,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     fit: "cover"
   });
 
-  // 2. Rectangle noir en bas pour la bannière
+  // 2. Rectangle noir pour la bannière
   clips.push({
     asset: {
       type: "shape",
@@ -49,7 +49,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     position: "bottom"
   });
 
-  // 3. Texte "VENDU" centré
+  // 3. Texte "VENDU" centré dans la bannière
   clips.push({
     asset: {
       type: "text",
@@ -60,7 +60,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
         family: "Poppins",
         color: "#ffffff",
         opacity: 1.0,
-        size: 90,
+        size: 100,
         weight: 700
       },
       alignment: {
@@ -71,7 +71,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     start: 0,
     length: duration,
     position: "bottom",
-    offset: { x: 0, y: 0.2 }
+    offset: { x: 0, y: 0.1 }
   });
 
   // 4. Informations du courtier à gauche
@@ -80,13 +80,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     asset: {
       type: "text",
       text: brokerInfo,
-      width: 400,
-      height: 100,
+      width: 500,
+      height: 120,
       font: {
         family: "Poppins",
         color: "#ffffff",
         opacity: 1.0,
-        size: 26,
+        size: 28,
         weight: 400
       },
       alignment: {
@@ -97,10 +97,10 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     start: 0,
     length: duration,
     position: "bottomLeft",
-    offset: { x: 0.2, y: 0.1 }
+    offset: { x: 0.25, y: 0.2 }
   });
 
-  // 5. Photo du courtier (si fournie)
+  // 5. Image du courtier en bas à gauche
   if (params.brokerImage) {
     clips.push({
       asset: { 
@@ -110,13 +110,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomLeft",
-      offset: { x: 0.1, y: 0.1 },
-      scale: 0.3, // Ajustement de la taille du courtier
-    
+      offset: { x: 0.1, y: 0.2 }, // Ajustement de position
+      scale: 0.25, // Taille réduite pour qu’il ne cache pas le texte
+      
     });
   }
 
-  // 6. Logo de l'agence à droite (si fourni)
+  // 6. Logo de l’agence à droite
   if (params.agencyLogo) {
     clips.push({
       asset: { 
