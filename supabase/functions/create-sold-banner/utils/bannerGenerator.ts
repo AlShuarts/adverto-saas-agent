@@ -30,13 +30,10 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   // 2. Bande noire en bas
   clips.push({
     asset: {
-      type: "rectangle",
+      type: "html",
+      html: `<div style="width: 100%; height: 400px; background-color: #000000; opacity: 1;"></div>`,
       width: 1920,
-      height: 400,
-      background: {
-        color: "#000000",
-        opacity: 1
-      }
+      height: 400
     },
     start: 0,
     length: duration,
@@ -46,12 +43,10 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   // 3. Texte "VENDU" centré dans la bande noire
   clips.push({
     asset: {
-      type: "title",
-      text: "VENDU",
-      style: "minimal",
-      size: "large",
-      position: "center",
-      color: "#ffffff"
+      type: "html",
+      html: `<div style="width: 100%; text-align: center; font-family: Arial; font-size: 80px; font-weight: bold; color: #ffffff;">VENDU</div>`,
+      width: 1920,
+      height: 100
     },
     start: 0,
     length: duration,
@@ -60,15 +55,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   });
 
   // 4. Informations du courtier sous "VENDU"
-  const brokerInfo = `${params.brokerName}\n${params.brokerEmail}\n${params.brokerPhone}`;
+  const brokerInfo = `${params.brokerName}<br>${params.brokerEmail}<br>${params.brokerPhone}`;
   clips.push({
     asset: {
-      type: "title",
-      text: brokerInfo,
-      style: "minimal",
-      size: "small",
-      position: "center",
-      color: "#ffffff"
+      type: "html",
+      html: `<div style="width: 100%; text-align: center; font-family: Arial; font-size: 30px; color: #ffffff;">${brokerInfo}</div>`,
+      width: 1920,
+      height: 150
     },
     start: 0,
     length: duration,
@@ -110,12 +103,10 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   if (params.address) {
     clips.push({
       asset: {
-        type: "title",
-        text: params.address,
-        style: "minimal",
-        size: "medium",
-        position: "center",
-        color: "#ffffff"
+        type: "html",
+        html: `<div style="width: 100%; text-align: center; font-family: Arial; font-size: 30px; font-weight: 500; color: #ffffff;">${params.address}</div>`,
+        width: 1920,
+        height: 50
       },
       start: 0,
       length: duration,
@@ -125,6 +116,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   }
 
   console.log(`✅ Total clips générés: ${clips.length}`);
+  console.log(`✅ Détail des clips: ${JSON.stringify(clips, null, 2)}`);
 
   return { clips, totalDuration: duration };
 };

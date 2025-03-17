@@ -8,8 +8,21 @@ export const renderWithShotstack = async (renderPayload: any) => {
       throw new Error("❌ Clé API Shotstack manquante dans les variables d'environnement.");
     }
 
+    // Simplification du payload pour éviter les erreurs de validation
+    const simplifiedPayload = {
+      timeline: {
+        background: "#000000",
+        tracks: renderPayload.timeline.tracks
+      },
+      output: {
+        format: "png",
+        resolution: "hd"
+      },
+      callback: renderPayload.callback
+    };
+
     // Log complet du payload pour debugging
-    console.log("📝 Payload complet:", JSON.stringify(renderPayload, null, 2));
+    console.log("📝 Payload simplifié:", JSON.stringify(simplifiedPayload, null, 2));
 
     const response = await fetch("https://api.shotstack.io/v1/render", {
       method: "POST",
@@ -17,7 +30,7 @@ export const renderWithShotstack = async (renderPayload: any) => {
         "x-api-key": apiKey,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(renderPayload),
+      body: JSON.stringify(simplifiedPayload),
     });
 
     console.log("✅ Statut de Shotstack:", response.status);
