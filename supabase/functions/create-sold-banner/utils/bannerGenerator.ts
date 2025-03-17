@@ -1,4 +1,3 @@
-
 type SoldBannerConfig = {
   mainImage: string;
   brokerImage: string | null;
@@ -27,46 +26,77 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     fit: "cover"
   });
 
-  // 2. Bande noire en bas
+  // 2. Rectangle noir en bas simulant une bannière
   clips.push({
     asset: {
-      type: "html",
-      html: `<div style="width: 100%; height: 400px; background-color: #000000; opacity: 1;"></div>`,
-      width: 1920,
-      height: 400
+      type: "shape",
+      shape: "rectangle",
+      width: 1920, // Largeur en pixels
+      height: 350, // Hauteur ajustée pour la bannière
+      fill: {
+        color: "#000000",
+        opacity: 1
+      },
+      rectangle: {
+        width: 1920,
+        height: 350,
+        cornerRadius: 0 // Pas d’arrondi sur les coins
+      }
     },
     start: 0,
     length: duration,
     position: "bottom"
   });
 
-  // 3. Texte "VENDU" centré dans la bande noire
+  // 3. Texte "VENDU"
   clips.push({
     asset: {
-      type: "html",
-      html: `<div style="width: 100%; text-align: center; font-family: Arial; font-size: 80px; font-weight: bold; color: #ffffff;">VENDU</div>`,
-      width: 1920,
-      height: 100
+      type: "text",
+      text: "VENDU",
+      width: 800,
+      height: 100,
+      font: {
+        family: "Poppins",
+        color: "#ffffff",
+        opacity: 1.0,
+        size: 80,
+        weight: 700
+      },
+      alignment: {
+        horizontal: "center",
+        vertical: "top"
+      }
     },
     start: 0,
     length: duration,
     position: "bottom",
-    offset: { x: 0, y: 0.25 }
+    offset: { x: 0, y: 0.15 }
   });
 
   // 4. Informations du courtier sous "VENDU"
-  const brokerInfo = `${params.brokerName}<br>${params.brokerEmail}<br>${params.brokerPhone}`;
+  const brokerInfo = `${params.brokerName}\n${params.brokerEmail}\n${params.brokerPhone}`;
   clips.push({
     asset: {
-      type: "html",
-      html: `<div style="width: 100%; text-align: center; font-family: Arial; font-size: 30px; color: #ffffff;">${brokerInfo}</div>`,
-      width: 1920,
-      height: 150
+      type: "text",
+      text: brokerInfo,
+      width: 800,
+      height: 150,
+      font: {
+        family: "Poppins",
+        color: "#ffffff",
+        opacity: 1.0,
+        size: 30,
+        weight: 400
+      },
+      alignment: {
+        horizontal: "center",
+        vertical: "bottom"
+      }
     },
     start: 0,
     length: duration,
     position: "bottom",
-    offset: { x: 0, y: -0.2 }
+    offset: { x: 0, y: -0.1 }
   });
 
   // 5. Photo du courtier (si fournie)
@@ -79,8 +109,11 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomLeft",
-      offset: { x: 0.15, y: -0.25 },
-      scale: 0.35
+      offset: { x: 0.2, y: -0.2 },
+      scale: 0.3,
+      transition: {
+        in: "fade"
+      }
     });
   }
 
@@ -94,8 +127,11 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomRight",
-      offset: { x: -0.15, y: -0.25 },
-      scale: 0.2
+      offset: { x: -0.2, y: -0.2 },
+      scale: 0.15,
+      transition: {
+        in: "fade"
+      }
     });
   }
 
@@ -103,10 +139,21 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   if (params.address) {
     clips.push({
       asset: {
-        type: "html",
-        html: `<div style="width: 100%; text-align: center; font-family: Arial; font-size: 30px; font-weight: 500; color: #ffffff;">${params.address}</div>`,
-        width: 1920,
-        height: 50
+        type: "text",
+        text: params.address,
+        width: 800,
+        height: 50,
+        font: {
+          family: "Poppins",
+          color: "#ffffff",
+          opacity: 1.0,
+          size: 30,
+          weight: 500
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "top"
+        }
       },
       start: 0,
       length: duration,
@@ -116,7 +163,6 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   }
 
   console.log(`✅ Total clips générés: ${clips.length}`);
-  console.log(`✅ Détail des clips: ${JSON.stringify(clips, null, 2)}`);
 
   return { clips, totalDuration: duration };
 };
