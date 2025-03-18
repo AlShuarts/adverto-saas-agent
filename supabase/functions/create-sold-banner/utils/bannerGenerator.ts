@@ -17,6 +17,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   const duration = 5; // Durée statique car c'est une image
 
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
+  
+  // ⚠️ IMPORTANT: L'ordre des clips détermine leur superposition dans Shotstack
+  // (les derniers clips ajoutés apparaissent au-dessus des premiers)
 
   // 1. Image principale (fond) - Toujours en premier plan
   const mainImageClip = {
@@ -62,7 +65,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   clips.push(venduTextClip);
 
   // 3. Bannière noire en bas - APRÈS le texte VENDU mais AVANT les autres éléments
-  const blackBannerHeight = 320; // Hauteur fixe pour le bandeau noir
+  // Augmentons la hauteur à 400px pour s'assurer qu'elle atteint le bas de l'image
+  const blackBannerHeight = 400; // Hauteur augmentée pour le bandeau noir
   const blackBannerHtml = `
     <div style="
       width: 100%; 
@@ -80,7 +84,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     },
     start: 0,
     length: duration,
-    position: "bottom"
+    position: "bottom" // S'assurer qu'il est bien placé en bas
   };
   console.log("👉 Ajout bannière noire via HTML:", JSON.stringify(blackBannerClip, null, 2));
   clips.push(blackBannerClip);
@@ -96,9 +100,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       fit: "contain",
-      scale: 0.22,     // Taille appropriée
+      scale: 0.5,     // Scale augmenté de 0.22 à 0.5
       position: "bottomLeft",
-      offset: { x: 0.05, y: -0.03 }  // Ajusté pour être dans le bandeau noir et décalé du bord
+      offset: { x: 80, y: -80 }  // Utilisation d'offsets fixes en pixels au lieu de pourcentages
     };
     console.log("👉 Ajout clip photo courtier avec scale:", JSON.stringify(brokerImageClip, null, 2));
     clips.push(brokerImageClip);
@@ -129,7 +133,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     start: 0,
     length: duration,
     position: "bottomLeft",
-    offset: { x: 0.28, y: -0.03 }  // Ajusté pour être à côté de la photo du courtier
+    offset: { x: 350, y: -100 }  // Ajusté avec valeurs fixes pour être à côté de la photo du courtier
   };
   console.log("👉 Ajout clip info courtier:", JSON.stringify(brokerInfoClip, null, 2));
   clips.push(brokerInfoClip);
@@ -145,9 +149,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       fit: "contain",
-      scale: 0.18,    // Taille appropriée
+      scale: 0.35,    // Scale augmenté de 0.18 à 0.35
       position: "bottomRight",
-      offset: { x: -0.05, y: -0.03 }  // Ajusté pour être dans le coin droit du bandeau
+      offset: { x: -80, y: -100 }  // Valeurs fixes en pixels pour être dans le coin droit du bandeau
     };
     console.log("👉 Ajout clip logo agence avec scale:", JSON.stringify(agencyLogoClip, null, 2));
     clips.push(agencyLogoClip);
