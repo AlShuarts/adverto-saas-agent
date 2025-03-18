@@ -13,46 +13,59 @@ export const renderWithShotstack = async (renderPayload: any) => {
       const clips = renderPayload.timeline.tracks[0].clips;
       console.log(`🖼️ Validation de ${clips.length} clips avant envoi`);
       
-      // Vérification des URLs d'images
-      for (const clip of clips) {
-        if (clip.asset && clip.asset.type === 'image' && clip.asset.src) {
-          console.log(`✓ Clip image trouvé, URL: ${clip.asset.src.substring(0, 50)}...`);
-          
-          // Vérification supplémentaire des positions et échelles
-          if (clip.position) {
-            console.log(`  Position: ${clip.position}, Scale: ${clip.scale || 'default'}, Offset: ${JSON.stringify(clip.offset || {})}`);
-          }
-        }
+      // Vérification détaillée de chaque clip
+      for (let i = 0; i < clips.length; i++) {
+        const clip = clips[i];
+        console.log(`\n📎 CLIP #${i+1} - Type: ${clip.asset.type}`);
         
-        // Vérification des clips HTML et texte
-        if (clip.asset && (clip.asset.type === 'html' || clip.asset.type === 'text')) {
-          console.log(`✓ Clip ${clip.asset.type} trouvé, position: ${clip.position}, offset: ${JSON.stringify(clip.offset || {})}`);
+        if (clip.asset.type === 'image') {
+          console.log(`  URL: ${clip.asset.src.substring(0, 50)}...`);
+          console.log(`  Position: ${clip.position || 'default'}`);
+          console.log(`  Scale: ${clip.scale || 'default'}`);
+          console.log(`  Offset: ${JSON.stringify(clip.offset || {})}`);
+          console.log(`  Width: ${clip.width || 'auto'}, Height: ${clip.height || 'auto'}`);
+          console.log(`  Fit: ${clip.fit || 'default'}`);
+        } 
+        else if (clip.asset.type === 'html') {
+          console.log(`  HTML content length: ${(clip.asset.html || '').length} chars`);
+          console.log(`  Position: ${clip.position || 'default'}`);
+          console.log(`  Offset: ${JSON.stringify(clip.offset || {})}`);
+          console.log(`  Width: ${clip.asset.width || 'auto'}, Height: ${clip.asset.height || 'auto'}`);
         }
       }
     }
 
-    // Simplification du payload pour éviter les erreurs de validation
+    // Simplification et nettoyage du payload pour éviter les erreurs
     const simplifiedPayload = {
       timeline: {
         background: "#000000",
         tracks: [
           {
             clips: renderPayload.timeline.tracks[0].clips.map((clip: any) => {
+              // Filtrer les propriétés invalides selon le type de clip
+              const cleanClip = { ...clip };
+              
+              // S'assurer que les valeurs sont valides
+              if (typeof cleanClip.scale !== 'number') delete cleanClip.scale;
+              if (!cleanClip.position) cleanClip.position = "center";
+              
               // Nettoie l'objet en le sérialisant puis en le désérialisant
-              return JSON.parse(JSON.stringify(clip));
+              return JSON.parse(JSON.stringify(cleanClip));
             })
           }
         ]
       },
       output: {
         format: "png",
-        resolution: "hd"
+        resolution: "hd",
+        aspectRatio: "16:9"
       },
       callback: renderPayload.callback
     };
 
     // Log complet du payload final pour debugging
-    console.log("📝 PAYLOAD FINAL ENVOYÉ À SHOTSTACK:", JSON.stringify(simplifiedPayload, null, 2));
+    console.log("\n📝 PAYLOAD FINAL ENVOYÉ À SHOTSTACK:");
+    console.log(JSON.stringify(simplifiedPayload, null, 2));
 
     // Appel à l'API Shotstack avec le payload simplifié
     const response = await fetch("https://api.shotstack.io/v1/render", {
@@ -73,6 +86,11 @@ export const renderWithShotstack = async (renderPayload: any) => {
       // Log très détaillé de l'erreur
       console.error("❌ ERREUR API SHOTSTACK - Code:", response.status);
       console.error("❌ Détails de l'erreur:", JSON.stringify(responseData, null, 2));
+      
+      // Si des détails de validation sont disponibles, les afficher
+      if (responseData.response?.error?.details) {
+        console.error("🔍 Détails spécifiques de validation:", JSON.stringify(responseData.response.error.details, null, 2));
+      }
       
       throw new Error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
     }
