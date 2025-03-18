@@ -12,7 +12,7 @@ type SoldBannerConfig = {
 export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   const clips = [];
   const duration = 5; // Durée statique car c'est une image
-  const bannerHeight = 250; // Hauteur de la bannière réduite
+  const bannerHeight = 200; // Hauteur de la bannière réduite
 
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
 
@@ -75,7 +75,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   });
 
   // 4. Informations du courtier sous "VENDU"
-  const brokerInfo = `${params.brokerName}\n${params.brokerEmail}\n${params.brokerPhone}`;
+  const brokerInfo = `${params.brokerName} \n \n ${params.brokerEmail}\n${params.brokerPhone}`;
   clips.push({
     asset: {
       type: "text",
@@ -110,8 +110,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomLeft",
-      offset: { x: 0.1, y: 0.05 },
-      scale: 0.35,
+      offset: { x: -0.1, y: 0 },
+      scale: 1,
       //transition: {
         //in: "fade"
       //}
@@ -128,8 +128,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomRight",
-      offset: { x: -0.1, y: 0.05 },
-      scale: 0.15,
+      offset: { x: 0.2, y: 0.05 },
+      scale: 0.05,
       //transition: {
         //in: "fade"
       //}
