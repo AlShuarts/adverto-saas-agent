@@ -22,9 +22,18 @@ export const renderWithShotstack = async (renderPayload: any) => {
           console.log(`  URL: ${clip.asset.src.substring(0, 50)}...`);
           console.log(`  Position: ${clip.position || 'default'}`);
           console.log(`  Scale: ${clip.scale || 'default'}`);
-          console.log(`  Offset: ${JSON.stringify(clip.offset || {})}`);
-          console.log(`  Width: ${clip.width || 'auto'}, Height: ${clip.height || 'auto'}`);
           console.log(`  Fit: ${clip.fit || 'default'}`);
+          console.log(`  Offset: ${JSON.stringify(clip.offset || {})}`);
+          
+          // IMPORTANT: Suppression des propriétés non autorisées pour les clips d'image
+          if (clip.width !== undefined) {
+            console.warn(`⚠️ Suppression de la propriété 'width' non autorisée sur clip #${i+1}`);
+            delete clip.width;
+          }
+          if (clip.height !== undefined) {
+            console.warn(`⚠️ Suppression de la propriété 'height' non autorisée sur clip #${i+1}`);
+            delete clip.height;
+          }
         } 
         else if (clip.asset.type === 'html') {
           console.log(`  HTML content length: ${(clip.asset.html || '').length} chars`);
@@ -35,6 +44,30 @@ export const renderWithShotstack = async (renderPayload: any) => {
       }
     }
 
+    // Nettoyage profond du payload pour éviter les erreurs
+    const cleanRecursively = (obj: any): any => {
+      if (obj === null || typeof obj !== 'object') return obj;
+      
+      const cleaned = Array.isArray(obj) ? [] : {};
+      
+      for (const key in obj) {
+        // Filtrer les valeurs non définies ou nulles
+        if (obj[key] !== undefined && obj[key] !== null) {
+          // Si c'est un objet, nettoyer récursivement
+          if (typeof obj[key] === 'object') {
+            const cleanedChild = cleanRecursively(obj[key]);
+            if (Object.keys(cleanedChild).length > 0 || Array.isArray(cleanedChild)) {
+              cleaned[key] = cleanedChild;
+            }
+          } else {
+            cleaned[key] = obj[key];
+          }
+        }
+      }
+      
+      return cleaned;
+    };
+
     // Simplification et nettoyage du payload pour éviter les erreurs
     const simplifiedPayload = {
       timeline: {
@@ -42,15 +75,8 @@ export const renderWithShotstack = async (renderPayload: any) => {
         tracks: [
           {
             clips: renderPayload.timeline.tracks[0].clips.map((clip: any) => {
-              // Filtrer les propriétés invalides selon le type de clip
-              const cleanClip = { ...clip };
-              
-              // S'assurer que les valeurs sont valides
-              if (typeof cleanClip.scale !== 'number') delete cleanClip.scale;
-              if (!cleanClip.position) cleanClip.position = "center";
-              
-              // Nettoie l'objet en le sérialisant puis en le désérialisant
-              return JSON.parse(JSON.stringify(cleanClip));
+              // Appliquer un nettoyage récursif pour enlever toutes les valeurs undefined/null
+              return cleanRecursively(clip);
             })
           }
         ]

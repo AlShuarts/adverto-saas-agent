@@ -89,7 +89,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   console.log("👉 Ajout clip texte VENDU:", JSON.stringify(venduTextClip, null, 2));
   clips.push(venduTextClip);
 
-  // 4. Photo du courtier (si fournie) - repositionnée et agrandie
+  // 4. Photo du courtier (si fournie) - avec corrections pour l'API Shotstack
   if (params.brokerImage) {
     console.log("🖼️ Image du courtier fournie:", params.brokerImage);
     const brokerImageClip = {
@@ -100,19 +100,17 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       fit: "contain",
-      scale: 1.0,
-      width: 200,
-      height: 200,
-      position: "bottom",
-      offset: { x: -0.35, y: 0.12 }
+      scale: 0.15,     // Utiliser scale au lieu de width/height
+      position: "bottomLeft",
+      offset: { x: 0.15, y: 0.12 }
     };
-    console.log("👉 Ajout clip photo courtier redimensionnée:", JSON.stringify(brokerImageClip, null, 2));
+    console.log("👉 Ajout clip photo courtier avec scale:", JSON.stringify(brokerImageClip, null, 2));
     clips.push(brokerImageClip);
   } else {
     console.warn("⚠️ Aucune image de courtier n'a été fournie");
   }
 
-  // 5. Informations du courtier dans le rectangle noir - amélioré avec meilleur positionnement
+  // 5. Informations du courtier dans le rectangle noir
   const brokerInfo = `<div style="
     text-align: left; 
     color: white; 
@@ -137,10 +135,10 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     position: "bottom",
     offset: { x: 0, y: 0.12 }
   };
-  console.log("👉 Ajout clip info courtier amélioré:", JSON.stringify(brokerInfoClip, null, 2));
+  console.log("👉 Ajout clip info courtier:", JSON.stringify(brokerInfoClip, null, 2));
   clips.push(brokerInfoClip);
 
-  // 6. Logo de l'agence (si fourni) - repositionné
+  // 6. Logo de l'agence (si fourni) - avec corrections pour l'API Shotstack
   if (params.agencyLogo) {
     console.log("🏢 Logo de l'agence fourni:", params.agencyLogo);
     const agencyLogoClip = {
@@ -151,13 +149,11 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       fit: "contain",
-      scale: 1.0,
-      width: 200,
-      height: 150,
-      position: "bottom",
-      offset: { x: 0.35, y: 0.12 }
+      scale: 0.15,    // Utiliser scale au lieu de width/height
+      position: "bottomRight",
+      offset: { x: -0.15, y: 0.12 }
     };
-    console.log("👉 Ajout clip logo agence redimensionné:", JSON.stringify(agencyLogoClip, null, 2));
+    console.log("👉 Ajout clip logo agence avec scale:", JSON.stringify(agencyLogoClip, null, 2));
     clips.push(agencyLogoClip);
   } else {
     console.warn("⚠️ Aucun logo d'agence n'a été fourni");
