@@ -102,7 +102,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       fit: "contain",
       scale: 0.5,     // Scale augmenté de 0.22 à 0.5
       position: "bottomLeft",
-      offset: { x: 80, y: -80 }  // Utilisation d'offsets fixes en pixels au lieu de pourcentages
+      offset: { x: 0.05, y: -0.05 }  // Valeurs relatives entre -1 et 1, x positif déplace vers la droite et y négatif vers le haut
     };
     console.log("👉 Ajout clip photo courtier avec scale:", JSON.stringify(brokerImageClip, null, 2));
     clips.push(brokerImageClip);
@@ -133,7 +133,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     start: 0,
     length: duration,
     position: "bottomLeft",
-    offset: { x: 350, y: -100 }  // Ajusté avec valeurs fixes pour être à côté de la photo du courtier
+    offset: { x: 0.25, y: -0.05 }  // Valeurs relatives
   };
   console.log("👉 Ajout clip info courtier:", JSON.stringify(brokerInfoClip, null, 2));
   clips.push(brokerInfoClip);
@@ -151,7 +151,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       fit: "contain",
       scale: 0.35,    // Scale augmenté de 0.18 à 0.35
       position: "bottomRight",
-      offset: { x: -80, y: -100 }  // Valeurs fixes en pixels pour être dans le coin droit du bandeau
+      offset: { x: -0.05, y: -0.05 }  // Valeurs relatives
     };
     console.log("👉 Ajout clip logo agence avec scale:", JSON.stringify(agencyLogoClip, null, 2));
     clips.push(agencyLogoClip);
