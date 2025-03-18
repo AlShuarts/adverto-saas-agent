@@ -75,6 +75,14 @@ export const renderWithShotstack = async (renderPayload: any) => {
         tracks: [
           {
             clips: renderPayload.timeline.tracks[0].clips.map((clip: any) => {
+              // Nettoyage supplémentaire pour les clips d'image
+              if (clip.asset && clip.asset.type === 'image') {
+                // S'assurer que width et height ne sont pas présents sur les clips d'image
+                const { width, height, ...cleanClip } = clip;
+                console.log(`🧹 Nettoyage du clip d'image: ${clip.asset.src.substring(0, 30)}...`);
+                return cleanRecursively(cleanClip);
+              }
+              
               // Appliquer un nettoyage récursif pour enlever toutes les valeurs undefined/null
               return cleanRecursively(clip);
             })

@@ -32,13 +32,12 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   console.log("👉 Ajout clip image principale:", JSON.stringify(mainImageClip, null, 2));
   clips.push(mainImageClip);
 
-  // 2. Bannière noire en bas en utilisant HTML au lieu de shape
+  // 2. Bannière noire en bas - ajusté pour être complètement opaque et plus haute
   const blackBannerHtml = `
     <div style="
       width: 100%; 
-      height: 300px; 
-      background-color: #000000; 
-      opacity: 0.9;
+      height: 400px; 
+      background-color: #000000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -50,7 +49,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       type: "html",
       html: blackBannerHtml,
       width: 1920,
-      height: 300
+      height: 400
     },
     start: 0,
     length: duration,
@@ -72,7 +71,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       ">
         <p style="
           color: white; 
-          font-size: 150px; 
+          font-size: 180px; 
           font-weight: bold; 
           margin: 0; 
           text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
@@ -84,12 +83,12 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     start: 0,
     length: duration,
     position: "center",
-    offset: { x: 0, y: -0.2 }
+    offset: { x: 0, y: -0.15 }
   };
   console.log("👉 Ajout clip texte VENDU:", JSON.stringify(venduTextClip, null, 2));
   clips.push(venduTextClip);
 
-  // 4. Photo du courtier (si fournie) - avec corrections pour l'API Shotstack
+  // 4. Photo du courtier (si fournie) - augmentation de la taille
   if (params.brokerImage) {
     console.log("🖼️ Image du courtier fournie:", params.brokerImage);
     const brokerImageClip = {
@@ -100,9 +99,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       fit: "contain",
-      scale: 0.15,     // Utiliser scale au lieu de width/height
+      scale: 0.25,     // Augmentation de l'échelle pour une meilleure visibilité
       position: "bottomLeft",
-      offset: { x: 0.15, y: 0.12 }
+      offset: { x: 0.15, y: 0.15 }
     };
     console.log("👉 Ajout clip photo courtier avec scale:", JSON.stringify(brokerImageClip, null, 2));
     clips.push(brokerImageClip);
@@ -110,7 +109,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     console.warn("⚠️ Aucune image de courtier n'a été fournie");
   }
 
-  // 5. Informations du courtier dans le rectangle noir
+  // 5. Informations du courtier dans le rectangle noir - texte plus grand et meilleur positionnement
   const brokerInfo = `<div style="
     text-align: left; 
     color: white; 
@@ -118,27 +117,27 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     padding: 20px;
     width: 100%;
   ">
-    <p style="font-size: 30px; font-weight: bold; margin: 0 0 10px 0;">${params.brokerName}</p>
-    <p style="font-size: 22px; margin: 0 0 10px 0;">${params.brokerEmail}</p>
-    <p style="font-size: 22px; margin: 0;">${params.brokerPhone}</p>
+    <p style="font-size: 40px; font-weight: bold; margin: 0 0 15px 0;">${params.brokerName}</p>
+    <p style="font-size: 28px; margin: 0 0 15px 0;">${params.brokerEmail}</p>
+    <p style="font-size: 28px; margin: 0;">${params.brokerPhone}</p>
   </div>`;
   
   const brokerInfoClip = {
     asset: {
       type: "html",
       html: brokerInfo,
-      width: 600,
+      width: 700,
       height: 200
     },
     start: 0,
     length: duration,
-    position: "bottom",
-    offset: { x: 0, y: 0.12 }
+    position: "bottomLeft",
+    offset: { x: 0.42, y: 0.15 }
   };
   console.log("👉 Ajout clip info courtier:", JSON.stringify(brokerInfoClip, null, 2));
   clips.push(brokerInfoClip);
 
-  // 6. Logo de l'agence (si fourni) - avec corrections pour l'API Shotstack
+  // 6. Logo de l'agence (si fourni) - augmentation de la taille
   if (params.agencyLogo) {
     console.log("🏢 Logo de l'agence fourni:", params.agencyLogo);
     const agencyLogoClip = {
@@ -149,9 +148,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       fit: "contain",
-      scale: 0.15,    // Utiliser scale au lieu de width/height
+      scale: 0.25,    // Augmentation de l'échelle pour une meilleure visibilité
       position: "bottomRight",
-      offset: { x: -0.15, y: 0.12 }
+      offset: { x: -0.15, y: 0.15 }
     };
     console.log("👉 Ajout clip logo agence avec scale:", JSON.stringify(agencyLogoClip, null, 2));
     clips.push(agencyLogoClip);
