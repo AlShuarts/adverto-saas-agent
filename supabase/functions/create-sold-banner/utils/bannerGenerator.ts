@@ -41,10 +41,10 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
           color: "#000000",
           opacity: 1
         },
-      rectangle: {  // ✅ Correction ici : Ajout de l'objet rectangle
-      width: 1920,
-      height: bannerHeight,
-      cornerRadius: 0
+        rectangle: { // ✅ Ajout correct du rectangle
+          width: 1920,
+          height: bannerHeight,
+          cornerRadius: 0
         }
       },
       start: 0,
@@ -59,10 +59,23 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       asset: {
         type: "text",
         text: "VENDU",
-        style: "bold",
-        size: "x-large",
-        color: "#ffffff",
-        background: "#000000"
+        width: 500,
+        height: 100,
+        font: {
+          family: "Poppins",
+          color: "#ffffff",
+          opacity: 1.0,
+          size: 100,
+          weight: 700
+        },
+        background: { // ✅ Correction ici
+          color: "#000000",
+          opacity: 1
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center"
+        }
       },
       start: 0,
       length: duration,
@@ -78,10 +91,23 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       asset: {
         type: "text",
         text: brokerInfo,
-        style: "normal",
-        size: "medium",
-        color: "#ffffff",
-        background: "#000000"
+        width: 500,
+        height: 120,
+        font: {
+          family: "Poppins",
+          color: "#ffffff",
+          opacity: 1.0,
+          size: 28,
+          weight: 400
+        },
+        background: { // ✅ Correction ici aussi
+          color: "#000000",
+          opacity: 1
+        },
+        alignment: {
+          horizontal: "left",
+          vertical: "center"
+        }
       },
       start: 0,
       length: duration,
