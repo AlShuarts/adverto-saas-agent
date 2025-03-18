@@ -17,11 +17,16 @@ export const renderWithShotstack = async (renderPayload: any) => {
       for (const clip of clips) {
         if (clip.asset && clip.asset.type === 'image' && clip.asset.src) {
           console.log(`✓ Clip image trouvé, URL: ${clip.asset.src.substring(0, 50)}...`);
+          
+          // Vérification supplémentaire des positions et échelles
+          if (clip.position) {
+            console.log(`  Position: ${clip.position}, Scale: ${clip.scale || 'default'}, Offset: ${JSON.stringify(clip.offset || {})}`);
+          }
         }
         
-        // Vérification spécifique pour l'image du courtier
-        if (clip.position === "bottomLeft" && clip.asset && clip.asset.type === 'image') {
-          console.log(`✓ Image du courtier trouvée, scale: ${clip.scale}, position: ${clip.position}`);
+        // Vérification des clips HTML et texte
+        if (clip.asset && (clip.asset.type === 'html' || clip.asset.type === 'text')) {
+          console.log(`✓ Clip ${clip.asset.type} trouvé, position: ${clip.position}, offset: ${JSON.stringify(clip.offset || {})}`);
         }
       }
     }
@@ -33,7 +38,7 @@ export const renderWithShotstack = async (renderPayload: any) => {
         tracks: [
           {
             clips: renderPayload.timeline.tracks[0].clips.map((clip: any) => {
-              // Crée une copie propre de chaque clip
+              // Nettoie l'objet en le sérialisant puis en le désérialisant
               return JSON.parse(JSON.stringify(clip));
             })
           }
