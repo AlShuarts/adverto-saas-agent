@@ -8,146 +8,18 @@ export const renderWithShotstack = async (renderPayload: any) => {
       throw new Error("❌ Clé API Shotstack manquante dans les variables d'environnement.");
     }
 
-    // Validation des images avant l'envoi
-    if (renderPayload.timeline.tracks[0].clips.length > 0) {
-      const clips = renderPayload.timeline.tracks[0].clips;
-      console.log(`🖼️ Validation de ${clips.length} clips avant envoi`);
-      
-      // Vérification détaillée de chaque clip
-      for (let i = 0; i < clips.length; i++) {
-        const clip = clips[i];
-        console.log(`\n📎 CLIP #${i+1} - Type: ${clip.asset.type}`);
-        
-        if (clip.asset.type === 'image') {
-          console.log(`  URL: ${clip.asset.src.substring(0, 50)}...`);
-          console.log(`  Position: ${clip.position || 'default'}`);
-          console.log(`  Scale: ${clip.scale || 'default'}`);
-          console.log(`  Fit: ${clip.fit || 'default'}`);
-          
-          // Vérification des valeurs d'offset
-          if (clip.offset) {
-            console.log(`  Offset original: ${JSON.stringify(clip.offset)}`);
-            
-            // Vérifier que les valeurs d'offset sont dans les limites
-            if (clip.offset.x !== undefined && (clip.offset.x > 10 || clip.offset.x < -10)) {
-              console.warn(`⚠️ Valeur d'offset x (${clip.offset.x}) hors limites. Ajustement à une valeur entre -1 et 1.`);
-              // Normaliser entre -1 et 1
-              clip.offset.x = Math.max(-1, Math.min(1, clip.offset.x / 100));
-            }
-            
-            if (clip.offset.y !== undefined && (clip.offset.y > 10 || clip.offset.y < -10)) {
-              console.warn(`⚠️ Valeur d'offset y (${clip.offset.y}) hors limites. Ajustement à une valeur entre -1 et 1.`);
-              // Normaliser entre -1 et 1
-              clip.offset.y = Math.max(-1, Math.min(1, clip.offset.y / 100));
-            }
-            
-            console.log(`  Offset ajusté: ${JSON.stringify(clip.offset)}`);
-          }
-          
-          // IMPORTANT: Suppression des propriétés non autorisées pour les clips d'image
-          if (clip.width !== undefined) {
-            console.warn(`⚠️ Suppression de la propriété 'width' non autorisée sur clip #${i+1}`);
-            delete clip.width;
-          }
-          if (clip.height !== undefined) {
-            console.warn(`⚠️ Suppression de la propriété 'height' non autorisée sur clip #${i+1}`);
-            delete clip.height;
-          }
-        } 
-        else if (clip.asset.type === 'html') {
-          console.log(`  HTML content length: ${(clip.asset.html || '').length} chars`);
-          console.log(`  Position: ${clip.position || 'default'}`);
-          
-          // Vérification des valeurs d'offset pour HTML
-          if (clip.offset) {
-            console.log(`  Offset original: ${JSON.stringify(clip.offset)}`);
-            
-            // Vérifier que les valeurs d'offset sont dans les limites
-            if (clip.offset.x !== undefined && (clip.offset.x > 10 || clip.offset.x < -10)) {
-              console.warn(`⚠️ Valeur d'offset x (${clip.offset.x}) hors limites. Ajustement à une valeur entre -1 et 1.`);
-              // Normaliser entre -1 et 1
-              clip.offset.x = Math.max(-1, Math.min(1, clip.offset.x / 100));
-            }
-            
-            if (clip.offset.y !== undefined && (clip.offset.y > 10 || clip.offset.y < -10)) {
-              console.warn(`⚠️ Valeur d'offset y (${clip.offset.y}) hors limites. Ajustement à une valeur entre -1 et 1.`);
-              // Normaliser entre -1 et 1
-              clip.offset.y = Math.max(-1, Math.min(1, clip.offset.y / 100));
-            }
-            
-            console.log(`  Offset ajusté: ${JSON.stringify(clip.offset)}`);
-          }
-          
-          console.log(`  Width: ${clip.asset.width || 'auto'}, Height: ${clip.asset.height || 'auto'}`);
-        }
-      }
-    }
-
-    // Nettoyage profond du payload pour éviter les erreurs
-    const cleanRecursively = (obj: any): any => {
-      if (obj === null || typeof obj !== 'object') return obj;
-      
-      const cleaned = Array.isArray(obj) ? [] : {};
-      
-      for (const key in obj) {
-        // Filtrer les valeurs non définies ou nulles
-        if (obj[key] !== undefined && obj[key] !== null) {
-          // Si c'est un objet, nettoyer récursivement
-          if (typeof obj[key] === 'object') {
-            const cleanedChild = cleanRecursively(obj[key]);
-            if (Object.keys(cleanedChild).length > 0 || Array.isArray(cleanedChild)) {
-              cleaned[key] = cleanedChild;
-            }
-          } else {
-            cleaned[key] = obj[key];
-          }
-        }
-      }
-      
-      return cleaned;
-    };
-
-    // S'assurer que les clips sont dans le bon ordre et correctement nettoyés
-    const simplifiedPayload = {
-      timeline: {
-        background: "#000000",
-        tracks: [
-          {
-            clips: renderPayload.timeline.tracks[0].clips.map((clip: any) => {
-              // Nettoyage supplémentaire pour les clips d'image
-              if (clip.asset && clip.asset.type === 'image') {
-                // S'assurer que width et height ne sont pas présents sur les clips d'image
-                const { width, height, ...cleanClip } = clip;
-                console.log(`🧹 Nettoyage du clip d'image: ${clip.asset.src.substring(0, 30)}...`);
-                return cleanRecursively(cleanClip);
-              }
-              
-              // Appliquer un nettoyage récursif pour enlever toutes les valeurs undefined/null
-              return cleanRecursively(clip);
-            })
-          }
-        ]
-      },
-      output: {
-        format: "png",
-        resolution: "hd",
-        aspectRatio: "16:9"
-      },
-      callback: renderPayload.callback
-    };
-
     // Log complet du payload final pour debugging
     console.log("\n📝 PAYLOAD FINAL ENVOYÉ À SHOTSTACK:");
-    console.log(JSON.stringify(simplifiedPayload, null, 2));
+    console.log(JSON.stringify(renderPayload, null, 2));
 
-    // Appel à l'API Shotstack avec le payload simplifié
+    // Appel à l'API Shotstack
     const response = await fetch("https://api.shotstack.io/v1/render", {
       method: "POST",
       headers: {
         "x-api-key": apiKey,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(simplifiedPayload),
+      body: JSON.stringify(renderPayload),
     });
 
     console.log("📊 Statut de réponse Shotstack:", response.status);

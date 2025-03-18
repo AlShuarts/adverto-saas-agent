@@ -13,152 +13,202 @@ type SoldBannerConfig = {
 export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   console.log("🔍 Début de generateSoldBannerClip avec params:", JSON.stringify(params, null, 2));
   
-  const clips = [];
   const duration = 5; // Durée statique car c'est une image
-
+  
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
   
-  // ⚠️ IMPORTANT: L'ordre des clips détermine leur superposition dans Shotstack
-  // (les derniers clips ajoutés apparaissent au-dessus des premiers)
-
-  // 1. Image principale (fond) - Toujours en premier plan
-  const mainImageClip = {
-    asset: { 
-      type: 'image', 
-      src: params.mainImage 
-    },
-    start: 0,
-    length: duration,
-    fit: "cover",
-    scale: 1.0
-  };
-  console.log("👉 Ajout clip image principale:", JSON.stringify(mainImageClip, null, 2));
-  clips.push(mainImageClip);
-
-  // 2. Texte "VENDU" - Centré et grand au milieu de l'image principale
-  const venduTextClip = {
-    asset: {
-      type: "html",
-      html: `<div style="
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-      ">
-        <p style="
-          color: white; 
-          font-size: 200px; 
-          font-weight: bold; 
-          margin: 0; 
-          text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
-        ">VENDU</p>
-      </div>`,
-      width: 1920,
-      height: 400
-    },
-    start: 0,
-    length: duration,
-    position: "center"
-  };
-  console.log("👉 Ajout clip texte VENDU:", JSON.stringify(venduTextClip, null, 2));
-  clips.push(venduTextClip);
-
-  // 3. Bannière noire en bas - APRÈS le texte VENDU mais AVANT les autres éléments
-  // Augmentons la hauteur à 400px pour s'assurer qu'elle atteint le bas de l'image
-  const blackBannerHeight = 400; // Hauteur augmentée pour le bandeau noir
-  const blackBannerHtml = `
-    <div style="
-      width: 100%; 
-      height: ${blackBannerHeight}px; 
-      background-color: #000000;
-    "></div>
-  `;
+  // Utilisation de la structure exacte fournie par l'utilisateur
+  // avec adaptation des variables dynamiques (images, textes, etc.)
   
-  const blackBannerClip = {
-    asset: {
-      type: "html",
-      html: blackBannerHtml,
-      width: 1920,
-      height: blackBannerHeight
+  // Construction des tracks pour la timeline avec l'ordre exact fourni
+  const tracks = [
+    // Track 1: Texte (non utilisé dans cette version)
+    {
+      clips: [
+        {
+          asset: {
+            type: "text",
+            text: `${params.brokerName}, ${params.brokerEmail} \n\n${params.brokerPhone}`,
+            alignment: {
+              horizontal: "left",
+              vertical: "top"
+            },
+            font: {
+              color: "#ffffff",
+              family: "Arapey",
+              size: "37",
+              lineHeight: 1
+            },
+            width: 918,
+            height: 127
+          },
+          start: 0,
+          length: "auto",
+          offset: {
+            x: 0.129,
+            y: -0.396
+          },
+          position: "center"
+        }
+      ]
     },
-    start: 0,
-    length: duration,
-    position: "bottom" // S'assurer qu'il est bien placé en bas
-  };
-  console.log("👉 Ajout bannière noire via HTML:", JSON.stringify(blackBannerClip, null, 2));
-  clips.push(blackBannerClip);
-
-  // 4. Photo du courtier (si fournie) - APRÈS le bandeau noir pour être par-dessus
-  if (params.brokerImage) {
-    console.log("🖼️ Image du courtier fournie:", params.brokerImage);
-    const brokerImageClip = {
-      asset: { 
-        type: 'image', 
-        src: params.brokerImage 
-      },
-      start: 0,
-      length: duration,
-      fit: "contain",
-      scale: 0.5,     // Scale augmenté de 0.22 à 0.5
-      position: "bottomLeft",
-      offset: { x: 0.05, y: -0.05 }  // Valeurs relatives entre -1 et 1, x positif déplace vers la droite et y négatif vers le haut
-    };
-    console.log("👉 Ajout clip photo courtier avec scale:", JSON.stringify(brokerImageClip, null, 2));
-    clips.push(brokerImageClip);
-  } else {
-    console.warn("⚠️ Aucune image de courtier n'a été fournie");
-  }
-
-  // 5. Informations du courtier - APRÈS la photo du courtier
-  const brokerInfo = `<div style="
-    text-align: left; 
-    color: white; 
-    font-family: Arial, sans-serif;
-    padding: 10px;
-    width: 100%;
-  ">
-    <p style="font-size: 32px; font-weight: bold; margin: 0 0 10px 0;">${params.brokerName}</p>
-    <p style="font-size: 24px; margin: 0 0 8px 0;">${params.brokerEmail}</p>
-    <p style="font-size: 24px; margin: 0;">${params.brokerPhone}</p>
-  </div>`;
+    
+    // Track 2: Ligne blanche
+    {
+      clips: [
+        {
+          asset: {
+            type: "shape",
+            shape: "line",
+            fill: {
+              color: "#ffffff",
+              opacity: 1
+            },
+            stroke: {
+              color: "#000000",
+              width: 0
+            },
+            width: 896,
+            height: 4,
+            line: {
+              length: 896,
+              thickness: 4
+            }
+          },
+          start: 0,
+          length: "auto",
+          offset: {
+            x: 0.121,
+            y: -0.295
+          },
+          position: "center"
+        }
+      ]
+    },
+    
+    // Track 3: Infos courtier en HTML
+    {
+      clips: [
+        {
+          asset: {
+            type: "html",
+            html: `<div style='color: white; font-family: Arial, sans-serif;'><div style='text-align: left;'>
+    <p style='font-size: 28px; font-weight: bold; margin: 0 0 5px 0;'>${params.brokerName}</p>
+    <p style='font-size: 24px; margin: 0 0 5px 0;'>${params.brokerEmail}</p>
+    <p style='font-size: 24px; margin: 0;'>${params.brokerPhone}</p>
+  </div></div>`,
+            width: 607,
+            height: 200,
+            color: "#ffffff",
+            textScale: "shrink",
+            fontSize: "96",
+            textAlign: "left",
+            fontFamily: "Arapey"
+          },
+          start: 0,
+          length: duration,
+          position: "center",
+          offset: {
+            x: 0.008,
+            y: -0.232
+          }
+        }
+      ]
+    },
+    
+    // Track 4: Photo du courtier
+    {
+      clips: params.brokerImage ? [
+        {
+          asset: {
+            type: "image",
+            src: params.brokerImage
+          },
+          start: 0,
+          length: duration,
+          position: "center",
+          offset: {
+            x: -0.386,
+            y: -0.275
+          },
+          scale: 0.45,
+          fit: "contain"
+        }
+      ] : []
+    },
+    
+    // Track 5: Logo de l'agence
+    {
+      clips: params.agencyLogo ? [
+        {
+          asset: {
+            type: "image",
+            src: params.agencyLogo
+          },
+          start: 0,
+          length: duration,
+          position: "center",
+          offset: {
+            x: 0.36,
+            y: -0.434
+          },
+          scale: 0.25,
+          fit: "contain"
+        }
+      ] : []
+    },
+    
+    // Track 6: Rectangle noir (fond de la bannière)
+    {
+      clips: [
+        {
+          asset: {
+            type: "shape",
+            shape: "rectangle",
+            width: 1285,
+            height: 250,
+            fill: {
+              color: "#000000",
+              opacity: "1"
+            },
+            rectangle: {
+              width: 1285,
+              height: 250,
+              cornerRadius: 0
+            },
+            stroke: {
+              width: "0"
+            }
+          },
+          start: 0,
+          length: duration,
+          position: "center",
+          offset: {
+            x: 0.002,
+            y: -0.326
+          }
+        }
+      ]
+    },
+    
+    // Track 7: Image principale (fond) - Doit être en dernier pour être en arrière-plan
+    {
+      clips: [
+        {
+          asset: {
+            type: "image",
+            src: params.mainImage
+          },
+          start: 0,
+          length: duration,
+          fit: "cover"
+        }
+      ]
+    }
+  ];
   
-  const brokerInfoClip = {
-    asset: {
-      type: "html",
-      html: brokerInfo,
-      width: 650,
-      height: 150
-    },
-    start: 0,
-    length: duration,
-    position: "bottomLeft",
-    offset: { x: 0.25, y: -0.05 }  // Valeurs relatives
-  };
-  console.log("👉 Ajout clip info courtier:", JSON.stringify(brokerInfoClip, null, 2));
-  clips.push(brokerInfoClip);
-
-  // 6. Logo de l'agence (si fourni) - Dernier élément, pour être par-dessus tout
-  if (params.agencyLogo) {
-    console.log("🏢 Logo de l'agence fourni:", params.agencyLogo);
-    const agencyLogoClip = {
-      asset: { 
-        type: 'image', 
-        src: params.agencyLogo 
-      },
-      start: 0,
-      length: duration,
-      fit: "contain",
-      scale: 0.35,    // Scale augmenté de 0.18 à 0.35
-      position: "bottomRight",
-      offset: { x: -0.05, y: -0.05 }  // Valeurs relatives
-    };
-    console.log("👉 Ajout clip logo agence avec scale:", JSON.stringify(agencyLogoClip, null, 2));
-    clips.push(agencyLogoClip);
-  } else {
-    console.warn("⚠️ Aucun logo d'agence n'a été fourni");
-  }
-
-  console.log(`✅ Total clips générés: ${clips.length}`);
-  return { clips, totalDuration: duration };
+  console.log(`✅ Total tracks générés: ${tracks.length}`);
+  
+  // On retourne les tracks complets au lieu des clips individuels
+  return { tracks, totalDuration: duration };
 };

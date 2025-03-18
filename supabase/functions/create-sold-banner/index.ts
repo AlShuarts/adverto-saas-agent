@@ -71,8 +71,8 @@ serve(async (req) => {
       console.warn("⚠️ Profil utilisateur non trouvé, utilisation des valeurs par défaut");
     }
 
-    // Générer les clips pour la bannière
-    console.log("🔄 Génération des clips avec les paramètres suivants:");
+    // Générer les tracks pour la bannière
+    console.log("🔄 Génération des tracks avec les paramètres suivants:");
     const bannerParams = {
       mainImage: config.mainImage,
       brokerImage: config.brokerImage || null,
@@ -85,7 +85,7 @@ serve(async (req) => {
     };
     console.log(JSON.stringify(bannerParams, null, 2));
     
-    const { clips, totalDuration } = generateSoldBannerClip(bannerParams);
+    const { tracks, totalDuration } = generateSoldBannerClip(bannerParams);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
     const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
@@ -95,14 +95,16 @@ serve(async (req) => {
     const renderPayload = {
       timeline: {
         background: "#000000",
-        tracks: [
-          { clips }
-        ],
+        tracks: tracks
       },
       output: { 
         format: "png", 
-        resolution: "hd",
-        aspectRatio: "16:9" 
+        aspectRatio: "16:9",
+        fps: 25,
+        size: {
+          width: 1280,
+          height: 720
+        }
       },
       callback: webhookUrl,
     };
