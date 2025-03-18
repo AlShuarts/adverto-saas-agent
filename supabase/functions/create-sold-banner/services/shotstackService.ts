@@ -8,7 +8,25 @@ export const renderWithShotstack = async (renderPayload: any) => {
       throw new Error("❌ Clé API Shotstack manquante dans les variables d'environnement.");
     }
 
-    // Simplification extrême du payload pour éviter les erreurs de validation
+    // Validation des images avant l'envoi
+    if (renderPayload.timeline.tracks[0].clips.length > 0) {
+      const clips = renderPayload.timeline.tracks[0].clips;
+      console.log(`🖼️ Validation de ${clips.length} clips avant envoi`);
+      
+      // Vérification des URLs d'images
+      for (const clip of clips) {
+        if (clip.asset && clip.asset.type === 'image' && clip.asset.src) {
+          console.log(`✓ Clip image trouvé, URL: ${clip.asset.src.substring(0, 50)}...`);
+        }
+        
+        // Vérification spécifique pour l'image du courtier
+        if (clip.position === "bottomLeft" && clip.asset && clip.asset.type === 'image') {
+          console.log(`✓ Image du courtier trouvée, scale: ${clip.scale}, position: ${clip.position}`);
+        }
+      }
+    }
+
+    // Simplification du payload pour éviter les erreurs de validation
     const simplifiedPayload = {
       timeline: {
         background: "#000000",

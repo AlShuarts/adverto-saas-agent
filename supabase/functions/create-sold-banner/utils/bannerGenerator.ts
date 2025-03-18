@@ -15,7 +15,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   
   const clips = [];
   const duration = 5; // Durée statique car c'est une image
-  const bannerHeight = 200; // Hauteur de la bannière réduite
+  const bannerHeight = 250; // Hauteur de la bannière augmentée
 
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
 
@@ -41,7 +41,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       height: bannerHeight, 
       fill: {
         color: "#000000",
-        opacity: 1
+        opacity: 0.9 // Légère transparence
       },
       rectangle: {
         width: 1920,
@@ -56,13 +56,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   console.log("👉 Ajout clip rectangle:", JSON.stringify(rectangleClip, null, 2));
   clips.push(rectangleClip);
 
-  // 3. Texte "VENDU"
+  // 3. Texte "VENDU" - grand et bien visible
   const venduTextClip = {
     asset: {
       type: "html",
-      html: "<p style='color: white; font-size: 90px; font-weight: bold; text-align: center;'>VENDU</p>",
+      html: "<p style='color: white; font-size: 120px; font-weight: bold; text-align: center; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);'>VENDU</p>",
       width: 800,
-      height: 100
+      height: 150
     },
     start: 0,
     length: duration,
@@ -72,25 +72,41 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   console.log("👉 Ajout clip texte VENDU:", JSON.stringify(venduTextClip, null, 2));
   clips.push(venduTextClip);
 
-  // 4. Informations du courtier sous "VENDU"
-  const brokerInfo = `${params.brokerName}, ${params.brokerEmail}\n${params.brokerPhone}`;
+  // Position pour le bloc des informations du courtier
+  let brokerInfoPosition = "bottomLeft";
+  let brokerInfoOffset = { x: 0.32, y: 0.05 };
+  
+  // Ajuster la position si l'image du courtier est présente
+  if (params.brokerImage) {
+    brokerInfoPosition = "bottomLeft";
+    brokerInfoOffset = { x: 0.38, y: 0.05 };
+  }
+
+  // 4. Informations du courtier dans le rectangle noir - aligné à gauche et bien structuré
+  const brokerInfo = `<div style='text-align: left;'>
+    <p style='font-size: 28px; font-weight: bold; margin: 0 0 5px 0;'>${params.brokerName}</p>
+    <p style='font-size: 24px; margin: 0 0 5px 0;'>${params.brokerEmail}</p>
+    <p style='font-size: 24px; margin: 0;'>${params.brokerPhone}</p>
+  </div>`;
+  
   const brokerInfoClip = {
     asset: {
       type: "html",
-      html: `<p style='color: white; font-size: 28px; text-align: center;'>${brokerInfo}</p>`,
+      html: `<div style='color: white; font-family: Arial, sans-serif;'>${brokerInfo}</div>`,
       width: 800,
       height: 150
     },
     start: 0,
     length: duration,
-    position: "center",
-    offset: { x: 0.2, y: 0.05 }
+    position: brokerInfoPosition,
+    offset: brokerInfoOffset
   };
   console.log("👉 Ajout clip info courtier:", JSON.stringify(brokerInfoClip, null, 2));
   clips.push(brokerInfoClip);
 
-  // 5. Photo du courtier (si fournie)
+  // 5. Photo du courtier (si fournie) - plus grande et bien placée
   if (params.brokerImage) {
+    console.log("🖼️ Image du courtier fournie:", params.brokerImage);
     const brokerImageClip = {
       asset: { 
         type: 'image', 
@@ -100,14 +116,18 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       length: duration,
       position: "bottomLeft",
       offset: { x: 0.1, y: 0.05 },
-      scale: 0.35
+      scale: 0.45, // Échelle augmentée
+      fit: "contain"
     };
     console.log("👉 Ajout clip photo courtier:", JSON.stringify(brokerImageClip, null, 2));
     clips.push(brokerImageClip);
+  } else {
+    console.warn("⚠️ Aucune image de courtier n'a été fournie");
   }
 
-  // 6. Logo de l'agence (si fourni)
+  // 6. Logo de l'agence (si fourni) - bien placé à droite
   if (params.agencyLogo) {
+    console.log("🏢 Logo de l'agence fourni:", params.agencyLogo);
     const agencyLogoClip = {
       asset: { 
         type: 'image', 
@@ -117,28 +137,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       length: duration,
       position: "bottomRight",
       offset: { x: -0.1, y: 0.05 },
-      scale: 0.15
+      scale: 0.25, // Échelle augmentée
+      fit: "contain"
     };
     console.log("👉 Ajout clip logo agence:", JSON.stringify(agencyLogoClip, null, 2));
     clips.push(agencyLogoClip);
-  }
-
-  // 7. Adresse de la propriété
-  if (params.address) {
-    const addressClip = {
-      asset: {
-        type: "html",
-        html: `<p style='color: white; font-size: 30px; font-weight: 500; text-align: center;'>${params.address}</p>`,
-        width: 1000,
-        height: 50
-      },
-      start: 0,
-      length: duration,
-      position: "bottom",
-      offset: { x: 0, y: 0.1 }
-    };
-    console.log("👉 Ajout clip adresse:", JSON.stringify(addressClip, null, 2));
-    clips.push(addressClip);
+  } else {
+    console.warn("⚠️ Aucun logo d'agence n'a été fourni");
   }
 
   console.log(`✅ Total clips générés: ${clips.length}`);
