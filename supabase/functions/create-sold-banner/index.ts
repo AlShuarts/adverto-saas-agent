@@ -6,6 +6,8 @@ import { generateSoldBannerClip } from "./utils/bannerGenerator.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
+  console.log("🔔 DÉMARRAGE de la fonction create-sold-banner, méthode:", req.method);
+  
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -31,7 +33,7 @@ serve(async (req) => {
     }
 
     const requestData = await req.json();
-    console.log("📝 Données de la requête:", JSON.stringify(requestData, null, 2));
+    console.log("📝 DONNÉES REQUÊTE REÇUES:", JSON.stringify(requestData, null, 2));
     
     const { listingId, config } = requestData;
     
@@ -42,7 +44,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
+    console.log("📜 CONFIGURATION REÇUE:", JSON.stringify(config, null, 2));
     console.log("🖼️ Image principale:", config.mainImage);
     
     // Récupérer les données du listing
@@ -70,7 +72,8 @@ serve(async (req) => {
     }
 
     // Générer les clips pour la bannière
-    const { clips, totalDuration } = generateSoldBannerClip({
+    console.log("🔄 Génération des clips avec les paramètres suivants:");
+    const bannerParams = {
       mainImage: config.mainImage,
       brokerImage: config.brokerImage || null,
       agencyLogo: config.agencyLogo || null,
@@ -79,7 +82,10 @@ serve(async (req) => {
       brokerPhone: config.brokerPhone || profile?.phone || "",
       address: listing.address || "",
       config
-    });
+    };
+    console.log(JSON.stringify(bannerParams, null, 2));
+    
+    const { clips, totalDuration } = generateSoldBannerClip(bannerParams);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
     const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
@@ -101,7 +107,7 @@ serve(async (req) => {
       callback: webhookUrl,
     };
 
-    console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
+    console.log("📤 PAYLOAD COMPLET pour Shotstack:", JSON.stringify(renderPayload, null, 2));
     
     // Faire le rendu avec Shotstack
     const renderId = await renderWithShotstack(renderPayload);
@@ -116,13 +122,15 @@ serve(async (req) => {
         status: "pending"
       });
 
+    console.log("✅ Rendu créé et enregistré avec succès, ID:", renderId);
+
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Bannière en cours de génération." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("⚠️ Erreur:", error);
+    console.error("⚠️ ERREUR CRITIQUE:", error);
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
   }
 });
