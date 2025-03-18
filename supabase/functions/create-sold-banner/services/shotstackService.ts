@@ -68,7 +68,7 @@ export const renderWithShotstack = async (renderPayload: any) => {
       return cleaned;
     };
 
-    // Simplification et nettoyage du payload pour éviter les erreurs
+    // S'assurer que les clips sont dans le bon ordre et correctement nettoyés
     const simplifiedPayload = {
       timeline: {
         background: "#000000",
