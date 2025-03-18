@@ -75,7 +75,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   });
 
   // 4. Informations du courtier sous "VENDU"
-  const brokerInfo = `${params.brokerName} \n \n ${params.brokerEmail}\n${params.brokerPhone}`;
+  const brokerInfo = `${params.brokerName}, ${params.brokerEmail}\n${params.brokerPhone}`;
   clips.push({
     asset: {
       type: "text",
@@ -90,13 +90,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
         weight: 400
       },
       alignment: {
-        horizontal: "left",
+        horizontal: "center",
         vertical: "center"
       }
     },
     start: 0,
     length: duration,
-    position: "bottomLeft",
+    position: "center",
     offset: { x: 0.2, y: 0.05 }
   });
 
@@ -111,10 +111,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       length: duration,
       position: "bottomLeft",
       offset: { x: 0, y: 0 },
-      scale: 1,
-      //transition: {
-        //in: "fade"
-      //}
+      scale: 1
+      
     });
   }
 
@@ -128,11 +126,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomRight",
-      offset: { x: 0.1, y: 0 },
-      scale: 0.1,
-      //transition: {
-        //in: "fade"
-      //}
+      offset: { x: 0, y: 0 },
+      scale: 1
     });
   }
 
