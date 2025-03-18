@@ -91,7 +91,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       },
       alignment: {
         horizontal: "left",
-        vertical: "bottom"
+        vertical: "center"
       }
     },
     start: 0,
@@ -110,7 +110,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomLeft",
-      offset: { x: -0.1, y: 0 },
+      offset: { x: 0, y: 0 },
       scale: 1,
       //transition: {
         //in: "fade"
@@ -128,8 +128,8 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       start: 0,
       length: duration,
       position: "bottomRight",
-      offset: { x: 0.2, y: 0.05 },
-      scale: 0.05,
+      offset: { x: 0.1, y: 0 },
+      scale: 0.1,
       //transition: {
         //in: "fade"
       //}
