@@ -83,7 +83,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       ]
     },
     
-    // Track 3: Infos courtier en HTML - SUPPRESSION DE LA PROPRIÉTÉ COLOR
+    // Track 3: Infos courtier en HTML - PROPRIÉTÉ COLOR SUPPRIMÉE
     {
       clips: [
         {
@@ -96,7 +96,6 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   </div></div>`,
             width: 607,
             height: 200,
-            // Suppression de la propriété "color" ici
             textScale: "shrink",
             fontSize: "96",
             textAlign: "left",
