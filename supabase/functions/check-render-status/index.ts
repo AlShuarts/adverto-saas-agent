@@ -110,6 +110,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         status,
+        videoUrl: url,
         url,
         message: `État du rendu: ${status}` 
       }),

@@ -46,13 +46,14 @@ export const useSlideshowStatus = (listingId: string) => {
               console.log('Render status check response:', response.data);
               
               // Si le statut a changé, mettons à jour le render local
-              if (response.data.status && response.data.status !== render.status) {
-                render.status = response.data.status;
+              if (response.data.status) {
+                // Convertir "done" en "completed" pour uniformité
+                render.status = response.data.status === "done" ? "completed" : response.data.status;
               }
               
               // Si une URL vidéo est disponible, mettons-la à jour
-              if (response.data.videoUrl && response.data.videoUrl !== render.video_url) {
-                render.video_url = response.data.videoUrl;
+              if ((response.data.videoUrl || response.data.url) && !render.video_url) {
+                render.video_url = response.data.videoUrl || response.data.url;
               }
             }
           } catch (checkError) {
@@ -68,10 +69,11 @@ export const useSlideshowStatus = (listingId: string) => {
     },
     refetchInterval: ({ state }) => {
       const data = state.data as SlideshowRender | undefined;
-      if (!data || data.status === "completed" || data.status === "error") {
-        return false;
+      // Continuer à vérifier si le statut est pending ou processing
+      if (!data || (data.status !== "completed" && data.status !== "done" && data.status !== "error")) {
+        return 10000; // Vérification toutes les 10 secondes
       }
-      return 10000; // Vérification toutes les 10 secondes
+      return false;
     },
   });
 };
