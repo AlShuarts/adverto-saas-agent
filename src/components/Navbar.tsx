@@ -1,84 +1,63 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Home, LogIn, LogOut, User } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 import { useEffect, useState } from "react";
-import { useToast } from "./ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, Link } from "react-router-dom";
+import { LogOut, User, Home, BookMarked } from "lucide-react";
 
 export const Navbar = () => {
-  const [user, setUser] = useState<any>(null);
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
     };
-
     getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate("/");
-      toast({
-        title: "Déconnexion réussie",
-        description: "À bientôt !",
-      });
-    } catch (error) {
-      console.error("Error:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la déconnexion",
-        variant: "destructive",
-      });
-    }
+    await supabase.auth.signOut();
+    navigate("/auth");
   };
 
   return (
-    <nav className="fixed top-0 w-full z-50 glass">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <Home className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">ImmoAds</span>
-        </Link>
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <>
-              <Link to="/profile">
-                <Button variant="ghost" className="flex items-center space-x-2">
-                  <User className="h-4 w-4" />
-                  <span>Profil</span>
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={handleSignOut} className="flex items-center space-x-2">
-                <LogOut className="h-4 w-4" />
-                <span>Déconnexion</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Link to="/auth">
-                <Button variant="ghost" className="flex items-center space-x-2">
-                  <LogIn className="h-4 w-4" />
-                  <span>Connexion</span>
-                </Button>
-              </Link>
-              <Link to="/auth?signup=true">
-                <Button>Commencer</Button>
-              </Link>
-            </>
-          )}
+    <nav className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="font-bold text-2xl flex items-center">
+            <span className="hidden md:inline">ImmoSocial</span>
+            <span className="inline md:hidden">IS</span>
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link to="/">
+            <Button variant="ghost" size="sm">
+              <Home className="h-4 w-4 mr-2" />
+              <span className="hidden md:inline">Accueil</span>
+            </Button>
+          </Link>
+          
+          <Link to="/published-listings">
+            <Button variant="ghost" size="sm">
+              <BookMarked className="h-4 w-4 mr-2" />
+              <span className="hidden md:inline">Publiés</span>
+            </Button>
+          </Link>
+
+          <Link to="/profile">
+            <Button variant="ghost" size="sm">
+              <User className="h-4 w-4 mr-2" />
+              <span className="hidden md:inline">Profil</span>
+            </Button>
+          </Link>
+
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            <span className="hidden md:inline">Déconnexion</span>
+          </Button>
         </div>
       </div>
     </nav>
