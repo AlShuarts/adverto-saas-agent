@@ -18,6 +18,7 @@ type SoldBannerRender = {
   status: string;
   image_url: string | null;
   created_at: string;
+  banner_type: string; // "VENDU" ou "A_VENDRE"
 };
 
 export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
@@ -73,7 +74,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
         
         // Si la bannière est prête, afficher une notification
         if (data.status === "done") {
-          toast.success("Votre bannière VENDU est prête !", {
+          toast.success("Votre bannière est prête !", {
             description: "Vous pouvez maintenant la télécharger ou la partager.",
           });
         }
@@ -114,7 +115,8 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
             payload.new.status === 'completed' &&
             payload.old.status === 'pending'
           ) {
-            toast.success("Votre bannière VENDU est prête !", {
+            const bannerType = payload.new.banner_type === 'VENDU' ? 'VENDU' : 'À VENDRE';
+            toast.success(`Votre bannière "${bannerType}" est prête !`, {
               description: "Vous pouvez maintenant la télécharger ou la partager.",
             });
           }
@@ -154,6 +156,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   }
 
   const latestRender = renders[0];
+  const bannerType = latestRender.banner_type === 'VENDU' ? 'VENDU' : 'À VENDRE';
 
   // Si la bannière est en cours de création
   if (latestRender.status === "pending") {
@@ -161,7 +164,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       <div className="border rounded-md p-4 text-center">
         <div className="flex flex-col items-center">
           <Loader2 className="h-6 w-6 animate-spin mb-2" />
-          <h3 className="text-lg font-medium">Bannière en cours de création</h3>
+          <h3 className="text-lg font-medium">Bannière "{bannerType}" en cours de création</h3>
           <p className="text-sm text-muted-foreground">
             Cela peut prendre quelques instants...
           </p>
@@ -188,11 +191,11 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   if (latestRender.status === "completed" && latestRender.image_url) {
     return (
       <div className="border rounded-md p-4">
-        <h3 className="text-lg font-medium mb-2">Bannière "VENDU"</h3>
+        <h3 className="text-lg font-medium mb-2">Bannière "{bannerType}"</h3>
         <div className="aspect-video overflow-hidden rounded-md mb-4">
           <img
             src={latestRender.image_url}
-            alt="Bannière VENDU"
+            alt={`Bannière ${bannerType}`}
             className="w-full h-full object-cover"
           />
         </div>
@@ -212,7 +215,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
               // Télécharger l'image
               const link = document.createElement("a");
               link.href = latestRender.image_url || "";
-              link.download = `vendu-${listing.address || "propriete"}.png`;
+              link.download = `${bannerType.toLowerCase()}-${listing.address || "propriete"}.png`;
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);

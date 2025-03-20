@@ -30,6 +30,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
   const [uploadingBrokerImage, setUploadingBrokerImage] = useState(false);
   const [uploadingAgencyLogo, setUploadingAgencyLogo] = useState(false);
+  const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
 
   const handleFileUpload = async (file: File, type: "broker" | "agency") => {
     try {
@@ -96,7 +97,8 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
         agencyLogo,
         brokerName,
         brokerEmail,
-        brokerPhone
+        brokerPhone,
+        bannerType
       };
       
       const { data, error } = await supabase.functions.invoke('create-sold-banner', {
@@ -108,10 +110,15 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       
       if (error) throw error;
       
-      toast.success("La bannière VENDU est en cours de création", {
-        description: "Vous recevrez une notification lorsqu'elle sera prête",
-        duration: 5000
-      });
+      toast.success(
+        bannerType === "VENDU" 
+          ? "La bannière VENDU est en cours de création" 
+          : "La bannière À VENDRE est en cours de création", 
+        {
+          description: "Vous recevrez une notification lorsqu'elle sera prête",
+          duration: 5000
+        }
+      );
       
       onClose();
     } catch (error) {
@@ -122,14 +129,32 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
     }
   };
   
+  const bannerTitle = bannerType === "VENDU" ? "VENDU" : "À VENDRE";
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Créer une bannière &quot;VENDU&quot;</DialogTitle>
+          <DialogTitle>Créer une bannière &quot;{bannerTitle}&quot;</DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="bannerType">Type de bannière</Label>
+            <Select 
+              value={bannerType} 
+              onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez le type de bannière" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="VENDU">VENDU</SelectItem>
+                <SelectItem value="A_VENDRE">À VENDRE</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="grid gap-2">
             <Label htmlFor="propertyImage">Image de la propriété</Label>
             <Select value={selectedImage} onValueChange={setSelectedImage}>
@@ -270,7 +295,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                 Création en cours...
               </>
             ) : (
-              "Créer la bannière"
+              `Créer la bannière "${bannerTitle}"`
             )}
           </Button>
         </DialogFooter>

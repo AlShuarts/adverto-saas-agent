@@ -13,7 +13,7 @@ export const CreateSoldBannerButton = ({ listing }: CreateSoldBannerButtonProps)
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreateSoldBanner = () => {
+  const handleCreateBanner = () => {
     setIsOpen(true);
   };
 
@@ -26,12 +26,12 @@ export const CreateSoldBannerButton = ({ listing }: CreateSoldBannerButtonProps)
       <Button
         variant="outline"
         size="sm"
-        onClick={handleCreateSoldBanner}
+        onClick={handleCreateBanner}
         disabled={isLoading}
         className="w-full"
       >
         <Tag className="w-4 h-4 mr-2" />
-        Créer une bannière "VENDU"
+        Créer une bannière
       </Button>
 
       <CreateSoldBannerDialog

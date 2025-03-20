@@ -7,6 +7,7 @@ type SoldBannerConfig = {
   brokerEmail: string;
   brokerPhone: string;
   address: string;
+  bannerType?: "VENDU" | "A_VENDRE";
   config: any;
 };
 
@@ -14,8 +15,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   console.log("🔍 Début de generateSoldBannerClip avec params:", JSON.stringify(params, null, 2));
   
   const duration = 5; // Durée statique car c'est une image
+  const bannerText = params.bannerType === "A_VENDRE" ? "À VENDRE" : "VENDU";
   
-  console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
+  console.log(`📸 Génération de bannière "${bannerText}" pour l'image ${params.mainImage}`);
   
   // Construction des tracks pour la timeline avec l'ordre exact fourni
   const tracks = [
@@ -83,13 +85,13 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       ]
     },
     
-    // Track 3: Infos courtier en HTML - PROPRIÉTÉ COLOR SUPPRIMÉE
+    // Track 3: Texte VENDU ou À VENDRE
     {
         clips: [
           {
             asset: {
               type: "text",
-              text: "VENDU",
+              text: bannerText,
               alignment: {
                 horizontal: "left",
                 vertical: "center"

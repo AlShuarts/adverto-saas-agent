@@ -71,6 +71,8 @@ serve(async (req) => {
       console.warn("⚠️ Profil utilisateur non trouvé, utilisation des valeurs par défaut");
     }
 
+    const bannerType = config.bannerType || "VENDU";
+
     // Générer les tracks pour la bannière
     console.log("🔄 Génération des tracks avec les paramètres suivants:");
     const bannerParams = {
@@ -81,6 +83,7 @@ serve(async (req) => {
       brokerEmail: config.brokerEmail || profile?.email || user.email || "",
       brokerPhone: config.brokerPhone || profile?.phone || "",
       address: listing.address || "",
+      bannerType,
       config
     };
     console.log(JSON.stringify(bannerParams, null, 2));
@@ -121,7 +124,8 @@ serve(async (req) => {
         listing_id: listingId,
         render_id: renderId,
         user_id: user.id,
-        status: "pending"
+        status: "pending",
+        banner_type: bannerType
       });
 
     console.log("✅ Rendu créé et enregistré avec succès, ID:", renderId);
