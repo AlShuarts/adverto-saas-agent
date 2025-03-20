@@ -280,6 +280,7 @@ export type Database = {
       }
       sold_banner_renders: {
         Row: {
+          banner_type: string
           created_at: string
           id: string
           image_url: string | null
@@ -290,6 +291,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          banner_type?: string
           created_at?: string
           id?: string
           image_url?: string | null
@@ -300,6 +302,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          banner_type?: string
           created_at?: string
           id?: string
           image_url?: string | null

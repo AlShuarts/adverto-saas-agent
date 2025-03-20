@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,11 +46,10 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       
       console.log("Bannières récupérées:", data);
       
-      // Ensure all records have the banner_type property, defaulting to "VENDU" if missing
+      // Ensure all records have the banner_type property
       const processedData = data?.map(render => ({
         ...render,
-        // TypeScript needs explicit type assertion here because it doesn't know banner_type exists
-        banner_type: (render as any).banner_type || "VENDU" // Provide default if missing
+        banner_type: render.banner_type || "VENDU" // Use the actual property now that it exists in the DB
       })) || [];
       
       setRenders(processedData as SoldBannerRender[]);
@@ -165,7 +165,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   }
 
   const latestRender = renders[0];
-  // Make sure we properly convert A_VENDRE to "À VENDRE" for display
+  // Make sure we properly format A_VENDRE to "À VENDRE" for display
   const bannerType = latestRender.banner_type === 'VENDU' ? 'VENDU' : 'À VENDRE';
 
   // Si la bannière est en cours de création
