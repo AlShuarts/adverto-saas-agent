@@ -1,17 +1,13 @@
 
 import { useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
-import { HeroSection } from "@/components/HeroSection";
-import { ListingsSection } from "@/components/ListingsSection";
-import { useFacebookSDK } from "@/hooks/useFacebookSDK";
-import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Sidebar } from "@/components/AppSidebar";
+import { SocialAccountsStatus } from "@/components/social/SocialAccountsStatus";
+import { SocialPublishingList } from "@/components/social/SocialPublishingList";
 
-const Index = () => {
-  const { fbInitialized } = useFacebookSDK();
-  const { profile, loading, getProfile, connectFacebook, connectInstagram } = useProfile();
+const SocialPublishing = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,16 +27,19 @@ const Index = () => {
       <Sidebar />
       <div className="flex-1">
         <Navbar />
-        <HeroSection 
-          profile={profile} 
-          loading={loading} 
-          onConnectFacebook={connectFacebook}
-          onConnectInstagram={connectInstagram}
-        />
-        <ListingsSection />
+        <div className="container mx-auto py-8">
+          <h1 className="text-3xl font-bold mb-8 text-center">Publication Sociale</h1>
+          <p className="text-center text-muted-foreground mb-8">
+            Publiez vos listings sur vos réseaux sociaux en quelques clics
+          </p>
+          <SocialAccountsStatus />
+          <div className="mt-8">
+            <SocialPublishingList />
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Index;
+export default SocialPublishing;

@@ -9,6 +9,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import PublishedListings from "./pages/PublishedListings";
+import MediaTools from "./pages/MediaTools";
+import SocialPublishing from "./pages/SocialPublishing";
+import Help from "./pages/Help";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +44,30 @@ const App = () => (
             element={
               <PrivateRoute>
                 <PublishedListings />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/media"
+            element={
+              <PrivateRoute>
+                <MediaTools />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/social"
+            element={
+              <PrivateRoute>
+                <SocialPublishing />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/help"
+            element={
+              <PrivateRoute>
+                <Help />
               </PrivateRoute>
             }
           />

@@ -3,7 +3,14 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, User, Home, BookMarked } from "lucide-react";
+import { LogOut, User, Bell, Menu } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -25,39 +32,47 @@ export const Navbar = () => {
   return (
     <nav className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="font-bold text-2xl flex items-center">
-            <span className="hidden md:inline">ImmoSocial</span>
-            <span className="inline md:hidden">IS</span>
-          </Link>
+        <div className="flex items-center gap-4 md:hidden">
+          <Button variant="ghost" size="icon">
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
 
+        <div className="flex-1" />
+
         <div className="flex items-center gap-2">
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              <Home className="h-4 w-4 mr-2" />
-              <span className="hidden md:inline">Accueil</span>
-            </Button>
-          </Link>
-          
-          <Link to="/published-listings">
-            <Button variant="ghost" size="sm">
-              <BookMarked className="h-4 w-4 mr-2" />
-              <span className="hidden md:inline">Publiés</span>
-            </Button>
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Bell className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <div className="p-2 text-center text-sm text-muted-foreground">
+                Aucune notification
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          <Link to="/profile">
-            <Button variant="ghost" size="sm">
-              <User className="h-4 w-4 mr-2" />
-              <span className="hidden md:inline">Profil</span>
-            </Button>
-          </Link>
-
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            <span className="hidden md:inline">Déconnexion</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <div className="p-2 text-sm">
+                <p className="font-medium">{user?.email}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/profile">Mon profil</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>
+                Déconnexion
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </nav>

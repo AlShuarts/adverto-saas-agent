@@ -1,62 +1,37 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
 import { ListingImageCarousel } from "./ListingImageCarousel";
-import { FacebookPublishButton } from "./FacebookPublishButton";
-import { InstagramPublishButton } from "./InstagramPublishButton";
 import { formatPrice } from "@/utils/priceFormatter";
-import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Share, Video, Bookmark } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { FacebookPreview } from "./FacebookPreview";
-import { InstagramPreview } from "./InstagramPreview";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { CreateSlideshowDialog } from "./CreateSlideshowDialog";
-import { SlideshowStatus } from "./SlideshowStatus";
+import { Video, Tag, Share, MoreHorizontal, CheckCircle2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { CreateSlideshowDialog } from "./CreateSlideshowDialog";
+import { SlideshowStatus } from "./SlideshowStatus";
+import { CreateSoldBannerDialog } from "./CreateSoldBannerDialog";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
 };
 
 export const ListingCard = ({ listing }: ListingCardProps) => {
-  const { profile } = useProfile();
-  const { toast: uiToast } = useToast();
-  const [showFacebookPreview, setShowFacebookPreview] = useState(false);
-  const [showInstagramPreview, setShowInstagramPreview] = useState(false);
   const [showSlideshowDialog, setShowSlideshowDialog] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
-  const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
+  const [showSoldBannerDialog, setShowSoldBannerDialog] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      const { data, error } = await supabase
-        .from('facebook_templates')
-        .select('id, name');
-      
-      if (error) {
-        console.error('Error fetching templates:', error);
-        return;
-      }
-      
-      setTemplates(data || []);
-    };
-
-    fetchTemplates();
-  }, []);
-
-  const handlePublishAttempt = () => {
-    uiToast({
-      title: "Connexion requise",
-      description: "Connectez votre page Facebook depuis votre profil pour publier sur Facebook/Instagram",
-    });
-  };
 
   const handleTogglePublished = async () => {
     try {
@@ -95,7 +70,15 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
       <CardContent className="p-0">
         <ListingImageCarousel images={listing.images || []} />
         <div className="p-4 space-y-2">
-          <h3 className="text-lg font-semibold">{listing.title}</h3>
+          <div className="flex justify-between items-start">
+            <h3 className="text-lg font-semibold">{listing.title}</h3>
+            {listing.is_published && (
+              <Badge variant="outline" className="bg-green-500/10 text-green-500 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Publié
+              </Badge>
+            )}
+          </div>
           <p className="text-2xl font-bold text-white">
             {formatPrice(listing.price)}
           </p>
@@ -122,93 +105,74 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
           </label>
         </div>
         
-        <div className="w-full grid grid-cols-1 gap-2">
-          {profile?.facebook_page_id ? (
-            <>
-              <FacebookPublishButton listing={listing} />
-              <InstagramPublishButton listing={listing} />
-            </>
-          ) : (
-            <>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
-                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Sélectionner un template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun template</SelectItem>
-                    {templates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFacebookPreview(true)}
-                  className="w-full"
-                >
-                  <Share className="w-4 h-4 mr-2" />
-                  Prévisualiser sur Facebook
-                </Button>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowInstagramPreview(true)}
-                className="w-full"
-              >
-                <Share className="w-4 h-4 mr-2" />
-                Prévisualiser sur Instagram
-              </Button>
-            </>
-          )}
+        <div className="grid grid-cols-3 gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowSlideshowDialog(true)}
-            className="w-full"
+            className="flex items-center gap-2"
           >
-            <Video className="w-4 h-4 mr-2" />
-            Créer un diaporama
+            <Video className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">Diaporama</span>
           </Button>
-          <SlideshowStatus listing={listing} />
           
-          {listing.is_published && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.href = "/published-listings"}
-              className="w-full"
-            >
-              <Bookmark className="w-4 h-4 mr-2" />
-              Voir dans les listings publiés
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSoldBannerDialog(true)}
+            className="flex items-center gap-2"
+          >
+            <Tag className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:inline">Bannière</span>
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 w-full"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only md:not-sr-only md:inline">Plus</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Share className="h-4 w-4 mr-2" />
+                Facebook
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Share className="h-4 w-4 mr-2" />
+                Instagram
+              </DropdownMenuItem>
+              {listing.is_published && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => window.location.href = "/published-listings"}>
+                    Voir dans les listings publiés
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+        
+        <SlideshowStatus listing={listing} />
       </CardFooter>
-
-      <FacebookPreview
-        listing={listing}
-        isOpen={showFacebookPreview}
-        onClose={() => setShowFacebookPreview(false)}
-        onPublish={handlePublishAttempt}
-        selectedTemplateId={selectedTemplateId}
-      />
-
-      <InstagramPreview
-        listing={listing}
-        isOpen={showInstagramPreview}
-        onClose={() => setShowInstagramPreview(false)}
-        onPublish={handlePublishAttempt}
-      />
 
       <CreateSlideshowDialog
         listing={listing}
         isOpen={showSlideshowDialog}
         onClose={() => setShowSlideshowDialog(false)}
+      />
+      
+      <CreateSoldBannerDialog
+        listing={listing}
+        isOpen={showSoldBannerDialog}
+        onClose={() => setShowSoldBannerDialog(false)}
       />
     </Card>
   );
