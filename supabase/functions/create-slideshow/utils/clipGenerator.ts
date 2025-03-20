@@ -1,3 +1,4 @@
+
 export const generateSlideShowClips = (selectedImages: string[], textElements: string[], config: any) => {
   const clips = [];
   let totalDuration = 0;
@@ -9,11 +10,12 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   for (let i = 0; i < selectedImages.length; i++) {
     const imageUrl = selectedImages[i];
     const effect = effects[i % effects.length];
+    const slideDuration = config.imageDuration || 3;
 
     const imageClip = {
       asset: { type: 'image', src: imageUrl },
       start: totalDuration,
-      length: config.imageDuration || 3,
+      length: slideDuration,
       effect: effect,
       fit: "cover",
       scale: 1.0,
@@ -25,7 +27,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     // Ajouter le texte correspondant sous l'image
     if (textElements[i]) {
       console.log(`📝 Ajout du texte pour l'image ${i}: ${textElements[i]}`);
-    const textHeight = totalDuration ===0  ? 150 : 50;
+      const textHeight = i === 0 ? 150 : 50;
       const textClip = {
         asset: {
           type: "text",
@@ -50,13 +52,13 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
           }
         },
         start: totalDuration,
-        length: config.imageDuration || 3,
+        length: slideDuration,
         offset: { x: 0, y: -0.4 }
       };
       clips.push(textClip);
     }
 
-    totalDuration += config.imageDuration || 3;
+    totalDuration += slideDuration;
   }
 
   // Ajouter un clip audio si une musique est sélectionnée

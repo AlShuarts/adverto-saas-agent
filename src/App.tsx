@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import { PrivateRoute } from "@/components/PrivateRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import PublishedListings from "./pages/PublishedListings";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,14 @@ const App = () => (
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/published-listings"
+            element={
+              <PrivateRoute>
+                <PublishedListings />
               </PrivateRoute>
             }
           />

@@ -9,3 +9,6 @@ verify_jwt = false
 
 [check-render-status]
 verify_jwt = true
+
+[create-sold-banner]
+verify_jwt = true

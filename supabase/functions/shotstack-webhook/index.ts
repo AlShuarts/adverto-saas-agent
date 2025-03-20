@@ -1,120 +1,114 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    console.log("🔹 Webhook Shotstack reçu");
-    
-    // Récupérer les données du webhook
-    let webhook;
-    try {
-      webhook = await req.json();
-      console.log('📌 Payload reçu:', JSON.stringify(webhook, null, 2));
-    } catch (error) {
-      console.error('❌ Erreur lors de la lecture du payload:', error);
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON payload' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
+    const body = await req.json();
+    console.log("💡 Shotstack webhook appelé avec:", JSON.stringify(body, null, 2));
 
-    // Vérifier si le webhook contient un ID de rendu
-    if (!webhook || !webhook.id) {
-      console.error('❌ Payload invalide: pas d\'ID de rendu');
-      return new Response(
-        JSON.stringify({ error: 'Invalid webhook payload: no render ID' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+    if (!body.id || !body.status) {
+      throw new Error("Données webhook manquantes");
     }
 
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    // Convertir le statut Shotstack en notre statut
-    let status = webhook.status || 'unknown';
-    if (webhook.status === 'done') {
-      status = 'completed';
-    } else if (webhook.status === 'failed') {
-      status = 'error';
-    }
+    const renderId = body.id;
+    const status = body.status;
+    
+    console.log(`📊 Mise à jour du rendu ${renderId} au statut: ${status}`);
+    console.log(`📊 URL reçue: ${body.url || "aucune URL"}`);
 
-    console.log(`🔍 Recherche du rendu avec ID: ${webhook.id}`);
-    // Trouver l'enregistrement de rendu
-    const { data: render, error: renderError } = await supabase
-      .from('slideshow_renders')
-      .select('*')
-      .eq('render_id', webhook.id)
-      .single();
+    // Vérifier si c'est un rendu de diaporama
+    const { data: slideshowData, error: slideshowError } = await supabase
+      .from("slideshow_renders")
+      .select("*")
+      .eq("render_id", renderId)
+      .maybeSingle();
 
-    if (renderError) {
-      console.error('❌ Rendu non trouvé:', webhook.id, renderError);
-      return new Response(
-        JSON.stringify({ error: 'Render not found', renderId: webhook.id }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
-      );
-    }
-
-    console.log(`✅ Rendu trouvé, mise à jour du statut: ${status}`);
-    console.log(`🎬 URL vidéo: ${webhook.url || 'Non disponible'}`);
-
-    // Mettre à jour le statut du rendu
-    const { error: updateError } = await supabase
-      .from('slideshow_renders')
-      .update({ 
-        status: status,
-        video_url: webhook.url || null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('render_id', webhook.id);
-
-    if (updateError) {
-      console.error('❌ Erreur lors de la mise à jour du rendu:', updateError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to update render status' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    // Si le rendu est terminé et qu'une URL de vidéo est disponible, mettre à jour le listing
-    if (status === 'completed' && webhook.url) {
-      console.log(`📝 Rendu terminé, mise à jour du listing ${render.listing_id} avec l'URL de la vidéo`);
+    if (slideshowData) {
+      console.log("🎬 C'est un rendu de diaporama");
       
-      const { error: listingError } = await supabase
-        .from('listings')
-        .update({ 
-          video_url: webhook.url,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', render.listing_id);
-
-      if (listingError) {
-        console.error('❌ Erreur lors de la mise à jour du listing:', listingError);
+      const updateData: any = { status };
+      
+      if (status === "done" && body.url) {
+        updateData.video_url = body.url;
+        console.log(`✅ URL vidéo mise à jour: ${body.url}`);
       }
+
+      // Mettre à jour le statut du rendu du diaporama
+      const { data, error } = await supabase
+        .from("slideshow_renders")
+        .update(updateData)
+        .eq("render_id", renderId);
+
+      if (error) {
+        console.error("❌ Erreur lors de la mise à jour du statut du diaporama:", error);
+      } else {
+        console.log("✅ Statut du diaporama mis à jour avec succès");
+      }
+      
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
+    // Vérifier si c'est un rendu de bannière VENDU
+    const { data: bannerData, error: bannerError } = await supabase
+      .from("sold_banner_renders")
+      .select("*")
+      .eq("render_id", renderId)
+      .maybeSingle();
+
+    if (bannerData) {
+      console.log("🏷️ C'est un rendu de bannière VENDU");
+      
+      const updateData: any = { 
+        status: status === "done" ? "completed" : status 
+      };
+      
+      if (status === "done" && body.url) {
+        updateData.image_url = body.url;
+        console.log("📸 URL de l'image récupérée:", body.url);
+      }
+
+      // Mettre à jour le statut du rendu de la bannière
+      const { data, error } = await supabase
+        .from("sold_banner_renders")
+        .update(updateData)
+        .eq("render_id", renderId);
+
+      if (error) {
+        console.error("❌ Erreur lors de la mise à jour du statut de la bannière:", error);
+      } else {
+        console.log("✅ Statut de la bannière mis à jour avec succès");
+      }
+      
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("⚠️ Aucun rendu correspondant trouvé pour l'ID:", renderId);
+    
     return new Response(
-      JSON.stringify({ success: true, message: 'Webhook processed successfully' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: true, message: "Aucun rendu correspondant trouvé" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error('❌ Erreur lors du traitement du webhook:', error);
+    console.error("❌ Erreur:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ success: false, error: error.message }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
