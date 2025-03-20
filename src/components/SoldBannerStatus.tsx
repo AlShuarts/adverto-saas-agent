@@ -19,6 +19,8 @@ type SoldBannerRender = {
   image_url: string | null;
   created_at: string;
   banner_type: string; // "VENDU" ou "A_VENDRE"
+  user_id: string;
+  updated_at: string;
 };
 
 export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
@@ -43,7 +45,14 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       }
       
       console.log("Bannières récupérées:", data);
-      setRenders(data || []);
+      
+      // Ensure all records have the banner_type property, defaulting to "VENDU" if missing
+      const processedData = (data || []).map(render => ({
+        ...render,
+        banner_type: render.banner_type || "VENDU" // Provide default if missing
+      }));
+      
+      setRenders(processedData as SoldBannerRender[]);
     } catch (error) {
       console.error("Erreur lors de la récupération des bannières:", error);
     } finally {
