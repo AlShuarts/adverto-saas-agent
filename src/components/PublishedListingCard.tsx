@@ -2,18 +2,17 @@
 import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
-import { ListingImageCarousel } from "./ListingImageCarousel";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Tag, Check } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Tag, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateSoldBannerButton } from "./CreateSoldBannerButton";
 import { SoldBannerStatus } from "./SoldBannerStatus";
 import { Switch } from "@/components/ui/switch";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type PublishedListingCardProps = {
   listing: Tables<"listings">;
@@ -22,7 +21,9 @@ type PublishedListingCardProps = {
 export const PublishedListingCard = ({ listing }: PublishedListingCardProps) => {
   const { profile } = useProfile();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   if (!listing.images || listing.images.length === 0) {
     return null;
@@ -59,27 +60,35 @@ export const PublishedListingCard = ({ listing }: PublishedListingCardProps) => 
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
-        <ListingImageCarousel images={listing.images || []} />
-        {listing.is_sold && (
-          <div className="absolute top-0 left-0 w-full bg-black bg-opacity-70 text-white py-2 px-4 text-center font-bold">
-            VENDU
+        <div className="relative">
+          <img 
+            src={listing.images[0]} 
+            alt={listing.title} 
+            className="w-full h-36 object-cover"
+          />
+          {listing.is_sold && (
+            <div className="absolute top-0 left-0 w-full bg-black bg-opacity-70 text-white py-1 px-2 text-center font-bold text-sm">
+              VENDU
+            </div>
+          )}
+        </div>
+        <div className="p-3 space-y-1">
+          <div className="flex justify-between items-start">
+            <h3 className="text-base font-semibold truncate">{listing.title}</h3>
           </div>
-        )}
-        <div className="p-4 space-y-2">
-          <h3 className="text-lg font-semibold">{listing.title}</h3>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-lg font-bold text-white">
             {formatPrice(listing.price)}
           </p>
-          <p className="text-sm text-muted-foreground">{listing.address}</p>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground truncate">{listing.address}</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{listing.bedrooms} ch.</span>
             <span>{listing.bathrooms} sdb.</span>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex flex-col gap-2 w-full">
-        <div className="flex items-center justify-between w-full py-2">
-          <div className="flex items-center gap-2">
+      <CardFooter className="p-3 pt-0 flex flex-col gap-2 w-full">
+        <div className="flex items-center justify-between w-full py-1">
+          <div className="flex items-center gap-1 text-sm">
             <Switch 
               id={`sold-${listing.id}`} 
               checked={!!listing.is_sold}
@@ -88,17 +97,27 @@ export const PublishedListingCard = ({ listing }: PublishedListingCardProps) => 
             />
             <label 
               htmlFor={`sold-${listing.id}`}
-              className="text-sm font-medium cursor-pointer"
+              className="text-xs font-medium cursor-pointer"
             >
-              Marqué comme vendu
+              Vendu
             </label>
           </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-7 px-2" 
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
         </div>
         
-        <div className="w-full grid grid-cols-1 gap-2">
-          <CreateSoldBannerButton listing={listing} />
-          <SoldBannerStatus listing={listing} />
-        </div>
+        {expanded && (
+          <div className="w-full grid grid-cols-1 gap-2 pt-1 border-t border-border">
+            <CreateSoldBannerButton listing={listing} />
+            <SoldBannerStatus listing={listing} />
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
