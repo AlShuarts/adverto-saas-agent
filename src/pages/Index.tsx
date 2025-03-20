@@ -40,7 +40,7 @@ const Index = () => {
           </div>
         )}
         <div className="flex-1 overflow-hidden">
-          <Navbar>
+          <div className="flex items-center">
             {isMobile && (
               <Button 
                 variant="ghost" 
@@ -51,7 +51,8 @@ const Index = () => {
                 <Menu className="h-5 w-5" />
               </Button>
             )}
-          </Navbar>
+            <Navbar />
+          </div>
           <div className="overflow-y-auto">
             <HeroSection 
               profile={profile} 

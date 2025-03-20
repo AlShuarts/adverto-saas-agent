@@ -8,9 +8,10 @@ import { useEffect, useRef } from "react";
 
 type SlideshowStatusProps = {
   listing: Tables<"listings">;
+  className?: string; // Ajout de la prop className optionnelle
 };
 
-export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
+export const SlideshowStatus = ({ listing, className = "" }: SlideshowStatusProps) => {
   const { data: render, isLoading, error } = useSlideshowStatus(listing.id);
   const hasNotified = useRef(false);
 
@@ -46,7 +47,7 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
 
   if (isLoading) {
     return (
-      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className={`mt-2 flex items-center gap-2 text-sm text-muted-foreground ${className}`}>
         <Loader2 className="h-4 w-4 animate-spin" />
         Vérification du statut du diaporama...
       </div>
@@ -56,7 +57,7 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
   if (error) {
     console.error("Error in SlideshowStatus:", error);
     return (
-      <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
+      <div className={`mt-2 flex items-center gap-2 text-sm text-destructive ${className}`}>
         <AlertTriangle className="h-4 w-4" />
         Erreur lors de la vérification du statut
       </div>
@@ -70,7 +71,7 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
 
   if (render.status === "error") {
     return (
-      <div className="mt-2 text-sm text-destructive flex items-center gap-2">
+      <div className={`mt-2 text-sm text-destructive flex items-center gap-2 ${className}`}>
         <AlertTriangle className="h-4 w-4" />
         Une erreur est survenue lors de la création du diaporama
       </div>
@@ -80,7 +81,7 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
   // Accepter les deux statuts "completed" ou "done"
   if ((render.status === "completed" || render.status === "done") && render.video_url) {
     return (
-      <div className="mt-2">
+      <div className={`mt-2 ${className}`}>
         <Button
           variant="outline"
           size="sm"
@@ -97,7 +98,7 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
 
   if (render.status === "pending" || render.status === "processing") {
     return (
-      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className={`mt-2 flex items-center gap-2 text-sm text-muted-foreground ${className}`}>
         <Loader2 className="h-4 w-4 animate-spin" />
         Création du diaporama en cours...
       </div>

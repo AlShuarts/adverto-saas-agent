@@ -36,7 +36,7 @@ const PublishedListings = () => {
           </div>
         )}
         <div className="flex-1 overflow-hidden">
-          <Navbar>
+          <div className="flex items-center">
             {isMobile && (
               <Button 
                 variant="ghost" 
@@ -47,7 +47,8 @@ const PublishedListings = () => {
                 <Menu className="h-5 w-5" />
               </Button>
             )}
-          </Navbar>
+            <Navbar />
+          </div>
           <div className="container mx-auto py-6 px-4 overflow-y-auto">
             <h1 className="text-2xl font-bold mb-4">Listings publiés</h1>
             <p className="text-muted-foreground mb-6">
