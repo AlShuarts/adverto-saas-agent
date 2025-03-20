@@ -47,10 +47,11 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       console.log("Bannières récupérées:", data);
       
       // Ensure all records have the banner_type property, defaulting to "VENDU" if missing
-      const processedData = (data || []).map(render => ({
+      const processedData = data?.map(render => ({
         ...render,
-        banner_type: render.banner_type || "VENDU" // Provide default if missing
-      }));
+        // TypeScript needs explicit type assertion here because it doesn't know banner_type exists
+        banner_type: (render as any).banner_type || "VENDU" // Provide default if missing
+      })) || [];
       
       setRenders(processedData as SoldBannerRender[]);
     } catch (error) {
