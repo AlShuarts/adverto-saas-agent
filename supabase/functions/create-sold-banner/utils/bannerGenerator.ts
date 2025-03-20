@@ -17,12 +17,9 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   
   console.log(`📸 Génération de bannière "VENDU" pour l'image ${params.mainImage}`);
   
-  // Utilisation de la structure exacte fournie par l'utilisateur
-  // avec adaptation des variables dynamiques (images, textes, etc.)
-  
   // Construction des tracks pour la timeline avec l'ordre exact fourni
   const tracks = [
-    // Track 1: Texte (non utilisé dans cette version)
+    // Track 1: Texte
     {
       clips: [
         {
@@ -86,7 +83,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
       ]
     },
     
-    // Track 3: Infos courtier en HTML
+    // Track 3: Infos courtier en HTML - SUPPRESSION DE LA PROPRIÉTÉ COLOR
     {
       clips: [
         {
@@ -99,7 +96,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   </div></div>`,
             width: 607,
             height: 200,
-            color: "#ffffff",
+            // Suppression de la propriété "color" ici
             textScale: "shrink",
             fontSize: "96",
             textAlign: "left",
@@ -209,6 +206,5 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
   
   console.log(`✅ Total tracks générés: ${tracks.length}`);
   
-  // On retourne les tracks complets au lieu des clips individuels
   return { tracks, totalDuration: duration };
 };
