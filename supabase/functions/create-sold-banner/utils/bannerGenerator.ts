@@ -85,32 +85,34 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
     
     // Track 3: Infos courtier en HTML - PROPRIÉTÉ COLOR SUPPRIMÉE
     {
-      clips: [
-        {
-          asset: {
-            type: "html",
-            html: `<div style='color: white; font-family: Arial, sans-serif;'><div style='text-align: left;'>
-    <p style='font-size: 28px; font-weight: bold; margin: 0 0 5px 0;'>${params.brokerName}</p>
-    <p style='font-size: 24px; margin: 0 0 5px 0;'>${params.brokerEmail}</p>
-    <p style='font-size: 24px; margin: 0;'>${params.brokerPhone}</p>
-  </div></div>`,
-            width: 607,
-            height: 200,
-            textScale: "shrink",
-            fontSize: "96",
-            textAlign: "left",
-            fontFamily: "Arapey"
-          },
-          start: 0,
-          length: duration,
-          position: "center",
-          offset: {
-            x: 0.008,
-            y: -0.232
+        clips: [
+          {
+            asset: {
+              type: "text",
+              text: "VENDU",
+              alignment: {
+                horizontal: "left",
+                vertical: "center"
+              },
+              font: {
+                color: "#fffafa",
+                family: "Arapey",
+                size: "85",
+                lineHeight: 1
+              },
+              width: 800,
+              height: 200
+            },
+            start: 0,
+            length: 3,
+            offset: {
+              x: 0.083,
+              y: -0.221
+            },
+            position: "center"
           }
-        }
-      ]
-    },
+        ]
+      },
     
     // Track 4: Photo du courtier
     {
