@@ -37,7 +37,9 @@ serve(async (req) => {
     if (slideshowData) {
       console.log("🎬 C'est un rendu de diaporama");
       
-      const updateData: any = { status };
+      const updateData: any = { 
+        status: status === "done" ? "completed" : status 
+      };
       
       if (status === "done" && body.url) {
         updateData.video_url = body.url;

@@ -22,7 +22,7 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
       const hasBeenNotified = localStorage.getItem(notificationKey);
 
       if (!hasBeenNotified) {
-        if (render.status === "completed" && render.video_url) {
+        if ((render.status === "completed" || render.status === "done") && render.video_url) {
           hasNotified.current = true;
           localStorage.setItem(notificationKey, "true");
           toast("Diaporama prêt !", {
@@ -77,7 +77,8 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
     );
   }
 
-  if (render.status === "completed" && render.video_url) {
+  // Accepter les deux statuts "completed" ou "done"
+  if ((render.status === "completed" || render.status === "done") && render.video_url) {
     return (
       <div className="mt-2">
         <Button
