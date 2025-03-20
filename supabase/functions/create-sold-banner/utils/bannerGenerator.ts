@@ -126,10 +126,10 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
           length: duration,
           position: "center",
           offset: {
-            x: -0.386,
-            y: -0.275
+            x: -0.411,
+            y: -0.327
           },
-          scale: 0.45,
+          scale: 0.353,
           fit: "contain"
         }
       ] : []
