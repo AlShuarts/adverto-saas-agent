@@ -166,6 +166,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   }
 
   const latestRender = renders[0];
+  // Make sure we properly convert A_VENDRE to "À VENDRE" for display
   const bannerType = latestRender.banner_type === 'VENDU' ? 'VENDU' : 'À VENDRE';
 
   // Si la bannière est en cours de création
