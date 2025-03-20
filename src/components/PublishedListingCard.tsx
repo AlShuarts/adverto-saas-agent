@@ -95,12 +95,10 @@ export const PublishedListingCard = ({ listing }: PublishedListingCardProps) => 
           </div>
         </div>
         
-        {listing.is_sold && (
-          <div className="w-full grid grid-cols-1 gap-2">
-            <CreateSoldBannerButton listing={listing} />
-            <SoldBannerStatus listing={listing} />
-          </div>
-        )}
+        <div className="w-full grid grid-cols-1 gap-2">
+          <CreateSoldBannerButton listing={listing} />
+          <SoldBannerStatus listing={listing} />
+        </div>
       </CardFooter>
     </Card>
   );
