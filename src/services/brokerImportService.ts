@@ -29,6 +29,7 @@ export const importListingsFromBrokerProfile = async (
     let currentPage = 1;
     let hasNextPage = true;
     let allListingUrls: string[] = [];
+    let displayedPropertyCount = 0;
     
     // Collect all listing URLs from all pages
     while (hasNextPage) {
@@ -48,28 +49,58 @@ export const importListingsFromBrokerProfile = async (
         break;
       }
       
+      // Add the URLs from this page
       allListingUrls = [...allListingUrls, ...response.listingUrls];
       console.log(`Added ${response.listingUrls.length} listings from page ${currentPage}`);
       
-      hasNextPage = response.hasNextPage && currentPage < response.totalPages;
+      // Update with displayedPropertyCount if available
+      if (response.displayedPropertyCount && currentPage === 1) {
+        displayedPropertyCount = response.displayedPropertyCount;
+        console.log(`Actual property count from profile: ${displayedPropertyCount}`);
+      }
+      
+      hasNextPage = response.hasNextPage && response.totalPages > currentPage;
       currentPage++;
       
       // Update progress with total count after first page
       if (currentPage === 2) {
-        progress.total = response.totalPages * response.listingUrls.length;
+        if (displayedPropertyCount > 0) {
+          // Use the property count from the page if available
+          progress.total = displayedPropertyCount;
+        } else if (response.totalPages && response.listingUrls.length) {
+          // Estimate based on listings per page × total pages
+          progress.total = response.totalPages * response.listingUrls.length;
+        } else {
+          progress.total = allListingUrls.length;
+        }
+        
         if (onProgressUpdate) onProgressUpdate({...progress});
       }
     }
     
-    // Deduplicate URLs
+    // Deduplicate URLs by converting to Set and back to Array
     const uniqueListingUrls = [...new Set(allListingUrls)];
-    progress.total = uniqueListingUrls.length;
+    
+    // If we have displayedPropertyCount from the page and it's less than our uniqueListingUrls
+    // Make sure we don't process more than what should be there
+    if (displayedPropertyCount > 0 && displayedPropertyCount < uniqueListingUrls.length) {
+      console.log(`Limiting import to ${displayedPropertyCount} listings (displayed on profile) instead of ${uniqueListingUrls.length} found URLs`);
+      progress.total = displayedPropertyCount;
+    } else {
+      progress.total = uniqueListingUrls.length;
+    }
+    
     console.log(`Found ${progress.total} unique listings to import`);
     
     if (onProgressUpdate) onProgressUpdate({...progress});
     
+    // Get number of listings to process (either all unique URLs, or limited by displayedPropertyCount)
+    const listingsToProcess = displayedPropertyCount > 0 && displayedPropertyCount < uniqueListingUrls.length 
+      ? uniqueListingUrls.slice(0, displayedPropertyCount) 
+      : uniqueListingUrls;
+    
     // Import listings one by one with rate limiting to avoid overloading
-    for (const listingUrl of uniqueListingUrls) {
+    for (const listingUrl of listingsToProcess) {
       try {
         console.log(`Importing listing: ${listingUrl}`);
         await importCentrisListing(listingUrl, userId);

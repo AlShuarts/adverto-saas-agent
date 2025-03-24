@@ -49,13 +49,21 @@ serve(async (req) => {
     const html = await response.text();
     console.log('HTML length:', html.length);
     
-    // Extract listing URLs from the broker profile page
-    const listingUrls = extractListingUrls(html);
-    console.log(`Found ${listingUrls.length} listings`);
+    // Extract property count to verify our extraction
+    const propertyCountMatch = html.match(/(\d+)\s*(?:propriété|propriétés|property|properties)/i);
+    const displayedPropertyCount = propertyCountMatch ? parseInt(propertyCountMatch[1], 10) : null;
     
-    // Check if there are more pages
+    // Extract listing URLs from the broker profile page - improved to be more precise
+    const listingUrls = extractListingUrls(html);
+    console.log(`Found ${listingUrls.length} listings on page ${page}`);
+    
+    // Check if there are more pages by looking for pagination links
     const hasNextPage = html.includes('class="pager-next"') || html.includes('class="next"');
     const totalPages = extractTotalPages(html);
+    
+    // Calculate actual total properties if we have that info
+    const totalProperties = displayedPropertyCount || 
+                          (totalPages && listingUrls.length ? totalPages * listingUrls.length : listingUrls.length);
     
     return new Response(
       JSON.stringify({
@@ -63,7 +71,9 @@ serve(async (req) => {
         currentPage: page,
         hasNextPage,
         totalPages,
-        totalListings: listingUrls.length
+        totalListings: displayedPropertyCount || listingUrls.length,
+        displayedPropertyCount,
+        actualListingsFound: listingUrls.length
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -84,10 +94,11 @@ serve(async (req) => {
 function extractListingUrls(html: string): string[] {
   const listingUrls = new Set<string>();
   
-  // Regular expression to match Centris listing URLs in the HTML
+  // More precise regex to match property listings only - avoid menu items and other links
   const regexPatterns = [
-    /href="(https:\/\/www\.centris\.ca\/fr\/(?:maison|condo|terrain|propriete)(?:~|\/)[^"]+)"/g,
-    /href="(\/fr\/(?:maison|condo|terrain|propriete)(?:~|\/)[^"]+)"/g
+    // Match listing detail URLs - more specific to actual property listings
+    /href="(https:\/\/www\.centris\.ca\/fr\/(?:maison|condo|terrain|propriete)(?:~|\/)[^"]+\/[0-9]+)"(?![^<]*<\/a>[^<]*<\/li>[^<]*<\/ul>[^<]*<\/div>[^<]*<\/div>[^<]*<\/nav>)/g,
+    /href="(\/fr\/(?:maison|condo|terrain|propriete)(?:~|\/)[^"]+\/[0-9]+)"(?![^<]*<\/a>[^<]*<\/li>[^<]*<\/ul>[^<]*<\/div>[^<]*<\/div>[^<]*<\/nav>)/g
   ];
   
   for (const regex of regexPatterns) {
@@ -100,11 +111,8 @@ function extractListingUrls(html: string): string[] {
         url = `https://www.centris.ca${url}`;
       }
       
-      // Only add property listings, not broker or agency pages
-      if (url.includes('/maison') || 
-          url.includes('/condo') || 
-          url.includes('/propriete') || 
-          url.includes('/terrain')) {
+      // Ensure we only add property listings with numeric IDs at the end
+      if (/\/[0-9]+$/.test(url)) {
         listingUrls.add(url);
       }
     }
