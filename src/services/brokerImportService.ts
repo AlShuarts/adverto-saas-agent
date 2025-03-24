@@ -46,7 +46,17 @@ export const importListingsFromBrokerProfile = async (
       
       console.log('Response from scrape-broker-profile:', response);
       
-      if (!response || !response.listingUrls || response.listingUrls.length === 0) {
+      if (!response) {
+        console.error('No response data received from scrape-broker-profile');
+        throw new Error("Aucune donnée reçue du serveur");
+      }
+      
+      if (response.error) {
+        console.error(`Error in scrape-broker-profile response:`, response.error);
+        throw new Error(`Erreur lors du scraping: ${response.error}`);
+      }
+      
+      if (!response.listingUrls || response.listingUrls.length === 0) {
         console.log(`No listings found on page ${currentPage}`);
         
         // Check if there was an "Voir toutes les propriétés" link and we have an alternate URL
@@ -59,6 +69,11 @@ export const importListingsFromBrokerProfile = async (
             userId,
             onProgressUpdate
           );
+        }
+        
+        // If we're on the first page and no listings found, throw an error
+        if (currentPage === 1 && allListingUrls.length === 0) {
+          throw new Error("Aucune annonce trouvée sur le profil du courtier");
         }
         
         break;
@@ -91,6 +106,11 @@ export const importListingsFromBrokerProfile = async (
         
         if (onProgressUpdate) onProgressUpdate({...progress});
       }
+    }
+    
+    // Check if we have any listings
+    if (allListingUrls.length === 0) {
+      throw new Error("Aucune annonce trouvée sur le profil du courtier");
     }
     
     // Deduplicate URLs by converting to Set and back to Array
