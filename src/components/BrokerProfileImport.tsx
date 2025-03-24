@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -24,7 +24,6 @@ interface ImportProgress {
 }
 
 export const BrokerProfileImport = () => {
-  const { toast } = useToast();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
@@ -32,10 +31,8 @@ export const BrokerProfileImport = () => {
 
   const handleImport = async () => {
     if (!url.includes("centris.ca")) {
-      toast({
-        title: "URL invalide",
-        description: "Veuillez entrer une URL de profil Centris valide",
-        variant: "destructive",
+      toast.error("URL invalide", {
+        description: "Veuillez entrer une URL de profil Centris valide"
       });
       return;
     }
@@ -55,9 +52,8 @@ export const BrokerProfileImport = () => {
       if (!userData.user) throw new Error("Non authentifié");
 
       // Display initial toast
-      toast({
-        title: "Import en cours",
-        description: "Récupération des annonces du profil de courtier...",
+      const importToast = toast.loading("Import en cours", {
+        description: "Récupération des annonces du profil de courtier..."
       });
 
       await importListingsFromBrokerProfile(
@@ -69,28 +65,25 @@ export const BrokerProfileImport = () => {
           // Update toast with progress when we have a total
           if (currentProgress.total > 0 && currentProgress.processed > 0) {
             const percentComplete = Math.round((currentProgress.processed / currentProgress.total) * 100);
-            toast({
-              title: `Import en cours (${percentComplete}%)`,
+            toast.loading(`Import en cours (${percentComplete}%)`, {
               description: `${currentProgress.processed}/${currentProgress.total} annonces traitées`,
-              id: "import-progress", // Use an ID to update the same toast
+              id: importToast
             });
           }
         }
       );
 
-      toast({
-        title: "Import terminé",
+      toast.success("Import terminé", {
         description: `${progress?.successful || 0} annonces importées avec succès${progress?.failed ? `, ${progress.failed} échecs` : ''}`,
+        id: importToast
       });
 
       // Refresh the listings
       queryClient.invalidateQueries({ queryKey: ["listings"] });
     } catch (error) {
       console.error("Erreur complète:", error);
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Impossible d'importer les annonces",
-        variant: "destructive",
+      toast.error("Erreur", {
+        description: error instanceof Error ? error.message : "Impossible d'importer les annonces"
       });
     } finally {
       setLoading(false);
