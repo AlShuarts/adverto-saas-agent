@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, User, Home, BookMarked } from "lucide-react";
+import { LogOut, User, Home, BookMarked, Table } from "lucide-react";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -37,6 +37,13 @@ export const Navbar = () => {
             <Button variant="ghost" size="sm">
               <Home className="h-4 w-4 mr-2" />
               <span className="hidden md:inline">Accueil</span>
+            </Button>
+          </Link>
+          
+          <Link to="/all-listings">
+            <Button variant="ghost" size="sm">
+              <Table className="h-4 w-4 mr-2" />
+              <span className="hidden md:inline">Tous</span>
             </Button>
           </Link>
           

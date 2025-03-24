@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import PublishedListings from "./pages/PublishedListings";
+import AllListings from "./pages/AllListings";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,14 @@ const App = () => (
             element={
               <PrivateRoute>
                 <PublishedListings />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/all-listings"
+            element={
+              <PrivateRoute>
+                <AllListings />
               </PrivateRoute>
             }
           />
