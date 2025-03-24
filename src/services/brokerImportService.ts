@@ -44,8 +44,23 @@ export const importListingsFromBrokerProfile = async (
         throw new Error(`Error scraping page ${currentPage}: ${error.message}`);
       }
       
+      console.log('Response from scrape-broker-profile:', response);
+      
       if (!response || !response.listingUrls || response.listingUrls.length === 0) {
         console.log(`No listings found on page ${currentPage}`);
+        
+        // Check if there was an "Voir toutes les propriétés" link and we have an alternate URL
+        if (response.hasAllPropertiesLink && response.allPropertiesUrl) {
+          console.log('Trying to use "Voir toutes les propriétés" URL:', response.allPropertiesUrl);
+          
+          // Call the function again with the new URL
+          return importListingsFromBrokerProfile(
+            response.allPropertiesUrl,
+            userId,
+            onProgressUpdate
+          );
+        }
+        
         break;
       }
       
