@@ -1,63 +1,79 @@
 
 /**
- * Utility functions for making HTTP requests
+ * Utility functions for handling HTTP requests
  */
 
-/**
- * Headers to use for scraping requests to appear more like a browser
- */
-export const scrapingHeaders = {
-  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
-  'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
-  'Connection': 'keep-alive',
-  'Upgrade-Insecure-Requests': '1',
-  'Cache-Control': 'max-age=0',
-  'Referer': 'https://www.centris.ca/',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-};
-
-/**
- * CORS headers for API responses
- */
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 /**
- * Fetch HTML from a URL with retry logic
+ * Headers to use for scraping Centris
  */
-export async function fetchWithRetry(url: string, maxRetries: number = 3): Promise<{html: string, response: Response}> {
-  let retries = 0;
+export const scrapingHeaders = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+  'Accept-Language': 'fr-CA,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+  'Cache-Control': 'no-cache',
+  'Pragma': 'no-cache',
+};
+
+/**
+ * Fetch a URL with retry logic
+ */
+export async function fetchWithRetry(
+  url: string, 
+  options: RequestInit = {}, 
+  maxRetries = 3, 
+  retryDelay = 2000
+): Promise<{ html: string; status: number }> {
   let lastError: Error | null = null;
   
-  while (retries < maxRetries) {
+  // Apply default headers if none provided
+  const fetchOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...scrapingHeaders,
+      ...(options.headers || {}),
+    },
+  };
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const response = await fetch(url, { 
-        headers: scrapingHeaders,
-        redirect: 'follow'
-      });
+      console.log(`Fetching URL (attempt ${attempt}/${maxRetries}): ${url}`);
+      
+      const response = await fetch(url, fetchOptions);
+      console.log(`Response status: ${response.status}`);
       
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
       }
       
       const html = await response.text();
       
       if (!html || html.length === 0) {
-        throw new Error("Empty response received");
+        throw new Error('Empty response body');
       }
       
-      return { html, response };
-    } catch (error) {
-      retries++;
-      lastError = error instanceof Error ? error : new Error(String(error));
-      console.log(`Retry ${retries}/${maxRetries} after error:`, lastError.message);
+      if (html.includes('Access Denied') || html.includes('Forbidden')) {
+        throw new Error('Access denied or forbidden by the server');
+      }
       
-      // Wait a bit before retrying
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log(`Successfully fetched HTML (${html.length} bytes)`);
+      return { html, status: response.status };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`Fetch attempt ${attempt} failed:`, lastError.message);
+      
+      if (attempt < maxRetries) {
+        // Calculate delay with exponential backoff
+        const delay = retryDelay * Math.pow(1.5, attempt - 1);
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
   }
   
-  throw lastError || new Error("Failed to fetch after multiple retries");
+  throw lastError || new Error('Failed to fetch after multiple attempts');
 }

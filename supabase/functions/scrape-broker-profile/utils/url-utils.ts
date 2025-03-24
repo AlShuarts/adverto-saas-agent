@@ -15,46 +15,56 @@ export function cleanBrokerUrl(brokerUrl: string, page: number = 1): string {
     const urlObj = new URL(brokerUrl);
     const baseUrl = `${urlObj.origin}${urlObj.pathname}`;
     
-    // Reconstruct query params, removing any potentially problematic ones
+    // Reconstruct query params, only keeping essential ones
     const params = new URLSearchParams();
     
-    // Keep desired view type
+    // Keep the view parameter (or set to Summary by default)
     if (urlObj.searchParams.has("view")) {
       params.set("view", urlObj.searchParams.get("view") || "Summary");
     } else {
       params.set("view", "Summary");
     }
     
-    // Show all properties
+    // Always set uc=0 to show all properties
     params.set("uc", "0");
     
-    // If we need pagination, add it
+    // Handle pagination
     if (page > 1) {
       params.set("pn", page.toString());
     }
     
+    // Important: Add the broker ID if it exists in the pathname
+    const brokerIdMatch = urlObj.pathname.match(/\/D(\d+)/);
+    if (brokerIdMatch && brokerIdMatch[1]) {
+      // This ensures we keep the broker identifier
+      params.set("broker", brokerIdMatch[1]);
+    }
+    
     return `${baseUrl}?${params.toString()}`;
   } catch (urlError) {
-    console.error('Error cleaning URL, using original:', urlError);
+    console.error('Error parsing URL with new URL():', urlError);
     
-    // Fallback to basic URL modification if needed
-    let cleanUrl = brokerUrl;
+    // If URL parsing fails, try a more basic approach
+    // Extract the base URL without query parameters
+    const baseUrlMatch = brokerUrl.match(/(https?:\/\/[^?]+)/);
+    const baseUrl = baseUrlMatch ? baseUrlMatch[1] : brokerUrl;
     
-    if (!cleanUrl.includes("?")) {
-      cleanUrl += "?uc=0&view=Summary";
-    } else if (!cleanUrl.includes("uc=0")) {
-      cleanUrl += "&uc=0";
-    }
-    
-    if (!cleanUrl.includes("view=")) {
-      cleanUrl += "&view=Summary";
-    }
+    // Create minimal query parameters
+    const params = new URLSearchParams();
+    params.set("view", "Summary");
+    params.set("uc", "0");
     
     if (page > 1) {
-      cleanUrl += `&pn=${page}`;
+      params.set("pn", page.toString());
     }
     
-    return cleanUrl;
+    // Extract broker ID if possible
+    const brokerIdMatch = brokerUrl.match(/\/D(\d+)/);
+    if (brokerIdMatch && brokerIdMatch[1]) {
+      params.set("broker", brokerIdMatch[1]);
+    }
+    
+    return `${baseUrl}?${params.toString()}`;
   }
 }
 
@@ -62,5 +72,19 @@ export function cleanBrokerUrl(brokerUrl: string, page: number = 1): string {
  * Validates if the URL is a valid Centris broker profile URL
  */
 export function validateBrokerUrl(url: string): boolean {
-  return !!url && url.includes("centris.ca");
+  if (!url || typeof url !== 'string') {
+    return false;
+  }
+  
+  // Check if it's a Centris URL
+  if (!url.includes("centris.ca")) {
+    return false;
+  }
+  
+  // Check if it's a broker profile URL (contains /courtier-immobilier or /broker)
+  if (url.includes("/courtier-immobilier") || url.includes("/broker") || url.includes("/D")) {
+    return true;
+  }
+  
+  return false;
 }

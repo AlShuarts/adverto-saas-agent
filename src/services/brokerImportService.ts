@@ -33,7 +33,7 @@ export const importListingsFromBrokerProfile = async (
     let maxRetries = 3;
     
     // Collect all listing URLs from all pages
-    while (hasNextPage) {
+    while (hasNextPage && currentPage <= 10) { // Limite à 10 pages pour éviter les boucles infinies
       console.log(`Fetching listings from page ${currentPage}...`);
       
       let retryCount = 0;
@@ -52,25 +52,26 @@ export const importListingsFromBrokerProfile = async (
           response = result.data;
           
           if (!error && response) {
+            console.log("Scraping function response:", response);
             success = true;
           } else {
             retryCount++;
             console.log(`Retry ${retryCount}/${maxRetries} after error:`, error || "No data received");
             // Wait a bit before retrying
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount)); // Augmenter le délai à chaque tentative
           }
         } catch (err) {
           error = err;
           retryCount++;
           console.error(`Exception on retry ${retryCount}/${maxRetries}:`, err);
           // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
         }
       }
       
       if (error) {
         console.error(`Error scraping page ${currentPage} after ${maxRetries} attempts:`, error);
-        throw new Error(`Error scraping page ${currentPage}: ${error.message || "Unknown error"}`);
+        throw new Error(`Error scraping page ${currentPage}: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
       }
       
       if (!response) {
@@ -142,6 +143,7 @@ export const importListingsFromBrokerProfile = async (
     
     // Deduplicate URLs by converting to Set and back to Array
     const uniqueListingUrls = [...new Set(allListingUrls)];
+    console.log(`Found ${uniqueListingUrls.length} unique listing URLs`);
     
     // If we have displayedPropertyCount from the page and it's less than our uniqueListingUrls
     // Make sure we don't process more than what should be there
