@@ -30,25 +30,52 @@ export const importListingsFromBrokerProfile = async (
     let hasNextPage = true;
     let allListingUrls: string[] = [];
     let displayedPropertyCount = 0;
+    let maxRetries = 3;
     
     // Collect all listing URLs from all pages
     while (hasNextPage) {
       console.log(`Fetching listings from page ${currentPage}...`);
       
-      const { data: response, error } = await supabase.functions.invoke('scrape-broker-profile', {
-        body: { brokerUrl, page: currentPage }
-      });
+      let retryCount = 0;
+      let success = false;
+      let response = null;
+      let error = null;
       
-      if (error) {
-        console.error(`Error scraping page ${currentPage}:`, error);
-        throw new Error(`Error scraping page ${currentPage}: ${error.message}`);
+      // Add retry logic for the scrape-broker-profile function
+      while (retryCount < maxRetries && !success) {
+        try {
+          const result = await supabase.functions.invoke('scrape-broker-profile', {
+            body: { brokerUrl, page: currentPage }
+          });
+          
+          error = result.error;
+          response = result.data;
+          
+          if (!error && response) {
+            success = true;
+          } else {
+            retryCount++;
+            console.log(`Retry ${retryCount}/${maxRetries} after error:`, error || "No data received");
+            // Wait a bit before retrying
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        } catch (err) {
+          error = err;
+          retryCount++;
+          console.error(`Exception on retry ${retryCount}/${maxRetries}:`, err);
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
       }
       
-      console.log('Response from scrape-broker-profile:', response);
+      if (error) {
+        console.error(`Error scraping page ${currentPage} after ${maxRetries} attempts:`, error);
+        throw new Error(`Error scraping page ${currentPage}: ${error.message || "Unknown error"}`);
+      }
       
       if (!response) {
-        console.error('No response data received from scrape-broker-profile');
-        throw new Error("Aucune donnée reçue du serveur");
+        console.error('No response data received from scrape-broker-profile after multiple attempts');
+        throw new Error("Aucune donnée reçue du serveur après plusieurs tentatives");
       }
       
       if (response.error) {
