@@ -1,6 +1,5 @@
-
 /**
- * Validate if the URL is a valid Centris broker profile URL
+ * Improved validation for broker URLs that handles both regular profiles and "all properties" views
  */
 export const validateBrokerUrl = (url: string): boolean => {
   if (!url || typeof url !== 'string') {
@@ -8,14 +7,42 @@ export const validateBrokerUrl = (url: string): boolean => {
     return false;
   }
 
-  // Check if URL is from centris.ca and contains courtier-immobilier or real-estate-broker
-  return url.includes('centris.ca') && 
-         (url.includes('courtier-immobilier') || 
-          url.includes('real-estate-broker'));
+  try {
+    // Create URL object to validate the URL format first
+    new URL(url);
+    
+    // Check if URL is from centris.ca
+    if (!url.includes('centris.ca')) {
+      console.error('Not a Centris URL:', url);
+      return false;
+    }
+    
+    // Multiple valid patterns for broker profiles
+    const validPatterns = [
+      /courtier-immobilier/i,        // Regular broker profile
+      /real-estate-broker/i,         // English version
+      /mes-inscriptions/i,           // "Mes inscriptions" view
+      /my-listings/i,                // English "My listings" view
+      /search\.aspx.*&bsc=\d+/i,     // Search with broker ID (bsc parameter)
+      /Residential.*AgentId=/i       // Another format with AgentId
+    ];
+    
+    // Check if any pattern matches
+    const isValid = validPatterns.some(pattern => pattern.test(url));
+    
+    if (!isValid) {
+      console.error('URL does not match any known broker profile patterns:', url);
+    }
+    
+    return isValid;
+  } catch (error) {
+    console.error('URL validation error:', error);
+    return false;
+  }
 };
 
 /**
- * Clean and normalize broker URL for proper scraping
+ * Enhanced URL cleaner with better preservation of important parameters
  */
 export const cleanBrokerUrl = (brokerUrl: string, page: number = 1): string => {
   if (!brokerUrl || typeof brokerUrl !== 'string') {
@@ -49,8 +76,11 @@ export const cleanBrokerUrl = (brokerUrl: string, page: number = 1): string => {
       urlObj.searchParams.set("pn", page.toString());
     }
     
-    // Preserve all other parameters exactly as they were
-    console.log(`Preserved broker URL: ${urlObj.toString()}`);
+    // Preserve all other parameters that might be important
+    // Specifically ensure we're keeping the broker ID parameters
+    // like 'uc', 'bsc', 'AgentId' intact
+    
+    console.log(`Processed broker URL: ${urlObj.toString()}`);
     return urlObj.toString();
   } catch (error) {
     console.error('Error processing broker URL:', error);

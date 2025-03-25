@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { extractListingUrls, alternativeExtractListingUrls, extractAllPropertiesLink } from "./extractors/listing-extractor.ts";
 import { extractTotalPages, hasNextPage, extractPropertyCount } from "./extractors/pagination-extractor.ts";
 import { cleanBrokerUrl, validateBrokerUrl } from "./utils/url-utils.ts";
-import { corsHeaders, fetchWithRetry } from "./utils/request-utils.ts";
+import { corsHeaders, fetchWithRetry, scrapingHeaders } from "./utils/request-utils.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
