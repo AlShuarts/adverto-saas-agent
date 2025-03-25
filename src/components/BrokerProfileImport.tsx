@@ -8,15 +8,18 @@ import { importListingsFromBrokerProfile } from "@/services/brokerImportService"
 import { useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSyncListings } from "@/hooks/useSyncListings";
+import { toast } from "sonner";
 
 export const BrokerProfileImport = () => {
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ imported: 0, total: 0, failed: 0 });
   const [importToastId, setImportToastId] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const [importType, setImportType] = useState<"profile" | "direct">("profile");
+  const [importType, setImportType] = useState<"profile" | "direct" | "sync">("profile");
+  const { syncListings, isSyncing, savedBrokerUrl } = useSyncListings();
 
   const handleImport = async () => {
     if (!url.includes("centris.ca")) {
@@ -28,6 +31,13 @@ export const BrokerProfileImport = () => {
       return;
     }
 
+    // Si c'est une synchronisation, utilisez la nouvelle méthode
+    if (importType === "sync") {
+      await syncListings(url);
+      return;
+    }
+
+    // Sinon, utilisez l'ancien système d'importation
     setLoading(true);
     setProgress({ imported: 0, total: 0, failed: 0 });
     
@@ -109,10 +119,11 @@ export const BrokerProfileImport = () => {
 
   return (
     <div className="space-y-4">
-      <Tabs value={importType} onValueChange={(v) => setImportType(v as "profile" | "direct")}>
-        <TabsList className="grid grid-cols-2 mb-4">
+      <Tabs value={importType} onValueChange={(v) => setImportType(v as "profile" | "direct" | "sync")}>
+        <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="profile">Profil de courtier</TabsTrigger>
           <TabsTrigger value="direct">URL de recherche</TabsTrigger>
+          <TabsTrigger value="sync">Synchronisation</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
@@ -126,6 +137,17 @@ export const BrokerProfileImport = () => {
             Collez une URL de recherche Centris qui contient le paramètre <code className="bg-muted px-1 rounded">uc=X</code> pour importer directement les annonces (plus efficace)
           </div>
         </TabsContent>
+        
+        <TabsContent value="sync">
+          <div className="text-sm text-muted-foreground mb-4">
+            Enregistrez l'URL de votre profil ou de recherche pour synchroniser régulièrement vos annonces sans scraper tous les détails immédiatement
+          </div>
+          {savedBrokerUrl && (
+            <div className="text-sm bg-muted p-2 rounded mb-4">
+              URL de synchronisation active: <span className="font-mono text-xs">{savedBrokerUrl}</span>
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
       
       <div className="flex gap-4">
@@ -134,26 +156,38 @@ export const BrokerProfileImport = () => {
           placeholder={
             importType === "profile" 
               ? "URL du profil de courtier Centris" 
-              : "URL de recherche avec paramètre uc=X"
+              : importType === "direct"
+              ? "URL de recherche avec paramètre uc=X"
+              : "URL du profil ou de recherche à synchroniser"
           }
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           className="flex-1"
         />
-        <Button onClick={handleImport} disabled={loading}>
-          {loading ? "Importation..." : "Importer"}
+        <Button 
+          onClick={handleImport} 
+          disabled={loading || (importType === "sync" && isSyncing)}
+        >
+          {importType === "sync" 
+            ? (isSyncing ? "Synchronisation..." : "Enregistrer & Synchroniser") 
+            : (loading ? "Importation..." : "Importer")}
         </Button>
       </div>
       
-      {loading && (
+      {(loading || (importType === "sync" && isSyncing)) && (
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>
-              {progress.imported} sur {progress.total || "?"} annonces importées
+              {importType === "sync" 
+                ? "Synchronisation en cours..." 
+                : `${progress.imported} sur ${progress.total || "?"} annonces importées`}
             </span>
-            <span>{progressPercentage}%</span>
+            {importType !== "sync" && <span>{progressPercentage}%</span>}
           </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <Progress 
+            value={importType === "sync" ? undefined : progressPercentage} 
+            className={`h-2 ${importType === "sync" ? "animate-pulse" : ""}`} 
+          />
           {progress.failed > 0 && (
             <p className="text-sm text-destructive">
               {progress.failed} annonce(s) non importée(s)

@@ -13,8 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    const { brokerUrl, page = 1 } = await req.json();
-    console.log('Scraping URL:', brokerUrl, 'Page:', page);
+    const { brokerUrl, page = 1, lightMode = false } = await req.json();
+    console.log('Scraping URL:', brokerUrl, 'Page:', page, 'Light mode:', lightMode);
 
     if (!validateBrokerUrl(brokerUrl)) {
       return new Response(
@@ -76,6 +76,45 @@ serve(async (req) => {
     let displayedPropertyCount = extractPropertyCount(html);
     console.log('Initial property count:', displayedPropertyCount);
     
+    // Si mode léger, on cherche seulement les liens sans traitement complexe
+    if (lightMode) {
+      // Extract listing URLs in light mode - juste les liens, pas de traitement additionnel
+      let listingUrls = extractListingUrls(html);
+      
+      if (listingUrls.length === 0) {
+        listingUrls = alternativeExtractListingUrls(html);
+      }
+      
+      console.log(`Light mode: Found ${listingUrls.length} listing URLs`);
+      
+      // Check if there are "Voir toutes les propriétés" link
+      const hasViewAllPropertiesLink = html.includes('Voir toutes les propriétés') || 
+                                    html.includes('See all properties') ||
+                                    html.match(/voir\s+toutes\s+les\s+propri[ée]t[ée]s/i) ||
+                                    html.includes('Voir toutes les propriétés du courtier');
+      
+      let allPropertiesUrl = null;
+      if (hasViewAllPropertiesLink) {
+        allPropertiesUrl = extractAllPropertiesLink(html);
+      }
+      
+      return new Response(
+        JSON.stringify({
+          listingUrls,
+          currentPage: page,
+          hasNextPage: false, // En mode léger, on ne cherche pas les pages suivantes
+          totalPages: 1,
+          hasAllPropertiesLink: hasViewAllPropertiesLink,
+          allPropertiesUrl,
+          lightMode: true
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+    
+    // Si on continue ici, on est en mode normal (complet)
     // If this is a direct property search, we don't need to look for "Voir toutes les propriétés"
     let hasViewAllPropertiesLink = false;
     let allPropertiesUrl = null;

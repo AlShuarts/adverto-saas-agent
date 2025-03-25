@@ -3,8 +3,19 @@ import { CentrisImport } from "@/components/CentrisImport";
 import { BrokerProfileImport } from "@/components/BrokerProfileImport";
 import { ListingsList } from "@/components/ListingsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSyncListings } from "@/hooks/useSyncListings";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 export const ListingsSection = () => {
+  const { syncListings, isSyncing, savedBrokerUrl } = useSyncListings();
+
+  const handleSync = () => {
+    if (savedBrokerUrl) {
+      syncListings(savedBrokerUrl);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-12">
       <div>
@@ -29,7 +40,22 @@ export const ListingsSection = () => {
       </div>
       
       <div>
-        <h2 className="text-2xl font-bold mb-6 text-center">Vos annonces</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Vos annonces</h2>
+          
+          {savedBrokerUrl && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSync}
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Synchronisation...' : 'Synchroniser'}
+            </Button>
+          )}
+        </div>
+        
         <ListingsList />
       </div>
     </div>
