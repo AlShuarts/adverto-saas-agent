@@ -8,7 +8,7 @@ export const validateBrokerUrl = (url: string): boolean => {
     return false;
   }
 
-  // Check if URL is from centris.ca and contains courtier-immobilier
+  // Check if URL is from centris.ca and contains courtier-immobilier or real-estate-broker
   return url.includes('centris.ca') && 
          (url.includes('courtier-immobilier') || 
           url.includes('real-estate-broker'));
@@ -36,6 +36,12 @@ export const cleanBrokerUrl = (brokerUrl: string, page: number = 1): string => {
     // Ensure essential view parameter exists
     if (!urlObj.searchParams.has("view")) {
       urlObj.searchParams.set("view", "Summary");
+    }
+    
+    // Preserve "onlyonedisplay" parameter if it exists
+    const hasOnlyOneDisplay = brokerUrl.includes("onlyonedisplay=true");
+    if (hasOnlyOneDisplay && !urlObj.searchParams.has("onlyonedisplay")) {
+      urlObj.searchParams.set("onlyonedisplay", "true");
     }
     
     // Handle pagination

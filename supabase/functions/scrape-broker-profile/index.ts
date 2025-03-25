@@ -72,20 +72,28 @@ serve(async (req) => {
     console.log('Initial property count:', displayedPropertyCount);
     
     // Check if we're on a page that requires clicking "Voir toutes les propriétés"
-    const needsToSeeAllProperties = html.includes('Voir toutes les propriétés') || 
-                                   html.includes('See all properties') ||
-                                   html.match(/voir\s+toutes\s+les\s+propri[ée]t[ée]s/i);
+    const hasViewAllPropertiesLink = html.includes('Voir toutes les propriétés') || 
+                            html.includes('See all properties') ||
+                            html.match(/voir\s+toutes\s+les\s+propri[ée]t[ée]s/i) ||
+                            html.includes('Voir toutes les propriétés du courtier');
     
     // If we need to click "Voir toutes les propriétés", extract the correct URL
     let allPropertiesUrl = null;
     let allPropertiesHtml = html;
     
-    if (needsToSeeAllProperties) {
+    if (hasViewAllPropertiesLink) {
       console.log('Detected "Voir toutes les propriétés" link - attempting to follow it');
       allPropertiesUrl = extractAllPropertiesLink(html);
       
       if (allPropertiesUrl) {
         console.log('Found "Voir toutes les propriétés" URL:', allPropertiesUrl);
+        
+        // Check if the original URL had the onlyonedisplay parameter and preserve it
+        const preserveOnlyOneDisplay = brokerUrl.includes("onlyonedisplay=true");
+        if (preserveOnlyOneDisplay && !allPropertiesUrl.includes("onlyonedisplay=true")) {
+          allPropertiesUrl = `${allPropertiesUrl}${allPropertiesUrl.includes('?') ? '&' : '?'}onlyonedisplay=true`;
+          console.log('Added onlyonedisplay parameter to URL:', allPropertiesUrl);
+        }
         
         // Fetch the "Voir toutes les propriétés" page
         try {
@@ -107,6 +115,8 @@ serve(async (req) => {
       } else {
         console.log('Could not find "Voir toutes les propriétés" link in the HTML');
       }
+    } else {
+      console.log('No "Voir toutes les propriétés" link detected - this profile shows listings directly');
     }
     
     // Extract listing URLs from the broker profile page with multiple methods
@@ -132,7 +142,7 @@ serve(async (req) => {
                           (totalPages && listingUrls.length ? totalPages * listingUrls.length : listingUrls.length);
     
     // Determine if we should respond with a "special" redirect to the all properties URL
-    if (needsToSeeAllProperties && allPropertiesUrl && page === 1 && listingUrls.length === 0) {
+    if (hasViewAllPropertiesLink && allPropertiesUrl && page === 1 && listingUrls.length === 0) {
       console.log('Returning all properties URL for client to retry with');
       return new Response(
         JSON.stringify({
@@ -159,7 +169,7 @@ serve(async (req) => {
         totalListings: totalProperties,
         displayedPropertyCount,
         actualListingsFound: listingUrls.length,
-        hasAllPropertiesLink: needsToSeeAllProperties,
+        hasAllPropertiesLink: hasViewAllPropertiesLink,
         allPropertiesUrl: allPropertiesUrl
       }),
       { 

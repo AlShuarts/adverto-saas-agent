@@ -22,7 +22,8 @@ export function extractListingUrls(html: string): string[] {
     const propertyCardPatterns = [
       /<div\s+class="[^"]*(?:property-thumbnail-item|property|property-item)[^"]*"[^>]*>[\s\S]*?href="([^"]+)"[\s\S]*?<\/div>/gi,
       /<a\s+class="[^"]*(?:property-thumbnail-link|property-link)[^"]*"[^>]*href="([^"]+)"[^>]*>/gi,
-      /<div\s+class="[^"]*thumbnail[^"]*"[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi
+      /<div\s+class="[^"]*thumbnail[^"]*"[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi,
+      /<div\s+class="property-thumbnail-summary"[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi
     ];
     
     for (const pattern of propertyCardPatterns) {
@@ -103,7 +104,11 @@ export function alternativeExtractListingUrls(html: string): string[] {
       // Look for media elements that often contain property images and links
       /<div[^>]*class="[^"]*media[^"]*"[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi,
       // Look for anchor tags with specific classes
-      /<a[^>]*class="[^"]*(?:property|listing)[^"]*"[^>]*href="([^"]+)"[^>]*>/gi
+      /<a[^>]*class="[^"]*(?:property|listing)[^"]*"[^>]*href="([^"]+)"[^>]*>/gi,
+      // Look for specific div with listing information
+      /<div class="property-thumbnail-summary"[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi,
+      // Look for any button that might link to a property
+      /<button[^>]*data-url="([^"]+)"[^>]*>/gi
     ];
     
     for (const pattern of patterns) {
@@ -156,7 +161,8 @@ export function extractAllPropertiesLink(html: string): string | null {
     const textPatterns = [
       /href="([^"]+)"[^>]*>(?:\s*<[^>]+>\s*)*(?:Voir toutes les propriétés|See all properties)/i,
       /href="([^"]+)"[^>]*>(?:\s*<[^>]+>\s*)*(?:Voir\s+toutes\s+les\s+propriétés|See\s+all\s+properties)/i,
-      /<a[^>]*href="([^"]+)"[^>]*>(?:\s*<[^>]+>\s*)*(?:Voir\s+toutes\s+les\s+propriétés|See\s+all\s+properties)/i
+      /<a[^>]*href="([^"]+)"[^>]*>(?:\s*<[^>]+>\s*)*(?:Voir\s+toutes\s+les\s+propriétés|See\s+all\s+properties)/i,
+      /<a[^>]*href="([^"]+)"[^>]*>(?:\s*<[^>]+>\s*)*(?:Voir\s+toutes\s+les\s+propriétés\s+du\s+courtier|See\s+all\s+broker\s+properties)/i
     ];
     
     for (const pattern of textPatterns) {
@@ -172,7 +178,8 @@ export function extractAllPropertiesLink(html: string): string | null {
     // 2. Look for buttons or links with specific classes that might be "see all" buttons
     const classPatterns = [
       /<a[^>]*class="[^"]*(?:btn-view-all|view-all|see-all|voir-tout)[^"]*"[^>]*href="([^"]+)"[^>]*>/i,
-      /<button[^>]*data-url="([^"]+)"[^>]*>(?:\s*<[^>]+>\s*)*(?:Voir|See)/i
+      /<button[^>]*data-url="([^"]+)"[^>]*>(?:\s*<[^>]+>\s*)*(?:Voir|See)/i,
+      /<a[^>]*href="([^"]+)"[^>]*class="[^"]*linkViewAllProperties[^"]*"/i
     ];
     
     for (const pattern of classPatterns) {

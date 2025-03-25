@@ -49,7 +49,6 @@ export async function fetchWithRetry(
   };
   
   console.log(`Full URL to fetch: ${url}`);
-  console.log(`Full headers: ${JSON.stringify(fetchOptions.headers, null, 2)}`);
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -70,6 +69,11 @@ export async function fetchWithRetry(
       
       if (html.includes('Access Denied') || html.includes('Forbidden') || html.includes('captcha')) {
         throw new Error('Access denied, forbidden, or captcha encountered');
+      }
+      
+      // Look for common error messages indicating no listings
+      if (html.includes('Aucune propriété') || html.includes('No properties')) {
+        console.log('Page indicates no properties found, but this is a valid response');
       }
       
       // Log a small sample of the HTML for debugging
