@@ -12,3 +12,9 @@ verify_jwt = true
 
 [create-sold-banner]
 verify_jwt = true
+
+[scrape-broker-profile]
+verify_jwt = false
+
+[scrape-centris]
+verify_jwt = false

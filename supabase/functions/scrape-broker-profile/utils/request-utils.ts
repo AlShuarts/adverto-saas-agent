@@ -1,5 +1,9 @@
 
-import { corsHeaders } from "../_shared/cors.ts";
+/**
+ * Common browser-like headers and utilities for making HTTP requests
+ */
+
+import { corsHeaders } from "../../_shared/cors.ts";
 
 /**
  * Common browser-like headers to use for scraping
