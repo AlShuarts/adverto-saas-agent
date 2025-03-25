@@ -13,6 +13,7 @@ export const BrokerProfileImport = () => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState({ imported: 0, total: 0, failed: 0 });
+  const [importToastId, setImportToastId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const handleImport = async () => {
@@ -36,10 +37,13 @@ export const BrokerProfileImport = () => {
       // Log the original URL for debugging
       console.log("URL originale du profil:", url);
       
-      // Display initial toast
-      const importToast = toast.loading("Import en cours", {
-        description: "Récupération des annonces du profil de courtier..."
-      });
+      // Display initial toast and store its ID
+      const toastId = toast({
+        title: "Import en cours",
+        description: "Récupération des annonces du profil de courtier...",
+      }).id;
+      
+      setImportToastId(toastId);
 
       const stats = await importListingsFromBrokerProfile(
         url, 
@@ -52,26 +56,33 @@ export const BrokerProfileImport = () => {
       // Refresh listings
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
-      // Show final results
-      toast.dismiss(importToast);
-
-      if (stats.imported > 0) {
+      // Dismiss the previous toast if it exists
+      if (importToastId) {
         toast({
+          id: importToastId,
           title: "Import terminé",
           description: `${stats.imported} annonce(s) importée(s), ${stats.failed} échec(s)`,
         });
-      } else if (stats.failed > 0) {
-        toast({
-          title: "Import échoué",
-          description: `Aucune annonce importée, ${stats.failed} échec(s)`,
-          variant: "destructive",
-        });
       } else {
-        toast({
-          title: "Aucune annonce trouvée",
-          description: "Vérifiez que l'URL du profil est correcte ou essayez une autre page",
-          variant: "destructive",
-        });
+        // Show final results as a new toast if no previous toast ID exists
+        if (stats.imported > 0) {
+          toast({
+            title: "Import terminé",
+            description: `${stats.imported} annonce(s) importée(s), ${stats.failed} échec(s)`,
+          });
+        } else if (stats.failed > 0) {
+          toast({
+            title: "Import échoué",
+            description: `Aucune annonce importée, ${stats.failed} échec(s)`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Aucune annonce trouvée",
+            description: "Vérifiez que l'URL du profil est correcte ou essayez une autre page",
+            variant: "destructive",
+          });
+        }
       }
 
       setUrl("");
@@ -84,6 +95,7 @@ export const BrokerProfileImport = () => {
       });
     } finally {
       setLoading(false);
+      setImportToastId(null);
     }
   };
 
