@@ -24,8 +24,7 @@ export const BrokerProfileImport = () => {
   const handleImport = async () => {
     if (!url.includes("centris.ca")) {
       toast("URL invalide", {
-        description: "Veuillez entrer une URL Centris valide",
-        variant: "destructive",
+        description: "Veuillez entrer une URL Centris valide"
       });
       return;
     }
@@ -55,7 +54,10 @@ export const BrokerProfileImport = () => {
           : "Récupération des annonces..."
       });
       
-      setImportToastId(toastId);
+      // Store the toast ID if needed for updates
+      if (toastId) {
+        setImportToastId(String(toastId));
+      }
 
       const stats = await importListingsFromBrokerProfile(
         url, 
@@ -81,13 +83,11 @@ export const BrokerProfileImport = () => {
           });
         } else if (stats.failed > 0) {
           toast("Import échoué", {
-            description: `Aucune annonce importée, ${stats.failed} échec(s)`,
-            variant: "destructive"
+            description: `Aucune annonce importée, ${stats.failed} échec(s)`
           });
         } else {
           toast("Aucune annonce trouvée", {
-            description: "Vérifiez que l'URL est correcte ou essayez une autre page",
-            variant: "destructive"
+            description: "Vérifiez que l'URL est correcte ou essayez une autre page"
           });
         }
       }
@@ -96,8 +96,7 @@ export const BrokerProfileImport = () => {
     } catch (error) {
       console.error("Erreur détaillée:", error);
       toast("Erreur d'importation", {
-        description: error instanceof Error ? error.message : "Impossible d'importer les annonces",
-        variant: "destructive"
+        description: error instanceof Error ? error.message : "Impossible d'importer les annonces"
       });
     } finally {
       setLoading(false);
