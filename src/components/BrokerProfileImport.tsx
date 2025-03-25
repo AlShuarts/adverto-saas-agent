@@ -23,8 +23,7 @@ export const BrokerProfileImport = () => {
 
   const handleImport = async () => {
     if (!url.includes("centris.ca")) {
-      toast({
-        title: "URL invalide",
+      toast("URL invalide", {
         description: "Veuillez entrer une URL Centris valide",
         variant: "destructive",
       });
@@ -50,12 +49,11 @@ export const BrokerProfileImport = () => {
       console.log("URL originale:", url);
       
       // Display initial toast and store its ID
-      const toastId = toast({
-        title: "Import en cours",
+      const toastId = toast("Import en cours", {
         description: importType === "profile" 
           ? "Récupération des annonces du profil de courtier..." 
-          : "Récupération des annonces...",
-      }).id;
+          : "Récupération des annonces..."
+      });
       
       setImportToastId(toastId);
 
@@ -72,28 +70,24 @@ export const BrokerProfileImport = () => {
 
       // Update the previous toast if it exists
       if (importToastId) {
-        toast({
-          title: "Import terminé",
-          description: `${stats.imported} annonce(s) importée(s), ${stats.failed} échec(s)`,
+        toast("Import terminé", {
+          description: `${stats.imported} annonce(s) importée(s), ${stats.failed} échec(s)`
         });
       } else {
         // Show final results as a new toast if no previous toast ID exists
         if (stats.imported > 0) {
-          toast({
-            title: "Import terminé",
-            description: `${stats.imported} annonce(s) importée(s), ${stats.failed} échec(s)`,
+          toast("Import terminé", {
+            description: `${stats.imported} annonce(s) importée(s), ${stats.failed} échec(s)`
           });
         } else if (stats.failed > 0) {
-          toast({
-            title: "Import échoué",
+          toast("Import échoué", {
             description: `Aucune annonce importée, ${stats.failed} échec(s)`,
-            variant: "destructive",
+            variant: "destructive"
           });
         } else {
-          toast({
-            title: "Aucune annonce trouvée",
+          toast("Aucune annonce trouvée", {
             description: "Vérifiez que l'URL est correcte ou essayez une autre page",
-            variant: "destructive",
+            variant: "destructive"
           });
         }
       }
@@ -101,10 +95,9 @@ export const BrokerProfileImport = () => {
       setUrl("");
     } catch (error) {
       console.error("Erreur détaillée:", error);
-      toast({
-        title: "Erreur d'importation",
+      toast("Erreur d'importation", {
         description: error instanceof Error ? error.message : "Impossible d'importer les annonces",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
