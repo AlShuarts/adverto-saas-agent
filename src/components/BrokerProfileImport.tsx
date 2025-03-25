@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { importListingsFromBrokerProfile } from "@/services/brokerImportService";
 import { useQueryClient } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const BrokerProfileImport = () => {
   const { toast } = useToast();
@@ -15,12 +16,13 @@ export const BrokerProfileImport = () => {
   const [progress, setProgress] = useState({ imported: 0, total: 0, failed: 0 });
   const [importToastId, setImportToastId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const [importType, setImportType] = useState<"profile" | "direct">("profile");
 
   const handleImport = async () => {
-    if (!url.includes("centris.ca") || !url.includes("courtier-immobilier")) {
+    if (!url.includes("centris.ca")) {
       toast({
         title: "URL invalide",
-        description: "Veuillez entrer une URL de profil de courtier Centris valide",
+        description: "Veuillez entrer une URL Centris valide",
         variant: "destructive",
       });
       return;
@@ -35,12 +37,14 @@ export const BrokerProfileImport = () => {
       if (!userData.user) throw new Error("Non authentifié");
 
       // Log the original URL for debugging
-      console.log("URL originale du profil:", url);
+      console.log("URL originale:", url);
       
       // Display initial toast and store its ID
       const toastId = toast({
         title: "Import en cours",
-        description: "Récupération des annonces du profil de courtier...",
+        description: importType === "profile" 
+          ? "Récupération des annonces du profil de courtier..." 
+          : "Récupération des annonces...",
       }).id;
       
       setImportToastId(toastId);
@@ -78,7 +82,7 @@ export const BrokerProfileImport = () => {
         } else {
           toast({
             title: "Aucune annonce trouvée",
-            description: "Vérifiez que l'URL du profil est correcte ou essayez une autre page",
+            description: "Vérifiez que l'URL est correcte ou essayez une autre page",
             variant: "destructive",
           });
         }
@@ -105,10 +109,33 @@ export const BrokerProfileImport = () => {
 
   return (
     <div className="space-y-4">
+      <Tabs value={importType} onValueChange={(v) => setImportType(v as "profile" | "direct")}>
+        <TabsList className="grid grid-cols-2 mb-4">
+          <TabsTrigger value="profile">Profil de courtier</TabsTrigger>
+          <TabsTrigger value="direct">URL de recherche</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile">
+          <div className="text-sm text-muted-foreground mb-4">
+            Collez l'URL du profil d'un courtier Centris pour importer toutes ses annonces
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="direct">
+          <div className="text-sm text-muted-foreground mb-4">
+            Collez une URL de recherche Centris qui contient le paramètre <code className="bg-muted px-1 rounded">uc=X</code> pour importer directement les annonces (plus efficace)
+          </div>
+        </TabsContent>
+      </Tabs>
+      
       <div className="flex gap-4">
         <Input
           type="url"
-          placeholder="Collez l'URL du profil de courtier Centris ici"
+          placeholder={
+            importType === "profile" 
+              ? "URL du profil de courtier Centris" 
+              : "URL de recherche avec paramètre uc=X"
+          }
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           className="flex-1"

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { importCentrisListing } from "./centrisImportService";
 
@@ -24,7 +25,7 @@ export async function importListingsFromBrokerProfile(
     };
 
     // Log the original broker URL to help with debugging
-    console.log(`Original broker URL: ${brokerUrl}`);
+    console.log(`Original URL: ${brokerUrl}`);
 
     // Initialize with first page
     let currentPage = 1;
@@ -33,7 +34,7 @@ export async function importListingsFromBrokerProfile(
 
     // Process all pages of listings
     while (hasNextPage) {
-      console.log(`Processing page ${currentPage} of broker profile`);
+      console.log(`Processing page ${currentPage}`);
       
       if (onProgressUpdate) {
         onProgressUpdate(stats.imported, stats.total, stats.failed);
@@ -52,8 +53,8 @@ export async function importListingsFromBrokerProfile(
 
       // Handle errors
       if (error) {
-        console.error(`Error scraping broker profile page ${currentPage}:`, error);
-        throw new Error(`Erreur lors de l'extraction du profil: ${error.message}`);
+        console.error(`Error scraping page ${currentPage}:`, error);
+        throw new Error(`Erreur lors de l'extraction: ${error.message}`);
       }
 
       // If we received a partial response with error details

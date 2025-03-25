@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { extractListingUrls, alternativeExtractListingUrls, extractAllPropertiesLink } from "./extractors/listing-extractor.ts";
 import { extractTotalPages, hasNextPage, extractPropertyCount } from "./extractors/pagination-extractor.ts";
-import { cleanBrokerUrl, validateBrokerUrl } from "./utils/url-utils.ts";
+import { cleanBrokerUrl, validateBrokerUrl, isDirectPropertyListingUrl } from "./utils/url-utils.ts";
 import { fetchWithRetry } from "./utils/request-utils.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -14,17 +14,21 @@ serve(async (req) => {
 
   try {
     const { brokerUrl, page = 1 } = await req.json();
-    console.log('Scraping broker profile URL:', brokerUrl, 'Page:', page);
+    console.log('Scraping URL:', brokerUrl, 'Page:', page);
 
     if (!validateBrokerUrl(brokerUrl)) {
       return new Response(
-        JSON.stringify({ error: "L'URL doit provenir de centris.ca et être un profil de courtier valide" }),
+        JSON.stringify({ error: "L'URL doit provenir de centris.ca et être un profil de courtier ou une recherche de propriétés valide" }),
         { 
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
+
+    // Determine if this is a direct property listing URL
+    const isDirectSearch = isDirectPropertyListingUrl(brokerUrl);
+    console.log(`URL type: ${isDirectSearch ? 'Direct property search' : 'Broker profile'}`);
 
     // Clean and normalize the URL
     const scrapingUrl = cleanBrokerUrl(brokerUrl, page);
@@ -36,7 +40,7 @@ serve(async (req) => {
       html = fetchedHtml;
       console.log('HTML successfully fetched, length:', html.length);
     } catch (fetchError) {
-      console.error('Network error fetching broker profile:', fetchError);
+      console.error('Network error fetching URL:', fetchError);
       return new Response(
         JSON.stringify({ 
           error: `Erreur réseau: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`,
@@ -72,55 +76,59 @@ serve(async (req) => {
     let displayedPropertyCount = extractPropertyCount(html);
     console.log('Initial property count:', displayedPropertyCount);
     
-    // Check if we're on a page that requires clicking "Voir toutes les propriétés"
-    const hasViewAllPropertiesLink = html.includes('Voir toutes les propriétés') || 
-                            html.includes('See all properties') ||
-                            html.match(/voir\s+toutes\s+les\s+propri[ée]t[ée]s/i) ||
-                            html.includes('Voir toutes les propriétés du courtier');
-    
-    // If we need to click "Voir toutes les propriétés", extract the correct URL
+    // If this is a direct property search, we don't need to look for "Voir toutes les propriétés"
+    let hasViewAllPropertiesLink = false;
     let allPropertiesUrl = null;
     let allPropertiesHtml = html;
     
-    if (hasViewAllPropertiesLink) {
-      console.log('Detected "Voir toutes les propriétés" link - attempting to follow it');
-      allPropertiesUrl = extractAllPropertiesLink(html);
+    if (!isDirectSearch) {
+      // Only check for "Voir toutes les propriétés" if this is a broker profile
+      hasViewAllPropertiesLink = html.includes('Voir toutes les propriétés') || 
+                              html.includes('See all properties') ||
+                              html.match(/voir\s+toutes\s+les\s+propri[ée]t[ée]s/i) ||
+                              html.includes('Voir toutes les propriétés du courtier');
       
-      if (allPropertiesUrl) {
-        console.log('Found "Voir toutes les propriétés" URL:', allPropertiesUrl);
+      // If we need to click "Voir toutes les propriétés", extract the correct URL
+      if (hasViewAllPropertiesLink) {
+        console.log('Detected "Voir toutes les propriétés" link - attempting to follow it');
+        allPropertiesUrl = extractAllPropertiesLink(html);
         
-        // Check if the original URL had the onlyonedisplay parameter and preserve it
-        const preserveOnlyOneDisplay = brokerUrl.includes("onlyonedisplay=true");
-        if (preserveOnlyOneDisplay && !allPropertiesUrl.includes("onlyonedisplay=true")) {
-          allPropertiesUrl = `${allPropertiesUrl}${allPropertiesUrl.includes('?') ? '&' : '?'}onlyonedisplay=true`;
-          console.log('Added onlyonedisplay parameter to URL:', allPropertiesUrl);
-        }
-        
-        // Fetch the "Voir toutes les propriétés" page
-        try {
-          const { html: allPropertiesContent } = await fetchWithRetry(allPropertiesUrl, {}, 4, 3000);
-          allPropertiesHtml = allPropertiesContent;
-          console.log('All properties HTML fetched, length:', allPropertiesHtml.length);
+        if (allPropertiesUrl) {
+          console.log('Found "Voir toutes les propriétés" URL:', allPropertiesUrl);
           
-          // Update property count
-          const updatedPropertyCount = extractPropertyCount(allPropertiesHtml);
-          if (updatedPropertyCount && updatedPropertyCount > 0) {
-            console.log('Updated property count from all properties page:', updatedPropertyCount);
-            displayedPropertyCount = updatedPropertyCount;
+          // Check if the original URL had the onlyonedisplay parameter and preserve it
+          const preserveOnlyOneDisplay = brokerUrl.includes("onlyonedisplay=true");
+          if (preserveOnlyOneDisplay && !allPropertiesUrl.includes("onlyonedisplay=true")) {
+            allPropertiesUrl = `${allPropertiesUrl}${allPropertiesUrl.includes('?') ? '&' : '?'}onlyonedisplay=true`;
+            console.log('Added onlyonedisplay parameter to URL:', allPropertiesUrl);
           }
-        } catch (fetchError) {
-          console.error('Error fetching all properties page:', fetchError);
-          // Continue with the original HTML if fetch fails
-          console.log('Continuing with original HTML');
+          
+          // Fetch the "Voir toutes les propriétés" page
+          try {
+            const { html: allPropertiesContent } = await fetchWithRetry(allPropertiesUrl, {}, 4, 3000);
+            allPropertiesHtml = allPropertiesContent;
+            console.log('All properties HTML fetched, length:', allPropertiesHtml.length);
+            
+            // Update property count
+            const updatedPropertyCount = extractPropertyCount(allPropertiesHtml);
+            if (updatedPropertyCount && updatedPropertyCount > 0) {
+              console.log('Updated property count from all properties page:', updatedPropertyCount);
+              displayedPropertyCount = updatedPropertyCount;
+            }
+          } catch (fetchError) {
+            console.error('Error fetching all properties page:', fetchError);
+            // Continue with the original HTML if fetch fails
+            console.log('Continuing with original HTML');
+          }
+        } else {
+          console.log('Could not find "Voir toutes les propriétés" link in the HTML');
         }
       } else {
-        console.log('Could not find "Voir toutes les propriétés" link in the HTML');
+        console.log('No "Voir toutes les propriétés" link detected - this profile shows listings directly');
       }
-    } else {
-      console.log('No "Voir toutes les propriétés" link detected - this profile shows listings directly');
     }
     
-    // Extract listing URLs from the broker profile page with multiple methods
+    // Extract listing URLs from the page with multiple methods
     let listingUrls = extractListingUrls(allPropertiesHtml);
     console.log(`Primary extraction found ${listingUrls.length} listings`);
     
@@ -143,7 +151,7 @@ serve(async (req) => {
                           (totalPages && listingUrls.length ? totalPages * listingUrls.length : listingUrls.length);
     
     // Determine if we should respond with a "special" redirect to the all properties URL
-    if (hasViewAllPropertiesLink && allPropertiesUrl && page === 1 && listingUrls.length === 0) {
+    if (!isDirectSearch && hasViewAllPropertiesLink && allPropertiesUrl && page === 1 && listingUrls.length === 0) {
       console.log('Returning all properties URL for client to retry with');
       return new Response(
         JSON.stringify({
@@ -171,7 +179,8 @@ serve(async (req) => {
         displayedPropertyCount,
         actualListingsFound: listingUrls.length,
         hasAllPropertiesLink: hasViewAllPropertiesLink,
-        allPropertiesUrl: allPropertiesUrl
+        allPropertiesUrl: allPropertiesUrl,
+        isDirectSearch
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" }

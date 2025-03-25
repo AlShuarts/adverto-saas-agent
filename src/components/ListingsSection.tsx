@@ -15,14 +15,14 @@ export const ListingsSection = () => {
         <Tabs defaultValue="single" className="max-w-xl mx-auto">
           <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="single">Annonce unique</TabsTrigger>
-            <TabsTrigger value="broker">Profil de courtier</TabsTrigger>
+            <TabsTrigger value="bulk">Import en masse</TabsTrigger>
           </TabsList>
           
           <TabsContent value="single">
             <CentrisImport />
           </TabsContent>
           
-          <TabsContent value="broker">
+          <TabsContent value="bulk">
             <BrokerProfileImport />
           </TabsContent>
         </Tabs>
