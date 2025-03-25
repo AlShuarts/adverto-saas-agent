@@ -58,6 +58,7 @@ export type Database = {
           id: string
           images: string[] | null
           instagram_post_id: string | null
+          is_fully_scraped: boolean | null
           is_published: boolean | null
           is_sold: boolean | null
           postal_code: string | null
@@ -84,6 +85,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           instagram_post_id?: string | null
+          is_fully_scraped?: boolean | null
           is_published?: boolean | null
           is_sold?: boolean | null
           postal_code?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           instagram_post_id?: string | null
+          is_fully_scraped?: boolean | null
           is_published?: boolean | null
           is_sold?: boolean | null
           postal_code?: string | null
@@ -135,6 +138,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          broker_sync_url: string | null
           company_name: string | null
           created_at: string
           facebook_access_token: string | null
@@ -146,10 +150,12 @@ export type Database = {
           instagram_access_token: string | null
           instagram_user_id: string | null
           last_name: string | null
+          last_sync_timestamp: string | null
           phone: string | null
           updated_at: string
         }
         Insert: {
+          broker_sync_url?: string | null
           company_name?: string | null
           created_at?: string
           facebook_access_token?: string | null
@@ -161,10 +167,12 @@ export type Database = {
           instagram_access_token?: string | null
           instagram_user_id?: string | null
           last_name?: string | null
+          last_sync_timestamp?: string | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
+          broker_sync_url?: string | null
           company_name?: string | null
           created_at?: string
           facebook_access_token?: string | null
@@ -176,6 +184,7 @@ export type Database = {
           instagram_access_token?: string | null
           instagram_user_id?: string | null
           last_name?: string | null
+          last_sync_timestamp?: string | null
           phone?: string | null
           updated_at?: string
         }
