@@ -24,7 +24,8 @@ export const scrapingHeaders = {
   'Sec-Fetch-Mode': 'navigate',
   'Sec-Fetch-Site': 'none',
   'Sec-Fetch-User': '?1',
-  'Upgrade-Insecure-Requests': '1'
+  'Upgrade-Insecure-Requests': '1',
+  'Referer': 'https://www.centris.ca/'
 };
 
 /**
@@ -47,6 +48,9 @@ export async function fetchWithRetry(
     },
   };
   
+  console.log(`Full URL to fetch: ${url}`);
+  console.log(`Full headers: ${JSON.stringify(fetchOptions.headers, null, 2)}`);
+  
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`Fetching URL (attempt ${attempt}/${maxRetries}): ${url}`);
@@ -68,6 +72,8 @@ export async function fetchWithRetry(
         throw new Error('Access denied, forbidden, or captcha encountered');
       }
       
+      // Log a small sample of the HTML for debugging
+      console.log(`HTML preview (first 300 chars): ${html.substring(0, 300)}...`);
       console.log(`Successfully fetched HTML (${html.length} bytes)`);
       return { html, status: response.status };
     } catch (error) {

@@ -51,6 +51,9 @@ export const BrokerProfileImport = () => {
       if (authError) throw new Error("Erreur d'authentification: " + authError.message);
       if (!userData.user) throw new Error("Non authentifié");
 
+      // Log the original URL for debugging
+      console.log("URL originale du profil:", url);
+      
       // Display initial toast
       const importToast = toast.loading("Import en cours", {
         description: "Récupération des annonces du profil de courtier..."

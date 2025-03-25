@@ -12,28 +12,30 @@ export function cleanBrokerUrl(brokerUrl: string, page: number = 1): string {
   }
 
   try {
-    // Special case for URLs with "onlyonedisplay=true"
+    // For URLs containing "onlyonedisplay=true", we need to be more careful
+    // and preserve most of the original URL structure
     if (brokerUrl.includes("onlyonedisplay=true")) {
-      console.log("Detected 'onlyonedisplay=true' parameter, handling specially");
+      console.log("Detected 'onlyonedisplay=true' parameter - preserving original URL structure");
       
-      // Extract the broker ID (e.g., D2089)
-      const brokerIdMatch = brokerUrl.match(/\/([D][0-9]+)(\?|\/|$)/);
-      const brokerId = brokerIdMatch ? brokerIdMatch[1] : null;
+      // Create a URL object to work with
+      const urlObj = new URL(brokerUrl);
       
-      if (brokerId) {
-        // Construct a simpler URL focused on the broker ID
-        const baseUrl = `https://www.centris.ca/fr/courtier-immobilier~${brokerId}`;
-        const params = new URLSearchParams();
-        params.set("view", "Summary");
-        params.set("uc", "0");
-        
-        if (page > 1) {
-          params.set("pn", page.toString());
-        }
-        
-        console.log(`Simplified broker URL: ${baseUrl}?${params.toString()}`);
-        return `${baseUrl}?${params.toString()}`;
+      // Set essential parameters
+      if (!urlObj.searchParams.has("view")) {
+        urlObj.searchParams.set("view", "Summary");
       }
+      
+      // Change uc to 0 to show all properties
+      urlObj.searchParams.set("uc", "0");
+      
+      // Handle pagination
+      if (page > 1) {
+        urlObj.searchParams.set("pn", page.toString());
+      }
+      
+      // Preserve other parameters but make sure essential ones are set correctly
+      console.log(`Preserved broker URL: ${urlObj.toString()}`);
+      return urlObj.toString();
     }
     
     // For very complex URLs, use a more robust approach

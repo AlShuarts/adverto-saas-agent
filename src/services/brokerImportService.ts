@@ -25,6 +25,9 @@ export const importListingsFromBrokerProfile = async (
       failedUrls: []
     };
 
+    // Log the original broker URL to help with debugging
+    console.log(`Original broker URL: ${brokerUrl}`);
+
     // Initialize with first page
     let currentPage = 1;
     let hasNextPage = true;
@@ -97,9 +100,16 @@ export const importListingsFromBrokerProfile = async (
         // Set the flag to avoid infinite loops
         hasTriedAllPropertiesUrl = true;
         
+        // Preserve any "onlyonedisplay=true" parameter if present
+        const finalUrl = brokerUrl.includes("onlyonedisplay=true") && !response.allPropertiesUrl.includes("onlyonedisplay=true")
+          ? `${response.allPropertiesUrl}${response.allPropertiesUrl.includes('?') ? '&' : '?'}onlyonedisplay=true`
+          : response.allPropertiesUrl;
+        
+        console.log(`Using all properties URL: ${finalUrl}`);
+        
         // Call the function recursively with the new URL
         return importListingsFromBrokerProfile(
-          response.allPropertiesUrl,
+          finalUrl,
           userId,
           onProgressUpdate
         );
