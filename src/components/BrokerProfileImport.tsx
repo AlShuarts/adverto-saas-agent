@@ -56,10 +56,9 @@ export const BrokerProfileImport = () => {
       // Refresh listings
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
-      // Dismiss the previous toast if it exists
+      // Update the previous toast if it exists
       if (importToastId) {
         toast({
-          id: importToastId,
           title: "Import terminé",
           description: `${stats.imported} annonce(s) importée(s), ${stats.failed} échec(s)`,
         });
