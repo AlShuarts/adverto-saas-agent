@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for handling URLs
  */
@@ -11,6 +12,30 @@ export function cleanBrokerUrl(brokerUrl: string, page: number = 1): string {
   }
 
   try {
+    // Special case for URLs with "onlyonedisplay=true"
+    if (brokerUrl.includes("onlyonedisplay=true")) {
+      console.log("Detected 'onlyonedisplay=true' parameter, handling specially");
+      
+      // Extract the broker ID (e.g., D2089)
+      const brokerIdMatch = brokerUrl.match(/\/([D][0-9]+)(\?|\/|$)/);
+      const brokerId = brokerIdMatch ? brokerIdMatch[1] : null;
+      
+      if (brokerId) {
+        // Construct a simpler URL focused on the broker ID
+        const baseUrl = `https://www.centris.ca/fr/courtier-immobilier~${brokerId}`;
+        const params = new URLSearchParams();
+        params.set("view", "Summary");
+        params.set("uc", "0");
+        
+        if (page > 1) {
+          params.set("pn", page.toString());
+        }
+        
+        console.log(`Simplified broker URL: ${baseUrl}?${params.toString()}`);
+        return `${baseUrl}?${params.toString()}`;
+      }
+    }
+    
     // For very complex URLs, use a more robust approach
     const urlObj = new URL(brokerUrl);
     const baseUrl = `${urlObj.origin}${urlObj.pathname}`;
@@ -81,8 +106,10 @@ export function validateBrokerUrl(url: string): boolean {
     return false;
   }
   
-  // Check if it's a broker profile URL (contains /courtier-immobilier or /broker)
-  if (url.includes("/courtier-immobilier") || url.includes("/broker") || url.includes("/D")) {
+  // Check if it's a broker profile URL (contains /courtier-immobilier or /broker or D{number})
+  if (url.includes("/courtier-immobilier") || 
+      url.includes("/broker") || 
+      url.match(/\/D\d+/) !== null) {
     return true;
   }
   

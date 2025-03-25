@@ -30,10 +30,14 @@ export const importListingsFromBrokerProfile = async (
     let hasNextPage = true;
     let allListingUrls: string[] = [];
     let displayedPropertyCount = 0;
-    let maxRetries = 3;
+    let maxRetries = 5;
+    let maxPages = 20; // Limit to 20 pages to avoid infinite loops
+    
+    // Flag to check if we've already tried the "allPropertiesUrl"
+    let hasTriedAllPropertiesUrl = false;
     
     // Collect all listing URLs from all pages
-    while (hasNextPage && currentPage <= 10) { // Limite à 10 pages pour éviter les boucles infinies
+    while (hasNextPage && currentPage <= maxPages) {
       console.log(`Fetching listings from page ${currentPage}...`);
       
       let retryCount = 0;
@@ -44,6 +48,8 @@ export const importListingsFromBrokerProfile = async (
       // Add retry logic for the scrape-broker-profile function
       while (retryCount < maxRetries && !success) {
         try {
+          console.log(`Making request to scrape-broker-profile with URL: ${brokerUrl}, page: ${currentPage}`);
+          
           const result = await supabase.functions.invoke('scrape-broker-profile', {
             body: { brokerUrl, page: currentPage }
           });
@@ -58,7 +64,7 @@ export const importListingsFromBrokerProfile = async (
             retryCount++;
             console.log(`Retry ${retryCount}/${maxRetries} after error:`, error || "No data received");
             // Wait a bit before retrying
-            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount)); // Augmenter le délai à chaque tentative
+            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount)); // Increase delay with each retry
           }
         } catch (err) {
           error = err;
@@ -84,20 +90,23 @@ export const importListingsFromBrokerProfile = async (
         throw new Error(`Erreur lors du scraping: ${response.error}`);
       }
       
+      // Check if we need to use the "Voir toutes les propriétés" URL
+      if (response.hasAllPropertiesLink && response.allPropertiesUrl && !hasTriedAllPropertiesUrl) {
+        console.log('Found "Voir toutes les propriétés" URL:', response.allPropertiesUrl);
+        
+        // Set the flag to avoid infinite loops
+        hasTriedAllPropertiesUrl = true;
+        
+        // Call the function recursively with the new URL
+        return importListingsFromBrokerProfile(
+          response.allPropertiesUrl,
+          userId,
+          onProgressUpdate
+        );
+      }
+      
       if (!response.listingUrls || response.listingUrls.length === 0) {
         console.log(`No listings found on page ${currentPage}`);
-        
-        // Check if there was an "Voir toutes les propriétés" link and we have an alternate URL
-        if (response.hasAllPropertiesLink && response.allPropertiesUrl) {
-          console.log('Trying to use "Voir toutes les propriétés" URL:', response.allPropertiesUrl);
-          
-          // Call the function again with the new URL
-          return importListingsFromBrokerProfile(
-            response.allPropertiesUrl,
-            userId,
-            onProgressUpdate
-          );
-        }
         
         // If we're on the first page and no listings found, throw an error
         if (currentPage === 1 && allListingUrls.length === 0) {

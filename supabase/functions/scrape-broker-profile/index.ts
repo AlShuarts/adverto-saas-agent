@@ -17,7 +17,7 @@ serve(async (req) => {
 
     if (!validateBrokerUrl(brokerUrl)) {
       return new Response(
-        JSON.stringify({ error: "L'URL doit provenir de centris.ca" }),
+        JSON.stringify({ error: "L'URL doit provenir de centris.ca et être un profil de courtier valide" }),
         { 
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -27,13 +27,13 @@ serve(async (req) => {
 
     // Clean and normalize the URL
     const scrapingUrl = cleanBrokerUrl(brokerUrl, page);
-    console.log('Fetching URL:', scrapingUrl);
+    console.log('Processed URL for scraping:', scrapingUrl);
     
     let html: string;
     try {
-      const { html: fetchedHtml } = await fetchWithRetry(scrapingUrl);
+      const { html: fetchedHtml } = await fetchWithRetry(scrapingUrl, {}, 4, 3000);
       html = fetchedHtml;
-      console.log('HTML length:', html.length);
+      console.log('HTML successfully fetched, length:', html.length);
     } catch (fetchError) {
       console.error('Network error fetching broker profile:', fetchError);
       return new Response(
@@ -69,6 +69,7 @@ serve(async (req) => {
     
     // Extract property count to verify our extraction
     let displayedPropertyCount = extractPropertyCount(html);
+    console.log('Initial property count:', displayedPropertyCount);
     
     // Check if we're on a page that requires clicking "Voir toutes les propriétés"
     const needsToSeeAllProperties = html.includes('Voir toutes les propriétés') || 
@@ -80,27 +81,28 @@ serve(async (req) => {
     let allPropertiesHtml = html;
     
     if (needsToSeeAllProperties) {
-      console.log('Detected "Voir toutes les propriétés" link');
+      console.log('Detected "Voir toutes les propriétés" link - attempting to follow it');
       allPropertiesUrl = extractAllPropertiesLink(html);
       
       if (allPropertiesUrl) {
-        console.log('Final "Voir toutes les propriétés" URL:', allPropertiesUrl);
+        console.log('Found "Voir toutes les propriétés" URL:', allPropertiesUrl);
         
         // Fetch the "Voir toutes les propriétés" page
         try {
-          const { html: allPropertiesContent } = await fetchWithRetry(allPropertiesUrl);
+          const { html: allPropertiesContent } = await fetchWithRetry(allPropertiesUrl, {}, 4, 3000);
           allPropertiesHtml = allPropertiesContent;
-          console.log('All properties HTML length:', allPropertiesHtml.length);
+          console.log('All properties HTML fetched, length:', allPropertiesHtml.length);
           
           // Update property count
           const updatedPropertyCount = extractPropertyCount(allPropertiesHtml);
           if (updatedPropertyCount && updatedPropertyCount > 0) {
-            console.log('Updated property count:', updatedPropertyCount);
+            console.log('Updated property count from all properties page:', updatedPropertyCount);
             displayedPropertyCount = updatedPropertyCount;
           }
         } catch (fetchError) {
           console.error('Error fetching all properties page:', fetchError);
           // Continue with the original HTML if fetch fails
+          console.log('Continuing with original HTML');
         }
       } else {
         console.log('Could not find "Voir toutes les propriétés" link in the HTML');
@@ -109,22 +111,44 @@ serve(async (req) => {
     
     // Extract listing URLs from the broker profile page with multiple methods
     let listingUrls = extractListingUrls(allPropertiesHtml);
+    console.log(`Primary extraction found ${listingUrls.length} listings`);
     
     // If we didn't find any listings, try an alternative parsing approach
     if (listingUrls.length === 0) {
       console.log('No listings found with primary extraction, trying fallback method');
       listingUrls = alternativeExtractListingUrls(allPropertiesHtml);
+      console.log(`Alternative extraction found ${listingUrls.length} listings`);
     }
     
-    console.log(`Found ${listingUrls.length} listings on page ${page}`);
+    console.log(`Total ${listingUrls.length} listings found on page ${page}`);
     
     // Check if there are more pages
     const hasMorePages = hasNextPage(allPropertiesHtml, page);
     const totalPages = extractTotalPages(allPropertiesHtml);
+    console.log(`Pagination info: has next page: ${hasMorePages}, total pages: ${totalPages}`);
     
     // Calculate actual total properties if we have that info
     const totalProperties = displayedPropertyCount || 
                           (totalPages && listingUrls.length ? totalPages * listingUrls.length : listingUrls.length);
+    
+    // Determine if we should respond with a "special" redirect to the all properties URL
+    if (needsToSeeAllProperties && allPropertiesUrl && page === 1 && listingUrls.length === 0) {
+      console.log('Returning all properties URL for client to retry with');
+      return new Response(
+        JSON.stringify({
+          hasAllPropertiesLink: true,
+          allPropertiesUrl: allPropertiesUrl,
+          listingUrls: [],
+          currentPage: page,
+          hasNextPage: false,
+          totalPages: 0,
+          message: "Utilisez l'URL 'Voir toutes les propriétés' pour accéder aux annonces"
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
     
     return new Response(
       JSON.stringify({
