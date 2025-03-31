@@ -31,6 +31,9 @@ export const useSyncListings = () => {
             if (shouldSync) {
               // Synchronisation automatique
               console.log("Synchronisation automatique déclenchée");
+              toast.info("Synchronisation automatique en cours...", {
+                description: "Récupération des mises à jour de vos annonces"
+              });
               syncListings(url);
             }
           }
@@ -54,10 +57,7 @@ export const useSyncListings = () => {
       if (authError) throw new Error("Erreur d'authentification");
       if (!userData.user) throw new Error("Non authentifié");
 
-      // Afficher un toast pour indiquer que la synchronisation est en cours
-      toast.info("Synchronisation des listings en cours...");
-
-      // Lancer la synchronisation
+      // Lancer la synchronisation en mode léger
       const stats = await synchronizeListings(brokerUrl, userData.user.id);
       setLastSyncStats(stats);
       
@@ -67,13 +67,13 @@ export const useSyncListings = () => {
       // Construire un message de résultat
       let resultMessage = "";
       if (stats.newListings > 0) {
-        resultMessage += `${stats.newListings} nouveau(x) listing(s) trouvé(s). `;
+        resultMessage += `${stats.newListings} nouvelle(s) annonce(s) trouvée(s). `;
       }
       if (stats.errors > 0) {
         resultMessage += `${stats.errors} erreur(s) rencontrée(s). `;
       }
       if (stats.newListings === 0 && stats.errors === 0) {
-        resultMessage = "Aucun nouveau listing trouvé.";
+        resultMessage = "Aucune nouvelle annonce trouvée.";
       }
       
       // Afficher le résultat
@@ -83,7 +83,7 @@ export const useSyncListings = () => {
         });
       } else if (stats.newListings > 0) {
         toast.success("Synchronisation réussie", {
-          description: resultMessage
+          description: `${resultMessage} Cliquez sur "Charger les détails complets" pour voir les informations complètes des nouvelles annonces.`
         });
       } else {
         toast.info("Synchronisation terminée", {

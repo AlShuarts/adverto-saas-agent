@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { validateBrokerUrl } from "../../supabase/functions/scrape-broker-profile/utils/url-utils";
 import { toast } from "sonner";
+import { importCentrisListing } from "./centrisImportService";
 
 export interface SyncStats {
   newListings: number;
@@ -47,6 +48,7 @@ export async function synchronizeListings(brokerUrl: string, userId: string): Pr
     const existingCentrisIds = new Set(existingListings.map(listing => listing.centris_id));
     
     // Appeler la fonction Edge pour récupérer les liens des listings actuels
+    // Utilisation explicite du mode léger (lightMode: true)
     const { data: response, error: functionError } = await supabase.functions.invoke(
       "scrape-broker-profile",
       {
@@ -68,7 +70,7 @@ export async function synchronizeListings(brokerUrl: string, userId: string): Pr
 
     // Si nous avons trouvé le lien "Voir toutes les propriétés", utiliser ce lien
     if (response.hasAllPropertiesLink && response.allPropertiesUrl) {
-      console.log("Redirection vers le lien 'Voir toutes les propriétés'");
+      console.log("Redirection vers le lien 'Voir toutes les propriétés':", response.allPropertiesUrl);
       return synchronizeListings(response.allPropertiesUrl, userId);
     }
 
@@ -141,6 +143,7 @@ export async function synchronizeListings(brokerUrl: string, userId: string): Pr
 
 /**
  * Charge les détails complets d'un listing spécifique
+ * Cette fonction utilise le service existant d'importation Centris
  */
 export async function loadListingDetails(listingId: string, userId: string): Promise<Tables<"listings">> {
   console.log(`Chargement des détails du listing ${listingId}`);
@@ -168,34 +171,12 @@ export async function loadListingDetails(listingId: string, userId: string): Pro
       throw new Error("URL Centris manquante pour ce listing");
     }
 
-    // Appeler la fonction Edge pour scraper les détails complets
-    const { data: scrapedData, error: scrapingError } = await supabase.functions.invoke(
-      "scrape-centris", 
-      {
-        body: { url: listing.centris_url }
-      }
-    );
-
-    if (scrapingError) {
-      throw new Error(`Erreur lors du scraping: ${scrapingError.message}`);
-    }
-
-    // Mise à jour du listing avec les données complètes
-    const updatedData = {
-      ...scrapedData,
-      is_fully_scraped: true,
-    };
-
-    const { data: updatedListing, error: updateError } = await supabase
-      .from("listings")
-      .update(updatedData)
-      .eq("id", listingId)
-      .eq("user_id", userId)
-      .select("*")
-      .single();
-
-    if (updateError) {
-      throw new Error(`Erreur lors de la mise à jour du listing: ${updateError.message}`);
+    // Utiliser le service existant d'importation pour récupérer tous les détails
+    // Cela permet de réutiliser la logique existante
+    const updatedListing = await importCentrisListing(listing.centris_url, userId);
+    
+    if (!updatedListing) {
+      throw new Error("Impossible de charger les détails du listing");
     }
 
     return updatedListing;

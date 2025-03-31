@@ -31,7 +31,17 @@ export const BrokerProfileImport = () => {
 
     // Si c'est une synchronisation, utilisez la nouvelle méthode
     if (importType === "sync") {
-      await syncListings(url);
+      try {
+        toast.info("Démarrage de la synchronisation...", {
+          description: "Récupération des liens des propriétés"
+        });
+        await syncListings(url);
+      } catch (error) {
+        console.error("Erreur lors de la synchronisation:", error);
+        toast.error("Erreur de synchronisation", {
+          description: error instanceof Error ? error.message : "Une erreur est survenue"
+        });
+      }
       return;
     }
 
@@ -132,7 +142,8 @@ export const BrokerProfileImport = () => {
         
         <TabsContent value="sync">
           <div className="text-sm text-muted-foreground mb-4">
-            Enregistrez l'URL de votre profil ou de recherche pour synchroniser régulièrement vos annonces sans scraper tous les détails immédiatement
+            <p>Enregistrez l'URL de votre profil ou de recherche pour synchroniser régulièrement vos annonces.</p>
+            <p className="mt-2 text-xs">Cette méthode récupère seulement les liens vers vos annonces. Vous pourrez ensuite charger les détails complets des annonces individuellement.</p>
           </div>
           {savedBrokerUrl && (
             <div className="text-sm bg-muted p-2 rounded mb-4">
