@@ -5,7 +5,6 @@ import { ListingItem } from "./ListingItem";
 import { ListingCard } from "./ListingCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { loadListingDetails } from "@/services/listingSyncService";
 
 export const ListingsList = () => {
   const { data: listings, isLoading, refetch, isError, error } = useQuery({
@@ -22,30 +21,6 @@ export const ListingsList = () => {
       return data;
     },
   });
-
-  const handleLoadDetails = async (listingId: string) => {
-    try {
-      toast.info("Chargement des détails en cours...");
-      
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        toast.error("Vous devez être connecté pour charger les détails");
-        return;
-      }
-      
-      await loadListingDetails(listingId, userData.user.id);
-      
-      // Rafraîchir la liste après le chargement
-      await refetch();
-      
-      toast.success("Détails du listing chargés avec succès");
-    } catch (error) {
-      console.error("Erreur lors du chargement des détails:", error);
-      toast.error("Erreur lors du chargement des détails", {
-        description: error instanceof Error ? error.message : "Une erreur est survenue"
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -79,7 +54,7 @@ export const ListingsList = () => {
       <div className="text-center py-12">
         <h3 className="text-lg font-semibold mb-2">Aucune annonce</h3>
         <p className="text-muted-foreground">
-          Importez votre première annonce Centris pour commencer ou synchronisez avec votre profil courtier
+          Importez votre première annonce Centris pour commencer
         </p>
       </div>
     );
@@ -92,18 +67,7 @@ export const ListingsList = () => {
           {listing.is_fully_scraped && listing.images && listing.images.length > 0 ? (
             <ListingCard listing={listing} />
           ) : (
-            <>
-              <ListingItem listing={listing} />
-              <div className="mt-2 flex justify-center">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleLoadDetails(listing.id)}
-                >
-                  Charger les détails complets
-                </Button>
-              </div>
-            </>
+            <ListingItem listing={listing} />
           )}
         </div>
       ))}
