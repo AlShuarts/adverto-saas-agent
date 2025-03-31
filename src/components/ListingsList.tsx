@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { loadListingDetails } from "@/services/listingSyncService";
 
 export const ListingsList = () => {
-  const { data: listings, isLoading, refetch } = useQuery({
+  const { data: listings, isLoading, refetch, isError, error } = useQuery({
     queryKey: ["listings"],
     queryFn: async () => {
       console.log("Fetching listings...");
@@ -56,6 +56,20 @@ export const ListingsList = () => {
             className="h-[300px] rounded-lg bg-muted animate-pulse"
           />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-semibold mb-2 text-destructive">Erreur de chargement</h3>
+        <p className="text-muted-foreground">
+          {error instanceof Error ? error.message : "Une erreur est survenue lors du chargement des annonces"}
+        </p>
+        <Button onClick={() => refetch()} className="mt-4">
+          Réessayer
+        </Button>
       </div>
     );
   }

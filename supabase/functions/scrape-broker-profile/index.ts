@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { extractListingUrls, alternativeExtractListingUrls, extractAllPropertiesLink } from "./extractors/listing-extractor.ts";
 import { extractTotalPages, hasNextPage, extractPropertyCount } from "./extractors/pagination-extractor.ts";
@@ -35,9 +34,11 @@ serve(async (req) => {
     console.log('Processed URL for scraping:', scrapingUrl);
     
     let html: string;
+    let fetchError = null;
+    
     try {
-      // Ajout d'un délai aléatoire pour simuler un comportement humain (entre 1 et 3 secondes)
-      const randomDelay = 1000 + Math.floor(Math.random() * 2000);
+      // Ajout d'un délai aléatoire pour simuler un comportement humain (entre 1 et 5 secondes)
+      const randomDelay = 1000 + Math.floor(Math.random() * 4000);
       await new Promise(resolve => setTimeout(resolve, randomDelay));
       
       // Améliorons les headers pour contourner les détections anti-bot
@@ -58,14 +59,21 @@ serve(async (req) => {
         'Cookie': 'TS01c02dd2=01bdefbe6ba9ecc7d50ba30dc15e3d4e24cf65fefb99bef8a6ad3e15e4b2ffb2'
       };
       
-      const { html: fetchedHtml } = await fetchWithRetry(scrapingUrl, customHeaders, 4, 3000);
-      html = fetchedHtml;
-      console.log('HTML successfully fetched, length:', html.length);
-    } catch (fetchError) {
-      console.error('Network error fetching URL:', fetchError);
+      const response = await fetchWithRetry(scrapingUrl, customHeaders, 4, 3000);
+      html = response.html;
+      
+      // If there was an error but we still got HTML, record the error
+      if (response.error) {
+        fetchError = response.error;
+        console.log('Fetch completed with error, but HTML was returned:', fetchError);
+      } else {
+        console.log('HTML successfully fetched, length:', html.length);
+      }
+    } catch (fetchCatastrophicError) {
+      console.error('Network error fetching URL:', fetchCatastrophicError);
       return new Response(
         JSON.stringify({ 
-          error: `Erreur réseau: ${fetchError instanceof Error ? fetchError.message : String(fetchError)}`,
+          error: `Erreur réseau: ${fetchCatastrophicError instanceof Error ? fetchCatastrophicError.message : String(fetchCatastrophicError)}`,
           listingUrls: [],
           currentPage: page,
           hasNextPage: false,
@@ -140,6 +148,13 @@ serve(async (req) => {
       
       console.log(`Light mode: Found ${listingUrls.length} listing URLs`);
       
+      // Save a portion of HTML for debugging if we couldn't find any listings
+      let htmlExcerpt = null;
+      if (listingUrls.length === 0) {
+        htmlExcerpt = html.substring(0, 2000);
+        console.log("HTML excerpt (first 2000 chars):", htmlExcerpt);
+      }
+      
       return new Response(
         JSON.stringify({
           listingUrls,
@@ -148,7 +163,9 @@ serve(async (req) => {
           totalPages: 1,
           hasAllPropertiesLink: hasViewAllPropertiesLink,
           allPropertiesUrl,
-          lightMode: true
+          lightMode: true,
+          fetchError,
+          htmlPreview: listingUrls.length === 0 ? htmlExcerpt : null
         }),
         { 
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -184,7 +201,7 @@ serve(async (req) => {
             console.log('Added onlyonedisplay parameter to URL:', allPropertiesUrl);
           }
           
-          // Fetch the "Voir toutes les propriétés" page
+          // Fetch the "Voir toutes les propriétées" page
           try {
             const { html: allPropertiesContent } = await fetchWithRetry(allPropertiesUrl, {}, 4, 3000);
             allPropertiesHtml = allPropertiesContent;
