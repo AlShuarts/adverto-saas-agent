@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { searchUrl } = await req.json();
+    const { searchUrl, page = 1 } = await req.json();
     console.log('URL à scraper:', searchUrl);
 
     if (!searchUrl.includes("centris.ca")) {
@@ -24,19 +24,19 @@ serve(async (req) => {
       );
     }
 
-    // Improve headers with randomization to avoid detection
+    // Add a delay between 1-3 seconds to simulate human behavior
+    const delayMs = 1000 + Math.floor(Math.random() * 2000);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+
+    // Randomize user agent to avoid detection
     const randomUserAgent = getRandomUserAgent();
     const customHeaders = {
       ...scrapingHeaders,
       'User-Agent': randomUserAgent,
       'Referer': 'https://www.centris.ca/fr',
     };
-
-    console.log(`Using User-Agent: ${randomUserAgent}`);
     
-    // Add a small delay to simulate human behavior (1-3 seconds)
-    const randomDelay = 1000 + Math.floor(Math.random() * 2000);
-    await new Promise(resolve => setTimeout(resolve, randomDelay));
+    console.log(`Using User-Agent: ${randomUserAgent}`);
 
     // Fetch the search results page
     const response = await fetch(searchUrl, { 
@@ -46,7 +46,6 @@ serve(async (req) => {
     if (!response.ok) {
       console.error('Failed to fetch search results:', response.status, response.statusText);
       
-      // If we get a 403 or 429, it might be a temporary block
       if (response.status === 403 || response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Accès temporairement bloqué par Centris. Réessayez plus tard." }),
@@ -63,11 +62,11 @@ serve(async (req) => {
     const html = await response.text();
     console.log('HTML length:', html.length);
     
-    // Check for captcha or access denied
+    // Check for captcha or access denied indicators
     if (
       html.toLowerCase().includes('captcha') || 
       html.toLowerCase().includes('access denied') ||
-      html.toLowerCase().includes('robot') && html.toLowerCase().includes('detect')
+      (html.toLowerCase().includes('robot') && html.toLowerCase().includes('detect'))
     ) {
       console.error('Captcha or access denied detected');
       return new Response(
@@ -82,18 +81,8 @@ serve(async (req) => {
     // Extract listing URLs from the search results page
     let listingUrls = extractListingUrls(html);
     
-    console.log(`Found ${listingUrls.length} listing URLs`);
-    
-    // If no listings found, log a portion of the HTML for debugging
     if (listingUrls.length === 0) {
-      const htmlExcerpt = html.substring(0, 1000);
-      console.log('HTML excerpt for debugging:', htmlExcerpt);
-      
-      // Look for property-row class that might contain listings
-      const hasPropertyRows = html.includes('property-row');
-      console.log('Has property rows:', hasPropertyRows);
-      
-      // Alternative extraction for property cards
+      // Try alternative extraction method for property cards
       const propertyCardRegex = /<div\s+class="[^"]*(?:thumbnail-cell|property-thumbnail)[^"]*"[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi;
       const alternativeUrls = [];
       let match;
@@ -114,11 +103,12 @@ serve(async (req) => {
         console.log(`Found ${alternativeUrls.length} listings with alternative extraction`);
         listingUrls = alternativeUrls;
       } else {
+        const htmlExcerpt = html.substring(0, 1000);
+        console.log('HTML excerpt for debugging:', htmlExcerpt);
         return new Response(
           JSON.stringify({ 
             error: "Aucune annonce trouvée dans les résultats de recherche",
-            listingUrls: [],
-            htmlExcerpt 
+            listingUrls: []
           }),
           { 
             headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -127,6 +117,8 @@ serve(async (req) => {
       }
     }
 
+    console.log(`Found ${listingUrls.length} listing URLs`);
+    
     return new Response(
       JSON.stringify({
         listingUrls,
