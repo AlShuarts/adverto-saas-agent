@@ -34,10 +34,11 @@ export const ListingItem = ({ listing }: ListingItemProps) => {
         throw new Error("Non authentifié");
       }
       
-      await loadListingDetails(listing.id, userData.user.id);
+      // Load details from the listing service
+      const updatedListing = await loadListingDetails(listing.id, userData.user.id);
       
-      // Invalidate queries to refetch the listing data
-      queryClient.invalidateQueries({ queryKey: ["listings"] });
+      // Invalidate the query to refresh the listing data
+      await queryClient.invalidateQueries({ queryKey: ["listings"] });
       
       // Expand details after loading
       setExpanded(true);
