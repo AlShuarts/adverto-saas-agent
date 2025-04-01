@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { extractListingUrls } from "../scrape-broker-profile/extractors/listing-extractor.ts";
-import { scrapingHeaders } from "../scrape-centris/scraping-headers.ts";
+import { fetchWithRetry } from "../scrape-broker-profile/utils/request-utils.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -24,59 +24,23 @@ serve(async (req) => {
       );
     }
 
-    // Add a delay between 1-3 seconds to simulate human behavior
-    const delayMs = 1000 + Math.floor(Math.random() * 2000);
-    await new Promise(resolve => setTimeout(resolve, delayMs));
-
-    // Randomize user agent to avoid detection
-    const randomUserAgent = getRandomUserAgent();
-    const customHeaders = {
-      ...scrapingHeaders,
-      'User-Agent': randomUserAgent,
-      'Referer': 'https://www.centris.ca/fr',
-    };
+    console.log('Utilisation de fetchWithRetry pour obtenir une meilleure fiabilité');
     
-    console.log(`Using User-Agent: ${randomUserAgent}`);
-
-    // Fetch the search results page
-    const response = await fetch(searchUrl, { 
-      headers: customHeaders 
-    });
+    // Utiliser la fonction fetchWithRetry du module request-utils qui fonctionne bien pour le scraping d'annonce unique
+    const { html, error: fetchError } = await fetchWithRetry(searchUrl);
     
-    if (!response.ok) {
-      console.error('Failed to fetch search results:', response.status, response.statusText);
-      
-      if (response.status === 403 || response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Accès temporairement bloqué par Centris. Réessayez plus tard." }),
-          { 
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
-        );
-      }
-      
-      throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-    }
-
-    const html = await response.text();
-    console.log('HTML length:', html.length);
-    
-    // Check for captcha or access denied indicators
-    if (
-      html.toLowerCase().includes('captcha') || 
-      html.toLowerCase().includes('access denied') ||
-      (html.toLowerCase().includes('robot') && html.toLowerCase().includes('detect'))
-    ) {
-      console.error('Captcha or access denied detected');
+    if (fetchError) {
+      console.error('Erreur lors de la récupération de la page:', fetchError);
       return new Response(
-        JSON.stringify({ error: "Protection anti-bot détectée. Réessayez plus tard." }),
+        JSON.stringify({ error: `Erreur lors de la récupération: ${fetchError}` }),
         { 
-          status: 403,
+          status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
+    
+    console.log('HTML length:', html.length);
     
     // Extract listing URLs from the search results page
     let listingUrls = extractListingUrls(html);
@@ -139,21 +103,6 @@ serve(async (req) => {
     );
   }
 });
-
-// Array of different user agents for rotation
-const userAgents = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-];
-
-// Get a random user agent from the array
-function getRandomUserAgent() {
-  return userAgents[Math.floor(Math.random() * userAgents.length)];
-}
 
 // Check if a URL is a valid Centris listing URL
 function isValidListingUrl(url: string): boolean {

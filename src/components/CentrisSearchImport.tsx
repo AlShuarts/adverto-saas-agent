@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { importListingsFromSearchUrl } from "@/services/centrisSearchService";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 export const CentrisSearchImport = () => {
   const { toast } = useToast();
@@ -45,6 +45,11 @@ export const CentrisSearchImport = () => {
         setProgress(totalCount > 0 ? Math.floor((importedCount / totalCount) * 100) : 0);
         setImportedListings(importedCount);
         setFoundListings(totalCount);
+        
+        // Change step to importing once we start processing listings
+        if (importedCount > 0 || totalCount > 0) {
+          setProcessingStep('importing');
+        }
       };
 
       // Start the import process
@@ -85,7 +90,14 @@ export const CentrisSearchImport = () => {
           disabled={loading}
         />
         <Button onClick={handleBulkImport} disabled={loading}>
-          {loading ? "Importation..." : "Importer"}
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Traitement...
+            </>
+          ) : (
+            "Importer"
+          )}
         </Button>
       </div>
 

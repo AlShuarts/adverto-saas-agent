@@ -27,6 +27,8 @@ export async function importListingsFromSearchUrl(
       failedUrls: [] as string[]
     };
 
+    console.log("Calling scrape-search-results with URL:", searchUrl);
+    
     // Call the Supabase Edge Function to scrape search results
     const { data: response, error } = await supabase.functions.invoke(
       "scrape-search-results",
@@ -51,13 +53,17 @@ export async function importListingsFromSearchUrl(
 
     // Extract listing URLs
     const listingUrls = response.listingUrls || [];
-    console.log(`Found ${listingUrls.length} listings`);
+    console.log(`Found ${listingUrls.length} listings to import`);
     
     // Update total count
     stats.total = listingUrls.length;
     
     if (onProgressUpdate) {
       onProgressUpdate(stats.imported, stats.total);
+    }
+
+    if (listingUrls.length === 0) {
+      return stats; // Return early if no listings were found
     }
 
     // Import each listing one by one
