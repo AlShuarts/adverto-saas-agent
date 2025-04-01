@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { importCentrisListing } from "./centrisImportService";
+import { toast } from "sonner";
 
 type ProgressUpdateCallback = (
   imported: number,
@@ -11,6 +12,8 @@ interface ImportResult {
   imported: number;
   total: number;
   failed: number;
+  failedUrls: string[];
+  captchaDetected?: boolean;
 }
 
 export async function importListingsFromSearchUrl(
@@ -24,13 +27,14 @@ export async function importListingsFromSearchUrl(
       imported: 0,
       total: 0,
       failed: 0,
-      failedUrls: [] as string[]
+      failedUrls: [] as string[],
+      captchaDetected: false
     };
 
     console.log("Calling scrape-search-results with URL:", searchUrl);
     
     // Call the Supabase Edge Function to scrape search results
-    const { data: response, error } = await supabase.functions.invoke(
+    const { data: response, error: functionError } = await supabase.functions.invoke(
       "scrape-search-results",
       {
         body: {
@@ -41,13 +45,20 @@ export async function importListingsFromSearchUrl(
     );
 
     // Handle errors
-    if (error) {
-      console.error(`Error scraping search results:`, error);
-      throw new Error(`Erreur lors de l'extraction: ${error.message}`);
+    if (functionError) {
+      console.error(`Error scraping search results:`, functionError);
+      throw new Error(`Erreur lors de l'extraction: ${functionError.message}`);
     }
 
     if (response.error) {
       console.error(`API reported error:`, response.error);
+      
+      // Check if captcha was detected
+      if (response.captchaDetected) {
+        stats.captchaDetected = true;
+        throw new Error(`Accès bloqué par Centris. L'application est détectée comme un robot. Veuillez réessayer plus tard ou importer les annonces une par une.`);
+      }
+      
       throw new Error(`Erreur lors de l'extraction: ${response.error}`);
     }
 
@@ -76,6 +87,9 @@ export async function importListingsFromSearchUrl(
         if (onProgressUpdate) {
           onProgressUpdate(stats.imported, stats.total);
         }
+        
+        // Add a small delay between imports to avoid overloading the server
+        await new Promise(r => setTimeout(r, 300));
       } catch (err) {
         console.error(`Failed to import listing ${listingUrl}:`, err);
         stats.failed++;
