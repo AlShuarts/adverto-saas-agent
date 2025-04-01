@@ -10,14 +10,16 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useQueryClient } from "@tanstack/react-query";
+import { ListingImageCarousel } from "./ListingImageCarousel";
 
 interface ListingItemProps {
   listing: Tables<"listings">;
 }
 
-export const ListingItem = ({ listing }: ListingItemProps) => {
+export const ListingItem = ({ listing: initialListing }: ListingItemProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [listing, setListing] = useState(initialListing);
   const queryClient = useQueryClient();
 
   const handleLoadDetails = async () => {
@@ -37,11 +39,14 @@ export const ListingItem = ({ listing }: ListingItemProps) => {
       // Load details from the listing service
       const updatedListing = await loadListingDetails(listing.id, userData.user.id);
       
-      // Invalidate the query to refresh the listing data
-      await queryClient.invalidateQueries({ queryKey: ["listings"] });
+      // Update the local state with the new listing data immediately
+      setListing(updatedListing);
       
       // Expand details after loading
       setExpanded(true);
+      
+      // Invalidate the query to refresh other components
+      await queryClient.invalidateQueries({ queryKey: ["listings"] });
       
       toast.success("Détails du listing chargés avec succès");
     } catch (error) {
@@ -129,13 +134,7 @@ export const ListingItem = ({ listing }: ListingItemProps) => {
         </div>
         
         {listing.images && listing.images.length > 0 ? (
-          <div className="aspect-video relative overflow-hidden rounded">
-            <img 
-              src={listing.images[0]} 
-              alt={listing.title} 
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <ListingImageCarousel images={listing.images} />
         ) : (
           <div className="h-40 bg-muted rounded flex items-center justify-center">
             <p className="text-muted-foreground">Aucune image disponible</p>
