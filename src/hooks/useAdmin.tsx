@@ -64,24 +64,20 @@ export const useAdmin = () => {
       
       if (profilesError) throw profilesError;
 
-      // Récupérer les statistiques d'utilisation
-      const { data: usageStats, error: statsError } = await supabase.rpc('admin_get_users');
-
-      if (statsError) {
-        console.error("Erreur RPC:", statsError);
-        throw new Error("Erreur lors de la récupération des statistiques");
-      }
+      // Note: Suppression de l'appel RPC à 'admin_get_users' qui n'existe pas
+      // Utilisation directe des données de la fonction Supabase
 
       // Enrichir les données des statistiques avec les informations des utilisateurs
-      const enrichedStats: UsageStatistic[] = (usageStats || []).map((stat: any) => {
+      const enrichedStats: UsageStatistic[] = (authUsers || []).map((stat: any) => {
+        // Recherche du profil utilisateur correspondant, avec valeurs par défaut si non trouvé
         const userProfile = usersProfiles?.find(u => u.id === stat.user_id) || {};
-        const authUser = authUsers?.find((u: any) => u.id === stat.user_id);
         
         return {
           ...stat,
+          // TypeScript safe access avec valeurs par défaut
           first_name: userProfile.first_name || 'Inconnu',
           last_name: userProfile.last_name || '',
-          email: authUser ? authUser.email : 'Inconnu'
+          email: stat.email || 'Inconnu'
         };
       });
 
