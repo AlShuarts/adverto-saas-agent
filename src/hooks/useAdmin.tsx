@@ -16,6 +16,13 @@ export type UsageStatistic = {
   last_name?: string;
 };
 
+// Define a type for the profile data
+type ProfileData = {
+  id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+};
+
 export const useAdmin = () => {
   const { profile } = useProfile();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -70,7 +77,7 @@ export const useAdmin = () => {
       // Enrichir les données des statistiques avec les informations des utilisateurs
       const enrichedStats: UsageStatistic[] = (authUsers || []).map((stat: any) => {
         // Recherche du profil utilisateur correspondant, avec valeurs par défaut si non trouvé
-        const userProfile = usersProfiles?.find(u => u.id === stat.user_id) || {};
+        const userProfile = (usersProfiles?.find(u => u.id === stat.user_id) || {}) as ProfileData;
         
         return {
           ...stat,
