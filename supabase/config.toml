@@ -15,3 +15,7 @@ verify_jwt = false
 
 [functions.scrape-centris]
 verify_jwt = false
+
+[functions.scrape-search-results]
+verify_jwt = false
+memory = 256
