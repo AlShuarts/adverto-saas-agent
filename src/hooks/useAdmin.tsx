@@ -52,33 +52,35 @@ export const useAdmin = () => {
       setIsLoading(true);
       setError(null);
 
-      // Récupérer les statistiques d'utilisation
-      const { data: stats, error: statsError } = await supabase
-        .from('usage_statistics')
-        .select('*')
-        .order('description_generations', { ascending: false });
-
-      if (statsError) throw statsError;
-
+      // Récupérer les statistiques d'utilisation via la fonction admin-get-users
+      const { data: authUsers, error: authError } = await supabase.functions.invoke('admin-get-users');
+      
+      if (authError) throw authError;
+      
       // Récupérer les informations des utilisateurs pour les lier aux statistiques
-      const { data: users, error: usersError } = await supabase
+      const { data: usersProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name');
       
-      if (usersError) throw usersError;
+      if (profilesError) throw profilesError;
 
-      // Récupérer les emails des utilisateurs (nécessite un rôle admin)
-      const { data: authUsers, error: authError } = await supabase
-        .rpc('admin_get_users');
+      // Récupérer les statistiques d'utilisation
+      const { data: usageStats, error: statsError } = await supabase.rpc('admin_get_users');
 
-      const enrichedStats = stats.map(stat => {
-        const userProfile = users.find(u => u.id === stat.user_id);
-        const authUser = authError ? null : (authUsers || []).find((u: any) => u.id === stat.user_id);
+      if (statsError) {
+        console.error("Erreur RPC:", statsError);
+        throw new Error("Erreur lors de la récupération des statistiques");
+      }
+
+      // Enrichir les données des statistiques avec les informations des utilisateurs
+      const enrichedStats: UsageStatistic[] = (usageStats || []).map((stat: any) => {
+        const userProfile = usersProfiles?.find(u => u.id === stat.user_id) || {};
+        const authUser = authUsers?.find((u: any) => u.id === stat.user_id);
         
         return {
           ...stat,
-          first_name: userProfile?.first_name || 'Inconnu',
-          last_name: userProfile?.last_name || '',
+          first_name: userProfile.first_name || 'Inconnu',
+          last_name: userProfile.last_name || '',
           email: authUser ? authUser.email : 'Inconnu'
         };
       });

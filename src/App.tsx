@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BrowserRouter,
@@ -5,11 +6,11 @@ import {
   Route,
   Navigate
 } from "react-router-dom";
-import { Auth } from "./pages/Auth";
-import { Index } from "./pages/Index";
-import { Profile } from "./pages/Profile";
-import { AllListings } from "./pages/AllListings";
-import { PublishedListings } from "./pages/PublishedListings";
+import Auth from "./pages/Auth";
+import Index from "./pages/Index";
+import Profile from "./pages/Profile";
+import AllListings from "./pages/AllListings";
+import PublishedListings from "./pages/PublishedListings";
 import { useProfile } from "@/hooks/useProfile";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from "@/components/ui/toaster"

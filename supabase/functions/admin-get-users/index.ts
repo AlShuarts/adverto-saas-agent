@@ -53,8 +53,26 @@ serve(async (req) => {
       throw usersError;
     }
 
+    // Récupérer les statistiques d'utilisation
+    const { data: stats, error: statsError } = await supabase
+      .from('usage_statistics')
+      .select('*');
+
+    if (statsError) {
+      throw statsError;
+    }
+
+    // Combiner les données des utilisateurs et des statistiques
+    const combined = stats.map(stat => {
+      const user = users.users.find(u => u.id === stat.user_id);
+      return {
+        ...stat,
+        email: user ? user.email : 'Inconnu'
+      };
+    });
+
     return new Response(
-      JSON.stringify(users),
+      JSON.stringify(combined),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
