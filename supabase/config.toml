@@ -22,3 +22,6 @@ verify_jwt = false
 [scrape-search-results]
 verify_jwt = false
 memory = 256
+
+[admin-get-users]
+verify_jwt = true

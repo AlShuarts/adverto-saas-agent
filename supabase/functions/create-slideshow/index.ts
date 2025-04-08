@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
@@ -95,6 +96,23 @@ serve(async (req) => {
       renderId,
       userId: user.id
     });
+
+    // Mettre à jour les statistiques d'utilisation
+    try {
+      const { error: statError } = await supabase.rpc(
+        'increment_usage_statistic',
+        {
+          user_id_param: user.id,
+          statistic_type: 'slideshow'
+        }
+      );
+
+      if (statError) {
+        console.error("⚠️ Erreur lors de la mise à jour des statistiques:", statError);
+      }
+    } catch (statErr) {
+      console.error("⚠️ Exception lors de la mise à jour des statistiques:", statErr);
+    }
 
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),

@@ -152,6 +152,7 @@ export type Database = {
           last_name: string | null
           last_sync_timestamp: string | null
           phone: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
         }
         Insert: {
@@ -169,6 +170,7 @@ export type Database = {
           last_name?: string | null
           last_sync_timestamp?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
         Update: {
@@ -186,6 +188,7 @@ export type Database = {
           last_name?: string | null
           last_sync_timestamp?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
         Relationships: []
@@ -331,6 +334,33 @@ export type Database = {
           },
         ]
       }
+      usage_statistics: {
+        Row: {
+          created_at: string
+          description_generations: number
+          id: string
+          slideshow_generations: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description_generations?: number
+          id?: string
+          slideshow_generations?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description_generations?: number
+          id?: string
+          slideshow_generations?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wistia_configs: {
         Row: {
           created_at: string
@@ -386,10 +416,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_usage_statistic: {
+        Args: { user_id_param: string; statistic_type: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -504,6 +537,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "user"],
+    },
   },
 } as const

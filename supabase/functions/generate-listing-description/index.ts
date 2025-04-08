@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -15,6 +16,25 @@ serve(async (req) => {
   }
 
   try {
+    // Vérification de l'authentification
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) {
+      throw new Error("Pas d'en-tête d'autorisation.");
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Récupération de l'ID utilisateur à partir du token
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+
+    if (userError || !user) {
+      throw new Error("Jeton utilisateur invalide.");
+    }
+
     const { listing, templateContent } = await req.json();
 
     console.log("Received template content:", templateContent);
@@ -89,6 +109,24 @@ INSTRUCTIONS IMPORTANTES:
     });
 
     const data = await response.json();
+
+    // Mise à jour des statistiques d'utilisation
+    try {
+      const { error: statError } = await supabase.rpc(
+        'increment_usage_statistic',
+        {
+          user_id_param: user.id,
+          statistic_type: 'description'
+        }
+      );
+
+      if (statError) {
+        console.error("Erreur lors de la mise à jour des statistiques:", statError);
+      }
+    } catch (statErr) {
+      console.error("Exception lors de la mise à jour des statistiques:", statErr);
+    }
+
     return new Response(JSON.stringify({ 
       text: data.choices[0].message.content 
     }), {
