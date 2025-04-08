@@ -1,8 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { fetchWithRetry } from "../scrape-broker-profile/utils/request-utils.ts";
 import { extractListingUrls, alternativeExtractListingUrls } from "../scrape-broker-profile/extractors/listing-extractor.ts";
+
+// Import the headers from the successful scrape-centris function
+import { scrapingHeaders } from "../scrape-centris/scraping-headers.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -33,33 +35,64 @@ serve(async (req) => {
     }
     
     if (!scrapingUrl.includes('ps=')) {
-      // Set page size to 40 to get more results per request
-      scrapingUrl += (scrapingUrl.includes('?') ? '&' : '?') + 'ps=40';
+      // Set page size to a smaller value (20) to reduce suspicion
+      scrapingUrl += (scrapingUrl.includes('?') ? '&' : '?') + 'ps=20';
     }
     
     console.log('URL optimisée pour le scraping:', scrapingUrl);
     
-    // Use the fetchWithRetry function that works well for single listing imports
-    const { html, error: fetchError, status } = await fetchWithRetry(scrapingUrl);
+    // Add a random delay before fetching to mimic human behavior (1-3 seconds)
+    const randomDelay = 1000 + Math.floor(Math.random() * 2000);
+    console.log(`Délai aléatoire avant requête: ${randomDelay}ms`);
+    await new Promise(resolve => setTimeout(resolve, randomDelay));
     
-    if (fetchError) {
-      console.error('Erreur lors de la récupération de la page:', fetchError);
+    // Use the direct fetch method with the same headers as the single listing scraper
+    // This replaces the fetchWithRetry function to ensure consistency
+    console.log('Envoi de la requête avec les headers de scrape-centris');
+    const response = await fetch(scrapingUrl, { 
+      headers: scrapingHeaders
+    });
+    
+    if (!response.ok) {
+      console.error('Échec de la récupération de la page:', response.status, response.statusText);
       
-      if (html && html.length > 0) {
-        console.log('HTML length despite error:', html.length);
-        // Continue with the HTML we got even with error, we might be able to extract some data
-      } else {
+      // Check if we got blocked or rate limited
+      if (response.status === 403 || response.status === 429) {
         return new Response(
-          JSON.stringify({ error: `Erreur lors de la récupération: ${fetchError}` }),
+          JSON.stringify({ 
+            error: "Accès bloqué par Centris. L'application est détectée comme un robot.",
+            captchaDetected: true
+          }),
           { 
-            status: 500,
+            status: response.status,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           }
         );
       }
+      
+      throw new Error(`Échec de la récupération de la page: ${response.status}`);
     }
     
+    const html = await response.text();
     console.log('HTML length:', html.length);
+    
+    // Check early for captcha detection before attempting extraction
+    if (html.toLowerCase().includes('captcha') || 
+        html.toLowerCase().includes('robot') || 
+        html.toLowerCase().includes('access denied')) {
+      console.error('Captcha or access denied detected');
+      return new Response(
+        JSON.stringify({ 
+          error: "Accès bloqué par Centris. L'application est détectée comme un robot.",
+          htmlPreview: html.substring(0, 1000),
+          captchaDetected: true
+        }),
+        { 
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
     
     // Extract listing URLs using multiple methods for the best chance of success
     let listingUrls = extractListingUrls(html);
@@ -89,25 +122,7 @@ serve(async (req) => {
     }
     
     if (listingUrls.length === 0) {
-      // If we still couldn't find any listings, check if we got a captcha or access denied
-      if (html.toLowerCase().includes('captcha') || 
-          html.toLowerCase().includes('robot') || 
-          html.toLowerCase().includes('access denied')) {
-        console.error('Captcha or access denied detected');
-        return new Response(
-          JSON.stringify({ 
-            error: "Accès bloqué par Centris. L'application est peut-être détectée comme un robot.",
-            htmlPreview: html.substring(0, 1000),
-            captchaDetected: true
-          }),
-          { 
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          }
-        );
-      }
-      
-      // Log an HTML excerpt for debugging
+      // If we still couldn't find any listings, log an HTML excerpt for debugging
       const htmlExcerpt = html.substring(0, 1000);
       console.log('HTML excerpt for debugging:', htmlExcerpt);
       
@@ -129,9 +144,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         listingUrls,
-        total: listingUrls.length,
-        status: status,
-        fetchError: fetchError,
+        total: listingUrls.length
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -148,5 +161,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Make sure function has correct memory limit in config.toml

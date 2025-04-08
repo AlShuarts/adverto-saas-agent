@@ -77,23 +77,49 @@ export async function importListingsFromSearchUrl(
       return stats; // Return early if no listings were found
     }
 
-    // Import each listing one by one
-    for (const listingUrl of listingUrls) {
-      try {
-        console.log(`Importing listing: ${listingUrl}`);
-        await importCentrisListing(listingUrl, userId);
-        stats.imported++;
-        
-        if (onProgressUpdate) {
-          onProgressUpdate(stats.imported, stats.total);
+    // Process listings in smaller batches to avoid detection
+    const batchSize = 3; // Process 3 listings at a time
+    const batches = [];
+    
+    // Split listings into batches
+    for (let i = 0; i < listingUrls.length; i += batchSize) {
+      batches.push(listingUrls.slice(i, i + batchSize));
+    }
+    
+    // Process each batch with a delay between batches
+    for (const batch of batches) {
+      // Process listings in the current batch
+      const batchPromises = batch.map(async (listingUrl) => {
+        try {
+          console.log(`Importing listing: ${listingUrl}`);
+          await importCentrisListing(listingUrl, userId);
+          stats.imported++;
+          
+          if (onProgressUpdate) {
+            onProgressUpdate(stats.imported, stats.total);
+          }
+          
+          // Add a small random delay between listings in the same batch (0.3-1 second)
+          const listingDelay = 300 + Math.floor(Math.random() * 700);
+          await new Promise(r => setTimeout(r, listingDelay));
+          
+          return { success: true };
+        } catch (err) {
+          console.error(`Failed to import listing ${listingUrl}:`, err);
+          stats.failed++;
+          stats.failedUrls.push(listingUrl);
+          return { success: false, url: listingUrl };
         }
-        
-        // Add a small delay between imports to avoid overloading the server
-        await new Promise(r => setTimeout(r, 300));
-      } catch (err) {
-        console.error(`Failed to import listing ${listingUrl}:`, err);
-        stats.failed++;
-        stats.failedUrls.push(listingUrl);
+      });
+      
+      // Wait for the current batch to complete
+      await Promise.all(batchPromises);
+      
+      // Add a longer delay between batches (2-5 seconds) to reduce load on server
+      if (batches.indexOf(batch) < batches.length - 1) {
+        const batchDelay = 2000 + Math.floor(Math.random() * 3000);
+        console.log(`Waiting ${batchDelay}ms before processing next batch...`);
+        await new Promise(r => setTimeout(r, batchDelay));
       }
     }
 

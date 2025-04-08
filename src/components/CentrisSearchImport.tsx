@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { importListingsFromSearchUrl } from "@/services/centrisSearchService";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertCircle, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const CentrisSearchImport = () => {
@@ -19,6 +19,8 @@ export const CentrisSearchImport = () => {
   const [importedListings, setImportedListings] = useState(0);
   const [processingStep, setProcessingStep] = useState<'idle' | 'scanning' | 'importing' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const handleBulkImport = async () => {
@@ -37,13 +39,15 @@ export const CentrisSearchImport = () => {
     setFoundListings(0);
     setImportedListings(0);
     setErrorMessage(null);
+    setEstimatedTimeRemaining(null);
+    setStartTime(Date.now());
 
     try {
       const { data: userData, error: authError } = await supabase.auth.getUser();
       if (authError) throw new Error("Erreur d'authentification: " + authError.message);
       if (!userData.user) throw new Error("Non authentifié");
 
-      // Function to update progress
+      // Function to update progress and estimate remaining time
       const handleProgress = (importedCount: number, totalCount: number) => {
         setProgress(totalCount > 0 ? Math.floor((importedCount / totalCount) * 100) : 0);
         setImportedListings(importedCount);
@@ -52,6 +56,16 @@ export const CentrisSearchImport = () => {
         // Change step to importing once we start processing listings
         if (importedCount > 0 || totalCount > 0) {
           setProcessingStep('importing');
+          
+          // Calculate estimated time remaining
+          if (startTime && importedCount > 0 && totalCount > importedCount) {
+            const elapsedMs = Date.now() - startTime;
+            const msPerItem = elapsedMs / importedCount;
+            const remainingItems = totalCount - importedCount;
+            const estimatedRemainingMs = msPerItem * remainingItems;
+            const estimatedRemainingMinutes = Math.ceil(estimatedRemainingMs / 60000);
+            setEstimatedTimeRemaining(estimatedRemainingMinutes);
+          }
         }
       };
 
@@ -59,7 +73,7 @@ export const CentrisSearchImport = () => {
       const importPromise = importListingsFromSearchUrl(url, userData.user.id, handleProgress);
       
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("L'opération a pris trop de temps. Veuillez réessayer.")), 45000);
+        setTimeout(() => reject(new Error("L'opération a pris trop de temps. Veuillez réessayer.")), 120000);
       });
       
       // Race between the import and the timeout
@@ -147,6 +161,13 @@ export const CentrisSearchImport = () => {
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
                 <span>Annonces trouvées : {foundListings}</span>
                 <span className="ml-2">Importées : {importedListings}</span>
+                
+                {estimatedTimeRemaining !== null && (
+                  <div className="ml-auto flex items-center text-muted-foreground">
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span>Temps restant estimé : ~{estimatedTimeRemaining} min</span>
+                  </div>
+                )}
               </>
             )}
             {processingStep === 'error' && (
@@ -157,6 +178,13 @@ export const CentrisSearchImport = () => {
             )}
           </div>
           <Progress value={progress} className="h-2" />
+          
+          {processingStep === 'importing' && (
+            <div className="text-sm text-muted-foreground mt-1">
+              <p>Les annonces sont importées par lots pour éviter d'être bloqué par Centris. Veuillez patienter.</p>
+            </div>
+          )}
+          
           {processingStep === 'error' && (
             <div className="text-sm text-muted-foreground mt-2">
               <p>Conseil: Essayez d'importer les annonces une par une en utilisant l'importation individuelle.</p>
