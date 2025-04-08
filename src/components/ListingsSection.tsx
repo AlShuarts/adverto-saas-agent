@@ -1,6 +1,7 @@
 
 import { CentrisImport } from "@/components/CentrisImport";
 import { CentrisSearchImport } from "@/components/CentrisSearchImport";
+import { AddressImport } from "@/components/AddressImport";
 import { ListingsList } from "@/components/ListingsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -13,13 +14,18 @@ export const ListingsSection = () => {
         </h2>
         
         <Tabs defaultValue="single" className="max-w-xl mx-auto">
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="single">Annonce unique</TabsTrigger>
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="single">URL unique</TabsTrigger>
+            <TabsTrigger value="address">Par adresse</TabsTrigger>
             <TabsTrigger value="search">Résultats de recherche</TabsTrigger>
           </TabsList>
           
           <TabsContent value="single">
             <CentrisImport />
+          </TabsContent>
+          
+          <TabsContent value="address">
+            <AddressImport />
           </TabsContent>
           
           <TabsContent value="search">
