@@ -3,8 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { extractListingUrls, alternativeExtractListingUrls } from "./extractors/listing-extractor.ts";
 
-// Import the headers from the successful scrape-centris function
-import { scrapingHeaders } from "../scrape-centris/scraping-headers.ts";
+// Import headers from the local copy
+import { scrapingHeaders } from "./scraping-headers.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
