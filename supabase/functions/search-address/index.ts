@@ -70,32 +70,38 @@ serve(async (req) => {
 
     console.log(`Recherche pour l'adresse: ${address}`);
 
-    // Format search query to specifically target Centris
-    const searchQuery = encodeURIComponent(`${address} site:centris.ca`);
-    const searchUrl = `https://www.google.com/search?q=${searchQuery}`;
-    
-    console.log(`URL de recherche Google: ${searchUrl}`);
+    // Construction de l'URL de recherche Centris
+    // Format: https://www.centris.ca/fr/propriete~a-vendre?view=Thumbnail&query=address
+    const searchTerm = encodeURIComponent(address.trim());
+    const searchUrl = `https://www.centris.ca/fr/propriete~a-vendre?view=Thumbnail&query=${searchTerm}`;
+    console.log(`URL de recherche Centris: ${searchUrl}`);
 
     // Make the request with a random user agent
     const userAgent = getRandomUserAgent();
     console.log(`Utilisation de l'User-Agent: ${userAgent}`);
     
-    console.log("Démarrage de la requête vers Google...");
+    console.log("Démarrage de la requête vers Centris...");
     const response = await fetch(searchUrl, {
       headers: {
         'User-Agent': userAgent,
         'Accept': 'text/html,application/xhtml+xml,application/xml',
         'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
         'Cache-Control': 'no-cache',
-        'Referer': 'https://www.google.com/',
+        'Referer': 'https://www.centris.ca/',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-User': '?1',
       }
     });
 
-    console.log(`Statut de la réponse Google: ${response.status} ${response.statusText}`);
+    console.log(`Statut de la réponse Centris: ${response.status} ${response.statusText}`);
     console.log(`Headers de la réponse:`, Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
-      console.error(`Erreur lors de la recherche Google: ${response.status}`);
+      console.error(`Erreur lors de la recherche Centris: ${response.status}`);
       throw new Error(`Erreur lors de la recherche: ${response.status}`);
     }
 
@@ -105,133 +111,90 @@ serve(async (req) => {
     // Log the first 200 characters to see what we're getting
     console.log(`Aperçu du HTML: ${html.substring(0, 200)}...`);
     
-    // Check for captcha/detection patterns
-    if (
-      html.includes("unusual traffic") ||
-      html.includes("captcha") ||
-      html.includes("verify you're a human")
-    ) {
-      console.error("Détection de bot par Google");
-      console.log("Extrait du HTML contenant probablement le captcha:", html.substring(0, 1000));
-      throw new Error("La recherche a été bloquée par Google. Veuillez réessayer plus tard.");
-    }
-
-    // Extract Centris links from the search results
+    // Extract Centris listing URLs and titles using multiple patterns
     const results: SearchResult[] = [];
     
-    // Amélioration: différentes patterns d'extraction pour couvrir plus de formats de résultats Google
-    const extractCentrisUrls = (html: string) => {
-      console.log("Début de l'extraction des URLs Centris...");
-      // Pattern 1: Extraire les liens directs
-      const pattern1 = /href="(https:\/\/www\.centris\.ca\/[^"]+)"/gi;
+    // Réutilisation des fonctions d'extraction du scrape-search-results
+    console.log("Extraction des annonces des résultats de recherche...");
+    
+    // Multiple patterns for finding listing URLs
+    const patterns = [
+      // Standard property card pattern
+      /<div class="[^"]*thumbnail[^"]*"[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi,
+      
+      // Property row pattern
+      /<div\s+class="(?:[^"]*\s)?property-row(?:\s[^"]*)?">[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>/gi,
+      
+      // Property item pattern
+      /<div\s+class="[^"]*(?:property-thumbnail-item|property|property-item)[^"]*"[^>]*>[\s\S]*?href="([^"]+)"[\s\S]*?<\/div>/gi,
+      
+      // Direct URL links to properties
+      /href="((?:https:\/\/www\.centris\.ca)?\/fr\/(?:maison|condo|terrain|propriete|ferme|commerce|multiplex)(?:~|\/)[^"]+\/[0-9]+)"/g,
+    ];
+    
+    const foundUrls = new Set<string>();
+    
+    for (const pattern of patterns) {
       let match;
-      const urls = new Set<string>();
-      
-      console.log("Application du pattern 1 (liens directs)...");
-      while ((match = pattern1.exec(html)) !== null) {
-        const url = match[1];
-        console.log(`URL trouvée (pattern 1): ${url}`);
-        if (isValidCentrisUrl(url)) {
-          console.log(`URL valide ajoutée: ${url}`);
-          urls.add(url);
-        } else {
-          console.log(`URL non valide ignorée: ${url}`);
+      while ((match = pattern.exec(html)) !== null) {
+        if (match && match[1]) {
+          let url = match[1];
+          
+          // Normalize URL
+          if (url.startsWith('/')) {
+            url = `https://www.centris.ca${url}`;
+          } else if (!url.startsWith('http')) {
+            url = `https://www.centris.ca/${url}`;
+          }
+          
+          // Validate URL
+          if (isValidCentrisUrl(url) && !foundUrls.has(url)) {
+            console.log(`URL valide trouvée: ${url}`);
+            foundUrls.add(url);
+            
+            // Extract property title
+            let title = extractTitleForUrl(html, url) || "Annonce Centris";
+            results.push({ url, title });
+          }
         }
       }
-      
-      // Pattern 2: Extraire les URL encodées (parfois Google encode les URL)
-      console.log("Application du pattern 2 (liens encodés)...");
-      const pattern2 = /href="\/url\?q=(https:\/\/www\.centris\.ca\/[^&]+)/gi;
-      while ((match = pattern2.exec(html)) !== null) {
-        const url = decodeURIComponent(match[1]);
-        console.log(`URL trouvée (pattern 2): ${url}`);
-        if (isValidCentrisUrl(url)) {
-          console.log(`URL valide ajoutée: ${url}`);
-          urls.add(url);
-        } else {
-          console.log(`URL non valide ignorée: ${url}`);
-        }
-      }
-      
-      // Pattern 3: Essayer un pattern plus générique pour les URL en cache
-      console.log("Application du pattern 3 (liens génériques)...");
-      const pattern3 = /https:\/\/www\.centris\.ca\/[^"&'\s)]+/gi;
-      while ((match = pattern3.exec(html)) !== null) {
-        const url = match[0];
-        console.log(`URL trouvée (pattern 3): ${url}`);
-        if (isValidCentrisUrl(url)) {
-          console.log(`URL valide ajoutée: ${url}`);
-          urls.add(url);
-        } else {
-          console.log(`URL non valide ignorée: ${url}`);
-        }
-      }
-      
-      console.log(`URLs brutes trouvées: ${urls.size}`);
-      return Array.from(urls);
-    };
-    
-    const isValidCentrisUrl = (url: string) => {
-      // Valider et filtrer pour les annonces immobilières
-      const result = (
-        url.includes("centris.ca") && 
-        (url.includes("/fr/propriete/") || 
-         url.includes("/en/property/") ||
-         url.includes("/fr/maison~a-vendre/") ||
-         url.includes("/en/house~for-sale/") ||
-         url.includes("/fr/condo~a-vendre/") ||
-         url.includes("/en/condo~for-sale/") ||
-         url.includes("/fr/multi-logements~a-vendre/") || 
-         url.includes("/en/multi-residential~for-sale/") ||
-         url.includes("/fr/terre-terrain~a-vendre/") || 
-         url.includes("/en/lot~for-sale/") ||
-         url.includes("MLS=") || url.includes("Centris="))
-      );
-      
-      console.log(`Validation URL ${url}: ${result ? 'VALIDE' : 'INVALIDE'}`);
-      return result;
-    };
-    
-    // Extraction des urls
-    const centrisUrls = extractCentrisUrls(html);
-    console.log(`URLs Centris filtrées: ${centrisUrls.length}`);
-    
-    if (centrisUrls.length === 0) {
-      // Si aucune URL n'est trouvée, enregistrons une partie plus grande du HTML pour le débogage
-      console.log("Aucune URL trouvée, voici un extrait plus large du HTML:");
-      console.log(html.substring(0, 3000));
     }
     
-    // Extraction des titres (approximatif)
-    for (const url of centrisUrls) {
-      // Essayer de trouver le titre associé à l'URL
-      console.log(`Extraction du titre pour l'URL: ${url}`);
-      const titleRegex = new RegExp(`<a[^>]*href="[^"]*${url.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}[^"]*"[^>]*>.*?<h3[^>]*>(.*?)<\/h3>`, 'i');
-      const titleMatch = titleRegex.exec(html);
-      let title = "Annonce Centris";
+    console.log(`${results.length} résultats trouvés`);
+    
+    if (results.length === 0) {
+      console.log("Aucun résultat trouvé, recherche de codes d'erreur ou de patterns alternatifs...");
       
-      if (titleMatch && titleMatch[1]) {
-        title = titleMatch[1].replace(/<[^>]*>/g, '');
-        console.log(`Titre trouvé: ${title}`);
-      } else {
-        // Extraction fallback du titre à partir de l'URL
-        const urlParts = url.split('/');
-        const lastPart = urlParts[urlParts.length - 1];
-        if (lastPart && lastPart.length > 0) {
-          title = lastPart.replace(/-/g, ' ').replace(/~[a-z-]+/g, '');
-          title = title.charAt(0).toUpperCase() + title.slice(1);
-          console.log(`Titre extrait de l'URL: ${title}`);
-        } else {
-          console.log(`Pas de titre trouvé, utilisation du titre par défaut: ${title}`);
-        }
+      if (html.includes("aucun résultat") || html.includes("Aucun résultat")) {
+        console.log("La page indique qu'aucun résultat n'a été trouvé");
       }
       
-      results.push({ url, title });
+      // Try alternative extraction as last resort
+      const allLinks = html.match(/<a[^>]*href="([^"#]+)"[^>]*>/gi);
+      if (allLinks) {
+        console.log(`Trouvé ${allLinks.length} liens au total, filtrage pour les propriétés...`);
+        for (const link of allLinks) {
+          const urlMatch = link.match(/href="([^"]+)"/i);
+          if (urlMatch && urlMatch[1]) {
+            const url = normalizeUrl(urlMatch[1]);
+            if (isValidCentrisUrl(url) && !foundUrls.has(url)) {
+              console.log(`URL alternative trouvée: ${url}`);
+              foundUrls.add(url);
+              
+              let title = extractTitleForUrl(html, url) || "Annonce Centris";
+              results.push({ url, title });
+            }
+          }
+        }
+      }
     }
     
-    console.log(`Nombre de résultats trouvés: ${results.length}`);
-    if (results.length > 0) {
-      console.log("Premiers résultats:", JSON.stringify(results.slice(0, 3)));
+    if (results.length === 0) {
+      // Log a portion of HTML for debugging
+      console.log("Aucune annonce trouvée. Extrait HTML pour débogage:");
+      console.log(html.substring(0, 3000)); // Log a larger portion for debugging
+    } else {
+      console.log("Premiers résultats:", results.slice(0, 3));
     }
     
     // Return the search results
@@ -260,3 +223,94 @@ serve(async (req) => {
   }
 });
 
+// Validate if a URL is a valid Centris property URL
+function isValidCentrisUrl(url: string): boolean {
+  // Must be a Centris URL
+  if (!url.includes('centris.ca')) {
+    return false;
+  }
+  
+  // Must have a language indicator
+  const hasLanguage = url.includes('/fr/') || url.includes('/en/');
+  if (!hasLanguage) {
+    return false;
+  }
+  
+  // Must have a property type indicator
+  const frenchTypes = ['maison', 'condo', 'terrain', 'propriete', 'ferme', 'commerce', 'multiplex'];
+  const englishTypes = ['house', 'condo', 'lot', 'property', 'farm', 'commercial', 'multiplex', 'plex'];
+  
+  const hasPropertyType = 
+    frenchTypes.some(type => url.includes(`/fr/${type}`)) || 
+    englishTypes.some(type => url.includes(`/en/${type}`));
+  
+  if (!hasPropertyType) {
+    return false;
+  }
+  
+  // Must end with a numeric ID
+  const endsWithId = /\/[0-9]+$/.test(url);
+  if (!endsWithId) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Normalize a URL
+function normalizeUrl(url: string): string {
+  // Expand relative URLs
+  if (url.startsWith('/')) {
+    url = `https://www.centris.ca${url}`;
+  } else if (!url.startsWith('http')) {
+    url = `https://www.centris.ca/${url}`;
+  }
+  
+  // Ensure URL is properly encoded
+  try {
+    url = new URL(url).toString();
+  } catch (e) {
+    console.error('Invalid URL:', url, e);
+  }
+  
+  return url;
+}
+
+// Extract title for a URL from HTML
+function extractTitleForUrl(html: string, url: string): string | null {
+  try {
+    // Try different patterns to find title
+    // 1. Find title near the URL
+    const urlPart = url.replace(/https?:\/\/[^\/]+/, '');
+    const titlePattern = new RegExp(`href="[^"]*${escapeRegExp(urlPart)}[^"]*"[^>]*>[\\s\\S]*?<h3[^>]*>([^<]+)<\/h3>`, 'i');
+    const titleMatch = titlePattern.exec(html);
+    
+    if (titleMatch && titleMatch[1]) {
+      return titleMatch[1].trim();
+    }
+    
+    // 2. Extract from URL itself
+    const pathParts = url.split('/');
+    const lastPart = pathParts[pathParts.length - 1];
+    if (lastPart && /\d+/.test(lastPart)) {
+      const secondLastPart = pathParts[pathParts.length - 2];
+      if (secondLastPart) {
+        return secondLastPart
+          .replace(/~/g, ' ')
+          .replace(/-/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+    }
+  } catch (e) {
+    console.error('Erreur lors de l\'extraction du titre:', e);
+  }
+  
+  return null;
+}
+
+// Helper to escape special characters in regex
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}

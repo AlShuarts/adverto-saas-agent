@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { importCentrisListing } from "@/services/centrisImportService";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, ExternalLink, AlertCircle } from "lucide-react";
+import { Loader2, Search, ExternalLink, AlertCircle, RefreshCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -45,6 +45,12 @@ export const AddressImport = () => {
     try {
       console.log(`Recherche pour l'adresse: ${address.trim()}`);
       
+      // Notification pour l'utilisateur
+      toast({
+        title: "Recherche en cours",
+        description: "Recherche des annonces correspondant à cette adresse...",
+      });
+      
       const { data, error } = await supabase.functions.invoke("search-address", {
         body: { address: address.trim() }
       });
@@ -61,13 +67,18 @@ export const AddressImport = () => {
         setError("Aucun résultat trouvé");
         toast({
           title: "Aucun résultat",
-          description: "Aucune annonce trouvée pour cette adresse. Essayez des termes de recherche différents.",
+          description: "Aucune annonce trouvée pour cette adresse. Essayez des termes de recherche différents ou plus précis.",
         });
         return;
       }
 
       setResults(data.results);
       setShowResults(true);
+      
+      toast({
+        title: "Recherche complétée",
+        description: `${data.results.length} annonces trouvées`,
+      });
     } catch (error) {
       console.error("Erreur lors de la recherche:", error);
       setError(error instanceof Error ? error.message : "Impossible de rechercher l'adresse");
@@ -125,7 +136,7 @@ export const AddressImport = () => {
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
         <Textarea
-          placeholder="Entrez l'adresse de la propriété (ex: 123 rue Principale, Montréal)"
+          placeholder="Entrez l'adresse complète de la propriété (ex: 123 rue Principale, Montréal, QC)"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           className="min-h-[100px] resize-none"
@@ -138,21 +149,23 @@ export const AddressImport = () => {
         />
         <div className="flex justify-between">
           <p className="text-xs text-muted-foreground">Appuyez sur Ctrl+Enter pour rechercher</p>
-          {error && (
-            <Button 
-              onClick={handleShowDebugInfo} 
-              variant="outline" 
-              size="sm"
-              type="button"
-            >
-              <AlertCircle className="h-4 w-4 mr-2" />
-              Afficher les détails
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {error && (
+              <Button 
+                onClick={handleShowDebugInfo} 
+                variant="outline" 
+                size="sm"
+                type="button"
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Détails
+              </Button>
+            )}
+          </div>
         </div>
         <Button onClick={handleSearch} disabled={searchLoading} className="w-full">
           {searchLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-          {searchLoading ? "Recherche en cours..." : "Rechercher"}
+          {searchLoading ? "Recherche en cours..." : "Rechercher sur Centris"}
         </Button>
       </div>
 
@@ -204,12 +217,12 @@ export const AddressImport = () => {
       
       {debugInfo && (
         <Dialog open={!!debugInfo} onOpenChange={() => setDebugInfo(null)}>
-          <DialogContent>
+          <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>Informations de débogage</DialogTitle>
             </DialogHeader>
             <div className="bg-muted p-4 rounded-md overflow-auto max-h-[60vh]">
-              <pre className="text-xs">{debugInfo}</pre>
+              <pre className="text-xs whitespace-pre-wrap">{debugInfo}</pre>
             </div>
           </DialogContent>
         </Dialog>
