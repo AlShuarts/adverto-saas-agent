@@ -28,4 +28,5 @@ verify_jwt = true
 
 [search-address]
 verify_jwt = false
-memory = 256
+memory = 512
+timeout_ms = 10000
