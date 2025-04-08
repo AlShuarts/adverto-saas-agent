@@ -4,7 +4,8 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Navigate
+  Navigate,
+  useLocation
 } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
@@ -14,32 +15,43 @@ import PublishedListings from "./pages/PublishedListings";
 import { useProfile } from "@/hooks/useProfile";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from "@/components/ui/toaster"
+import AdminPage from "./pages/Admin";
 
 const queryClient = new QueryClient()
 
 // Composant pour protéger les routes
 function PrivateRoute({ children }: { children: JSX.Element }) {
-  const { profile } = useProfile();
+  const { profile, loading, initialized } = useProfile();
+  const location = useLocation();
+
+  // Afficher un indicateur de chargement pendant la vérification
+  if (loading || !initialized) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!profile) {
     // Rediriger vers la page d'authentification si l'utilisateur n'est pas connecté
-    return <Navigate to="/auth" />;
+    return <Navigate to="/auth" state={{ from: location }} />;
   }
 
   return children;
 }
 
-// Importer la page d'administration
-import AdminPage from "./pages/Admin";
-
-// Ajoutez la route admin au routeur
 function App() {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <Routes>
-          <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={
+            <PrivateRoute>
+              <Index />
+            </PrivateRoute>
+          } />
           <Route path="/admin" element={
             <PrivateRoute>
               <AdminPage />
