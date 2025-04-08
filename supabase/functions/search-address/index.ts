@@ -88,27 +88,74 @@ serve(async (req) => {
     // Extract Centris links from the search results
     const results: SearchResult[] = [];
     
-    // Pattern for Google search result links
-    const linkPattern = /<a\s+[^>]*href="(https:\/\/www.centris.ca\/[^"]*)"[^>]*>(.*?)<\/a>/gi;
-    let match;
-    
-    while ((match = linkPattern.exec(html)) !== null) {
-      const url = match[1];
-      const titleMatch = /<h3[^>]*>(.*?)<\/h3>/i.exec(match[0]);
-      const title = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '') : "Annonce Centris";
+    // Amélioration: différentes patterns d'extraction pour couvrir plus de formats de résultats Google
+    const extractCentrisUrls = (html: string) => {
+      // Pattern 1: Extraire les liens directs
+      const pattern1 = /href="(https:\/\/www\.centris\.ca\/[^"]+)"/gi;
+      let match;
+      const urls = new Set<string>();
       
-      // Only include property listings
-      if (
-        url.includes("/fr/propriete/") || 
-        url.includes("/en/property/") ||
-        url.includes("/fr/maison~a-vendre/") ||
-        url.includes("/en/house~for-sale/")
-      ) {
-        results.push({ url, title });
+      while ((match = pattern1.exec(html)) !== null) {
+        const url = match[1];
+        if (isValidCentrisUrl(url)) {
+          urls.add(url);
+        }
       }
+      
+      // Pattern 2: Extraire les URL encodées (parfois Google encode les URL)
+      const pattern2 = /href="\/url\?q=(https:\/\/www\.centris\.ca\/[^&]+)/gi;
+      while ((match = pattern2.exec(html)) !== null) {
+        const url = decodeURIComponent(match[1]);
+        if (isValidCentrisUrl(url)) {
+          urls.add(url);
+        }
+      }
+      
+      console.log(`URLs brutes trouvées: ${urls.size}`);
+      return Array.from(urls);
+    };
+    
+    const isValidCentrisUrl = (url: string) => {
+      // Valider et filtrer pour les annonces immobilières
+      return (
+        url.includes("centris.ca") && 
+        (url.includes("/fr/propriete/") || 
+         url.includes("/en/property/") ||
+         url.includes("/fr/maison~a-vendre/") ||
+         url.includes("/en/house~for-sale/") ||
+         url.includes("/fr/condo~a-vendre/") ||
+         url.includes("/en/condo~for-sale/"))
+      );
+    };
+    
+    // Extraction des urls
+    const centrisUrls = extractCentrisUrls(html);
+    console.log(`URLs Centris filtrées: ${centrisUrls.length}`);
+    
+    // Extraction des titres (approximatif)
+    for (const url of centrisUrls) {
+      // Essayer de trouver le titre associé à l'URL
+      const titleRegex = new RegExp(`<a[^>]*href="[^"]*${url.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}[^"]*"[^>]*>.*?<h3[^>]*>(.*?)<\/h3>`, 'i');
+      const titleMatch = titleRegex.exec(html);
+      let title = "Annonce Centris";
+      
+      if (titleMatch && titleMatch[1]) {
+        title = titleMatch[1].replace(/<[^>]*>/g, '');
+      } else {
+        // Extraction fallback du titre à partir de l'URL
+        const urlParts = url.split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        if (lastPart && lastPart.length > 0) {
+          title = lastPart.replace(/-/g, ' ').replace(/~[a-z-]+/g, '');
+          title = title.charAt(0).toUpperCase() + title.slice(1);
+        }
+      }
+      
+      results.push({ url, title });
     }
     
     console.log(`Nombre de résultats trouvés: ${results.length}`);
+    console.log("Premiers résultats:", results.slice(0, 3));
     
     // Return the search results
     return new Response(

@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { importCentrisListing } from "@/services/centrisImportService";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, ExternalLink } from "lucide-react";
+import { Loader2, Search, ExternalLink, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SearchResult {
   title: string;
@@ -22,6 +23,8 @@ export const AddressImport = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const handleSearch = async () => {
@@ -36,12 +39,18 @@ export const AddressImport = () => {
 
     setSearchLoading(true);
     setResults([]);
+    setError(null);
+    setDebugInfo(null);
     
     try {
+      console.log(`Recherche pour l'adresse: ${address.trim()}`);
+      
       const { data, error } = await supabase.functions.invoke("search-address", {
         body: { address: address.trim() }
       });
 
+      console.log("Réponse du serveur:", data);
+      
       if (error) throw new Error(error.message);
       
       if (data.error) {
@@ -49,6 +58,7 @@ export const AddressImport = () => {
       }
 
       if (!data.results || data.results.length === 0) {
+        setError("Aucun résultat trouvé");
         toast({
           title: "Aucun résultat",
           description: "Aucune annonce trouvée pour cette adresse. Essayez des termes de recherche différents.",
@@ -60,6 +70,7 @@ export const AddressImport = () => {
       setShowResults(true);
     } catch (error) {
       console.error("Erreur lors de la recherche:", error);
+      setError(error instanceof Error ? error.message : "Impossible de rechercher l'adresse");
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de rechercher l'adresse",
@@ -106,24 +117,42 @@ export const AddressImport = () => {
     }
   };
 
+  const handleShowDebugInfo = () => {
+    setDebugInfo(JSON.stringify({ results, error }, null, 2));
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
-        <Input
-          type="text"
-          placeholder="Entrez l'adresse de la propriété"
+      <div className="flex flex-col gap-4">
+        <Textarea
+          placeholder="Entrez l'adresse de la propriété (ex: 123 rue Principale, Montréal)"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          className="flex-1"
+          className="min-h-[100px] resize-none"
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !searchLoading) {
+            if (e.key === "Enter" && e.ctrlKey && !searchLoading) {
+              e.preventDefault();
               handleSearch();
             }
           }}
         />
-        <Button onClick={handleSearch} disabled={searchLoading} className="min-w-20">
-          {searchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-          {searchLoading ? "Recherche..." : "Rechercher"}
+        <div className="flex justify-between">
+          <p className="text-xs text-muted-foreground">Appuyez sur Ctrl+Enter pour rechercher</p>
+          {error && (
+            <Button 
+              onClick={handleShowDebugInfo} 
+              variant="outline" 
+              size="sm"
+              type="button"
+            >
+              <AlertCircle className="h-4 w-4 mr-2" />
+              Afficher les détails
+            </Button>
+          )}
+        </div>
+        <Button onClick={handleSearch} disabled={searchLoading} className="w-full">
+          {searchLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+          {searchLoading ? "Recherche en cours..." : "Rechercher"}
         </Button>
       </div>
 
@@ -172,6 +201,19 @@ export const AddressImport = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {debugInfo && (
+        <Dialog open={!!debugInfo} onOpenChange={() => setDebugInfo(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Informations de débogage</DialogTitle>
+            </DialogHeader>
+            <div className="bg-muted p-4 rounded-md overflow-auto max-h-[60vh]">
+              <pre className="text-xs">{debugInfo}</pre>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
