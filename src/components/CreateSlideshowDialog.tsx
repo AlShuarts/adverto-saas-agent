@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -10,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
-import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -54,6 +54,7 @@ export const CreateSlideshowDialog = ({
   const [audioPlaying, setAudioPlaying] = useState<HTMLAudioElement | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   
+  // Les options d'affichage sont toujours activées
   const [config, setConfig] = useState<SlideshowConfig>({
     showPrice: true,
     showDetails: true,
@@ -114,9 +115,9 @@ export const CreateSlideshowDialog = ({
           listingId: listing.id,
           config: {
             imageDuration: 3,
-            showDetails: config.showDetails,
-            showPrice: config.showPrice,
-            showAddress: config.showAddress,
+            showDetails: true, // Toujours afficher les détails
+            showPrice: true,    // Toujours afficher le prix
+            showAddress: true,  // Toujours afficher l'adresse
             selectedImages: config.selectedImages,
             selectedMusic: config.selectedMusic,
           },
@@ -293,40 +294,13 @@ export const CreateSlideshowDialog = ({
           </div>
 
           <div className="space-y-4 p-4 border rounded-md">
-            <h3 className="font-medium">Informations à afficher</h3>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="showAddress">Afficher l'adresse</Label>
-              <Switch
-                id="showAddress"
-                checked={config.showAddress}
-                onCheckedChange={(checked) =>
-                  setConfig({ ...config, showAddress: checked })
-                }
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <Label htmlFor="showPrice">Afficher le prix</Label>
-              <Switch
-                id="showPrice"
-                checked={config.showPrice}
-                onCheckedChange={(checked) =>
-                  setConfig({ ...config, showPrice: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="showDetails">Afficher les détails (chambres/SDB)</Label>
-              <Switch
-                id="showDetails"
-                checked={config.showDetails}
-                onCheckedChange={(checked) =>
-                  setConfig({ ...config, showDetails: checked })
-                }
-              />
-            </div>
+            <h3 className="font-medium">Informations toujours affichées</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Adresse de la propriété</li>
+              <li>Prix</li>
+              <li>Détails (chambres/salles de bain)</li>
+            </ul>
+            <p className="text-sm text-muted-foreground">Ces informations seront toujours affichées dans votre diaporama pour une meilleure présentation.</p>
           </div>
 
           <div className="space-y-4 p-4 border rounded-md">
@@ -403,3 +377,4 @@ export const CreateSlideshowDialog = ({
     </Dialog>
   );
 };
+
