@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,8 @@ import { Share } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { InstagramPreview } from "./InstagramPreview";
+import { toast } from "sonner";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 type InstagramPublishButtonProps = {
   listing: Tables<"listings">;
@@ -58,6 +61,9 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
 
       if (error) throw error;
 
+      // Incrémenter les statistiques d'utilisation pour Instagram
+      await ensureAndIncrementStatistic('instagram');
+
       toast({
         title: "Publication réussie",
         description: "Votre annonce a été publiée sur Instagram",
@@ -78,13 +84,19 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
     }
   };
 
+  const handlePreviewClick = async () => {
+    // Increment statistics for description generation when preview button is clicked
+    await ensureAndIncrementStatistic('description');
+    setShowPreview(true);
+  };
+
   return (
     <>
       <Button
         variant="outline"
         size="sm"
         className="w-full"
-        onClick={() => setShowPreview(true)}
+        onClick={handlePreviewClick}
         disabled={isPublishing}
       >
         <Share className="w-4 h-4 mr-2 flex-shrink-0" />

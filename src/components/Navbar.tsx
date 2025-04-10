@@ -3,16 +3,28 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, User, Home, BookMarked } from "lucide-react";
+import { LogOut, User, Home, BookMarked, Table, Settings } from "lucide-react";
 
 export const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
+      
+      if (data.user) {
+        // Vérifier si l'utilisateur est admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+          
+        setIsAdmin(profile?.role === 'admin');
+      }
     };
     getUser();
   }, []);
@@ -40,6 +52,13 @@ export const Navbar = () => {
             </Button>
           </Link>
           
+          <Link to="/listings">
+            <Button variant="ghost" size="sm">
+              <Table className="h-4 w-4 mr-2" />
+              <span className="hidden md:inline">Listings</span>
+            </Button>
+          </Link>
+          
           <Link to="/published-listings">
             <Button variant="ghost" size="sm">
               <BookMarked className="h-4 w-4 mr-2" />
@@ -53,6 +72,15 @@ export const Navbar = () => {
               <span className="hidden md:inline">Profil</span>
             </Button>
           </Link>
+
+          {isAdmin && (
+            <Link to="/admin">
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                <span className="hidden md:inline">Admin</span>
+              </Button>
+            </Link>
+          )}
 
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />

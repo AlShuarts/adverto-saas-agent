@@ -1,9 +1,11 @@
+
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { SlideshowPreviewDialog } from "./slideshow/SlideshowPreviewDialog";
 import { useSlideshow } from "@/hooks/useSlideshow";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
+import { Video } from "lucide-react";
 
 type CreateSlideshowButtonProps = {
   listing: Tables<"listings">;
@@ -11,14 +13,17 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isLoading, videoUrl } = useSlideshow({ 
+  const { isLoading, videoUrl, setVideoUrl, createSlideshow } = useSlideshow({ 
     listing,
     images: listing.images || []
   });
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
   const handleCreateSlideshow = async () => {
-    setIsOpen(true);
+    const result = await createSlideshow();
+    if (result) {
+      setIsOpen(true);
+    }
   };
 
   const handlePublish = async (message: string) => {
@@ -39,7 +44,9 @@ export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) =
         size="sm"
         onClick={handleCreateSlideshow}
         disabled={isLoading || isPublishing}
+        className="w-full"
       >
+        <Video className="w-4 h-4 mr-2" />
         {isLoading ? "Génération en cours..." : "Prévisualiser le diaporama"}
       </Button>
 

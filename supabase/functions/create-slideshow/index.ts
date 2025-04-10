@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
@@ -56,15 +57,12 @@ serve(async (req) => {
       console.log("🔇 Aucune musique sélectionnée");
     }
 
-    // Récupérer les données du listing
     const listing = await getListingById(supabase, listingId);
     console.log("📋 Données du listing:", JSON.stringify(listing, null, 2));
 
-    // Préparer les éléments de texte
     const textElements = prepareTextElements(listing, config);
     console.log("📝 Éléments de texte préparés:", textElements);
 
-    // Générer les clips pour le diaporama
     const { clips, totalDuration } = generateSlideShowClips(config.selectedImages, textElements, config);
     console.log("🎬 Nombre de clips générés:", clips.length);
 
@@ -86,15 +84,59 @@ serve(async (req) => {
 
     console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
     
-    // Faire le rendu avec Shotstack
     const renderId = await renderWithShotstack(renderPayload);
     
-    // Enregistrer les informations du rendu dans la base de données
     await saveRenderRecord(supabase, {
       listingId,
       renderId,
       userId: user.id
     });
+
+    // Mise à jour directe des statistiques au lieu d'utiliser la fonction RPC
+    try {
+      // Vérifier si une entrée existe déjà
+      const { data: existingStat, error: fetchError } = await supabase
+        .from('usage_statistics')
+        .select('id, slideshow_generations')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("⚠️ Erreur lors de la vérification des statistiques:", fetchError);
+      } else if (!existingStat) {
+        // Créer une nouvelle entrée avec les valeurs par défaut
+        const { error: insertError } = await supabase
+          .from('usage_statistics')
+          .insert([{ 
+            user_id: user.id, 
+            description_generations: 0, 
+            slideshow_generations: 1, 
+            facebook_generations: 0, 
+            instagram_generations: 0 
+          }]);
+        
+        if (insertError) {
+          console.error("⚠️ Erreur lors de la création des statistiques:", insertError);
+        } else {
+          console.log("✅ Nouvelle entrée statistique créée avec succès");
+        }
+      } else {
+        // Incrémenter le compteur existant
+        const currentValue = existingStat.slideshow_generations || 0;
+        const { error: updateError } = await supabase
+          .from('usage_statistics')
+          .update({ slideshow_generations: currentValue + 1 })
+          .eq('user_id', user.id);
+        
+        if (updateError) {
+          console.error("⚠️ Erreur lors de la mise à jour des statistiques:", updateError);
+        } else {
+          console.log(`✅ Compteur slideshow incrémenté de ${currentValue} à ${currentValue + 1}`);
+        }
+      }
+    } catch (statErr) {
+      console.error("⚠️ Exception lors de la mise à jour des statistiques:", statErr);
+    }
 
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),

@@ -1,12 +1,32 @@
 
 project_id = "msmuyhmxlrkcjthugcxd"
 
-[functions.create-slideshow]
+[create-slideshow]
+verify_jwt = true
+
+[shotstack-webhook]
 verify_jwt = false
 
-[functions.create-sold-banner]
+[check-render-status]
+verify_jwt = true
+
+[create-sold-banner]
+verify_jwt = true
+
+[scrape-broker-profile]
 verify_jwt = false
 
-[functions.shotstack-webhook]
+[scrape-centris]
 verify_jwt = false
 
+[scrape-search-results]
+verify_jwt = false
+memory = 256
+
+[admin-get-users]
+verify_jwt = true
+
+[search-address]
+verify_jwt = false
+memory = 512
+timeout_ms = 15000

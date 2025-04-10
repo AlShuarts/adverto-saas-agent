@@ -1,9 +1,13 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ListingItem } from "./ListingItem";
 import { ListingCard } from "./ListingCard";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const ListingsList = () => {
-  const { data: listings, isLoading } = useQuery({
+  const { data: listings, isLoading, refetch, isError, error } = useQuery({
     queryKey: ["listings"],
     queryFn: async () => {
       console.log("Fetching listings...");
@@ -24,9 +28,23 @@ export const ListingsList = () => {
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="h-[400px] rounded-lg bg-muted animate-pulse"
+            className="h-[300px] rounded-lg bg-muted animate-pulse"
           />
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-semibold mb-2 text-destructive">Erreur de chargement</h3>
+        <p className="text-muted-foreground">
+          {error instanceof Error ? error.message : "Une erreur est survenue lors du chargement des annonces"}
+        </p>
+        <Button onClick={() => refetch()} className="mt-4">
+          Réessayer
+        </Button>
       </div>
     );
   }
@@ -45,7 +63,9 @@ export const ListingsList = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {listings.map((listing) => (
-        <ListingCard key={listing.id} listing={listing} />
+        <div key={listing.id} className="relative">
+          <ListingCard listing={listing} />
+        </div>
       ))}
     </div>
   );

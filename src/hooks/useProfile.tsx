@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,20 +8,19 @@ export const useProfile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         setProfile(null);
         navigate('/auth');
-      } else if (event === 'SIGNED_IN') {
+      } else if (event === 'SIGNED_IN' && session) {
         getProfile();
       }
     });
 
-    // Vérifier la session au chargement
     checkSession();
 
     return () => {
@@ -31,16 +29,25 @@ export const useProfile = () => {
   }, []);
 
   const checkSession = async () => {
+    setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/auth");
+        if (window.location.pathname !== '/auth') {
+          navigate("/auth");
+        }
+        setLoading(false);
+        setInitialized(true);
         return;
       }
       await getProfile();
     } catch (error) {
       console.error("Error checking session:", error);
-      navigate("/auth");
+      if (window.location.pathname !== '/auth') {
+        navigate("/auth");
+      }
+      setLoading(false);
+      setInitialized(true);
     }
   };
 
@@ -48,7 +55,11 @@ export const useProfile = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/auth");
+        if (window.location.pathname !== '/auth') {
+          navigate("/auth");
+        }
+        setLoading(false);
+        setInitialized(true);
         return;
       }
 
@@ -65,10 +76,14 @@ export const useProfile = () => {
           description: "Impossible de charger votre profil",
           variant: "destructive",
         });
+        setLoading(false);
+        setInitialized(true);
         return;
       }
 
       setProfile(data);
+      setLoading(false);
+      setInitialized(true);
     } catch (error) {
       console.error("Error:", error);
       toast({
@@ -76,6 +91,8 @@ export const useProfile = () => {
         description: "Une erreur est survenue",
         variant: "destructive",
       });
+      setLoading(false);
+      setInitialized(true);
     }
   };
 
@@ -212,6 +229,7 @@ export const useProfile = () => {
   return {
     profile,
     loading,
+    initialized,
     getProfile,
     connectFacebook,
     connectInstagram

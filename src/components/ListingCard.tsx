@@ -18,6 +18,7 @@ import { SlideshowStatus } from "./SlideshowStatus";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -86,6 +87,16 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
     }
   };
 
+  const handleFacebookPreviewClick = async () => {
+    await ensureAndIncrementStatistic('description');
+    setShowFacebookPreview(true);
+  };
+
+  const handleInstagramPreviewClick = async () => {
+    await ensureAndIncrementStatistic('description');
+    setShowInstagramPreview(true);
+  };
+
   if (!listing.images || listing.images.length === 0) {
     return null;
   }
@@ -147,7 +158,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowFacebookPreview(true)}
+                  onClick={handleFacebookPreviewClick}
                   className="w-full"
                 >
                   <Share className="w-4 h-4 mr-2" />
@@ -157,7 +168,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowInstagramPreview(true)}
+                onClick={handleInstagramPreviewClick}
                 className="w-full"
               >
                 <Share className="w-4 h-4 mr-2" />

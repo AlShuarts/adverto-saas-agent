@@ -1,0 +1,4 @@
+
+project_id = "msmuyhmxlrkcjthugcxd"
+memory = 256 # Increase memory allocation to handle larger responses
+verify_jwt = false

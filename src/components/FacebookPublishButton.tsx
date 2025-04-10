@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FacebookPreview } from "./FacebookPreview";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 type FacebookPublishButtonProps = {
   listing: Tables<"listings">;
@@ -101,6 +102,9 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         console.error("Erreur lors de la mise à jour du statut:", updateError);
       }
 
+      // Incrémenter les statistiques d'utilisation pour Facebook
+      await ensureAndIncrementStatistic('facebook');
+
       // Rafraîchir les données
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
@@ -136,6 +140,13 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
     }
   };
 
+  // Fonction pour gérer le clic sur le bouton de prévisualisation
+  const handlePreviewClick = async () => {
+    // Incrémenter les statistiques pour la génération de description
+    await ensureAndIncrementStatistic('description');
+    setShowPreview(true);
+  };
+
   if (listing.published_to_facebook) {
     return null;
   }
@@ -160,7 +171,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => setShowPreview(true)}
+          onClick={handlePreviewClick}
           disabled={isPublishing}
         >
           <Share className="w-4 h-4 mr-2 flex-shrink-0" />
