@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
@@ -127,28 +126,25 @@ const Auth = () => {
                 password_label: "Mot de passe",
                 button_label: "Se connecter",
                 loading_button_label: "Connexion en cours...",
-                link_text: "Déjà un compte? Connectez-vous",
-                password_recovery_text: "Mot de passe oublié?",
+                link_text: "Pas encore de compte? Inscrivez-vous",
               },
               sign_up: {
                 email_label: "Adresse email",
                 password_label: "Mot de passe",
                 button_label: "Créer un compte",
                 loading_button_label: "Inscription en cours...",
-                link_text: "Pas encore de compte? Inscrivez-vous",
+                link_text: "Déjà un compte? Connectez-vous",
               },
               forgotten_password: {
                 email_label: "Adresse email",
                 button_label: "Envoyer les instructions",
                 loading_button_label: "Envoi en cours...",
                 link_text: "Réinitialiser le mot de passe",
-                confirmation_text: "Vérifiez votre email pour le lien de réinitialisation",
               },
               update_password: {
                 password_label: "Nouveau mot de passe",
                 button_label: "Mettre à jour le mot de passe",
                 loading_button_label: "Mise à jour en cours...",
-                confirmation_text: "Votre mot de passe a été mis à jour",
               },
             },
           }}
