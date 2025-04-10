@@ -338,7 +338,9 @@ export type Database = {
         Row: {
           created_at: string
           description_generations: number
+          facebook_generations: number
           id: string
+          instagram_generations: number
           slideshow_generations: number
           updated_at: string
           user_id: string
@@ -346,7 +348,9 @@ export type Database = {
         Insert: {
           created_at?: string
           description_generations?: number
+          facebook_generations?: number
           id?: string
+          instagram_generations?: number
           slideshow_generations?: number
           updated_at?: string
           user_id: string
@@ -354,7 +358,9 @@ export type Database = {
         Update: {
           created_at?: string
           description_generations?: number
+          facebook_generations?: number
           id?: string
+          instagram_generations?: number
           slideshow_generations?: number
           updated_at?: string
           user_id?: string
