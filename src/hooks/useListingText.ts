@@ -7,10 +7,11 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
   const [generatedText, setGeneratedText] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   useEffect(() => {
     const generateText = async () => {
-      if (!isOpen) return;
+      if (!isOpen || hasGenerated) return;
       
       setIsLoading(true);
       setError(null);
@@ -42,6 +43,20 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
 
         if (error) throw error;
         setGeneratedText(data.text);
+        setHasGenerated(true);
+        
+        // Increment the usage statistics for description generation
+        const { error: statError } = await supabase.rpc(
+          'increment_usage_statistic',
+          {
+            user_id_param: (await supabase.auth.getUser()).data.user?.id,
+            statistic_type: 'description'
+          }
+        );
+
+        if (statError) {
+          console.error("Erreur lors de la mise à jour des statistiques:", statError);
+        }
       } catch (err) {
         console.error('Error generating text:', err);
         setError("Impossible de générer le texte de vente. Le texte par défaut sera utilisé.");
@@ -53,7 +68,7 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
     };
 
     generateText();
-  }, [isOpen, listing, selectedTemplateId]);
+  }, [isOpen, listing, selectedTemplateId, hasGenerated]);
 
   return { generatedText, isLoading, error };
 };

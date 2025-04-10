@@ -7,6 +7,7 @@ import { Share } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { InstagramPreview } from "./InstagramPreview";
+import { toast } from "sonner";
 
 type InstagramPublishButtonProps = {
   listing: Tables<"listings">;
@@ -92,13 +93,34 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
     }
   };
 
+  const handlePreviewClick = async () => {
+    // Increment statistics for description generation when preview button is clicked
+    try {
+      const { error: statError } = await supabase.rpc(
+        "increment_usage_statistic",
+        {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id,
+          statistic_type: "description"
+        }
+      );
+
+      if (statError) {
+        console.error("Erreur lors de la mise à jour des statistiques:", statError);
+      }
+    } catch (err) {
+      console.error("Erreur lors de l'incrémentation des statistiques:", err);
+    }
+    
+    setShowPreview(true);
+  };
+
   return (
     <>
       <Button
         variant="outline"
         size="sm"
         className="w-full"
-        onClick={() => setShowPreview(true)}
+        onClick={handlePreviewClick}
         disabled={isPublishing}
       >
         <Share className="w-4 h-4 mr-2 flex-shrink-0" />

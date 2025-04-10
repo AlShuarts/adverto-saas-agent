@@ -87,6 +87,46 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
     }
   };
 
+  const handleFacebookPreviewClick = async () => {
+    try {
+      const { error: statError } = await supabase.rpc(
+        "increment_usage_statistic",
+        {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id,
+          statistic_type: "description"
+        }
+      );
+
+      if (statError) {
+        console.error("Erreur lors de la mise à jour des statistiques:", statError);
+      }
+    } catch (err) {
+      console.error("Erreur lors de l'incrémentation des statistiques:", err);
+    }
+    
+    setShowFacebookPreview(true);
+  };
+
+  const handleInstagramPreviewClick = async () => {
+    try {
+      const { error: statError } = await supabase.rpc(
+        "increment_usage_statistic",
+        {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id,
+          statistic_type: "description"
+        }
+      );
+
+      if (statError) {
+        console.error("Erreur lors de la mise à jour des statistiques:", statError);
+      }
+    } catch (err) {
+      console.error("Erreur lors de l'incrémentation des statistiques:", err);
+    }
+    
+    setShowInstagramPreview(true);
+  };
+
   if (!listing.images || listing.images.length === 0) {
     return null;
   }
@@ -148,7 +188,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowFacebookPreview(true)}
+                  onClick={handleFacebookPreviewClick}
                   className="w-full"
                 >
                   <Share className="w-4 h-4 mr-2" />
@@ -158,7 +198,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowInstagramPreview(true)}
+                onClick={handleInstagramPreviewClick}
                 className="w-full"
               >
                 <Share className="w-4 h-4 mr-2" />
