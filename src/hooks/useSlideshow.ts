@@ -40,8 +40,10 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
 
       if (error) throw error;
 
-      // Si la génération est réussie, incrémenter les statistiques
+      // Si la génération est réussie, incrémenter les statistiques côté client également
+      // Cela servira de fallback au cas où l'incrémentation côté serveur échouerait
       await ensureAndIncrementStatistic('slideshow');
+      console.log("Statistiques de diaporama incrémentées localement après la création réussie");
 
       // Mettre à jour l'URL de la vidéo si disponible
       if (data?.videoUrl) {
