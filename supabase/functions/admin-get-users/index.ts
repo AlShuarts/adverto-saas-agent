@@ -46,13 +46,6 @@ serve(async (req) => {
       );
     }
 
-    // Récupérer la liste des utilisateurs avec l'API admin
-    const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
-    
-    if (usersError) {
-      throw usersError;
-    }
-
     // Récupérer les statistiques d'utilisation
     const { data: stats, error: statsError } = await supabase
       .from('usage_statistics')
@@ -62,14 +55,43 @@ serve(async (req) => {
       throw statsError;
     }
 
-    // Combiner les données des utilisateurs et des statistiques
+    // Récupérer la liste des utilisateurs avec l'API admin
+    const { data: authUsers, error: authUsersError } = await supabase.auth.admin.listUsers();
+    
+    if (authUsersError) {
+      throw authUsersError;
+    }
+
+    console.log("Utilisateurs récupérés:", authUsers.users.length);
+
+    // Récupérer les profils des utilisateurs
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (profilesError) {
+      throw profilesError;
+    }
+
+    console.log("Profils récupérés:", profiles.length);
+
+    // Combiner les données des utilisateurs, profils et statistiques
     const combined = stats.map(stat => {
-      const user = users.users.find(u => u.id === stat.user_id);
+      // Trouver l'utilisateur correspondant dans auth.users
+      const authUser = authUsers.users.find(u => u.id === stat.user_id);
+      
+      // Trouver le profil correspondant
+      const userProfile = profiles.find(p => p.id === stat.user_id);
+      
       return {
         ...stat,
-        email: user ? user.email : 'Inconnu'
+        email: authUser ? authUser.email : 'Inconnu',
+        first_name: userProfile ? userProfile.first_name : 'Inconnu',
+        last_name: userProfile ? userProfile.last_name : ''
       };
     });
+
+    console.log("Données combinées prêtes à être envoyées:", combined.length);
 
     return new Response(
       JSON.stringify(combined),

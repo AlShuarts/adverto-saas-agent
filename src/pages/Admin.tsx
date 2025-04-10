@@ -155,24 +155,28 @@ export default function AdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {statistics.map((stat) => (
-                  <TableRow key={stat.id}>
-                    <TableCell>
-                      {`${stat.first_name} ${stat.last_name || ''}`.trim() || 'Utilisateur inconnu'}
-                    </TableCell>
-                    <TableCell>{stat.email || 'Inconnu'}</TableCell>
-                    <TableCell className="text-right">{stat.description_generations || 0}</TableCell>
-                    <TableCell className="text-right">{stat.slideshow_generations || 0}</TableCell>
-                    <TableCell className="text-right">{stat.facebook_generations || 0}</TableCell>
-                    <TableCell className="text-right">{stat.instagram_generations || 0}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {(stat.description_generations || 0) + 
-                       (stat.slideshow_generations || 0) + 
-                       (stat.facebook_generations || 0) + 
-                       (stat.instagram_generations || 0)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {statistics.map((stat) => {
+                  const userName = stat.first_name && stat.first_name !== 'Inconnu' 
+                    ? `${stat.first_name} ${stat.last_name || ''}`.trim() 
+                    : 'Utilisateur inconnu';
+                    
+                  return (
+                    <TableRow key={stat.id}>
+                      <TableCell>{userName}</TableCell>
+                      <TableCell>{stat.email || 'Inconnu'}</TableCell>
+                      <TableCell className="text-right">{stat.description_generations || 0}</TableCell>
+                      <TableCell className="text-right">{stat.slideshow_generations || 0}</TableCell>
+                      <TableCell className="text-right">{stat.facebook_generations || 0}</TableCell>
+                      <TableCell className="text-right">{stat.instagram_generations || 0}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {(stat.description_generations || 0) + 
+                         (stat.slideshow_generations || 0) + 
+                         (stat.facebook_generations || 0) + 
+                         (stat.instagram_generations || 0)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>

@@ -18,13 +18,6 @@ export type UsageStatistic = {
   last_name?: string;
 };
 
-// Define a type for the profile data
-type ProfileData = {
-  id: string;
-  first_name?: string | null;
-  last_name?: string | null;
-};
-
 export const useAdmin = () => {
   const { profile } = useProfile();
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -66,56 +59,22 @@ export const useAdmin = () => {
       setError(null);
       console.log("Récupération des statistiques d'utilisation");
 
-      // Récupérer les statistiques d'utilisation directement de la table
-      const { data: usageStats, error: statsError } = await supabase
-        .from('usage_statistics')
-        .select('*');
+      // Récupérer les statistiques enrichies via la fonction Edge
+      const { data, error } = await supabase.functions.invoke('admin-get-users');
       
-      if (statsError) {
-        console.error("Erreur lors de la récupération des statistiques:", statsError);
-        throw statsError;
+      if (error) {
+        console.error("Erreur lors de la récupération des statistiques:", error);
+        throw error;
       }
       
-      console.log("Statistiques récupérées:", usageStats);
-
-      // Récupérer les informations des utilisateurs pour les lier aux statistiques
-      const { data: usersProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name');
+      console.log("Statistiques récupérées:", data);
       
-      if (profilesError) {
-        console.error("Erreur lors de la récupération des profils:", profilesError);
-        throw profilesError;
+      if (Array.isArray(data)) {
+        setStatistics(data);
+      } else {
+        console.error("Format de données inattendu:", data);
+        throw new Error("Format de données inattendu");
       }
-
-      // Récupérer les emails des utilisateurs via la fonction admin-get-users
-      const { data: authUsers, error: authError } = await supabase.functions.invoke('admin-get-users');
-      
-      if (authError) {
-        console.error("Erreur lors de la récupération des emails:", authError);
-        throw authError;
-      }
-
-      // Enrichir les données des statistiques avec les informations des utilisateurs
-      const enrichedStats: UsageStatistic[] = (usageStats || []).map((stat: any) => {
-        // Recherche du profil utilisateur correspondant
-        const userProfile = (usersProfiles?.find(u => u.id === stat.user_id) || {}) as ProfileData;
-        // Recherche de l'email correspondant
-        const authUser = authUsers?.find((u: any) => u.id === stat.user_id);
-        
-        return {
-          ...stat,
-          // TypeScript safe access avec valeurs par défaut
-          first_name: userProfile.first_name || 'Inconnu',
-          last_name: userProfile.last_name || '',
-          email: authUser?.email || 'Inconnu',
-          facebook_generations: stat.facebook_generations || 0,
-          instagram_generations: stat.instagram_generations || 0
-        };
-      });
-
-      console.log("Statistiques enrichies:", enrichedStats);
-      setStatistics(enrichedStats);
     } catch (err: any) {
       console.error("Erreur lors du chargement des statistiques:", err);
       setError(err.message || "Impossible de charger les statistiques");
