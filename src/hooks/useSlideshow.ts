@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -16,6 +17,7 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
 
   return {
     isLoading,
+    setIsLoading,
     videoUrl,
     setVideoUrl,
     isPlaying,

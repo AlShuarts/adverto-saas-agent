@@ -64,11 +64,7 @@ export const ListingsList = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {listings.map((listing) => (
         <div key={listing.id} className="relative">
-          {listing.is_fully_scraped && listing.images && listing.images.length > 0 ? (
-            <ListingCard listing={listing} />
-          ) : (
-            <ListingItem listing={listing} />
-          )}
+          <ListingCard listing={listing} />
         </div>
       ))}
     </div>
