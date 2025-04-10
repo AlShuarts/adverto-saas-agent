@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -22,9 +23,10 @@ Deno.serve(async (req) => {
     console.log('Publishing to Instagram:', { message, images: images.length, listingId })
 
     // Récupérer les informations du profil de l'utilisateur qui fait la requête
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
-    )
+    const authHeader = req.headers.get('Authorization')
+    const token = authHeader?.replace('Bearer ', '') ?? '';
+    
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
 
     if (authError || !user) {
       console.error('Auth error:', authError)
@@ -162,6 +164,15 @@ Deno.serve(async (req) => {
       console.error('Database update failed:', updateError)
       throw new Error('Failed to update listing status')
     }
+
+    // Incrémenter les statistiques d'utilisation pour Instagram
+    await supabaseClient.rpc(
+      'increment_usage_statistic',
+      {
+        user_id_param: user.id,
+        statistic_type: 'instagram'
+      }
+    );
 
     return new Response(
       JSON.stringify({ success: true, postId: publishData.id }),

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +58,19 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
       });
 
       if (error) throw error;
+
+      // Incrémenter les statistiques d'utilisation pour Instagram
+      const { error: statsError } = await supabase.rpc(
+        "increment_usage_statistic",
+        {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id,
+          statistic_type: "instagram"
+        }
+      );
+
+      if (statsError) {
+        console.error("Erreur lors de la mise à jour des statistiques:", statsError);
+      }
 
       toast({
         title: "Publication réussie",

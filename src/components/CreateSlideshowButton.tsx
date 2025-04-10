@@ -13,14 +13,17 @@ type CreateSlideshowButtonProps = {
 
 export const CreateSlideshowButton = ({ listing }: CreateSlideshowButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isLoading, videoUrl } = useSlideshow({ 
+  const { isLoading, videoUrl, setVideoUrl, createSlideshow } = useSlideshow({ 
     listing,
     images: listing.images || []
   });
   const { publishToFacebook, isPublishing } = useFacebookPublish(listing);
 
   const handleCreateSlideshow = async () => {
-    setIsOpen(true);
+    const result = await createSlideshow();
+    if (result) {
+      setIsOpen(true);
+    }
   };
 
   const handlePublish = async (message: string) => {

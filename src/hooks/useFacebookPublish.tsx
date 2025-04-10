@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
+import { toast as sonnerToast } from "sonner";
 
 export const useFacebookPublish = (listing: Tables<"listings">) => {
   const [isPublishing, setIsPublishing] = useState(false);
@@ -11,7 +13,7 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
   const queryClient = useQueryClient();
 
   const publishToFacebook = async (videoUrl: string | null, message: string) => {
-    if (!videoUrl) return;
+    if (!videoUrl) return false;
     
     try {
       setIsPublishing(true);
@@ -33,7 +35,7 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
           description: "Veuillez d'abord connecter votre page Facebook dans votre profil",
           variant: "destructive",
         });
-        return;
+        return false;
       }
 
       console.log("Tentative de publication de la vidéo sur Facebook");
@@ -55,6 +57,7 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
         throw new Error("Aucun ID de publication reçu");
       }
 
+      // Mettre à jour le statut de l'annonce
       const { error: updateError } = await supabase
         .from("listings")
         .update({
@@ -65,6 +68,19 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
 
       if (updateError) {
         console.error("Erreur lors de la mise à jour du statut:", updateError);
+      }
+
+      // Incrémenter les statistiques d'utilisation pour Facebook
+      const { error: statsError } = await supabase.rpc(
+        "increment_usage_statistic",
+        {
+          user_id_param: (await supabase.auth.getUser()).data.user?.id,
+          statistic_type: "facebook"
+        }
+      );
+
+      if (statsError) {
+        console.error("Erreur lors de la mise à jour des statistiques:", statsError);
       }
 
       queryClient.invalidateQueries({ queryKey: ["listings"] });

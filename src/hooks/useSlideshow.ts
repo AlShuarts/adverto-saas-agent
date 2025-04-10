@@ -1,6 +1,8 @@
 
 import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type UseSlideshowProps = {
   listing?: Tables<"listings">;
@@ -15,6 +17,49 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
   const [volume, setVolume] = useState(1);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const createSlideshow = async () => {
+    if (!listing?.id) {
+      toast.error("Impossible de créer un diaporama sans annonce");
+      return null;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      // Appeler la fonction edge pour créer le diaporama
+      const { data, error } = await supabase.functions.invoke("create-slideshow", {
+        body: {
+          listingId: listing.id,
+          config: {
+            selectedImages: listing.images || [],
+            musicUrl: "/background-music.mp3"
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      // Si la génération est réussie, incrémenter les statistiques
+      await supabase.rpc("increment_usage_statistic", {
+        user_id_param: (await supabase.auth.getUser()).data.user?.id,
+        statistic_type: "slideshow"
+      });
+
+      // Mettre à jour l'URL de la vidéo si disponible
+      if (data?.videoUrl) {
+        setVideoUrl(data.videoUrl);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la création du diaporama:", error);
+      toast.error("Une erreur est survenue lors de la création du diaporama");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     setIsLoading,
@@ -26,5 +71,6 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
     setVolume,
     currentIndex,
     setCurrentIndex,
+    createSlideshow
   };
 };
