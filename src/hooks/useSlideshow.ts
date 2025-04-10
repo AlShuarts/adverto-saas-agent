@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 type UseSlideshowProps = {
   listing?: Tables<"listings">;
@@ -40,10 +41,7 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
       if (error) throw error;
 
       // Si la génération est réussie, incrémenter les statistiques
-      await supabase.rpc("increment_usage_statistic", {
-        user_id_param: (await supabase.auth.getUser()).data.user?.id,
-        statistic_type: "slideshow"
-      });
+      await ensureAndIncrementStatistic('slideshow');
 
       // Mettre à jour l'URL de la vidéo si disponible
       if (data?.videoUrl) {

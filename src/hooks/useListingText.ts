@@ -9,6 +9,40 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
   const [error, setError] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
 
+  // Fonction pour s'assurer que l'entrée de statistiques existe pour l'utilisateur
+  const ensureStatisticsEntry = async (userId: string) => {
+    try {
+      // Vérifier si une entrée existe déjà
+      const { data, error } = await supabase
+        .from('usage_statistics')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Erreur lors de la vérification des statistiques:", error);
+        return false;
+      }
+      
+      // Si aucune entrée n'existe, en créer une nouvelle
+      if (!data) {
+        const { error: insertError } = await supabase
+          .from('usage_statistics')
+          .insert([{ user_id: userId }]);
+        
+        if (insertError) {
+          console.error("Erreur lors de la création de l'entrée statistique:", insertError);
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (err) {
+      console.error("Exception lors de la vérification/création des statistiques:", err);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const generateText = async () => {
       if (!isOpen || hasGenerated) return;
@@ -45,17 +79,26 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
         setGeneratedText(data.text);
         setHasGenerated(true);
         
-        // Increment the usage statistics for description generation
-        const { error: statError } = await supabase.rpc(
-          'increment_usage_statistic',
-          {
-            user_id_param: (await supabase.auth.getUser()).data.user?.id,
-            statistic_type: 'description'
-          }
-        );
+        // Récupérer l'ID utilisateur
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // S'assurer qu'une entrée de statistiques existe pour cet utilisateur
+          const success = await ensureStatisticsEntry(user.id);
+          
+          if (success) {
+            // Incrémenter les statistiques d'utilisation pour la génération de description
+            const { error: statError } = await supabase.rpc(
+              'increment_usage_statistic',
+              {
+                user_id_param: user.id,
+                statistic_type: 'description'
+              }
+            );
 
-        if (statError) {
-          console.error("Erreur lors de la mise à jour des statistiques:", statError);
+            if (statError) {
+              console.error("Erreur lors de la mise à jour des statistiques:", statError);
+            }
+          }
         }
       } catch (err) {
         console.error('Error generating text:', err);

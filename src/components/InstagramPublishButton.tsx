@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { InstagramPreview } from "./InstagramPreview";
 import { toast } from "sonner";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 type InstagramPublishButtonProps = {
   listing: Tables<"listings">;
@@ -61,17 +62,7 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
       if (error) throw error;
 
       // Incrémenter les statistiques d'utilisation pour Instagram
-      const { error: statsError } = await supabase.rpc(
-        "increment_usage_statistic",
-        {
-          user_id_param: (await supabase.auth.getUser()).data.user?.id,
-          statistic_type: "instagram"
-        }
-      );
-
-      if (statsError) {
-        console.error("Erreur lors de la mise à jour des statistiques:", statsError);
-      }
+      await ensureAndIncrementStatistic('instagram');
 
       toast({
         title: "Publication réussie",
@@ -95,22 +86,7 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
 
   const handlePreviewClick = async () => {
     // Increment statistics for description generation when preview button is clicked
-    try {
-      const { error: statError } = await supabase.rpc(
-        "increment_usage_statistic",
-        {
-          user_id_param: (await supabase.auth.getUser()).data.user?.id,
-          statistic_type: "description"
-        }
-      );
-
-      if (statError) {
-        console.error("Erreur lors de la mise à jour des statistiques:", statError);
-      }
-    } catch (err) {
-      console.error("Erreur lors de l'incrémentation des statistiques:", err);
-    }
-    
+    await ensureAndIncrementStatistic('description');
     setShowPreview(true);
   };
 

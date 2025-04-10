@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
@@ -19,6 +18,7 @@ import { SlideshowStatus } from "./SlideshowStatus";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -88,42 +88,12 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
   };
 
   const handleFacebookPreviewClick = async () => {
-    try {
-      const { error: statError } = await supabase.rpc(
-        "increment_usage_statistic",
-        {
-          user_id_param: (await supabase.auth.getUser()).data.user?.id,
-          statistic_type: "description"
-        }
-      );
-
-      if (statError) {
-        console.error("Erreur lors de la mise à jour des statistiques:", statError);
-      }
-    } catch (err) {
-      console.error("Erreur lors de l'incrémentation des statistiques:", err);
-    }
-    
+    await ensureAndIncrementStatistic('description');
     setShowFacebookPreview(true);
   };
 
   const handleInstagramPreviewClick = async () => {
-    try {
-      const { error: statError } = await supabase.rpc(
-        "increment_usage_statistic",
-        {
-          user_id_param: (await supabase.auth.getUser()).data.user?.id,
-          statistic_type: "description"
-        }
-      );
-
-      if (statError) {
-        console.error("Erreur lors de la mise à jour des statistiques:", statError);
-      }
-    } catch (err) {
-      console.error("Erreur lors de l'incrémentation des statistiques:", err);
-    }
-    
+    await ensureAndIncrementStatistic('description');
     setShowInstagramPreview(true);
   };
 

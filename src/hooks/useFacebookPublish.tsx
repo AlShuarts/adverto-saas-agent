@@ -6,6 +6,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 export const useFacebookPublish = (listing: Tables<"listings">) => {
   const [isPublishing, setIsPublishing] = useState(false);
@@ -71,17 +72,7 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
       }
 
       // Incrémenter les statistiques d'utilisation pour Facebook
-      const { error: statsError } = await supabase.rpc(
-        "increment_usage_statistic",
-        {
-          user_id_param: (await supabase.auth.getUser()).data.user?.id,
-          statistic_type: "facebook"
-        }
-      );
-
-      if (statsError) {
-        console.error("Erreur lors de la mise à jour des statistiques:", statsError);
-      }
+      await ensureAndIncrementStatistic('facebook');
 
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
