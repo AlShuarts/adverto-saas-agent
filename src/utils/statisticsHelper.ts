@@ -26,7 +26,7 @@ export const ensureAndIncrementStatistic = async (statisticType: 'description' |
     // Vérifier si une entrée existe déjà et la créer si nécessaire
     const { data: existingStat, error: checkError } = await supabase
       .from('usage_statistics')
-      .select('id')
+      .select(`id, ${statisticType}_generations`)
       .eq('user_id', user.id)
       .maybeSingle();
     
@@ -38,44 +38,53 @@ export const ensureAndIncrementStatistic = async (statisticType: 'description' |
     // Si aucune entrée n'existe, en créer une nouvelle
     if (!existingStat) {
       console.log("Création d'une nouvelle entrée statistique...");
+      const initialValues = {
+        user_id: user.id,
+        description_generations: 0,
+        slideshow_generations: 0,
+        facebook_generations: 0,
+        instagram_generations: 0
+      };
+      
+      // Incrémenter le compteur demandé
+      initialValues[`${statisticType}_generations`] = 1;
+      
       const { error: insertError } = await supabase
         .from('usage_statistics')
-        .insert([{ 
-          user_id: user.id,
-          description_generations: 0,
-          slideshow_generations: 0,
-          facebook_generations: 0,
-          instagram_generations: 0
-        }]);
+        .insert([initialValues]);
       
       if (insertError) {
         console.error("Erreur lors de la création de l'entrée statistique:", insertError);
         toast.error("Impossible de créer les statistiques d'utilisation");
         return false;
       }
-      console.log("Nouvelle entrée statistique créée avec succès");
+      console.log("Nouvelle entrée statistique créée avec succès avec compteur initialisé à 1");
     } else {
-      console.log("Entrée statistique existante trouvée");
+      console.log("Entrée statistique existante trouvée, incrémentation du compteur");
+      
+      // Récupérer la valeur actuelle
+      const currentValue = existingStat[`${statisticType}_generations`] || 0;
+      const newValue = currentValue + 1;
+      
+      // Créer un objet pour la mise à jour
+      const updateObj: Record<string, number> = {};
+      updateObj[`${statisticType}_generations`] = newValue;
+      
+      // Mettre à jour le compteur
+      const { error: updateError } = await supabase
+        .from('usage_statistics')
+        .update(updateObj)
+        .eq('user_id', user.id);
+      
+      if (updateError) {
+        console.error(`Erreur lors de la mise à jour du compteur ${statisticType}:`, updateError);
+        toast.error(`Impossible de mettre à jour les statistiques de ${statisticType}`);
+        return false;
+      }
+      
+      console.log(`Compteur ${statisticType} incrémenté de ${currentValue} à ${newValue}`);
     }
     
-    // Mettre à jour directement le compteur spécifique
-    const updateData: Record<string, number> = {};
-    updateData[`${statisticType}_generations`] = supabase.rpc('increment_counter');
-    
-    console.log(`Mise à jour du compteur ${statisticType}_generations...`, updateData);
-    
-    const { error: updateError } = await supabase
-      .from('usage_statistics')
-      .update({ [`${statisticType}_generations`]: supabase.sql`${statisticType}_generations + 1` })
-      .eq('user_id', user.id);
-
-    if (updateError) {
-      console.error(`Erreur lors de la mise à jour du compteur ${statisticType}:`, updateError);
-      toast.error(`Impossible de mettre à jour les statistiques de ${statisticType}`);
-      return false;
-    }
-    
-    console.log(`Statistique ${statisticType} incrémentée avec succès`);
     return true;
   } catch (err) {
     console.error("Exception lors de l'incrémentation des statistiques:", err);
