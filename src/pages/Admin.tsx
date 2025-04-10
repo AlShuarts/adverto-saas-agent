@@ -30,6 +30,13 @@ export default function AdminPage() {
     }
   }, [profile, isAdmin, isLoading, navigate]);
 
+  useEffect(() => {
+    // Rafraîchir les statistiques lorsque la page est chargée
+    if (isAdmin && !isLoading) {
+      refreshStatistics();
+    }
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -44,12 +51,22 @@ export default function AdminPage() {
 
   // Calculer les totaux
   const totalDescriptions = statistics.reduce(
-    (sum, stat) => sum + stat.description_generations, 
+    (sum, stat) => sum + (stat.description_generations || 0), 
     0
   );
   
   const totalSlideshows = statistics.reduce(
-    (sum, stat) => sum + stat.slideshow_generations,
+    (sum, stat) => sum + (stat.slideshow_generations || 0),
+    0
+  );
+
+  const totalFacebook = statistics.reduce(
+    (sum, stat) => sum + (stat.facebook_generations || 0),
+    0
+  );
+
+  const totalInstagram = statistics.reduce(
+    (sum, stat) => sum + (stat.instagram_generations || 0),
     0
   );
 
@@ -59,7 +76,7 @@ export default function AdminPage() {
       <div className="container mx-auto py-8 space-y-8">
         <h1 className="text-3xl font-bold">Tableau de bord administrateur</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Générations de descriptions</CardTitle>
@@ -77,6 +94,26 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold">{totalSlideshows}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Publications Facebook</CardTitle>
+              <CardDescription>Nombre total de publications Facebook</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">{totalFacebook}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Publications Instagram</CardTitle>
+              <CardDescription>Nombre total de publications Instagram</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">{totalInstagram}</p>
             </CardContent>
           </Card>
         </div>
@@ -110,8 +147,10 @@ export default function AdminPage() {
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead className="text-right">Descriptions générées</TableHead>
-                  <TableHead className="text-right">Diaporamas générés</TableHead>
+                  <TableHead className="text-right">Descriptions</TableHead>
+                  <TableHead className="text-right">Diaporamas</TableHead>
+                  <TableHead className="text-right">Facebook</TableHead>
+                  <TableHead className="text-right">Instagram</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
@@ -122,10 +161,15 @@ export default function AdminPage() {
                       {`${stat.first_name} ${stat.last_name || ''}`.trim() || 'Utilisateur inconnu'}
                     </TableCell>
                     <TableCell>{stat.email || 'Inconnu'}</TableCell>
-                    <TableCell className="text-right">{stat.description_generations}</TableCell>
-                    <TableCell className="text-right">{stat.slideshow_generations}</TableCell>
+                    <TableCell className="text-right">{stat.description_generations || 0}</TableCell>
+                    <TableCell className="text-right">{stat.slideshow_generations || 0}</TableCell>
+                    <TableCell className="text-right">{stat.facebook_generations || 0}</TableCell>
+                    <TableCell className="text-right">{stat.instagram_generations || 0}</TableCell>
                     <TableCell className="text-right font-medium">
-                      {stat.description_generations + stat.slideshow_generations}
+                      {(stat.description_generations || 0) + 
+                       (stat.slideshow_generations || 0) + 
+                       (stat.facebook_generations || 0) + 
+                       (stat.instagram_generations || 0)}
                     </TableCell>
                   </TableRow>
                 ))}

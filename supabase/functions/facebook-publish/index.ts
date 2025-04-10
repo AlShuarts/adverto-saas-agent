@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
@@ -125,6 +124,62 @@ serve(async (req) => {
     }
 
     console.log("Publication réussie avec l'ID:", responseData.id);
+
+    // Récupérer l'utilisateur courant
+    const authHeader = req.headers.get("authorization");
+    if (authHeader) {
+      const jwt = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+
+      if (!userError && user) {
+        console.log(`Utilisateur authentifié: ${user.id}`);
+        // Incrémenter les statistiques d'utilisation
+        try {
+          // Vérifier d'abord si une entrée existe pour l'utilisateur
+          const { data: statCheck } = await supabase
+            .from('usage_statistics')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (!statCheck) {
+            // Créer une entrée si elle n'existe pas
+            await supabase
+              .from('usage_statistics')
+              .insert([{ user_id: user.id }]);
+          }
+          
+          // Déterminer le type de statistique à incrémenter
+          let statType = 'facebook';
+          if (video) {
+            statType = 'facebook'; // C'est une vidéo pour Facebook
+          } else {
+            // Si c'est un post avec des images sans vidéo, vérifier si c'est pour Instagram
+            const reqUrl = req.url.toLowerCase();
+            if (reqUrl.includes('instagram')) {
+              statType = 'instagram';
+            }
+          }
+          
+          // Incrémenter la statistique
+          const { error: statError } = await supabase.rpc(
+            'increment_usage_statistic',
+            {
+              user_id_param: user.id,
+              statistic_type: statType
+            }
+          );
+  
+          if (statError) {
+            console.error(`Erreur lors de la mise à jour des statistiques (${statType}):`, statError);
+          } else {
+            console.log(`Statistiques ${statType} mises à jour avec succès`);
+          }
+        } catch (statErr) {
+          console.error("Exception lors de la mise à jour des statistiques:", statErr);
+        }
+      }
+    }
 
     return new Response(JSON.stringify({ id: responseData.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
@@ -57,15 +56,12 @@ serve(async (req) => {
       console.log("🔇 Aucune musique sélectionnée");
     }
 
-    // Récupérer les données du listing
     const listing = await getListingById(supabase, listingId);
     console.log("📋 Données du listing:", JSON.stringify(listing, null, 2));
 
-    // Préparer les éléments de texte
     const textElements = prepareTextElements(listing, config);
     console.log("📝 Éléments de texte préparés:", textElements);
 
-    // Générer les clips pour le diaporama
     const { clips, totalDuration } = generateSlideShowClips(config.selectedImages, textElements, config);
     console.log("🎬 Nombre de clips générés:", clips.length);
 
@@ -87,17 +83,14 @@ serve(async (req) => {
 
     console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
     
-    // Faire le rendu avec Shotstack
     const renderId = await renderWithShotstack(renderPayload);
     
-    // Enregistrer les informations du rendu dans la base de données
     await saveRenderRecord(supabase, {
       listingId,
       renderId,
       userId: user.id
     });
 
-    // Mettre à jour les statistiques d'utilisation
     try {
       const { error: statError } = await supabase.rpc(
         'increment_usage_statistic',
@@ -109,6 +102,8 @@ serve(async (req) => {
 
       if (statError) {
         console.error("⚠️ Erreur lors de la mise à jour des statistiques:", statError);
+      } else {
+        console.log("✅ Statistiques mises à jour avec succès");
       }
     } catch (statErr) {
       console.error("⚠️ Exception lors de la mise à jour des statistiques:", statErr);
