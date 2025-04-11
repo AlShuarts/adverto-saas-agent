@@ -35,8 +35,12 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   });
   
   // État pour les templates Facebook
-  const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
+  const [facebookTemplates, setFacebookTemplates] = useState<{ id: string; name: string }[]>([]);
+  const [selectedFacebookTemplateId, setSelectedFacebookTemplateId] = useState<string>("none");
+  
+  // État pour les templates Instagram
+  const [instagramTemplates, setInstagramTemplates] = useState<{ id: string; name: string }[]>([]);
+  const [selectedInstagramTemplateId, setSelectedInstagramTemplateId] = useState<string>("none");
   
   // État pour les musiques
   const [musicList, setMusicList] = useState<string[]>([]);
@@ -56,13 +60,23 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   // Charger les templates et musiques
   useEffect(() => {
     if (isOpen) {
-      const fetchTemplates = async () => {
+      const fetchFacebookTemplates = async () => {
         const { data, error } = await supabase
           .from('facebook_templates')
           .select('id, name');
         
         if (!error && data) {
-          setTemplates(data);
+          setFacebookTemplates(data);
+        }
+      };
+      
+      const fetchInstagramTemplates = async () => {
+        const { data, error } = await supabase
+          .from('instagram_templates')
+          .select('id, name');
+        
+        if (!error && data) {
+          setInstagramTemplates(data);
         }
       };
       
@@ -81,7 +95,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         }
       };
       
-      fetchTemplates();
+      fetchFacebookTemplates();
+      fetchInstagramTemplates();
       fetchMusic();
     }
   }, [isOpen]);
@@ -209,7 +224,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
               pageId: profile.facebook_page_id,
               accessToken: profile.facebook_access_token,
               image: listing.images?.[0] || "",
-              templateId: selectedTemplateId === "none" ? undefined : selectedTemplateId
+              templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
             }
           }).then(async () => {
             // Mettre à jour le statut de l'annonce
@@ -231,7 +246,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             body: {
               message: socialText,
               images: listing.images?.slice(0, 10) || [],
-              listingId: listing.id
+              listingId: listing.id,
+              templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId
             }
           }).then(async () => await ensureAndIncrementStatistic('instagram'))
         );
@@ -351,13 +367,13 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
               
               <div className="space-y-2">
                 <Label htmlFor="facebook-template">Sélectionner un template (optionnel)</Label>
-                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                <Select value={selectedFacebookTemplateId} onValueChange={setSelectedFacebookTemplateId}>
                   <SelectTrigger id="facebook-template">
                     <SelectValue placeholder="Sélectionner un template" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Aucun template</SelectItem>
-                    {templates.map((template) => (
+                    {facebookTemplates.map((template) => (
                       <SelectItem key={template.id} value={template.id}>
                         {template.name}
                       </SelectItem>
@@ -381,6 +397,23 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
               <p className="text-sm">
                 Les {Math.min(10, listing.images?.length || 0)} premières images seront utilisées pour la publication.
               </p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="instagram-template">Sélectionner un template (optionnel)</Label>
+                <Select value={selectedInstagramTemplateId} onValueChange={setSelectedInstagramTemplateId}>
+                  <SelectTrigger id="instagram-template">
+                    <SelectValue placeholder="Sélectionner un template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun template</SelectItem>
+                    {instagramTemplates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
               {!profile?.instagram_user_id && (
                 <p className="text-sm text-amber-500">

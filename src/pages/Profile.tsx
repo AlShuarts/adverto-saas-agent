@@ -7,12 +7,14 @@ import { Tables } from "@/integrations/supabase/types";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { TemplateManager } from "@/components/profile/TemplateManager";
 
-type Template = Tables<"facebook_templates">;
+type FacebookTemplate = Tables<"facebook_templates">;
+type InstagramTemplate = Tables<"instagram_templates">;
 
 const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [facebookTemplates, setFacebookTemplates] = useState<FacebookTemplate[]>([]);
+  const [instagramTemplates, setInstagramTemplates] = useState<InstagramTemplate[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -22,13 +24,23 @@ const Profile = () => {
 
   const getTemplates = async () => {
     try {
-      const { data, error } = await supabase
+      // Récupérer les templates Facebook
+      const { data: fbData, error: fbError } = await supabase
         .from("facebook_templates")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setTemplates(data || []);
+      if (fbError) throw fbError;
+      setFacebookTemplates(fbData || []);
+      
+      // Récupérer les templates Instagram
+      const { data: igData, error: igError } = await supabase
+        .from("instagram_templates")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (igError) throw igError;
+      setInstagramTemplates(igData || []);
     } catch (error) {
       console.error("Error fetching templates:", error);
       toast({
@@ -88,7 +100,8 @@ const Profile = () => {
 
           <div className="glass p-6 rounded-lg">
             <TemplateManager 
-              templates={templates}
+              facebookTemplates={facebookTemplates}
+              instagramTemplates={instagramTemplates}
               onTemplatesUpdate={getTemplates}
             />
           </div>

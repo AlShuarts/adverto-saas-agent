@@ -6,6 +6,7 @@ interface RequestBody {
   message: string;
   images: string[];
   listingId: string;
+  templateId?: string;
 }
 
 Deno.serve(async (req) => {
@@ -19,8 +20,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { message, images, listingId } = await req.json() as RequestBody
-    console.log('Publishing to Instagram:', { message, images: images.length, listingId })
+    const { message, images, listingId, templateId } = await req.json() as RequestBody
+    console.log('Publishing to Instagram:', { message, images: images.length, listingId, hasTemplate: !!templateId })
 
     // Récupérer les informations du profil de l'utilisateur qui fait la requête
     const authHeader = req.headers.get('Authorization')
@@ -56,6 +57,40 @@ Deno.serve(async (req) => {
       throw new Error('Instagram credentials not found. Please connect your Instagram account in your profile.')
     }
 
+    // Récupérer le template s'il est spécifié
+    let finalMessage = message;
+    if (templateId) {
+      const { data: template, error: templateError } = await supabaseClient
+        .from('instagram_templates')
+        .select('content')
+        .eq('id', templateId)
+        .single();
+
+      if (templateError || !template) {
+        console.warn('Template not found, using original message:', templateError);
+      } else {
+        console.log('Using template:', template.content);
+        finalMessage = template.content;
+        
+        // Remplacer les variables du template
+        const { data: listingData, error: listingError } = await supabaseClient
+          .from('listings')
+          .select('*')
+          .eq('id', listingId)
+          .single();
+          
+        if (!listingError && listingData) {
+          // Remplacer les variables dans le template
+          finalMessage = finalMessage.replace(/\{price\}/g, listingData.price?.toString() || '');
+          finalMessage = finalMessage.replace(/\{address\}/g, listingData.address || '');
+          finalMessage = finalMessage.replace(/\{city\}/g, listingData.city || '');
+          finalMessage = finalMessage.replace(/\{bedrooms\}/g, listingData.bedrooms?.toString() || '');
+          finalMessage = finalMessage.replace(/\{bathrooms\}/g, listingData.bathrooms?.toString() || '');
+          finalMessage = finalMessage.replace(/\{description\}/g, message); // Message original comme description
+        }
+      }
+    }
+
     // Publier sur Instagram
     if (!images.length) {
       throw new Error('No images provided')
@@ -71,7 +106,7 @@ Deno.serve(async (req) => {
           method: 'POST',
           body: new URLSearchParams({
             image_url: images[0],
-            caption: message,
+            caption: finalMessage,
             access_token: profile.instagram_access_token,
           }),
         }
@@ -114,7 +149,7 @@ Deno.serve(async (req) => {
           method: 'POST',
           body: new URLSearchParams({
             media_type: 'CAROUSEL',
-            caption: message,
+            caption: finalMessage,
             children: mediaIds.join(','),
             access_token: profile.instagram_access_token,
           }),

@@ -1,15 +1,19 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
 import { InstagramPreviewContent } from "./InstagramPreviewContent";
 import { useListingText } from "@/hooks/useListingText";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 type InstagramPreviewProps = {
   listing: Tables<"listings">;
   isOpen: boolean;
   onClose: () => void;
-  onPublish: (message: string, selectedImages: string[]) => void;
+  onPublish: (message: string, selectedImages: string[], templateId?: string) => void;
 };
 
 export const InstagramPreview = ({
@@ -22,6 +26,8 @@ export const InstagramPreview = ({
   const [editedText, setEditedText] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
   const displayImages = listing.images || [];
 
   useEffect(() => {
@@ -33,13 +39,29 @@ export const InstagramPreview = ({
   useEffect(() => {
     if (isOpen && displayImages.length > 0) {
       setSelectedImages([displayImages[0]]);
+      fetchTemplates();
     }
   }, [isOpen]);
+
+  const fetchTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('instagram_templates')
+        .select('id, name');
+      
+      if (!error && data) {
+        setTemplates(data);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des templates Instagram:", error);
+    }
+  };
 
   const handlePublish = async () => {
     setIsPublishing(true);
     try {
-      await onPublish(editedText, selectedImages);
+      const templateId = selectedTemplateId === "none" ? undefined : selectedTemplateId;
+      await onPublish(editedText, selectedImages, templateId);
     } finally {
       setIsPublishing(false);
     }
@@ -52,6 +74,25 @@ export const InstagramPreview = ({
           <DialogTitle>Prévisualisation Instagram</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {!isLoading && (
+            <div className="space-y-2">
+              <Label htmlFor="instagram-template">Sélectionner un template (optionnel)</Label>
+              <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                <SelectTrigger id="instagram-template">
+                  <SelectValue placeholder="Sélectionner un template" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun template</SelectItem>
+                  {templates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
           <InstagramPreviewContent
             isLoading={isLoading}
             error={error}

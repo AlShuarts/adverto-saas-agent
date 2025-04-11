@@ -20,7 +20,7 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const publishToInstagram = async (message: string, selectedImages: string[]) => {
+  const publishToInstagram = async (message: string, selectedImages: string[], templateId?: string) => {
     try {
       setIsPublishing(true);
       console.log("Début de la publication sur Instagram");
@@ -56,6 +56,7 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
           message,
           images: selectedImages,
           listingId: listing.id,
+          templateId
         },
       });
 
