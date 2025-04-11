@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
@@ -7,7 +8,7 @@ import { InstagramPublishButton } from "./InstagramPublishButton";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Share, Video, Bookmark } from "lucide-react";
+import { Share, Video, Bookmark, ListChecks } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FacebookPreview } from "./FacebookPreview";
 import { InstagramPreview } from "./InstagramPreview";
@@ -19,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { ActionSelectionDialog } from "./ActionSelectionDialog";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
@@ -30,6 +32,7 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
   const [showFacebookPreview, setShowFacebookPreview] = useState(false);
   const [showInstagramPreview, setShowInstagramPreview] = useState(false);
   const [showSlideshowDialog, setShowSlideshowDialog] = useState(false);
+  const [showActionsDialog, setShowActionsDialog] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("none");
   const [templates, setTemplates] = useState<{ id: string; name: string }[]>([]);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -134,6 +137,18 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
         </div>
         
         <div className="w-full grid grid-cols-1 gap-2">
+          {/* Nouveau bouton pour le dialogue d'actions */}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setShowActionsDialog(true)}
+            className="w-full"
+          >
+            <ListChecks className="w-4 h-4 mr-2" />
+            Effectuer des actions
+          </Button>
+          
+          {/* Boutons existants - on les garde pour compatibilité */}
           {profile?.facebook_page_id ? (
             <>
               <FacebookPublishButton listing={listing} />
@@ -220,6 +235,12 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
         listing={listing}
         isOpen={showSlideshowDialog}
         onClose={() => setShowSlideshowDialog(false)}
+      />
+      
+      <ActionSelectionDialog
+        listing={listing}
+        isOpen={showActionsDialog}
+        onClose={() => setShowActionsDialog(false)}
       />
     </Card>
   );
