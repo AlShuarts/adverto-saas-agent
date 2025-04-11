@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [bannerImage, setBannerImage] = useState<string | null>(listing.images?.[0] || null);
   
   // Charger les templates et musiques
-  useState(() => {
+  useEffect(() => {
     if (isOpen) {
       const fetchTemplates = async () => {
         const { data, error } = await supabase
