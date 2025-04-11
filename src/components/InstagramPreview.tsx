@@ -9,6 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define Instagram template type since it's not in the generated types yet
+type InstagramTemplate = {
+  id: string;
+  name: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
 type InstagramPreviewProps = {
   listing: Tables<"listings">;
   isOpen: boolean;
@@ -46,11 +56,11 @@ export const InstagramPreview = ({
   const fetchTemplates = async () => {
     try {
       const { data, error } = await supabase
-        .from('instagram_templates')
+        .from('instagram_templates' as any)
         .select('id, name');
       
       if (!error && data) {
-        setTemplates(data);
+        setTemplates(data as {id: string, name: string}[]);
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des templates Instagram:", error);

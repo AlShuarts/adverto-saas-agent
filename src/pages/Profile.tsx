@@ -8,7 +8,15 @@ import { ProfileForm } from "@/components/profile/ProfileForm";
 import { TemplateManager } from "@/components/profile/TemplateManager";
 
 type FacebookTemplate = Tables<"facebook_templates">;
-type InstagramTemplate = Tables<"instagram_templates">;
+// Since instagram_templates is not in the types yet, we'll define our own type
+type InstagramTemplate = {
+  id: string;
+  name: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+};
 
 const Profile = () => {
   const [loading, setLoading] = useState(false);
@@ -35,12 +43,12 @@ const Profile = () => {
       
       // Récupérer les templates Instagram
       const { data: igData, error: igError } = await supabase
-        .from("instagram_templates")
+        .from("instagram_templates" as any)
         .select("*")
         .order("created_at", { ascending: false });
 
       if (igError) throw igError;
-      setInstagramTemplates(igData || []);
+      setInstagramTemplates(igData as InstagramTemplate[] || []);
     } catch (error) {
       console.error("Error fetching templates:", error);
       toast({

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,11 +9,20 @@ import { PlusCircle, Pencil, Trash2, Save, X, Facebook, Instagram } from "lucide
 import { Tables } from "@/integrations/supabase/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type Template = Tables<"facebook_templates"> | Tables<"instagram_templates">;
+type InstagramTemplate = {
+  id: string;
+  name: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type Template = Tables<"facebook_templates"> | InstagramTemplate;
 
 interface TemplateManagerProps {
   facebookTemplates: Tables<"facebook_templates">[];
-  instagramTemplates: Tables<"instagram_templates">[];
+  instagramTemplates: InstagramTemplate[];
   onTemplatesUpdate: () => void;
 }
 
@@ -35,7 +43,7 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
 
       if (template.id) {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .update({
             name: template.name,
             content: template.content,
@@ -45,7 +53,7 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .insert({
             name: template.name,
             content: template.content,
@@ -79,7 +87,7 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
       const tableName = type === 'facebook' ? 'facebook_templates' : 'instagram_templates';
       
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq("id", id);
 
@@ -187,7 +195,7 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
               <TemplateItem 
                 key={template.id} 
                 template={{...template, type: 'facebook'}} 
-                onEdit={(t) => setEditingTemplate({...t, type: 'facebook'})} 
+                onEdit={(t: any) => setEditingTemplate({...t, type: 'facebook'})} 
                 onDelete={handleDeleteTemplate}
                 onSave={handleSaveTemplate}
               />
@@ -205,7 +213,7 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
               <TemplateItem 
                 key={template.id} 
                 template={{...template, type: 'instagram'}} 
-                onEdit={(t) => setEditingTemplate({...t, type: 'instagram'})} 
+                onEdit={(t: any) => setEditingTemplate({...t, type: 'instagram'})} 
                 onDelete={handleDeleteTemplate}
                 onSave={handleSaveTemplate}
               />
@@ -218,10 +226,10 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
 };
 
 interface TemplateItemProps {
-  template: Template & { type: 'facebook' | 'instagram' };
-  onEdit: (template: Template & { type: 'facebook' | 'instagram' }) => void;
+  template: (Tables<"facebook_templates"> | InstagramTemplate) & { type: 'facebook' | 'instagram' };
+  onEdit: (template: (Tables<"facebook_templates"> | InstagramTemplate) & { type: 'facebook' | 'instagram' }) => void;
   onDelete: (id: string, type: 'facebook' | 'instagram') => void;
-  onSave: (template: Template & { type: 'facebook' | 'instagram' }) => void;
+  onSave: (template: (Tables<"facebook_templates"> | InstagramTemplate) & { type: 'facebook' | 'instagram' }) => void;
 }
 
 const TemplateItem = ({ template, onEdit, onDelete, onSave }: TemplateItemProps) => {

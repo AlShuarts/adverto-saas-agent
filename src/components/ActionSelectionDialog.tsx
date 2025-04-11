@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -14,6 +13,15 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { MoveVertical, Play, Pause } from "lucide-react";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { useQueryClient } from "@tanstack/react-query";
+
+type InstagramTemplate = {
+  id: string;
+  name: string;
+  content: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+};
 
 type ActionSelectionDialogProps = {
   listing: Tables<"listings">;
@@ -34,30 +42,24 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     banner: false
   });
   
-  // État pour les templates Facebook
   const [facebookTemplates, setFacebookTemplates] = useState<{ id: string; name: string }[]>([]);
   const [selectedFacebookTemplateId, setSelectedFacebookTemplateId] = useState<string>("none");
   
-  // État pour les templates Instagram
   const [instagramTemplates, setInstagramTemplates] = useState<{ id: string; name: string }[]>([]);
   const [selectedInstagramTemplateId, setSelectedInstagramTemplateId] = useState<string>("none");
   
-  // État pour les musiques
   const [musicList, setMusicList] = useState<string[]>([]);
   const [audioPlaying, setAudioPlaying] = useState<HTMLAudioElement | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   
-  // État pour le diaporama
   const [slideshowConfig, setSlideshowConfig] = useState({
     selectedImages: listing.images || [],
     selectedMusic: undefined as string | undefined
   });
   
-  // État pour la bannière
   const [bannerType, setBannerType] = useState<"VENDU" | "À VENDRE">("VENDU");
   const [bannerImage, setBannerImage] = useState<string | null>(listing.images?.[0] || null);
   
-  // Charger les templates et musiques
   useEffect(() => {
     if (isOpen) {
       const fetchFacebookTemplates = async () => {
@@ -72,11 +74,11 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
       const fetchInstagramTemplates = async () => {
         const { data, error } = await supabase
-          .from('instagram_templates')
+          .from('instagram_templates' as any)
           .select('id, name');
         
         if (!error && data) {
-          setInstagramTemplates(data);
+          setInstagramTemplates(data as {id: string, name: string}[]);
         }
       };
       
@@ -101,7 +103,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     }
   }, [isOpen]);
   
-  // Gestion audio pour le diaporama
   const handleMusicChange = (value: string) => {
     stopAudio();
     setSlideshowConfig({ ...slideshowConfig, selectedMusic: value });
@@ -130,7 +131,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     }
   };
   
-  // Sélection des images pour le diaporama
   const toggleImageSelection = (imageUrl: string) => {
     if (slideshowConfig.selectedImages.includes(imageUrl)) {
       setSlideshowConfig({
@@ -145,7 +145,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     }
   };
   
-  // Réordonner les images du diaporama
   const onDragEnd = (result: any) => {
     if (!result.destination) return;
     const items = Array.from(slideshowConfig.selectedImages);
@@ -154,12 +153,10 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     setSlideshowConfig({ ...slideshowConfig, selectedImages: items });
   };
   
-  // Sélection de l'image pour la bannière
   const selectBannerImage = (imageUrl: string) => {
     setBannerImage(imageUrl);
   };
   
-  // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -167,7 +164,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     try {
       const tasks = [];
       
-      // Préparer le texte pour Facebook/Instagram si nécessaire
       let socialText = "";
       if (actions.facebook || actions.instagram) {
         const { data, error } = await supabase.functions.invoke("generate-listing-description", {
@@ -180,7 +176,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         await ensureAndIncrementStatistic('description');
       }
       
-      // Créer diaporama
       if (actions.slideshow) {
         tasks.push(
           supabase.functions.invoke("create-slideshow", {
@@ -199,7 +194,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         );
       }
       
-      // Créer bannière
       if (actions.banner && bannerImage) {
         tasks.push(
           supabase.functions.invoke("create-sold-banner", {
@@ -214,10 +208,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         );
       }
       
-      // Publier sur Facebook
       if (actions.facebook && profile?.facebook_page_id && profile?.facebook_access_token) {
         tasks.push(
-          // Publier sur Facebook
           supabase.functions.invoke("facebook-publish", {
             body: {
               message: socialText,
@@ -227,7 +219,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
               templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
             }
           }).then(async () => {
-            // Mettre à jour le statut de l'annonce
             await supabase
               .from("listings")
               .update({ published_to_facebook: true })
@@ -238,10 +229,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         );
       }
       
-      // Publier sur Instagram
       if (actions.instagram && profile?.instagram_user_id && profile?.instagram_access_token) {
         tasks.push(
-          // Publier sur Instagram
           supabase.functions.invoke("instagram-publish", {
             body: {
               message: socialText,
@@ -253,16 +242,13 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         );
       }
       
-      // Exécuter toutes les tâches
       await Promise.allSettled(tasks);
       
-      // Succès
       toast({
         title: "Actions complétées",
         description: "Les actions sélectionnées ont été exécutées avec succès.",
       });
       
-      // Rafraîchir les données
       queryClient.invalidateQueries({ queryKey: ["listings"] });
       
       onClose();
@@ -289,7 +275,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {/* Sélection des actions */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-start space-x-3">
               <Checkbox 
@@ -360,7 +345,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             </div>
           </div>
 
-          {/* Options Facebook */}
           {actions.facebook && (
             <div className="space-y-4 p-4 border rounded-md">
               <h3 className="font-medium">Options de publication Facebook</h3>
@@ -390,7 +374,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             </div>
           )}
           
-          {/* Options Instagram */}
           {actions.instagram && (
             <div className="space-y-4 p-4 border rounded-md">
               <h3 className="font-medium">Options de publication Instagram</h3>
@@ -423,7 +406,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             </div>
           )}
           
-          {/* Options Diaporama */}
           {actions.slideshow && (
             <div className="space-y-4 p-4 border rounded-md">
               <h3 className="font-medium">Options du diaporama</h3>
@@ -530,7 +512,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             </div>
           )}
           
-          {/* Options Bannière */}
           {actions.banner && (
             <div className="space-y-4 p-4 border rounded-md">
               <h3 className="font-medium">Options de la bannière</h3>
