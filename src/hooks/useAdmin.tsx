@@ -10,6 +10,7 @@ export type UsageStatistic = {
   slideshow_generations: number;
   facebook_generations: number;
   instagram_generations: number;
+  banner_generations: number;
   created_at: string;
   updated_at: string;
   // Informations jointes du profil utilisateur

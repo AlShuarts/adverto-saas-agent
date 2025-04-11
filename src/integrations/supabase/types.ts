@@ -363,6 +363,7 @@ export type Database = {
       }
       usage_statistics: {
         Row: {
+          banner_generations: number
           created_at: string
           description_generations: number
           facebook_generations: number
@@ -373,6 +374,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          banner_generations?: number
           created_at?: string
           description_generations?: number
           facebook_generations?: number
@@ -383,6 +385,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          banner_generations?: number
           created_at?: string
           description_generations?: number
           facebook_generations?: number

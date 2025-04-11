@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 type CreateSoldBannerDialogProps = {
   listing: Tables<"listings">;
@@ -89,6 +90,9 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const handleCreateBanner = async () => {
     try {
       setIsCreating(true);
+      
+      // Incrémenter les statistiques de génération de bannière
+      await ensureAndIncrementStatistic('banner');
       
       // Configuration pour la bannière
       const config = {

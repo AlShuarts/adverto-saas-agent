@@ -6,7 +6,7 @@ import { toast } from "sonner";
  * S'assure qu'une entrée de statistiques existe pour l'utilisateur et incrémente
  * le compteur correspondant à l'activité spécifiée
  */
-export const ensureAndIncrementStatistic = async (statisticType: 'description' | 'slideshow' | 'facebook' | 'instagram') => {
+export const ensureAndIncrementStatistic = async (statisticType: 'description' | 'slideshow' | 'facebook' | 'instagram' | 'banner') => {
   try {
     // Récupérer l'utilisateur connecté
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -43,7 +43,8 @@ export const ensureAndIncrementStatistic = async (statisticType: 'description' |
         description_generations: 0,
         slideshow_generations: 0,
         facebook_generations: 0,
-        instagram_generations: 0
+        instagram_generations: 0,
+        banner_generations: 0
       };
       
       // Incrémenter le compteur demandé
