@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -78,7 +79,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           .select('id, name');
         
         if (!error && data) {
-          setInstagramTemplates(data as {id: string, name: string}[]);
+          // Use proper type assertion with 'as'
+          setInstagramTemplates(data as { id: string; name: string }[]);
         }
       };
       

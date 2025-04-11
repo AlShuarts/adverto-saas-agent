@@ -60,7 +60,8 @@ export const InstagramPreview = ({
         .select('id, name');
       
       if (!error && data) {
-        setTemplates(data as {id: string, name: string}[]);
+        // Use proper type assertion with 'as'
+        setTemplates(data as { id: string; name: string }[]);
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des templates Instagram:", error);
