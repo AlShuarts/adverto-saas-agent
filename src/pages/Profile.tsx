@@ -48,8 +48,8 @@ const Profile = () => {
         .order("created_at", { ascending: false });
 
       if (igError) throw igError;
-      // Use proper type assertion with 'as'
-      setInstagramTemplates((igData || []) as InstagramTemplate[]);
+      // First convert to unknown, then to InstagramTemplate[] to avoid TypeScript errors
+      setInstagramTemplates(((igData || []) as unknown) as InstagramTemplate[]);
     } catch (error) {
       console.error("Error fetching templates:", error);
       toast({
