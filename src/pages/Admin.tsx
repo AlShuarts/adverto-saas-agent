@@ -69,6 +69,11 @@ export default function AdminPage() {
     (sum, stat) => sum + (stat.instagram_generations || 0),
     0
   );
+  
+  const totalBanners = statistics.reduce(
+    (sum, stat) => sum + (stat.banner_generations || 0),
+    0
+  );
 
   return (
     <div className="min-h-screen bg-secondary">
@@ -76,7 +81,7 @@ export default function AdminPage() {
       <div className="container mx-auto py-8 space-y-8">
         <h1 className="text-3xl font-bold">Tableau de bord administrateur</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Générations de descriptions</CardTitle>
@@ -116,6 +121,16 @@ export default function AdminPage() {
               <p className="text-4xl font-bold">{totalInstagram}</p>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Bannières VENDU</CardTitle>
+              <CardDescription>Nombre total de bannières générées</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold">{totalBanners}</p>
+            </CardContent>
+          </Card>
         </div>
         
         {error && (
@@ -151,6 +166,7 @@ export default function AdminPage() {
                   <TableHead className="text-right">Diaporamas</TableHead>
                   <TableHead className="text-right">Facebook</TableHead>
                   <TableHead className="text-right">Instagram</TableHead>
+                  <TableHead className="text-right">Bannières</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
@@ -160,6 +176,13 @@ export default function AdminPage() {
                     ? `${stat.first_name} ${stat.last_name || ''}`.trim() 
                     : 'Utilisateur inconnu';
                     
+                  const total = 
+                    (stat.description_generations || 0) + 
+                    (stat.slideshow_generations || 0) + 
+                    (stat.facebook_generations || 0) + 
+                    (stat.instagram_generations || 0) + 
+                    (stat.banner_generations || 0);
+                    
                   return (
                     <TableRow key={stat.id}>
                       <TableCell>{userName}</TableCell>
@@ -168,12 +191,8 @@ export default function AdminPage() {
                       <TableCell className="text-right">{stat.slideshow_generations || 0}</TableCell>
                       <TableCell className="text-right">{stat.facebook_generations || 0}</TableCell>
                       <TableCell className="text-right">{stat.instagram_generations || 0}</TableCell>
-                      <TableCell className="text-right font-medium">
-                        {(stat.description_generations || 0) + 
-                         (stat.slideshow_generations || 0) + 
-                         (stat.facebook_generations || 0) + 
-                         (stat.instagram_generations || 0)}
-                      </TableCell>
+                      <TableCell className="text-right">{stat.banner_generations || 0}</TableCell>
+                      <TableCell className="text-right font-medium">{total}</TableCell>
                     </TableRow>
                   );
                 })}
