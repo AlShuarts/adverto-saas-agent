@@ -807,19 +807,21 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             {selectedPublicationTypes.includes("photo") && (
               <div className="space-y-4 border rounded-md p-4">
                 <h4 className="font-medium">Sélection des photos</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border rounded-lg p-2">
-                  {listing.images?.map(imageUrl => (
-                    <div key={imageUrl} className="relative group">
-                      <img src={imageUrl} alt="Property" className="w-full h-24 object-cover rounded" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Checkbox 
-                          checked={selectedImages.includes(imageUrl)} 
-                          onCheckedChange={() => toggleImageSelection(imageUrl)} 
-                        />
+                <ScrollArea className="h-[260px] border rounded-lg p-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
+                    {listing.images?.map(imageUrl => (
+                      <div key={imageUrl} className="relative group">
+                        <img src={imageUrl} alt="Property" className="w-full h-24 object-cover rounded" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Checkbox 
+                            checked={selectedImages.includes(imageUrl)} 
+                            onCheckedChange={() => toggleImageSelection(imageUrl)} 
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </div>
             )}
             
@@ -829,19 +831,21 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Sélection des photos pour le diaporama</Label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 border rounded-lg p-2">
-                      {listing.images?.map(imageUrl => (
-                        <div key={imageUrl} className="relative group">
-                          <img src={imageUrl} alt="Property" className="w-full h-24 object-cover rounded" />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Checkbox 
-                              checked={selectedImages.includes(imageUrl)} 
-                              onCheckedChange={() => toggleImageSelection(imageUrl)} 
-                            />
+                    <ScrollArea className="h-[220px] border rounded-lg p-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
+                        {listing.images?.map(imageUrl => (
+                          <div key={imageUrl} className="relative group">
+                            <img src={imageUrl} alt="Property" className="w-full h-24 object-cover rounded" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Checkbox 
+                                checked={selectedImages.includes(imageUrl)} 
+                                onCheckedChange={() => toggleImageSelection(imageUrl)} 
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
                   </div>
                   
                   <div className="space-y-2">
@@ -852,7 +856,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                           <div 
                             {...provided.droppableProps} 
                             ref={provided.innerRef} 
-                            className="border rounded-lg p-2 min-h-[200px] max-h-[300px] overflow-y-auto"
+                            className="border rounded-lg p-2 h-[220px] overflow-y-auto"
                           >
                             {selectedImages.map((imageUrl, index) => (
                               <Draggable key={imageUrl} draggableId={imageUrl} index={index}>
@@ -943,23 +947,25 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                 
                 <div className="space-y-2">
                   <Label>Sélection de l'image principale</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border rounded-lg p-2">
-                    {listing.images?.map(imageUrl => (
-                      <div
-                        key={imageUrl}
-                        className={`relative cursor-pointer border-2 ${
-                          bannerImage === imageUrl ? "border-primary" : "border-transparent"
-                        } rounded overflow-hidden`}
-                        onClick={() => selectBannerImage(imageUrl)}
-                      >
-                        <img
-                          src={imageUrl}
-                          alt="Property"
-                          className="w-full h-24 object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <ScrollArea className="h-[220px] border rounded-lg p-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
+                      {listing.images?.map(imageUrl => (
+                        <div
+                          key={imageUrl}
+                          className={`relative cursor-pointer border-2 ${
+                            bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                          } rounded overflow-hidden`}
+                          onClick={() => selectBannerImage(imageUrl)}
+                        >
+                          <img
+                            src={imageUrl}
+                            alt="Property"
+                            className="w-full h-24 object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </div>
               </div>
             )}
