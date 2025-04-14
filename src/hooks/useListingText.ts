@@ -58,7 +58,7 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
             .from('facebook_templates')
             .select('content')
             .eq('id', selectedTemplateId)
-            .single();
+            .maybeSingle();
           
           if (template) {
             templateContent = template.content;
@@ -70,8 +70,7 @@ export const useListingText = (listing: Tables<"listings">, isOpen: boolean, sel
         const { data, error } = await supabase.functions.invoke('generate-listing-description', {
           body: { 
             listing,
-            selectedTemplateId,
-            templateContent, // Envoyer le contenu du template directement
+            templateContent, 
           },
         });
 

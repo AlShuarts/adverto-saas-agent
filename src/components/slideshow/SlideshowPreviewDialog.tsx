@@ -48,7 +48,7 @@ export const SlideshowPreviewDialog = ({
         .eq("listing_id", listing.id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       const videoUrl = slideshowData?.video_url;
 

@@ -192,8 +192,13 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     try {
       setIsGeneratingText(true);
       
+      // Pass the entire listing object directly
       const { data, error } = await supabase.functions.invoke("generate-listing-description", {
-        body: { listingId: listing.id }
+        body: { 
+          listing: listing,
+          templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId,
+          templateContent: facebookTemplates.find(t => t.id === selectedFacebookTemplateId)?.content
+        }
       });
       
       if (error) throw new Error("Erreur lors de la génération du texte");

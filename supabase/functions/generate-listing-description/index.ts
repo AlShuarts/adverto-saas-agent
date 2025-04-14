@@ -35,9 +35,50 @@ serve(async (req) => {
       throw new Error("Jeton utilisateur invalide.");
     }
 
-    const { listing, templateContent } = await req.json();
+    const body = await req.json();
+    let listing;
+    let templateContent;
+    
+    // Handle different request formats
+    if (body.listing) {
+      // Direct listing object in request
+      listing = body.listing;
+      templateContent = body.templateContent;
+    } else if (body.listingId) {
+      // Just listing ID provided, fetch listing from database
+      const { data: listingData, error: listingError } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', body.listingId)
+        .single();
+        
+      if (listingError || !listingData) {
+        throw new Error("Impossible de trouver l'annonce.");
+      }
+      
+      listing = listingData;
+      
+      // If templateId is provided, fetch the template
+      if (body.templateId && body.templateId !== "none") {
+        const { data: template } = await supabase
+          .from('facebook_templates')
+          .select('content')
+          .eq('id', body.templateId)
+          .single();
+          
+        if (template) {
+          templateContent = template.content;
+        }
+      }
+    } else {
+      throw new Error("Format de requête invalide. Listing ou listingId requis.");
+    }
 
     console.log("Received template content:", templateContent);
+
+    if (!listing) {
+      throw new Error("Données de l'annonce manquantes.");
+    }
 
     const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
 
