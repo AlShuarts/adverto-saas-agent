@@ -41,28 +41,21 @@ export const useSlideshowStatus = (listingId: string) => {
             
             if (response.error) {
               console.error('Error checking render status:', response.error);
+              
+              // Si une erreur survient lors de la vérification, on ne marque pas immédiatement
+              // le rendu comme échoué pour donner une chance aux tentatives suivantes
             } else {
               console.log('Render status check response:', response.data);
               
-              // If status has changed, update local render
+              // Si le statut a changé, mettre à jour le rendu local
               if (response.data.status) {
-                // Convert "done" to "completed" for consistency
+                // Convertir "done" en "completed" pour cohérence
                 render.status = response.data.status === "done" ? "completed" : response.data.status;
               }
               
-              // If video URL is available, update it
+              // Si l'URL de la vidéo est disponible, la mettre à jour
               if ((response.data.videoUrl || response.data.url) && !render.video_url) {
                 render.video_url = response.data.videoUrl || response.data.url;
-                
-                // Update the database entry
-                await supabase
-                  .from("slideshow_renders")
-                  .update({ 
-                    video_url: render.video_url,
-                    status: render.status,
-                    updated_at: new Date().toISOString()
-                  })
-                  .eq("id", render.id);
               }
             }
           } catch (checkError) {
@@ -76,14 +69,15 @@ export const useSlideshowStatus = (listingId: string) => {
         return null;
       }
     },
-    refetchInterval: ({ state }) => {
-      const data = state.data as SlideshowRender | undefined;
-      // Continue checking if status is pending or processing
+    refetchInterval: (query) => {
+      const data = query.state.data as SlideshowRender | undefined;
+      // Continuer à vérifier si le statut est pending ou processing
       if (!data || (data.status !== "completed" && data.status !== "done" && data.status !== "error")) {
-        return 5000; // Check every 5 seconds
+        return 5000; // Vérifier toutes les 5 secondes
       }
       return false;
     },
     enabled: !!listingId,
+    retry: 3,
   });
 };
