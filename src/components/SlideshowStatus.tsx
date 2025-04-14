@@ -74,18 +74,6 @@ export const SlideshowStatus = ({ listing }: SlideshowStatusProps) => {
       <div className="mt-2 text-sm text-destructive flex items-center gap-2">
         <AlertTriangle className="h-4 w-4" />
         Une erreur est survenue lors de la création du diaporama
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-2"
-          onClick={() => {
-            localStorage.removeItem(`slideshow-${listing.id}-${render.status}`);
-            hasNotified.current = false;
-            window.location.reload();
-          }}
-        >
-          Réessayer
-        </Button>
       </div>
     );
   }

@@ -32,31 +32,59 @@ export const useSlideshowStatus = (listingId: string) => {
         const render = renders[0];
         console.log("Retrieved render status:", render);
 
+        // If the render is in pending or processing state, check with Shotstack API
         if (render && (render.status === 'pending' || render.status === 'processing')) {
           try {
             console.log("Checking render status for ID:", render.render_id);
-            const response = await supabase.functions.invoke('check-render-status', {
-              body: { renderId: render.render_id }
-            });
             
-            if (response.error) {
-              console.error('Error checking render status:', response.error);
-              
-              // Si une erreur survient lors de la vérification, on ne marque pas immédiatement
-              // le rendu comme échoué pour donner une chance aux tentatives suivantes
-            } else {
-              console.log('Render status check response:', response.data);
-              
-              // Si le statut a changé, mettre à jour le rendu local
-              if (response.data.status) {
-                // Convertir "done" en "completed" pour cohérence
-                render.status = response.data.status === "done" ? "completed" : response.data.status;
+            // Make 3 attempts to check the status with a short delay between them
+            let attempts = 0;
+            const maxAttempts = 3;
+            
+            while (attempts < maxAttempts) {
+              try {
+                const response = await supabase.functions.invoke('check-render-status', {
+                  body: { renderId: render.render_id }
+                });
+                
+                if (!response.error) {
+                  console.log('Render status check response:', response.data);
+                  
+                  // Si le statut a changé, mettre à jour le rendu local
+                  if (response.data.status) {
+                    // Convertir "done" en "completed" pour cohérence
+                    render.status = response.data.status === "done" ? "completed" : response.data.status;
+                  }
+                  
+                  // Si l'URL de la vidéo est disponible, la mettre à jour
+                  if ((response.data.videoUrl || response.data.url) && !render.video_url) {
+                    render.video_url = response.data.videoUrl || response.data.url;
+                  }
+                  
+                  // Exit the retry loop on success
+                  break;
+                } else {
+                  console.error('Error checking render status:', response.error);
+                  attempts++;
+                  
+                  // Only wait if we're going to retry
+                  if (attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between attempts
+                  }
+                }
+              } catch (attemptError) {
+                console.error('Error in status check attempt:', attemptError);
+                attempts++;
+                
+                // Only wait if we're going to retry
+                if (attempts < maxAttempts) {
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                }
               }
-              
-              // Si l'URL de la vidéo est disponible, la mettre à jour
-              if ((response.data.videoUrl || response.data.url) && !render.video_url) {
-                render.video_url = response.data.videoUrl || response.data.url;
-              }
+            }
+            
+            if (attempts === maxAttempts) {
+              console.error('Max attempts reached when checking render status');
             }
           } catch (checkError) {
             console.error('Error checking render status:', checkError);
@@ -79,5 +107,8 @@ export const useSlideshowStatus = (listingId: string) => {
     },
     enabled: !!listingId,
     retry: 3,
+    staleTime: 0, // Always check for fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
