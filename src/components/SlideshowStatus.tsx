@@ -4,7 +4,8 @@ import { useSlideshowStatus } from "@/hooks/useSlideshowStatus";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type SlideshowStatusProps = {
   listing: Tables<"listings">;
@@ -16,10 +17,49 @@ export const SlideshowStatus = ({
   const {
     data: render,
     isLoading,
-    error
+    error,
+    refetch
   } = useSlideshowStatus(listing.id);
   
   const hasNotified = useRef(false);
+  const [isForceChecking, setIsForceChecking] = useState(false);
+  
+  // Force check with the API if we're showing 'processing' for too long
+  useEffect(() => {
+    let timeoutId: number | undefined;
+    
+    if (render && (render.status === "pending" || render.status === "processing")) {
+      // If we're still in processing state after 5 seconds, force a direct check
+      timeoutId = window.setTimeout(async () => {
+        if (!render.render_id) return;
+        
+        setIsForceChecking(true);
+        try {
+          console.log("Forcing a direct check with the API for render:", render.render_id);
+          const response = await supabase.functions.invoke('check-render-status', {
+            body: { renderId: render.render_id }
+          });
+          
+          if (response.data && 
+              (response.data.status === "completed" || 
+               response.data.status === "done" || 
+               response.data.status === "error")) {
+            console.log("Force check returned updated status:", response.data.status);
+            // Immediately refetch the render status from DB
+            refetch();
+          }
+        } catch (err) {
+          console.error("Error forcing render check:", err);
+        } finally {
+          setIsForceChecking(false);
+        }
+      }, 5000);
+    }
+    
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [render, refetch]);
   
   useEffect(() => {
     console.log("SlideshowStatus render data:", render);
@@ -92,7 +132,7 @@ export const SlideshowStatus = ({
   if (render.status === "pending" || render.status === "processing") {
     return <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Création du diaporama en cours...
+        {isForceChecking ? "Vérification du statut..." : "Création du diaporama en cours..."}
       </div>;
   }
   

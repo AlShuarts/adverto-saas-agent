@@ -56,30 +56,48 @@ export const useSlideshowStatus = (listingId: string) => {
             if (response.data) {
               console.log('Render status check response data:', response.data);
               
-              // Si le statut a changé, mettre à jour le rendu local
+              // Si le statut a changé, mettre à jour le rendu local immédiatement
               if (response.data.status) {
-                // Convertir "done" en "completed" pour cohérence
-                render.status = response.data.status === "done" ? "completed" : response.data.status;
+                const newStatus = response.data.status === "done" ? "completed" : response.data.status;
+                
+                // Si l'état a changé, mettre à jour dans la base de données
+                if (newStatus !== render.status || 
+                   (response.data.videoUrl && !render.video_url) || 
+                   (response.data.url && !render.video_url)) {
+                  
+                  const updateData: any = { status: newStatus };
+                  
+                  // Mise à jour de l'URL vidéo si disponible
+                  if ((response.data.videoUrl || response.data.url) && !render.video_url) {
+                    updateData.video_url = response.data.videoUrl || response.data.url;
+                  }
+                  
+                  console.log("Updating render in DB with:", updateData);
+                  
+                  const { data: updatedRender, error: updateError } = await supabase
+                    .from("slideshow_renders")
+                    .update(updateData)
+                    .eq("id", render.id)
+                    .select('*')
+                    .single();
+                  
+                  if (updateError) {
+                    console.error("Error updating render:", updateError);
+                  } else if (updatedRender) {
+                    console.log("Render updated successfully:", updatedRender);
+                    return updatedRender;
+                  }
+                }
               }
               
-              // Si l'URL de la vidéo est disponible, la mettre à jour
+              // Si l'URL de la vidéo est disponible, la mettre à jour localement
               if ((response.data.videoUrl || response.data.url) && !render.video_url) {
                 render.video_url = response.data.videoUrl || response.data.url;
               }
               
-              // Si le rendu est terminé, actualiser les données de la base de données
-              if (render.status === "completed" || render.status === "error") {
-                // La mise à jour est déjà faite par la fonction check-render-status
-                // Actualiser les données pour être sûr
-                const { data: freshRender } = await supabase
-                  .from("slideshow_renders")
-                  .select("*")
-                  .eq("id", render.id)
-                  .single();
-                  
-                if (freshRender) {
-                  return freshRender;
-                }
+              // Mettre à jour le statut localement
+              if (response.data.status) {
+                render.status = response.data.status === "done" ? "completed" : response.data.status;
               }
             }
           } catch (checkError) {
