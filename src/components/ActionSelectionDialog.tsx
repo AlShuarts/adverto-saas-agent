@@ -16,6 +16,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 import { useSlideshowStatus } from "@/hooks/useSlideshowStatus";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { InstagramPreviewContent } from "./InstagramPreviewContent";
+import { FacebookPreviewContent } from "./FacebookPreviewContent";
 
 type PublicationType = "photo" | "slideshow" | "banner";
 
@@ -1105,16 +1108,72 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                   </div>
                 </div>
               </div>
-              
-              <div className="border rounded p-4 space-y-4">
-                <h4 className="font-medium">Prévisualisation du message</h4>
-                <Textarea
-                  value={generatedText}
-                  onChange={(e) => setGeneratedText(e.target.value)}
-                  className="min-h-[200px]"
-                  placeholder="Votre texte apparaîtra ici"
-                />
-              </div>
+
+              <Tabs defaultValue="message" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="message">Message</TabsTrigger>
+                  <TabsTrigger value="facebook">Aperçu Facebook</TabsTrigger>
+                  <TabsTrigger value="instagram">Aperçu Instagram</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="message" className="space-y-4">
+                  <div className="border rounded p-4 space-y-4">
+                    <h4 className="font-medium">Message de la publication</h4>
+                    <Textarea
+                      value={generatedText}
+                      onChange={(e) => setGeneratedText(e.target.value)}
+                      className="min-h-[200px]"
+                      placeholder="Votre texte apparaîtra ici"
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="facebook" className="space-y-4">
+                  <div className="border rounded p-4 space-y-2">
+                    <h4 className="font-medium mb-4">Aperçu Facebook</h4>
+                    <FacebookPreviewContent 
+                      isLoading={false}
+                      error={null}
+                      generatedText={generatedText}
+                      images={selectedPublicationTypes.includes("banner") && bannerUrl 
+                        ? [bannerUrl] 
+                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
+                        ? [slideshowUrl]
+                        : selectedImages}
+                      onTextChange={setGeneratedText}
+                      selectedImages={selectedPublicationTypes.includes("banner") && bannerUrl 
+                        ? [bannerUrl] 
+                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
+                        ? [slideshowUrl]
+                        : selectedImages.length > 0 ? [selectedImages[0]] : []}
+                      onSelectedImagesChange={() => {}}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="instagram" className="space-y-4">
+                  <div className="border rounded p-4 space-y-2">
+                    <h4 className="font-medium mb-4">Aperçu Instagram</h4>
+                    <InstagramPreviewContent
+                      isLoading={false}
+                      error={null}
+                      generatedText={generatedText}
+                      images={selectedPublicationTypes.includes("banner") && bannerUrl 
+                        ? [bannerUrl] 
+                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
+                        ? [slideshowUrl]
+                        : selectedImages}
+                      onTextChange={setGeneratedText}
+                      selectedImages={selectedPublicationTypes.includes("banner") && bannerUrl 
+                        ? [bannerUrl] 
+                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
+                        ? [slideshowUrl]
+                        : selectedImages.length > 0 ? [selectedImages[0]] : []}
+                      onSelectedImagesChange={() => {}}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         );
