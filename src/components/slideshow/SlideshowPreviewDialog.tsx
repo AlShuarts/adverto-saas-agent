@@ -87,20 +87,23 @@ export const SlideshowPreviewDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogTitle className="text-xl">Prévisualisation du diaporama</DialogTitle>
-        <ScrollArea className="flex-grow pr-4">
-          <div className="space-y-6 py-2">
+      <DialogContent className="max-w-[90vw] w-[95vw] max-h-[95vh] h-[95vh] overflow-hidden flex flex-col p-4">
+        <DialogTitle className="text-xl mb-2">Prévisualisation du diaporama</DialogTitle>
+        <div className="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col">
             {listing.images && (
-              <div className="aspect-video max-h-[60vh] overflow-hidden">
+              <div className="aspect-video max-h-[50vh] flex-shrink-0 bg-black rounded-lg overflow-hidden">
                 <SlideshowPlayer
                   images={listing.images}
                   musicUrl={musicUrl}
                 />
               </div>
             )}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Message de la publication</h3>
+          </div>
+          
+          <div className="flex-1 min-h-0 flex flex-col border rounded-lg p-4">
+            <h3 className="text-sm font-medium mb-2">Message de la publication</h3>
+            <ScrollArea className="flex-grow pr-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -109,14 +112,15 @@ export const SlideshowPreviewDialog = ({
                 <Textarea
                   value={editedText}
                   onChange={(e) => setEditedText(e.target.value)}
-                  className="min-h-[150px]"
+                  className="min-h-[200px] resize-none"
                   placeholder="Entrez votre texte ici..."
                 />
               )}
               {error && <p className="text-sm text-red-500">{error}</p>}
-            </div>
+            </ScrollArea>
           </div>
-        </ScrollArea>
+        </div>
+        
         <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t mt-4">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Annuler
