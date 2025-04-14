@@ -10,6 +10,7 @@ import { Loader2, Facebook, Instagram } from "lucide-react";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type SlideshowPreviewDialogProps = {
   isOpen: boolean;
@@ -86,33 +87,37 @@ export const SlideshowPreviewDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
-        <DialogTitle>Prévisualisation du diaporama</DialogTitle>
-        <div className="space-y-4">
-          {listing.images && (
-            <SlideshowPlayer
-              images={listing.images}
-              musicUrl={musicUrl}
-            />
-          )}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Message de la publication</h3>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin" />
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogTitle className="text-xl">Prévisualisation du diaporama</DialogTitle>
+        <ScrollArea className="flex-grow pr-4">
+          <div className="space-y-6 py-2">
+            {listing.images && (
+              <div className="aspect-video max-h-[60vh] overflow-hidden">
+                <SlideshowPlayer
+                  images={listing.images}
+                  musicUrl={musicUrl}
+                />
               </div>
-            ) : (
-              <Textarea
-                value={editedText}
-                onChange={(e) => setEditedText(e.target.value)}
-                className="min-h-[150px]"
-                placeholder="Entrez votre texte ici..."
-              />
             )}
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Message de la publication</h3>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : (
+                <Textarea
+                  value={editedText}
+                  onChange={(e) => setEditedText(e.target.value)}
+                  className="min-h-[150px]"
+                  placeholder="Entrez votre texte ici..."
+                />
+              )}
+              {error && <p className="text-sm text-red-500">{error}</p>}
+            </div>
           </div>
-        </div>
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+        </ScrollArea>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t mt-4">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Annuler
           </Button>
