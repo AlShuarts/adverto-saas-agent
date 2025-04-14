@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -799,7 +800,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         );
       
       case 3: 
-        
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
@@ -922,4 +922,317 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             )}
             
             {selectedPublicationTypes.includes("banner") && (
-              <div className="space-y-4 border rounded-md p
+              <div className="space-y-4 border rounded-md p-4">
+                <h4 className="font-medium">Configuration de la bannière</h4>
+                
+                <div>
+                  <Label htmlFor="banner-type">Type de bannière</Label>
+                  <Select 
+                    value={bannerType} 
+                    onValueChange={(value) => setBannerType(value as "VENDU" | "À VENDRE")}
+                  >
+                    <SelectTrigger id="banner-type" className="mt-1">
+                      <SelectValue placeholder="Type de bannière" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="VENDU">VENDU</SelectItem>
+                      <SelectItem value="À VENDRE">À VENDRE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Sélection de l'image principale</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border rounded-lg p-2">
+                    {listing.images?.map(imageUrl => (
+                      <div
+                        key={imageUrl}
+                        className={`relative cursor-pointer border-2 ${
+                          bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                        } rounded overflow-hidden`}
+                        onClick={() => selectBannerImage(imageUrl)}
+                      >
+                        <img
+                          src={imageUrl}
+                          alt="Property"
+                          className="w-full h-24 object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 3.5:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium">Étape 3.5: Génération des médias</h3>
+            
+            {selectedPublicationTypes.includes("slideshow") && renderSlideshowGenerationStep()}
+            
+            {selectedPublicationTypes.includes("banner") && (
+              <div className="space-y-4 border rounded-md p-4">
+                <h4 className="font-medium">Génération de la bannière</h4>
+                
+                {!bannerUrl ? (
+                  <div className="flex flex-col items-center justify-center py-4">
+                    {isGeneratingBanner ? (
+                      <div className="flex flex-col items-center space-y-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">
+                          Création de la bannière en cours...
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <Button 
+                          onClick={generateBanner} 
+                          disabled={isGeneratingBanner || !bannerImage}
+                          className="w-full"
+                        >
+                          {isGeneratingBanner ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Génération en cours...
+                            </>
+                          ) : "Générer la bannière"}
+                        </Button>
+                        
+                        {bannerError && (
+                          <div className="text-sm text-red-500 mt-2">
+                            {bannerError}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-500 flex items-center gap-1">
+                        <Tag className="w-4 h-4" /> Bannière générée avec succès
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setBannerUrl(null);
+                          setIsGeneratingBanner(false);
+                        }}
+                      >
+                        Régénérer
+                      </Button>
+                    </div>
+                    
+                    <div className="border rounded-md p-2 bg-muted/20">
+                      <img src={bannerUrl} alt="Bannière générée" className="max-h-[200px] mx-auto" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      
+      case 4:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium">Étape 4: Publier sur les réseaux sociaux</h3>
+            
+            <div className="space-y-4 border rounded-md p-4">
+              <h4 className="font-medium">Sélection des réseaux sociaux</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
+                  <div className="flex items-start space-x-3">
+                    <Checkbox 
+                      id="network-facebook" 
+                      checked={selectedNetworks.facebook}
+                      onCheckedChange={(checked) => setSelectedNetworks({
+                        ...selectedNetworks,
+                        facebook: !!checked
+                      })}
+                    />
+                    <div className="space-y-2">
+                      <Label 
+                        htmlFor="network-facebook" 
+                        className="flex items-center cursor-pointer"
+                      >
+                        <Facebook className="w-4 h-4 mr-2" />
+                        Facebook
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Publier sur votre page Facebook.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
+                  <div className="flex items-start space-x-3">
+                    <Checkbox 
+                      id="network-instagram" 
+                      checked={selectedNetworks.instagram}
+                      onCheckedChange={(checked) => setSelectedNetworks({
+                        ...selectedNetworks,
+                        instagram: !!checked
+                      })}
+                    />
+                    <div className="space-y-2">
+                      <Label 
+                        htmlFor="network-instagram" 
+                        className="flex items-center cursor-pointer"
+                      >
+                        <Instagram className="w-4 h-4 mr-2" />
+                        Instagram
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Publier sur votre compte Instagram.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h4 className="font-medium">Aperçu des publications</h4>
+              
+              <Tabs defaultValue="facebook" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="facebook" disabled={!selectedNetworks.facebook}>
+                    <Facebook className="w-4 h-4 mr-2" />
+                    Facebook
+                  </TabsTrigger>
+                  <TabsTrigger value="instagram" disabled={!selectedNetworks.instagram}>
+                    <Instagram className="w-4 h-4 mr-2" />
+                    Instagram
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="facebook">
+                  {selectedNetworks.facebook ? (
+                    <div className="border rounded-md p-4">
+                      <FacebookPreviewContent 
+                        text={generatedText}
+                        images={
+                          selectedPublicationTypes.includes("banner") && bannerUrl 
+                            ? [bannerUrl] 
+                            : selectedImages.slice(0, 1)
+                        }
+                        listing={listing}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
+                      <Facebook className="w-8 h-8 mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Sélectionnez Facebook pour voir l'aperçu.
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="instagram">
+                  {selectedNetworks.instagram ? (
+                    <div className="border rounded-md p-4">
+                      <InstagramPreviewContent 
+                        text={generatedText}
+                        images={
+                          selectedPublicationTypes.includes("slideshow") && slideshowUrl
+                            ? [slideshowUrl]
+                            : selectedPublicationTypes.includes("banner") && bannerUrl
+                              ? [bannerUrl]
+                              : selectedImages.slice(0, 10)
+                        }
+                        listing={listing}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
+                      <Instagram className="w-8 h-8 mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground">
+                        Sélectionnez Instagram pour voir l'aperçu.
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Publication sur les réseaux sociaux</DialogTitle>
+          <DialogDescription>
+            Créez une publication pour diffuser votre bien immobilier sur les réseaux sociaux.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="my-4">
+          {renderStepContent()}
+        </div>
+        
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+          <div className="flex-1 flex">
+            {currentStep > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={prevStep}
+                className="flex items-center"
+              >
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Précédent
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex justify-end space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+            >
+              Annuler
+            </Button>
+            
+            {currentStep < 4 ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!canGoToNextStep()}
+                className="flex items-center"
+              >
+                Suivant
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handlePublish}
+                disabled={isPublishing || !canGoToNextStep()}
+              >
+                {isPublishing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Publication...
+                  </>
+                ) : "Publier"}
+              </Button>
+            )}
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
