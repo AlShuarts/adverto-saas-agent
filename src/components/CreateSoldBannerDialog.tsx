@@ -29,7 +29,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const [brokerName, setBrokerName] = useState(
     profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : ""
   );
-  const [brokerEmail, setBrokerEmail] = useState("");
+  const [brokerEmail, setBrokerEmail] = useState<string>("");
   const [brokerPhone, setBrokerPhone] = useState(profile?.phone || "");
   const [brokerImage, setBrokerImage] = useState<string | null>(null);
   const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
@@ -41,9 +41,9 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   useEffect(() => {
     const fetchEmail = async () => {
       try {
-        const { data } = await supabase.auth.getUser();
-        if (data?.user?.email) {
-          setBrokerEmail(data.user.email);
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user?.email) {
+          setBrokerEmail(data.session.user.email);
         }
       } catch (error) {
         console.error("Error fetching user email:", error);
@@ -83,7 +83,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       }
       
       toast.success(`Image ${type === "broker" ? "du courtier" : "du logo"} téléchargée avec succès`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors du téléchargement:", error);
       toast.error(`Erreur lors du téléchargement de l'image: ${error.message}`);
     } finally {
@@ -181,7 +181,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       );
       
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la création de la bannière:", error);
       toast.error(`Erreur: ${error.message || "Impossible de créer la bannière"}`);
     } finally {
@@ -350,11 +350,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileUpload(e.target.files[0], "broker");
-                    }
-                  }}
+                  onChange={handleBrokerImageChange}
                 />
               </div>
               {brokerImage && (
@@ -388,11 +384,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileUpload(e.target.files[0], "agency");
-                    }
-                  }}
+                  onChange={handleAgencyLogoChange}
                 />
               </div>
               {agencyLogo && (
