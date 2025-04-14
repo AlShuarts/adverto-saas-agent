@@ -32,76 +32,55 @@ export const useSlideshowStatus = (listingId: string) => {
         const render = renders[0];
         console.log("Retrieved render status:", render);
 
-        // If the render is in pending or processing state, check with Shotstack API
+        // Si le rendu est en attente ou en cours de traitement, vérifier avec l'API Shotstack
         if (render && (render.status === 'pending' || render.status === 'processing')) {
           try {
             console.log("Checking render status for ID:", render.render_id);
             
-            // Make 3 attempts to check the status with a short delay between them
-            let attempts = 0;
-            const maxAttempts = 3;
-            
-            while (attempts < maxAttempts) {
-              try {
-                if (!render.render_id) {
-                  console.error("Missing render_id for Shotstack status check");
-                  break;
-                }
-                
-                const response = await supabase.functions.invoke('check-render-status', {
-                  body: { renderId: render.render_id }
-                });
-                
-                console.log('Full check-render-status response:', response);
-                
-                if (response.error) {
-                  console.error('Error from check-render-status:', response.error);
-                  attempts++;
-                  
-                  if (attempts < maxAttempts) {
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between attempts
-                  }
-                  continue;
-                }
-                
-                if (response.data) {
-                  console.log('Render status check response data:', response.data);
-                  
-                  // Si le statut a changé, mettre à jour le rendu local
-                  if (response.data.status) {
-                    // Convertir "done" en "completed" pour cohérence
-                    render.status = response.data.status === "done" ? "completed" : response.data.status;
-                  }
-                  
-                  // Si l'URL de la vidéo est disponible, la mettre à jour
-                  if ((response.data.videoUrl || response.data.url) && !render.video_url) {
-                    render.video_url = response.data.videoUrl || response.data.url;
-                  }
-                  
-                  // Exit the retry loop on success
-                  break;
-                } else {
-                  console.log('No data returned from check-render-status');
-                  attempts++;
-                  
-                  // Only wait if we're going to retry
-                  if (attempts < maxAttempts) {
-                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between attempts
-                  }
-                }
-              } catch (attemptError) {
-                console.error('Error in status check attempt:', attemptError);
-                attempts++;
-                
-                // Only wait if we're going to retry
-                if (attempts < maxAttempts) {
-                  await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-              }
+            if (!render.render_id) {
+              console.error("Missing render_id for Shotstack status check");
+              return render;
             }
             
-            if (attempts === maxAttempts) {
-              console.error('Max attempts reached when checking render status');
+            const response = await supabase.functions.invoke('check-render-status', {
+              body: { renderId: render.render_id }
+            });
+            
+            console.log('Full check-render-status response:', response);
+            
+            if (response.error) {
+              console.error('Error from check-render-status:', response.error);
+              return render;
+            }
+            
+            if (response.data) {
+              console.log('Render status check response data:', response.data);
+              
+              // Si le statut a changé, mettre à jour le rendu local
+              if (response.data.status) {
+                // Convertir "done" en "completed" pour cohérence
+                render.status = response.data.status === "done" ? "completed" : response.data.status;
+              }
+              
+              // Si l'URL de la vidéo est disponible, la mettre à jour
+              if ((response.data.videoUrl || response.data.url) && !render.video_url) {
+                render.video_url = response.data.videoUrl || response.data.url;
+              }
+              
+              // Si le rendu est terminé, actualiser les données de la base de données
+              if (render.status === "completed" || render.status === "error") {
+                // La mise à jour est déjà faite par la fonction check-render-status
+                // Actualiser les données pour être sûr
+                const { data: freshRender } = await supabase
+                  .from("slideshow_renders")
+                  .select("*")
+                  .eq("id", render.id)
+                  .single();
+                  
+                if (freshRender) {
+                  return freshRender;
+                }
+              }
             }
           } catch (checkError) {
             console.error('Error checking render status:', checkError);

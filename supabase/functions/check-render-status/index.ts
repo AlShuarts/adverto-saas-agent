@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,16 @@ serve(async (req) => {
     if (!apiKey) {
       throw new Error("❌ Clé API Shotstack manquante dans les variables d'environnement.");
     }
+
+    // Initialiser le client Supabase
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("❌ Variables d'environnement Supabase manquantes.");
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Effectuer 3 tentatives maximum
     let attempt = 0;
@@ -59,9 +70,49 @@ serve(async (req) => {
         console.log("✅ Statut du rendu:", status);
         console.log("✅ URL de la vidéo (si disponible):", url);
 
-        // Si le statut est "done", mettre à jour la base de données
+        // Si le statut est "done" ou "failed", mettre à jour la base de données
         if (status === "done" || status === "failed") {
           console.log("🔄 Le rendu est terminé, mise à jour de la base de données...");
+          
+          try {
+            // Rechercher le rendu dans la base de données
+            const { data: renders, error: findError } = await supabase
+              .from("slideshow_renders")
+              .select("*")
+              .eq("render_id", renderId);
+              
+            if (findError) {
+              console.error("❌ Erreur lors de la recherche du rendu:", findError);
+            } else if (renders && renders.length > 0) {
+              console.log("📊 Rendu trouvé dans la base de données:", renders[0]);
+              
+              // Préparer les données à mettre à jour
+              const updateData: any = {
+                status: status === "done" ? "completed" : "error"
+              };
+              
+              if (status === "done" && url) {
+                updateData.video_url = url;
+                console.log("🎬 Mise à jour de l'URL de la vidéo:", url);
+              }
+              
+              // Mettre à jour le rendu dans la base de données
+              const { error: updateError } = await supabase
+                .from("slideshow_renders")
+                .update(updateData)
+                .eq("render_id", renderId);
+                
+              if (updateError) {
+                console.error("❌ Erreur lors de la mise à jour du statut du rendu:", updateError);
+              } else {
+                console.log("✅ Statut du rendu mis à jour avec succès dans la base de données");
+              }
+            } else {
+              console.warn("⚠️ Aucun rendu trouvé avec cet ID dans la base de données");
+            }
+          } catch (dbError) {
+            console.error("❌ Erreur lors de l'interaction avec la base de données:", dbError);
+          }
         }
 
         return new Response(

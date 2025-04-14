@@ -31,7 +31,7 @@ export const SlideshowStatus = ({
         if ((render.status === "completed" || render.status === "done") && render.video_url) {
           hasNotified.current = true;
           localStorage.setItem(notificationKey, "true");
-          toast("Diaporama prêt !", {
+          toast.success("Diaporama prêt !", {
             description: "Votre diaporama est prêt à être visionné.",
             action: {
               label: "Voir",
