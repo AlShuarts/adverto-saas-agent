@@ -44,6 +44,20 @@ serve(async (req) => {
       );
     }
 
+    // Validation des données de configuration requises
+    const requiredFields = ["mainImage", "brokerName", "brokerEmail", "brokerPhone"];
+    const missingFields = requiredFields.filter(field => !config[field]);
+    
+    if (missingFields.length > 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: `❌ Champs requis manquants: ${missingFields.join(", ")}.`,
+          missingFields 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
     console.log("📜 CONFIGURATION REÇUE:", JSON.stringify(config, null, 2));
     console.log("🖼️ Image principale:", config.mainImage);
     
@@ -94,6 +108,12 @@ serve(async (req) => {
     const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
     
     console.log("🔗 URL du webhook configurée:", webhookUrl);
+
+    // Vérifier la disponibilité de la clé API Shotstack
+    const apiKey = Deno.env.get("SHOTSTACK_API_KEY");
+    if (!apiKey) {
+      throw new Error("❌ Clé API Shotstack non configurée");
+    }
 
     const renderPayload = {
       timeline: {

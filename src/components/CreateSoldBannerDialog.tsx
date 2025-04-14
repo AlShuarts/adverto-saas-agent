@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, AlertTriangle } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type CreateSoldBannerDialogProps = {
   listing: Tables<"listings">;
@@ -22,10 +23,13 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const { profile } = useProfile();
   const [selectedImage, setSelectedImage] = useState<string>(listing.images?.[0] || "");
   const [isCreating, setIsCreating] = useState(false);
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  
+  // Initialize form values with profile data when available
   const [brokerName, setBrokerName] = useState(
     profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : ""
   );
-  const [brokerEmail, setBrokerEmail] = useState("");
+  const [brokerEmail, setBrokerEmail] = useState(profile?.email || "");
   const [brokerPhone, setBrokerPhone] = useState(profile?.phone || "");
   const [brokerImage, setBrokerImage] = useState<string | null>(null);
   const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
@@ -87,8 +91,40 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
     }
   };
 
+  const validateForm = (): boolean => {
+    const errors: {[key: string]: string} = {};
+    
+    if (!selectedImage) {
+      errors.selectedImage = "Veuillez sélectionner une image";
+    }
+    
+    if (!brokerName || brokerName.trim() === '') {
+      errors.brokerName = "Le nom du courtier est requis";
+    }
+    
+    if (!brokerPhone || brokerPhone.trim() === '') {
+      errors.brokerPhone = "Le téléphone du courtier est requis";
+    }
+    
+    if (!brokerEmail || brokerEmail.trim() === '') {
+      errors.brokerEmail = "L'email du courtier est requis";
+    } else if (!/\S+@\S+\.\S+/.test(brokerEmail)) {
+      errors.brokerEmail = "L'email semble invalide";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleCreateBanner = async () => {
     try {
+      if (!validateForm()) {
+        toast.error("Veuillez remplir tous les champs obligatoires", {
+          description: "Tous les champs marqués sont requis pour créer la bannière"
+        });
+        return;
+      }
+      
       setIsCreating(true);
       
       // Incrémenter les statistiques de génération de bannière
@@ -105,6 +141,8 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
         bannerType
       };
       
+      console.log("Sending banner creation request with config:", config);
+      
       const { data, error } = await supabase.functions.invoke('create-sold-banner', {
         body: {
           listingId: listing.id,
@@ -113,6 +151,8 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       });
       
       if (error) throw error;
+      
+      console.log("Banner creation response:", data);
       
       toast.success(
         bannerType === "VENDU" 
@@ -142,6 +182,15 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
           <DialogTitle>Créer une bannière &quot;{bannerTitle}&quot;</DialogTitle>
         </DialogHeader>
         
+        {(!listing.images || listing.images.length === 0) && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Cette propriété n'a pas d'images. Veuillez d'abord ajouter des images à la propriété.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="bannerType">Type de bannière</Label>
@@ -160,8 +209,19 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="propertyImage">Image de la propriété</Label>
-            <Select value={selectedImage} onValueChange={setSelectedImage}>
+            <Label htmlFor="propertyImage" className={formErrors.selectedImage ? "text-destructive" : ""}>
+              Image de la propriété *
+            </Label>
+            <Select 
+              value={selectedImage} 
+              onValueChange={(value) => {
+                setSelectedImage(value);
+                if (formErrors.selectedImage) {
+                  const { selectedImage, ...rest } = formErrors;
+                  setFormErrors(rest);
+                }
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une image" />
               </SelectTrigger>
@@ -173,6 +233,9 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                 ))}
               </SelectContent>
             </Select>
+            {formErrors.selectedImage && (
+              <p className="text-xs text-destructive">{formErrors.selectedImage}</p>
+            )}
             {selectedImage && (
               <div className="aspect-video overflow-hidden rounded-md mt-2">
                 <img
@@ -185,33 +248,69 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="brokerName">Nom du courtier</Label>
+            <Label htmlFor="brokerName" className={formErrors.brokerName ? "text-destructive" : ""}>
+              Nom du courtier *
+            </Label>
             <Input
               id="brokerName"
               value={brokerName}
-              onChange={(e) => setBrokerName(e.target.value)}
+              onChange={(e) => {
+                setBrokerName(e.target.value);
+                if (formErrors.brokerName) {
+                  const { brokerName, ...rest } = formErrors;
+                  setFormErrors(rest);
+                }
+              }}
               placeholder="Nom du courtier"
+              className={formErrors.brokerName ? "border-destructive" : ""}
             />
+            {formErrors.brokerName && (
+              <p className="text-xs text-destructive">{formErrors.brokerName}</p>
+            )}
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="brokerEmail">Email du courtier</Label>
+            <Label htmlFor="brokerEmail" className={formErrors.brokerEmail ? "text-destructive" : ""}>
+              Email du courtier *
+            </Label>
             <Input
               id="brokerEmail"
               value={brokerEmail}
-              onChange={(e) => setBrokerEmail(e.target.value)}
+              onChange={(e) => {
+                setBrokerEmail(e.target.value);
+                if (formErrors.brokerEmail) {
+                  const { brokerEmail, ...rest } = formErrors;
+                  setFormErrors(rest);
+                }
+              }}
               placeholder="Email du courtier"
+              className={formErrors.brokerEmail ? "border-destructive" : ""}
             />
+            {formErrors.brokerEmail && (
+              <p className="text-xs text-destructive">{formErrors.brokerEmail}</p>
+            )}
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="brokerPhone">Téléphone du courtier</Label>
+            <Label htmlFor="brokerPhone" className={formErrors.brokerPhone ? "text-destructive" : ""}>
+              Téléphone du courtier *
+            </Label>
             <Input
               id="brokerPhone"
               value={brokerPhone}
-              onChange={(e) => setBrokerPhone(e.target.value)}
+              onChange={(e) => {
+                setBrokerPhone(e.target.value);
+                if (formErrors.brokerPhone) {
+                  const { brokerPhone, ...rest } = formErrors;
+                  setFormErrors(rest);
+                }
+              }}
               placeholder="Téléphone du courtier"
+              className={formErrors.brokerPhone ? "border-destructive" : ""}
             />
+            {formErrors.brokerPhone && (
+              <p className="text-xs text-destructive">{formErrors.brokerPhone}</p>
+            )}
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -283,6 +382,10 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
               )}
             </div>
           </div>
+          
+          <div className="text-sm text-muted-foreground mt-2">
+            * Champs obligatoires
+          </div>
         </div>
         
         <DialogFooter>
@@ -291,7 +394,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
           </Button>
           <Button 
             onClick={handleCreateBanner} 
-            disabled={isCreating || !selectedImage}
+            disabled={isCreating || !listing.images || listing.images.length === 0}
           >
             {isCreating ? (
               <>

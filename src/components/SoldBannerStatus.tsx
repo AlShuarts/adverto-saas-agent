@@ -4,10 +4,11 @@ import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Loader2, Image, Download, RefreshCw, Facebook, Instagram } from "lucide-react";
+import { Loader2, Image, Download, RefreshCw, Facebook, Instagram, AlertTriangle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFacebookPublish } from "@/hooks/useFacebookPublish";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type SoldBannerStatusProps = {
   listing: Tables<"listings">;
@@ -30,12 +31,15 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const queryClient = useQueryClient();
   const { publishToFacebook } = useFacebookPublish(listing);
 
   const fetchRenders = async () => {
     try {
       setIsLoading(true);
+      setHasError(false);
       
       const { data, error } = await supabase
         .from("sold_banner_renders")
@@ -45,6 +49,8 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
         
       if (error) {
         console.error("Erreur lors de la récupération des bannières:", error);
+        setHasError(true);
+        setErrorMessage(error.message);
         return;
       }
       
@@ -59,6 +65,8 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       setRenders(processedData as SoldBannerRender[]);
     } catch (error) {
       console.error("Erreur lors de la récupération des bannières:", error);
+      setHasError(true);
+      setErrorMessage(error.message);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -69,6 +77,7 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   const checkRenderStatus = async (renderId: string) => {
     try {
       setIsRefreshing(true);
+      setHasError(false);
       
       const { data, error } = await supabase.functions.invoke('check-render-status', {
         body: { renderId }
@@ -76,6 +85,9 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       
       if (error) {
         console.error('Erreur lors de la vérification du statut:', error);
+        setHasError(true);
+        setErrorMessage(error.message);
+        setIsRefreshing(false);
         return;
       }
       
@@ -91,11 +103,17 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
             description: "Vous pouvez maintenant la télécharger ou la partager.",
           });
         }
+      } else if (data.status === "failed") {
+        setHasError(true);
+        setErrorMessage("La génération de la bannière a échoué. Veuillez réessayer.");
+        setIsRefreshing(false);
       } else {
         setIsRefreshing(false);
       }
     } catch (error) {
       console.error('Erreur lors de la vérification du statut:', error);
+      setHasError(true);
+      setErrorMessage(error.message);
       setIsRefreshing(false);
     }
   };
@@ -242,6 +260,12 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
           <p className="text-sm text-muted-foreground">
             Cela peut prendre quelques instants...
           </p>
+          {hasError && (
+            <Alert variant="destructive" className="mt-4 mb-2">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{errorMessage || "Une erreur s'est produite."}</AlertDescription>
+            </Alert>
+          )}
           <Button 
             variant="outline" 
             size="sm" 
@@ -336,9 +360,13 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   // En cas d'erreur
   return (
     <div className="border rounded-md p-4 text-center">
-      <p className="text-red-500">
-        Une erreur est survenue lors de la création de la bannière.
-      </p>
+      <Alert variant="destructive" className="mb-4">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Une erreur est survenue lors de la création de la bannière.
+          {errorMessage ? ` ${errorMessage}` : ""}
+        </AlertDescription>
+      </Alert>
       <Button
         variant="outline"
         size="sm"
