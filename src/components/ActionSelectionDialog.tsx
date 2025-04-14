@@ -1120,19 +1120,21 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                 <TabsContent value="facebook">
                   {selectedNetworks.facebook ? (
                     <div className="border rounded-md p-4">
-                      <FacebookPreviewContent 
-                        isLoading={false}
-                        error={null}
-                        generatedText={generatedText}
-                        images={
-                          selectedPublicationTypes.includes("banner") && bannerUrl 
-                            ? [bannerUrl] 
-                            : selectedImages.slice(0, 1)
-                        }
-                        onTextChange={(text) => setGeneratedText(text)}
-                        selectedImages={selectedImages}
-                        onSelectedImagesChange={setSelectedImages}
-                      />
+                      <ScrollArea className="max-h-[400px]">
+                        <FacebookPreviewContent 
+                          isLoading={false}
+                          error={null}
+                          generatedText={generatedText}
+                          images={
+                            selectedPublicationTypes.includes("banner") && bannerUrl 
+                              ? [bannerUrl] 
+                              : selectedImages.slice(0, 1)
+                          }
+                          onTextChange={(text) => setGeneratedText(text)}
+                          selectedImages={selectedImages}
+                          onSelectedImagesChange={setSelectedImages}
+                        />
+                      </ScrollArea>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
@@ -1147,21 +1149,23 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                 <TabsContent value="instagram">
                   {selectedNetworks.instagram ? (
                     <div className="border rounded-md p-4">
-                      <InstagramPreviewContent 
-                        isLoading={false}
-                        error={null}
-                        generatedText={generatedText}
-                        images={
-                          selectedPublicationTypes.includes("slideshow") && slideshowUrl
-                            ? [slideshowUrl]
-                            : selectedPublicationTypes.includes("banner") && bannerUrl
-                              ? [bannerUrl]
-                              : selectedImages.slice(0, 10)
-                        }
-                        onTextChange={(text) => setGeneratedText(text)}
-                        selectedImages={selectedImages}
-                        onSelectedImagesChange={setSelectedImages}
-                      />
+                      <ScrollArea className="max-h-[400px]">
+                        <InstagramPreviewContent 
+                          isLoading={false}
+                          error={null}
+                          generatedText={generatedText}
+                          images={
+                            selectedPublicationTypes.includes("slideshow") && slideshowUrl
+                              ? [slideshowUrl]
+                              : selectedPublicationTypes.includes("banner") && bannerUrl
+                                ? [bannerUrl]
+                                : selectedImages.slice(0, 10)
+                          }
+                          onTextChange={(text) => setGeneratedText(text)}
+                          selectedImages={selectedImages}
+                          onSelectedImagesChange={setSelectedImages}
+                        />
+                      </ScrollArea>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
