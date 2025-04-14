@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -29,13 +28,29 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const [brokerName, setBrokerName] = useState(
     profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : ""
   );
-  const [brokerEmail, setBrokerEmail] = useState(profile?.email || "");
+  const [brokerEmail, setBrokerEmail] = useState(supabase.auth.getUser().then(res => res.data.user?.email || "").catch(() => ""));
   const [brokerPhone, setBrokerPhone] = useState(profile?.phone || "");
   const [brokerImage, setBrokerImage] = useState<string | null>(null);
   const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
   const [uploadingBrokerImage, setUploadingBrokerImage] = useState(false);
   const [uploadingAgencyLogo, setUploadingAgencyLogo] = useState(false);
   const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
+
+  // Set broker email from auth when component mounts
+  useState(() => {
+    const fetchEmail = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data?.user?.email) {
+          setBrokerEmail(data.user.email);
+        }
+      } catch (error) {
+        console.error("Error fetching user email:", error);
+      }
+    };
+    
+    fetchEmail();
+  });
 
   const handleFileUpload = async (file: File, type: "broker" | "agency") => {
     try {

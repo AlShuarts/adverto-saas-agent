@@ -94,7 +94,7 @@ serve(async (req) => {
       brokerImage: config.brokerImage || null,
       agencyLogo: config.agencyLogo || null,
       brokerName: config.brokerName || profile?.full_name || "Courtier immobilier",
-      brokerEmail: config.brokerEmail || profile?.email || user.email || "",
+      brokerEmail: config.brokerEmail || user.email || "",
       brokerPhone: config.brokerPhone || profile?.phone || "",
       address: listing.address || "",
       bannerType,
