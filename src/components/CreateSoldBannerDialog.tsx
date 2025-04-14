@@ -337,6 +337,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                   variant="outline"
                   onClick={() => document.getElementById("brokerImageInput")?.click()}
                   disabled={uploadingBrokerImage}
+                  type="button"
                 >
                   {uploadingBrokerImage ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -371,6 +372,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                   variant="outline"
                   onClick={() => document.getElementById("agencyLogoInput")?.click()}
                   disabled={uploadingAgencyLogo}
+                  type="button"
                 >
                   {uploadingAgencyLogo ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -411,6 +413,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
           <Button 
             onClick={handleCreateBanner} 
             disabled={isCreating || !listing.images || listing.images.length === 0}
+            type="button"
           >
             {isCreating ? (
               <>
