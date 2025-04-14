@@ -55,14 +55,14 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [generatedText, setGeneratedText] = useState<string>("");
   const [isGeneratingText, setIsGeneratingText] = useState(false);
   
-  const [selectedImages, setSelectedImages] = useState<string[]>(listing.images || []);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [musicList, setMusicList] = useState<string[]>([]);
   const [audioPlaying, setAudioPlaying] = useState<HTMLAudioElement | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
   
   const [bannerType, setBannerType] = useState<"VENDU" | "À VENDRE">("VENDU");
-  const [bannerImage, setBannerImage] = useState<string | null>(listing.images?.[0] || null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
   
   const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
@@ -123,7 +123,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       setSelectedPublicationTypes([]);
       setSelectedFacebookTemplateId("none");
       setSelectedInstagramTemplateId("none");
-      setSelectedImages(listing.images || []);
+      setSelectedImages([]);
       setBannerImage(listing.images?.[0] || null);
       setSelectedNetworks({ facebook: false, instagram: false });
       setGeneratedText("");
@@ -167,6 +167,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       fetchMusic();
     }
   }, [isOpen, listing.images]);
+  
   
   const handlePublicationTypeChange = (type: PublicationType, checked: boolean) => {
     setSelectedPublicationTypes(prev => 
@@ -723,7 +724,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         );
       
       case 2: 
-        
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-medium">Étape 2: Choisir un template et générer le texte</h3>
@@ -922,311 +922,4 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             )}
             
             {selectedPublicationTypes.includes("banner") && (
-              <div className="space-y-4 border rounded-md p-4">
-                <h4 className="font-medium">Configuration de la bannière</h4>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label>Type de bannière</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <Button
-                        type="button"
-                        variant={bannerType === "VENDU" ? "default" : "outline"}
-                        onClick={() => setBannerType("VENDU")}
-                      >
-                        VENDU
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={bannerType === "À VENDRE" ? "default" : "outline"}
-                        onClick={() => setBannerType("À VENDRE")}
-                      >
-                        À VENDRE
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label>Image principale</Label>
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      {listing.images?.map(imageUrl => (
-                        <div
-                          key={imageUrl}
-                          className={`relative border rounded cursor-pointer ${
-                            bannerImage === imageUrl ? "border-primary border-2" : ""
-                          }`}
-                          onClick={() => selectBannerImage(imageUrl)}
-                        >
-                          <img src={imageUrl} alt="Banner" className="w-full h-20 object-cover rounded" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      
-      case 3.5: 
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">Étape 3.5: Génération des médias</h3>
-            
-            {selectedPublicationTypes.includes("slideshow") && (
-              renderSlideshowGenerationStep()
-            )}
-            
-            {selectedPublicationTypes.includes("banner") && (
-              <div className="space-y-4 border rounded-md p-4">
-                <h4 className="font-medium">Génération de la bannière</h4>
-                
-                {!bannerUrl ? (
-                  <div className="flex flex-col items-center justify-center py-4">
-                    {isGeneratingBanner ? (
-                      <div className="flex flex-col items-center space-y-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground">
-                          Génération de la bannière en cours...
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <Button 
-                          onClick={generateBanner} 
-                          disabled={isGeneratingBanner || !bannerImage}
-                          className="w-full"
-                        >
-                          {isGeneratingBanner ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Génération en cours...
-                            </>
-                          ) : "Générer la bannière"}
-                        </Button>
-                        
-                        {bannerError && (
-                          <div className="text-sm text-red-500 mt-2">
-                            {bannerError}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-500 flex items-center gap-1">
-                        <Tag className="w-4 h-4" /> Bannière générée avec succès
-                      </span>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setBannerUrl(null);
-                          setIsGeneratingBanner(false);
-                        }}
-                      >
-                        Régénérer
-                      </Button>
-                    </div>
-                    
-                    <div className="flex justify-center">
-                      <img 
-                        src={bannerUrl} 
-                        alt="Bannière générée" 
-                        className="max-h-48 rounded-md border" 
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      
-      case 4: 
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">Étape 4: Publier sur les réseaux sociaux</h3>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
-                  <div className="flex items-start space-x-3">
-                    <Checkbox 
-                      id="network-facebook" 
-                      checked={selectedNetworks.facebook}
-                      onCheckedChange={(checked) => setSelectedNetworks(prev => ({ ...prev, facebook: !!checked }))}
-                      // Removed disabled condition to allow testing
-                    />
-                    <div className="space-y-2">
-                      <Label 
-                        htmlFor="network-facebook" 
-                        className="flex items-center cursor-pointer"
-                      >
-                        <Facebook className="w-4 h-4 mr-2 text-blue-600" />
-                        Facebook
-                      </Label>
-                      {(!profile?.facebook_page_id || !profile?.facebook_access_token) ? (
-                        <p className="text-sm text-amber-500">
-                          Mode test activé - La publication ne sera pas réellement partagée sur Facebook.
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Publier sur votre page Facebook.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
-                  <div className="flex items-start space-x-3">
-                    <Checkbox 
-                      id="network-instagram" 
-                      checked={selectedNetworks.instagram}
-                      onCheckedChange={(checked) => setSelectedNetworks(prev => ({ ...prev, instagram: !!checked }))}
-                      // Removed disabled condition to allow testing
-                    />
-                    <div className="space-y-2">
-                      <Label 
-                        htmlFor="network-instagram" 
-                        className="flex items-center cursor-pointer"
-                      >
-                        <Instagram className="w-4 h-4 mr-2 text-pink-600" />
-                        Instagram
-                      </Label>
-                      {(!profile?.instagram_user_id || !profile?.instagram_access_token) ? (
-                        <p className="text-sm text-amber-500">
-                          Mode test activé - La publication ne sera pas réellement partagée sur Instagram.
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Publier sur votre compte Instagram.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Tabs defaultValue="message" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="message">Message</TabsTrigger>
-                  <TabsTrigger value="facebook">Aperçu Facebook</TabsTrigger>
-                  <TabsTrigger value="instagram">Aperçu Instagram</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="message" className="space-y-4">
-                  <div className="border rounded p-4 space-y-4">
-                    <h4 className="font-medium">Message de la publication</h4>
-                    <Textarea
-                      value={generatedText}
-                      onChange={(e) => setGeneratedText(e.target.value)}
-                      className="min-h-[200px]"
-                      placeholder="Votre texte apparaîtra ici"
-                    />
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="facebook" className="space-y-4">
-                  <div className="border rounded p-4 space-y-2">
-                    <h4 className="font-medium mb-4">Aperçu Facebook</h4>
-                    <FacebookPreviewContent 
-                      isLoading={false}
-                      error={null}
-                      generatedText={generatedText}
-                      images={selectedPublicationTypes.includes("banner") && bannerUrl 
-                        ? [bannerUrl] 
-                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
-                        ? [slideshowUrl]
-                        : selectedImages}
-                      onTextChange={setGeneratedText}
-                      selectedImages={selectedPublicationTypes.includes("banner") && bannerUrl 
-                        ? [bannerUrl] 
-                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
-                        ? [slideshowUrl]
-                        : selectedImages.length > 0 ? [selectedImages[0]] : []}
-                      onSelectedImagesChange={() => {}}
-                    />
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="instagram" className="space-y-4">
-                  <div className="border rounded p-4 space-y-2">
-                    <h4 className="font-medium mb-4">Aperçu Instagram</h4>
-                    <InstagramPreviewContent
-                      isLoading={false}
-                      error={null}
-                      generatedText={generatedText}
-                      images={selectedPublicationTypes.includes("banner") && bannerUrl 
-                        ? [bannerUrl] 
-                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
-                        ? [slideshowUrl]
-                        : selectedImages}
-                      onTextChange={setGeneratedText}
-                      selectedImages={selectedPublicationTypes.includes("banner") && bannerUrl 
-                        ? [bannerUrl] 
-                        : selectedPublicationTypes.includes("slideshow") && slideshowUrl 
-                        ? [slideshowUrl]
-                        : selectedImages.length > 0 ? [selectedImages[0]] : []}
-                      onSelectedImagesChange={() => {}}
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        );
-      
-      default:
-        return null;
-    }
-  };
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[85vw] w-[85vw] max-h-[85vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle>Publier {listing.address || "Propriété"}</DialogTitle>
-          <DialogDescription>
-            Créez et partagez votre annonce sur les réseaux sociaux.
-          </DialogDescription>
-        </DialogHeader>
-        
-        {renderStepContent()}
-        
-        <DialogFooter className="flex justify-between">
-          {currentStep > 1 ? (
-            <Button type="button" variant="outline" onClick={prevStep}>
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Précédent
-            </Button>
-          ) : (
-            <div></div>
-          )}
-          
-          {currentStep < 4 ? (
-            <Button 
-              type="button" 
-              onClick={nextStep} 
-              disabled={!canGoToNextStep()}
-            >
-              Suivant
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          ) : (
-            <Button 
-              type="button" 
-              onClick={handlePublish} 
-              disabled={isPublishing || !canGoToNextStep()}
-              className="flex items-center"
-            >
-              {isPublishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isPublishing ? "Publication en cours..." : "Publier"}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+              <div className="space-y-4 border rounded-md p
