@@ -4,6 +4,7 @@ import { Loader2, Instagram } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SlideshowPlayer } from "./slideshow/SlideshowPlayer";
 
 type InstagramPreviewContentProps = {
   isLoading: boolean;
@@ -13,6 +14,9 @@ type InstagramPreviewContentProps = {
   onTextChange: (text: string) => void;
   selectedImages: string[];
   onSelectedImagesChange: (images: string[]) => void;
+  slideshowUrl?: string | null;
+  musicUrl?: string | null;
+  showSlideshow?: boolean;
 };
 
 export const InstagramPreviewContent = ({
@@ -23,6 +27,9 @@ export const InstagramPreviewContent = ({
   onTextChange,
   selectedImages,
   onSelectedImagesChange,
+  slideshowUrl,
+  musicUrl,
+  showSlideshow = false,
 }: InstagramPreviewContentProps) => {
   const handleImageSelect = (image: string) => {
     const isSelected = selectedImages.includes(image);
@@ -34,6 +41,30 @@ export const InstagramPreviewContent = ({
       const newSelection = [...selectedImages, image];
       onSelectedImagesChange(newSelection);
     }
+  };
+
+  const renderMediaContent = () => {
+    if (showSlideshow && selectedImages.length > 0) {
+      return (
+        <div className="aspect-square bg-black rounded-lg overflow-hidden mb-3">
+          <SlideshowPlayer 
+            images={selectedImages}
+            musicUrl={musicUrl || null}
+          />
+        </div>
+      );
+    } else if (selectedImages.length > 0) {
+      return (
+        <div className="aspect-square bg-muted rounded-lg overflow-hidden mb-3">
+          <img
+            src={selectedImages[0]}
+            alt="Preview"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -56,15 +87,7 @@ export const InstagramPreviewContent = ({
         <>
           <div className="flex flex-col space-y-4">
             <div className="p-4 rounded-lg bg-card border">
-              {selectedImages.length > 0 && (
-                <div className="aspect-square bg-muted rounded-lg overflow-hidden mb-3">
-                  <img
-                    src={selectedImages[0]}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              {renderMediaContent()}
               
               <div className="flex space-x-4 py-2 border-b pb-2">
                 <div className="flex space-x-2">
@@ -84,7 +107,7 @@ export const InstagramPreviewContent = ({
               </div>
             </div>
 
-            {images.length > 0 && (
+            {!showSlideshow && images.length > 0 && (
               <>
                 <div className="bg-secondary/10 rounded-lg p-4 mb-4">
                   <p className="text-sm text-muted-foreground">

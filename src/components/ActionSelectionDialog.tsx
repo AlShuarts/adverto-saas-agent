@@ -1125,14 +1125,17 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                           isLoading={false}
                           error={null}
                           generatedText={generatedText}
-                          images={
+                          images={listing.images || []}
+                          onTextChange={(text) => setGeneratedText(text)}
+                          selectedImages={
                             selectedPublicationTypes.includes("banner") && bannerUrl 
                               ? [bannerUrl] 
-                              : selectedImages.slice(0, 1)
+                              : selectedImages
                           }
-                          onTextChange={(text) => setGeneratedText(text)}
-                          selectedImages={selectedImages}
                           onSelectedImagesChange={setSelectedImages}
+                          slideshowUrl={slideshowUrl}
+                          musicUrl={selectedMusic ? `${supabase.storage.from('background-music').getPublicUrl(selectedMusic).data.publicUrl}` : null}
+                          showSlideshow={selectedPublicationTypes.includes("slideshow")}
                         />
                       </div>
                     ) : (
@@ -1152,16 +1155,17 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                           isLoading={false}
                           error={null}
                           generatedText={generatedText}
-                          images={
-                            selectedPublicationTypes.includes("slideshow") && slideshowUrl
-                              ? [slideshowUrl]
-                              : selectedPublicationTypes.includes("banner") && bannerUrl
-                                ? [bannerUrl]
-                                : selectedImages.slice(0, 10)
-                          }
+                          images={listing.images || []}
                           onTextChange={(text) => setGeneratedText(text)}
-                          selectedImages={selectedImages}
+                          selectedImages={
+                            selectedPublicationTypes.includes("banner") && bannerUrl
+                              ? [bannerUrl]
+                              : selectedImages
+                          }
                           onSelectedImagesChange={setSelectedImages}
+                          slideshowUrl={slideshowUrl}
+                          musicUrl={selectedMusic ? `${supabase.storage.from('background-music').getPublicUrl(selectedMusic).data.publicUrl}` : null}
+                          showSlideshow={selectedPublicationTypes.includes("slideshow")}
                         />
                       </div>
                     ) : (

@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Save, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { SlideshowPlayer } from "./slideshow/SlideshowPlayer";
 
 type FacebookPreviewContentProps = {
   isLoading: boolean;
@@ -19,6 +20,9 @@ type FacebookPreviewContentProps = {
   onTextChange: (text: string) => void;
   selectedImages: string[];
   onSelectedImagesChange: (images: string[]) => void;
+  slideshowUrl?: string | null;
+  musicUrl?: string | null;
+  showSlideshow?: boolean;
 };
 
 export const FacebookPreviewContent = ({
@@ -29,6 +33,9 @@ export const FacebookPreviewContent = ({
   onTextChange,
   selectedImages,
   onSelectedImagesChange,
+  slideshowUrl,
+  musicUrl,
+  showSlideshow = false,
 }: FacebookPreviewContentProps) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -108,6 +115,40 @@ export const FacebookPreviewContent = ({
     }
   };
 
+  const renderMediaContent = () => {
+    if (showSlideshow && selectedImages.length > 0) {
+      return (
+        <div className="relative">
+          <div className="aspect-video bg-black rounded-md overflow-hidden">
+            <SlideshowPlayer 
+              images={selectedImages} 
+              musicUrl={musicUrl || null} 
+            />
+          </div>
+        </div>
+      );
+    } else if (selectedImages.length > 0) {
+      return (
+        <div className="relative">
+          <div className="aspect-video bg-muted rounded-md overflow-hidden">
+            <img
+              src={selectedImages[0]}
+              alt="Preview"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {selectedImages.length > 1 && (
+            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+              +{selectedImages.length - 1} photo{selectedImages.length > 2 ? 's' : ''}
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      return null;
+    }
+  };
+
   return (
     <div className="glass border border-border/40 rounded-lg p-4">
       <div className="flex items-center space-x-2 mb-3">
@@ -128,22 +169,7 @@ export const FacebookPreviewContent = ({
             <div className="p-4 rounded-lg bg-card border">
               <div className="space-y-3">
                 <p className="whitespace-pre-wrap text-sm">{generatedText}</p>
-                {selectedImages.length > 0 && (
-                  <div className="relative">
-                    <div className="aspect-video bg-muted rounded-md overflow-hidden">
-                      <img
-                        src={selectedImages[0]}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {selectedImages.length > 1 && (
-                      <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                        +{selectedImages.length - 1} photo{selectedImages.length > 2 ? 's' : ''}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {renderMediaContent()}
               </div>
               <div className="flex justify-between pt-3 mt-3 border-t text-sm text-muted-foreground">
                 <span>J'aime</span>
@@ -182,7 +208,7 @@ export const FacebookPreviewContent = ({
             
             {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
             
-            {images.length > 0 && (
+            {!showSlideshow && images.length > 0 && (
               <>
                 <div className="mb-4 p-3 bg-secondary/10 rounded-lg">
                   <p className="text-sm font-medium mb-2">
