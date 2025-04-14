@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -1130,7 +1131,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Publier {listing.address_street}</DialogTitle>
+          <DialogTitle>Publier {listing.address || "Propriété"}</DialogTitle>
           <DialogDescription>
             Créez et partagez votre annonce sur les réseaux sociaux.
           </DialogDescription>
@@ -1173,3 +1174,4 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     </Dialog>
   );
 };
+
