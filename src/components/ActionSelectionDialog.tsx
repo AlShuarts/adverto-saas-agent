@@ -36,7 +36,7 @@ type ActionSelectionDialogProps = {
 
 export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelectionDialogProps) => {
   const { profile } = useProfile();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const queryClient = useQueryClient();
   
   const [currentStep, setCurrentStep] = useState(1);
@@ -209,14 +209,14 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       setGeneratedText(data.text || "");
       await ensureAndIncrementStatistic('description');
       
-      toast({
+      uiToast({
         title: "Texte généré",
         description: "Le texte de votre publication a été généré avec succès.",
       });
       
     } catch (error) {
       console.error("Erreur lors de la génération du texte:", error);
-      toast({
+      uiToast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la génération du texte.",
         variant: "destructive"
@@ -262,7 +262,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         // Enregistrer l'utilisation
         await ensureAndIncrementStatistic('slideshow');
         
-        toast.info("Diaporama en cours de génération", {
+        toast.success("Diaporama en cours de génération", {
           description: "Ce processus peut prendre quelques minutes",
           duration: 5000
         });
@@ -287,7 +287,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   
   const generateBanner = async () => {
     if (!bannerImage) {
-      toast({
+      uiToast({
         title: "Erreur",
         description: "Veuillez sélectionner une image pour la bannière.",
         variant: "destructive"
@@ -325,7 +325,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         if (statusData && statusData.status === "completed" && statusData.image_url) {
           setBannerUrl(statusData.image_url);
           isComplete = true;
-          toast({
+          uiToast({
             title: "Bannière créée",
             description: "La bannière a été générée avec succès.",
           });
@@ -339,7 +339,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
     } catch (error) {
       console.error("Erreur lors de la création de la bannière:", error);
-      toast({
+      uiToast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la création de la bannière.",
         variant: "destructive"
@@ -355,7 +355,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       const tasks = [];
       
       if (!generatedText) {
-        toast({
+        uiToast({
           title: "Erreur",
           description: "Veuillez générer un texte pour votre publication.",
           variant: "destructive"
@@ -423,7 +423,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
       await Promise.allSettled(tasks);
       
-      toast({
+      uiToast({
         title: "Publications complétées",
         description: "Vos publications ont été créées avec succès sur les réseaux sociaux sélectionnés.",
       });
@@ -433,7 +433,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       onClose();
     } catch (error) {
       console.error("Erreur lors de la publication:", error);
-      toast({
+      uiToast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la publication sur les réseaux sociaux.",
         variant: "destructive"

@@ -2,7 +2,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { toast } from "sonner";
 
 type SlideshowRender = Tables<"slideshow_renders">;
 
@@ -45,17 +44,17 @@ export const useSlideshowStatus = (listingId: string) => {
             } else {
               console.log('Render status check response:', response.data);
               
-              // Si le statut a changé, mettons à jour le render local
+              // If status has changed, update local render
               if (response.data.status) {
-                // Convertir "done" en "completed" pour uniformité
+                // Convert "done" to "completed" for consistency
                 render.status = response.data.status === "done" ? "completed" : response.data.status;
               }
               
-              // Si une URL vidéo est disponible, mettons-la à jour
+              // If video URL is available, update it
               if ((response.data.videoUrl || response.data.url) && !render.video_url) {
                 render.video_url = response.data.videoUrl || response.data.url;
                 
-                // Mettre à jour l'entrée dans la base de données
+                // Update the database entry
                 await supabase
                   .from("slideshow_renders")
                   .update({ 
@@ -79,9 +78,9 @@ export const useSlideshowStatus = (listingId: string) => {
     },
     refetchInterval: ({ state }) => {
       const data = state.data as SlideshowRender | undefined;
-      // Continuer à vérifier si le statut est pending ou processing
+      // Continue checking if status is pending or processing
       if (!data || (data.status !== "completed" && data.status !== "done" && data.status !== "error")) {
-        return 5000; // Vérification toutes les 5 secondes
+        return 5000; // Check every 5 seconds
       }
       return false;
     },
