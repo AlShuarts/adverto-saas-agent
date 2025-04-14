@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { SlideshowPlayer } from "./SlideshowPlayer";
@@ -45,7 +44,6 @@ export const SlideshowPreviewDialog = ({
     try {
       setIsPublishingToInstagram(true);
       
-      // Récupérer l'URL de la vidéo du diaporama
       const { data: slideshowData } = await supabase
         .from("slideshow_renders")
         .select("video_url")
@@ -61,13 +59,12 @@ export const SlideshowPreviewDialog = ({
         throw new Error("URL de la vidéo non disponible");
       }
 
-      // Incrémenter les statistiques pour Instagram
       await ensureAndIncrementStatistic('instagram');
       
       const { error } = await supabase.functions.invoke('instagram-publish', {
         body: {
           message: editedText,
-          images: [videoUrl], // Nous passons l'URL de la vidéo comme image (l'API Instagram traitera la première comme une vidéo si c'est une URL de vidéo)
+          images: [videoUrl],
           listingId: listing.id
         },
       });
@@ -87,7 +84,6 @@ export const SlideshowPreviewDialog = ({
     }
   };
 
-  // Composant pour prévisualiser Facebook
   const FacebookPreview = () => (
     <div className="border rounded-lg p-4 bg-white shadow-sm">
       <div className="flex items-center space-x-2 border-b pb-3">
@@ -122,7 +118,6 @@ export const SlideshowPreviewDialog = ({
     </div>
   );
 
-  // Composant pour prévisualiser Instagram
   const InstagramPreview = () => (
     <div className="border rounded-lg p-4 bg-white shadow-sm">
       <div className="flex items-center space-x-2 border-b pb-3">
@@ -173,87 +168,87 @@ export const SlideshowPreviewDialog = ({
             <TabsTrigger value="instagram">Aperçu Instagram</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="edit" className="h-[calc(85vh-12rem)] overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
-              {/* Slideshow player side */}
-              <div className="h-full flex flex-col">
-                {listing.images && (
-                  <div className="relative bg-black rounded-lg overflow-hidden h-full">
-                    <SlideshowPlayer
-                      images={listing.images}
-                      musicUrl={musicUrl}
-                    />
-                  </div>
-                )}
-              </div>
-              
-              {/* Text editor side */}
-              <div className="h-full flex flex-col border rounded-lg p-4">
-                <h3 className="text-sm font-medium mb-2">Message de la publication</h3>
-                <ScrollArea className="flex-grow">
-                  <div className="pr-4 pb-4">
-                    {isLoading ? (
-                      <div className="flex items-center justify-center h-32">
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                      </div>
-                    ) : (
-                      <Textarea
-                        value={editedText}
-                        onChange={(e) => setEditedText(e.target.value)}
-                        className="min-h-[200px] resize-none w-full"
-                        placeholder="Entrez votre texte ici..."
+          <ScrollArea className="h-[calc(85vh-12rem)]">
+            <TabsContent value="edit" className="h-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                <div className="h-full flex flex-col">
+                  {listing.images && (
+                    <div className="relative bg-black rounded-lg overflow-hidden h-full">
+                      <SlideshowPlayer
+                        images={listing.images}
+                        musicUrl={musicUrl}
                       />
-                    )}
-                    {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
-                  </div>
-                </ScrollArea>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="facebook" className="h-[calc(85vh-12rem)] overflow-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Aperçu Facebook</h3>
-                <div className="p-2">
-                  <FacebookPreview />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="h-full flex flex-col border rounded-lg p-4">
+                  <h3 className="text-sm font-medium mb-2">Message de la publication</h3>
+                  <ScrollArea className="flex-grow">
+                    <div className="pr-4 pb-4">
+                      {isLoading ? (
+                        <div className="flex items-center justify-center h-32">
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        </div>
+                      ) : (
+                        <Textarea
+                          value={editedText}
+                          onChange={(e) => setEditedText(e.target.value)}
+                          className="min-h-[200px] resize-none w-full"
+                          placeholder="Entrez votre texte ici..."
+                        />
+                      )}
+                      {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+                    </div>
+                  </ScrollArea>
                 </div>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Diaporama</h3>
-                {listing.images && (
-                  <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-                    <SlideshowPlayer
-                      images={listing.images}
-                      musicUrl={musicUrl}
-                    />
+            </TabsContent>
+            
+            <TabsContent value="facebook" className="pr-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Aperçu Facebook</h3>
+                  <div className="p-2">
+                    <FacebookPreview />
                   </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="instagram" className="h-[calc(85vh-12rem)] overflow-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Aperçu Instagram</h3>
-                <div className="p-2">
-                  <InstagramPreview />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Diaporama</h3>
+                  {listing.images && (
+                    <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                      <SlideshowPlayer
+                        images={listing.images}
+                        musicUrl={musicUrl}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Diaporama</h3>
-                {listing.images && (
-                  <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-                    <SlideshowPlayer
-                      images={listing.images}
-                      musicUrl={musicUrl}
-                    />
+            </TabsContent>
+            
+            <TabsContent value="instagram" className="pr-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Aperçu Instagram</h3>
+                  <div className="p-2">
+                    <InstagramPreview />
                   </div>
-                )}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Diaporama</h3>
+                  {listing.images && (
+                    <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                      <SlideshowPlayer
+                        images={listing.images}
+                        musicUrl={musicUrl}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
+          </ScrollArea>
         </Tabs>
         
         <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t mt-2">

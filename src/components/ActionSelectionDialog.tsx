@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InstagramPreviewContent } from "./InstagramPreviewContent";
 import { FacebookPreviewContent } from "./FacebookPreviewContent";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type PublicationType = "photo" | "slideshow" | "banner";
 
@@ -1185,11 +1186,13 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           </DialogDescription>
         </DialogHeader>
         
-        <div className="my-4">
-          {renderStepContent()}
-        </div>
+        <ScrollArea className="max-h-[calc(85vh-10rem)]">
+          <div className="my-4 pr-4 pb-4">
+            {renderStepContent()}
+          </div>
+        </ScrollArea>
         
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 border-t pt-4 mt-2">
           <div className="flex-1 flex">
             {currentStep > 1 && (
               <Button
