@@ -35,6 +35,7 @@ type ActionSelectionDialogProps = {
 };
 
 export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelectionDialogProps) => {
+  
   const { profile } = useProfile();
   const { toast: uiToast } = useToast();
   const queryClient = useQueryClient();
@@ -76,6 +77,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [slideshowError, setSlideshowError] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
   
+  
   const { 
     data: slideshowRender, 
     isLoading: isSlideshowStatusLoading,
@@ -83,6 +85,43 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     refetch: refetchSlideshowStatus
   } = useSlideshowStatus(listing.id);
 
+  
+  useEffect(() => {
+    if (slideshowRender && selectedPublicationTypes.includes("slideshow")) {
+      console.log("État actuel du diaporama:", slideshowRender);
+      
+      
+      if ((slideshowRender.status === "completed" || slideshowRender.status === "done") && slideshowRender.video_url) {
+        console.log("Diaporama terminé, mise à jour de l'interface", slideshowRender.video_url);
+        
+        setSlideshowUrl(slideshowRender.video_url);
+        setIsGeneratingSlideshow(false);
+        toast.success("Diaporama généré avec succès");
+      } 
+      
+      else if (slideshowRender.status === "error" || slideshowRender.status === "failed") {
+        console.log("Échec de la génération du diaporama");
+        setIsGeneratingSlideshow(false);
+        setSlideshowError("La génération du diaporama a échoué. Veuillez réessayer.");
+        toast.error("Échec de la génération du diaporama");
+      }
+      
+      else if (slideshowRender.status === "pending" || slideshowRender.status === "processing" || slideshowRender.status === "rendering") {
+        if (slideshowRenderId) {
+          
+          const checkTimer = setTimeout(() => {
+            console.log("Vérification périodique du statut du diaporama...");
+            refetchSlideshowStatus();
+          }, 5000);
+          
+          return () => clearTimeout(checkTimer);
+        }
+      }
+    }
+  }, [slideshowRender, refetchSlideshowStatus, slideshowRenderId, selectedPublicationTypes]);
+
+  
+  
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(1);
@@ -191,6 +230,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   };
 
   const generateText = async () => {
+    
     try {
       setIsGeneratingText(true);
       
@@ -235,7 +275,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       console.log("Images sélectionnées:", selectedImages);
       console.log("Musique sélectionnée:", selectedMusic);
       
-      // Notification de début
+      
       toast.info("Génération du diaporama", {
         description: "Nous préparons votre diaporama...",
         duration: 3000
@@ -265,7 +305,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       if (data.renderId) {
         setSlideshowRenderId(data.renderId);
         
-        // Enregistrer l'utilisation
+        
         await ensureAndIncrementStatistic('slideshow');
         
         toast.success("Diaporama en cours de génération", {
@@ -273,7 +313,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           duration: 5000
         });
         
-        // Déclencher une vérification immédiate de l'état
+        
         setTimeout(() => refetchSlideshowStatus(), 3000);
         
         return data.renderId;
@@ -290,11 +330,12 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       });
       return null;
     } finally {
-      setIsGeneratingSlideshow(false);
+      
     }
   };
   
   const generateBanner = async () => {
+    
     if (!bannerImage) {
       uiToast({
         title: "Erreur",
@@ -359,6 +400,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   };
   
   const handlePublish = async () => {
+    
     try {
       setIsPublishing(true);
       const tasks = [];
@@ -454,16 +496,16 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   
   const canGoToNextStep = () => {
     switch (currentStep) {
-      case 1: // Publication type selection
+      case 1: 
         return selectedPublicationTypes.length > 0;
-      case 2: // Template selection
-        return true; // Templates are optional
-      case 3: // Media selection
+      case 2: 
+        return true; 
+      case 3: 
         return !(
           (selectedPublicationTypes.includes("photo") && selectedImages.length === 0) ||
           (selectedPublicationTypes.includes("banner") && !bannerImage)
         );
-      case 3.5: // Generation step
+      case 3.5: 
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
         const needsBanner = selectedPublicationTypes.includes("banner");
         
@@ -471,7 +513,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         const bannerReady = !needsBanner || bannerUrl;
         
         return slideshowReady && bannerReady;
-      case 4: // Social network selection
+      case 4: 
         return selectedNetworks.facebook || selectedNetworks.instagram;
       default:
         return true;
@@ -532,6 +574,15 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                 <p className="text-xs text-muted-foreground">
                   Votre diaporama est en train d'être généré. Veuillez patienter.
                 </p>
+                
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => refetchSlideshowStatus()}
+                >
+                  Vérifier le statut
+                </Button>
               </div>
             ) : (
               <>
@@ -557,29 +608,48 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-green-500 flex items-center gap-1">
-              <Video className="w-4 h-4" /> Diaporama généré avec succès
-            </span>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSlideshowUrl(null);
-                setSlideshowRenderId(null);
-                setIsGeneratingSlideshow(false);
-              }}
-            >
-              Régénérer
-            </Button>
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-green-500 flex items-center gap-1">
+                <Video className="w-4 h-4" /> Diaporama généré avec succès
+              </span>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSlideshowUrl(null);
+                  setSlideshowRenderId(null);
+                  setIsGeneratingSlideshow(false);
+                }}
+              >
+                Régénérer
+              </Button>
+            </div>
+            
+            
+            <div className="border rounded-md p-2 bg-muted/20">
+              <div className="flex justify-center">
+                <Button 
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => window.open(slideshowUrl, '_blank')}
+                  className="flex items-center gap-2"
+                >
+                  <Play className="h-4 w-4" />
+                  Prévisualiser le diaporama
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
     );
   };
 
+  
+  
   const renderStepContent = () => {
     switch (currentStep) {
-      case 1: // Publication type selection
+      case 1: 
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-medium">Étape 1: Choisir le type de publication</h3>
@@ -653,7 +723,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           </div>
         );
       
-      case 2: // Template selection and text generation
+      case 2: 
+        
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-medium">Étape 2: Choisir un template et générer le texte</h3>
@@ -728,7 +799,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           </div>
         );
       
-      case 3: // Media selection
+      case 3: 
+        
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
@@ -852,291 +924,4 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             
             {selectedPublicationTypes.includes("banner") && (
               <div className="space-y-4 border rounded-md p-4">
-                <h4 className="font-medium">Configuration de la bannière</h4>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="banner-type">Type de bannière</Label>
-                  <Select 
-                    value={bannerType} 
-                    onValueChange={(value: "VENDU" | "À VENDRE") => setBannerType(value)}
-                  >
-                    <SelectTrigger id="banner-type" className="mt-1">
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="VENDU">VENDU</SelectItem>
-                      <SelectItem value="À VENDRE">À VENDRE</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Sélectionner une image pour la bannière</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {listing.images?.map(imageUrl => (
-                      <div 
-                        key={imageUrl} 
-                        className={`relative cursor-pointer ${bannerImage === imageUrl ? 'ring-2 ring-primary' : ''}`}
-                        onClick={() => selectBannerImage(imageUrl)}
-                      >
-                        <img src={imageUrl} alt="Property" className="w-full h-24 object-cover rounded" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-        
-      case 3.5: // Generation step
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">Étape 3.5: Génération des médias</h3>
-            
-            {selectedPublicationTypes.includes("slideshow") && renderSlideshowGenerationStep()}
-            
-            {selectedPublicationTypes.includes("banner") && (
-              <div className="space-y-4 border rounded-md p-4">
-                <h4 className="font-medium">Génération de la bannière</h4>
-                
-                {!bannerUrl ? (
-                  <div className="flex flex-col items-center justify-center py-4">
-                    <Button 
-                      onClick={generateBanner} 
-                      disabled={isGeneratingBanner || !bannerImage}
-                      className="w-full"
-                    >
-                      {isGeneratingBanner ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Génération en cours...
-                        </>
-                      ) : "Générer la bannière"}
-                    </Button>
-                    
-                    {bannerError && (
-                      <div className="text-sm text-red-500 mt-2">
-                        {bannerError}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <img src={bannerUrl} alt="Generated Banner" className="h-16 rounded" />
-                      <span className="text-green-500">Bannière générée avec succès</span>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setBannerUrl(null);
-                        setIsGeneratingBanner(false);
-                      }}
-                    >
-                      Régénérer
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      
-      case 4: // Social media selection
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">Étape 4: Sélectionner les réseaux sociaux</h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
-                <div className="flex items-start space-x-3">
-                  <Checkbox 
-                    id="network-facebook" 
-                    checked={selectedNetworks.facebook}
-                    onCheckedChange={(checked) => setSelectedNetworks(prev => ({ ...prev, facebook: !!checked }))}
-                  />
-                  <div className="space-y-2">
-                    <Label 
-                      htmlFor="network-facebook" 
-                      className="flex items-center cursor-pointer"
-                    >
-                      <Facebook className="w-4 h-4 mr-2" />
-                      Facebook
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Publier sur votre page Facebook professionnelle.
-                    </p>
-                    
-                    {!profile?.facebook_page_id && (
-                      <p className="text-sm text-amber-500">
-                        Vous devez connecter votre page Facebook dans votre profil.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
-                <div className="flex items-start space-x-3">
-                  <Checkbox 
-                    id="network-instagram" 
-                    checked={selectedNetworks.instagram}
-                    onCheckedChange={(checked) => setSelectedNetworks(prev => ({ ...prev, instagram: !!checked }))}
-                  />
-                  <div className="space-y-2">
-                    <Label 
-                      htmlFor="network-instagram" 
-                      className="flex items-center cursor-pointer"
-                    >
-                      <Instagram className="w-4 h-4 mr-2" />
-                      Instagram
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Publier sur votre compte Instagram professionnel.
-                    </p>
-                    
-                    {!profile?.instagram_user_id && (
-                      <p className="text-sm text-amber-500">
-                        Vous devez connecter votre compte Instagram dans votre profil.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-        
-      case 5: // Review and publish
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">Étape 5: Confirmation et publication</h3>
-            
-            <div className="border rounded-md p-4">
-              <div className="space-y-4">
-                <h4 className="font-medium">Récapitulatif de votre publication</h4>
-                
-                <div className="space-y-2">
-                  <p><strong>Type de publication:</strong></p>
-                  <ul className="list-disc pl-5">
-                    {selectedPublicationTypes.includes("photo") && <li>Texte avec photos</li>}
-                    {selectedPublicationTypes.includes("slideshow") && <li>Texte avec diaporama</li>}
-                    {selectedPublicationTypes.includes("banner") && <li>Texte avec bannière</li>}
-                  </ul>
-                </div>
-                
-                <div className="space-y-2">
-                  <p><strong>Texte de la publication:</strong></p>
-                  <div className="border rounded p-2 bg-muted/50 text-sm">
-                    {generatedText ? (
-                      <p className="whitespace-pre-wrap">{generatedText.slice(0, 200)}...</p>
-                    ) : (
-                      <p className="text-muted-foreground italic">Aucun texte généré</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <p><strong>Réseaux sociaux sélectionnés:</strong></p>
-                  <ul className="list-disc pl-5">
-                    {selectedNetworks.facebook && <li>Facebook</li>}
-                    {selectedNetworks.instagram && <li>Instagram</li>}
-                    {!selectedNetworks.facebook && !selectedNetworks.instagram && (
-                      <li className="text-muted-foreground italic">Aucun réseau sélectionné</li>
-                    )}
-                  </ul>
-                </div>
-                
-                {!selectedNetworks.facebook && !selectedNetworks.instagram && (
-                  <p className="text-amber-500 text-sm">
-                    Vous devez sélectionner au moins un réseau social pour publier.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Création d'une nouvelle publication</DialogTitle>
-          <DialogDescription>
-            Créez une publication personnalisée pour vos réseaux sociaux en quelques étapes.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="w-full bg-muted h-2 rounded-full mb-6">
-          <div 
-            className="bg-primary h-2 rounded-full transition-all duration-300"
-            style={{ 
-              width: `${(currentStep / 5) * 100}%`
-            }}
-          />
-        </div>
-
-        <div className="py-4">
-          {renderStepContent()}
-        </div>
-
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
-          <div className="flex gap-2 mt-2 sm:mt-0">
-            {currentStep > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevStep}
-                className="flex items-center"
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Précédent
-              </Button>
-            )}
-            
-            {currentStep < 5 ? (
-              <Button
-                type="button"
-                onClick={nextStep}
-                disabled={!canGoToNextStep()}
-                className="flex items-center"
-              >
-                Suivant
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handlePublish}
-                disabled={isPublishing || !canGoToNextStep()}
-                className="flex items-center"
-              >
-                {isPublishing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Publication en cours...
-                  </>
-                ) : "Publier"}
-              </Button>
-            )}
-          </div>
-          
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            disabled={isPublishing}
-          >
-            Annuler
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+                <h4 className="font-medium">Configuration de la
