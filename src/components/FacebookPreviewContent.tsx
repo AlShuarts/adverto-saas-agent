@@ -116,13 +116,17 @@ export const FacebookPreviewContent = ({
   };
 
   const renderMediaContent = () => {
-    if (showSlideshow && selectedImages.length > 0) {
+    if (showSlideshow && slideshowUrl) {
       return (
         <div className="relative">
           <div className="aspect-video bg-black rounded-md overflow-hidden">
-            <SlideshowPlayer 
-              images={selectedImages} 
-              musicUrl={musicUrl || null} 
+            <video 
+              src={slideshowUrl} 
+              className="w-full h-full object-cover"
+              controls
+              autoPlay
+              muted
+              loop
             />
           </div>
         </div>

@@ -44,12 +44,16 @@ export const InstagramPreviewContent = ({
   };
 
   const renderMediaContent = () => {
-    if (showSlideshow && selectedImages.length > 0) {
+    if (showSlideshow && slideshowUrl) {
       return (
         <div className="aspect-square bg-black rounded-lg overflow-hidden mb-3">
-          <SlideshowPlayer 
-            images={selectedImages}
-            musicUrl={musicUrl || null}
+          <video 
+            src={slideshowUrl} 
+            className="w-full h-full object-cover"
+            controls
+            autoPlay
+            muted
+            loop
           />
         </div>
       );
