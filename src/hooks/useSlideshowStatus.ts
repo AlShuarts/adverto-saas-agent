@@ -54,6 +54,16 @@ export const useSlideshowStatus = (listingId: string) => {
               // Si une URL vidéo est disponible, mettons-la à jour
               if ((response.data.videoUrl || response.data.url) && !render.video_url) {
                 render.video_url = response.data.videoUrl || response.data.url;
+                
+                // Mettre à jour l'entrée dans la base de données
+                await supabase
+                  .from("slideshow_renders")
+                  .update({ 
+                    video_url: render.video_url,
+                    status: render.status,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq("id", render.id);
               }
             }
           } catch (checkError) {
@@ -71,9 +81,10 @@ export const useSlideshowStatus = (listingId: string) => {
       const data = state.data as SlideshowRender | undefined;
       // Continuer à vérifier si le statut est pending ou processing
       if (!data || (data.status !== "completed" && data.status !== "done" && data.status !== "error")) {
-        return 10000; // Vérification toutes les 10 secondes
+        return 5000; // Vérification toutes les 5 secondes
       }
       return false;
     },
+    enabled: !!listingId,
   });
 };

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Facebook, Instagram } from "lucide-react";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type SlideshowPreviewDialogProps = {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export const SlideshowPreviewDialog = ({
       const videoUrl = slideshowData?.video_url;
 
       if (!videoUrl) {
+        toast.error("URL de la vidéo non disponible");
         throw new Error("URL de la vidéo non disponible");
       }
 
@@ -68,12 +70,15 @@ export const SlideshowPreviewDialog = ({
       });
       
       if (error) {
+        toast.error("Erreur lors de la publication sur Instagram");
         throw error;
       }
       
+      toast.success("Publication sur Instagram réussie");
       onClose();
     } catch (error) {
       console.error("Erreur lors de la publication sur Instagram:", error);
+      toast.error("Erreur lors de la publication sur Instagram");
     } finally {
       setIsPublishingToInstagram(false);
     }

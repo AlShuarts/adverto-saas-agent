@@ -4,7 +4,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Loader2, Facebook, Instagram, Video, Tag, FileText, Image, FileImage } from "lucide-react";
+import { Loader2, Facebook, Instagram, Video, Tag, FileText, FileImage } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
@@ -14,6 +14,8 @@ import { MoveVertical, Play, Pause, ChevronLeft, ChevronRight } from "lucide-rea
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { useQueryClient } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
+import { useSlideshowStatus } from "@/hooks/useSlideshowStatus";
+import { toast } from "sonner";
 
 type PublicationType = "photo" | "slideshow" | "banner";
 
@@ -70,6 +72,17 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   
   const [isPublishing, setIsPublishing] = useState(false);
   
+  const [slideshowRenderId, setSlideshowRenderId] = useState<string | null>(null);
+  const [slideshowError, setSlideshowError] = useState<string | null>(null);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  
+  const { 
+    data: slideshowRender, 
+    isLoading: isSlideshowStatusLoading,
+    error: slideshowStatusError,
+    refetch: refetchSlideshowStatus
+  } = useSlideshowStatus(listing.id);
+
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(1);
@@ -216,6 +229,11 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const generateSlideshow = async () => {
     try {
       setIsGeneratingSlideshow(true);
+      setSlideshowError(null);
+      
+      console.log("Génération du diaporama pour le listing:", listing.id);
+      console.log("Images sélectionnées:", selectedImages);
+      console.log("Musique sélectionnée:", selectedMusic);
       
       const { data, error } = await supabase.functions.invoke("create-slideshow", {
         body: {
@@ -231,43 +249,37 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur lors de l'appel à create-slideshow:", error);
+        throw error;
+      }
       
-      await ensureAndIncrementStatistic('slideshow');
+      console.log("Réponse de create-slideshow:", data);
       
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      let isComplete = false;
-      while (!isComplete) {
-        const { data: statusData } = await supabase
-          .from("slideshow_renders")
-          .select("video_url, status")
-          .eq("listing_id", listing.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+      if (data.renderId) {
+        setSlideshowRenderId(data.renderId);
         
-        if (statusData && statusData.status === "completed" && statusData.video_url) {
-          setSlideshowUrl(statusData.video_url);
-          isComplete = true;
-          toast({
-            title: "Diaporama créé",
-            description: "Le diaporama a été généré avec succès.",
-          });
-        } else if (statusData && statusData.status === "failed") {
-          throw new Error("La création du diaporama a échoué");
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        }
+        // Enregistrer l'utilisation
+        await ensureAndIncrementStatistic('slideshow');
+        
+        toast.info("Diaporama en cours de génération", {
+          description: "Ce processus peut prendre quelques minutes",
+          duration: 5000
+        });
+        
+        // Déclencher une vérification immédiate de l'état
+        setTimeout(() => refetchSlideshowStatus(), 3000);
+        
+        return data.renderId;
+      } else {
+        throw new Error("Aucun ID de rendu n'a été retourné");
       }
       
     } catch (error) {
-      console.error("Erreur lors de la création du diaporama:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la création du diaporama.",
-        variant: "destructive"
-      });
+      console.error("Erreur lors de la génération du diaporama:", error);
+      setSlideshowError("Une erreur est survenue lors de la génération du diaporama: " + (error.message || "erreur inconnue"));
+      toast.error("Erreur lors de la génération du diaporama");
+      return null;
     } finally {
       setIsGeneratingSlideshow(false);
     }
@@ -446,7 +458,10 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
         const needsBanner = selectedPublicationTypes.includes("banner");
         
-        return (!needsSlideshow || slideshowUrl) && (!needsBanner || bannerUrl);
+        const slideshowReady = !needsSlideshow || slideshowUrl;
+        const bannerReady = !needsBanner || bannerUrl;
+        
+        return slideshowReady && bannerReady;
       case 4: // Social network selection
         return selectedNetworks.facebook || selectedNetworks.instagram;
       default:
@@ -480,6 +495,77 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     } else {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const renderSlideshowGenerationStep = () => {
+    return (
+      <div className="space-y-4 border rounded-md p-4">
+        <h4 className="font-medium">Génération du diaporama</h4>
+        
+        {!slideshowUrl ? (
+          <div className="flex flex-col items-center justify-center py-4">
+            {isGeneratingSlideshow ? (
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Génération du diaporama en cours...
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Ce processus peut prendre plusieurs minutes.
+                </p>
+              </div>
+            ) : slideshowRenderId && !slideshowError ? (
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Traitement en cours...
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Votre diaporama est en train d'être généré. Veuillez patienter.
+                </p>
+              </div>
+            ) : (
+              <>
+                <Button 
+                  onClick={generateSlideshow} 
+                  disabled={isGeneratingSlideshow || selectedImages.length === 0}
+                  className="w-full"
+                >
+                  {isGeneratingSlideshow ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Génération en cours...
+                    </>
+                  ) : "Générer le diaporama"}
+                </Button>
+                
+                {slideshowError && (
+                  <div className="text-sm text-red-500 mt-2">
+                    {slideshowError}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <span className="text-green-500 flex items-center gap-1">
+              <Video className="w-4 h-4" /> Diaporama généré avec succès
+            </span>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSlideshowUrl(null);
+                setSlideshowRenderId(null);
+                setIsGeneratingSlideshow(false);
+              }}
+            >
+              Régénérer
+            </Button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderStepContent = () => {
@@ -799,49 +885,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           <div className="space-y-6">
             <h3 className="text-lg font-medium">Étape 3.5: Génération des médias</h3>
             
-            {selectedPublicationTypes.includes("slideshow") && (
-              <div className="space-y-4 border rounded-md p-4">
-                <h4 className="font-medium">Génération du diaporama</h4>
-                
-                {!slideshowUrl ? (
-                  <div className="flex flex-col items-center justify-center py-4">
-                    <Button 
-                      onClick={generateSlideshow} 
-                      disabled={isGeneratingSlideshow || selectedImages.length === 0}
-                      className="w-full"
-                    >
-                      {isGeneratingSlideshow ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Génération en cours...
-                        </>
-                      ) : "Générer le diaporama"}
-                    </Button>
-                    
-                    {isGeneratingSlideshow && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        La génération peut prendre plusieurs minutes...
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <span className="text-green-500 flex items-center gap-1">
-                      <Loader2 className="w-4 h-4" /> Diaporama généré avec succès
-                    </span>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setSlideshowUrl(null);
-                        setIsGeneratingSlideshow(false);
-                      }}
-                    >
-                      Régénérer
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
+            {selectedPublicationTypes.includes("slideshow") && renderSlideshowGenerationStep()}
             
             {selectedPublicationTypes.includes("banner") && (
               <div className="space-y-4 border rounded-md p-4">
@@ -862,10 +906,10 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                       ) : "Générer la bannière"}
                     </Button>
                     
-                    {isGeneratingBanner && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        La génération peut prendre quelques minutes...
-                      </p>
+                    {bannerError && (
+                      <div className="text-sm text-red-500 mt-2">
+                        {bannerError}
+                      </div>
                     )}
                   </div>
                 ) : (
