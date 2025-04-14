@@ -71,11 +71,12 @@ serve(async (req) => {
         console.log("✅ URL de la vidéo (si disponible):", url);
         
         // Normaliser le statut pour notre base de données
+        let normalizedStatus = status;
         if (status === "done") {
-          status = "completed";
+          normalizedStatus = "completed";
         }
         
-        console.log("✅ Statut normalisé du rendu:", status);
+        console.log("✅ Statut normalisé du rendu:", normalizedStatus);
 
         // Si le statut est "done"/"completed" ou "failed"/"error", mettre à jour la base de données
         if (status === "completed" || status === "done" || status === "failed" || status === "error") {
@@ -95,7 +96,7 @@ serve(async (req) => {
               
               // Préparer les données à mettre à jour
               const updateData: any = {
-                status: status === "completed" || status === "done" ? "completed" : "error"
+                status: normalizedStatus
               };
               
               if ((status === "completed" || status === "done") && url) {
@@ -126,14 +127,9 @@ serve(async (req) => {
           }
         }
 
-        // Normaliser le statut pour la réponse de l'API
-        if (status === "done") {
-          status = "completed";
-        }
-
         return new Response(
           JSON.stringify({
-            status,
+            status: normalizedStatus,
             url,
             error,
             videoUrl: url,
