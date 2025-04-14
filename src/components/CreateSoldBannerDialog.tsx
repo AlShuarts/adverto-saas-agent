@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -28,7 +29,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const [brokerName, setBrokerName] = useState(
     profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : ""
   );
-  const [brokerEmail, setBrokerEmail] = useState(supabase.auth.getUser().then(res => res.data.user?.email || "").catch(() => ""));
+  const [brokerEmail, setBrokerEmail] = useState("");
   const [brokerPhone, setBrokerPhone] = useState(profile?.phone || "");
   const [brokerImage, setBrokerImage] = useState<string | null>(null);
   const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
 
   // Set broker email from auth when component mounts
-  useState(() => {
+  useEffect(() => {
     const fetchEmail = async () => {
       try {
         const { data } = await supabase.auth.getUser();
@@ -50,7 +51,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
     };
     
     fetchEmail();
-  });
+  }, []);
 
   const handleFileUpload = async (file: File, type: "broker" | "agency") => {
     try {
