@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -38,51 +37,41 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Step tracking
   const [currentStep, setCurrentStep] = useState(1);
   
-  // Step 1: Publication type selection
   const [selectedPublicationTypes, setSelectedPublicationTypes] = useState<PublicationType[]>([]);
   
-  // Step 2: Templates
-  const [facebookTemplates, setFacebookTemplates] = useState<{ id: string; name: string }[]>([]);
+  const [facebookTemplates, setFacebookTemplates] = useState<{ id: string; name: string; content?: string }[]>([]);
   const [selectedFacebookTemplateId, setSelectedFacebookTemplateId] = useState<string>("none");
   const [instagramTemplates, setInstagramTemplates] = useState<{ id: string; name: string }[]>([]);
   const [selectedInstagramTemplateId, setSelectedInstagramTemplateId] = useState<string>("none");
   
-  // Generated text
   const [generatedText, setGeneratedText] = useState<string>("");
   const [isGeneratingText, setIsGeneratingText] = useState(false);
   
-  // Step 3: Media selection
   const [selectedImages, setSelectedImages] = useState<string[]>(listing.images || []);
   const [musicList, setMusicList] = useState<string[]>([]);
   const [audioPlaying, setAudioPlaying] = useState<HTMLAudioElement | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
   
-  // Banner options
   const [bannerType, setBannerType] = useState<"VENDU" | "À VENDRE">("VENDU");
   const [bannerImage, setBannerImage] = useState<string | null>(listing.images?.[0] || null);
   
-  // Step 3.5: Generation status
   const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
   const [slideshowUrl, setSlideshowUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   
-  // Step 4: Social media selection
   const [selectedNetworks, setSelectedNetworks] = useState({
     facebook: false,
     instagram: false
   });
   
-  // Step 5: Publishing
   const [isPublishing, setIsPublishing] = useState(false);
   
   useEffect(() => {
     if (isOpen) {
-      // Reset state when dialog opens
       setCurrentStep(1);
       setSelectedPublicationTypes([]);
       setSelectedFacebookTemplateId("none");
@@ -97,7 +86,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       const fetchTemplates = async () => {
         const { data: fbTemplates, error: fbError } = await supabase
           .from('facebook_templates')
-          .select('id, name');
+          .select('id, name, content');
         
         if (!fbError && fbTemplates) {
           setFacebookTemplates(fbTemplates);
@@ -192,12 +181,13 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     try {
       setIsGeneratingText(true);
       
-      // Pass the entire listing object directly
       const { data, error } = await supabase.functions.invoke("generate-listing-description", {
         body: { 
           listing: listing,
           templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId,
-          templateContent: facebookTemplates.find(t => t.id === selectedFacebookTemplateId)?.content
+          templateContent: selectedFacebookTemplateId !== "none" ? 
+            facebookTemplates.find(t => t.id === selectedFacebookTemplateId)?.content : 
+            undefined
         }
       });
       
@@ -245,10 +235,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
       await ensureAndIncrementStatistic('slideshow');
       
-      // Attendre quelques secondes pour que le traitement commence
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Vérifier le statut jusqu'à ce que le traitement soit terminé
       let isComplete = false;
       while (!isComplete) {
         const { data: statusData } = await supabase
@@ -269,7 +257,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         } else if (statusData && statusData.status === "failed") {
           throw new Error("La création du diaporama a échoué");
         } else {
-          // Attendre 5 secondes avant de vérifier à nouveau
           await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
@@ -311,10 +298,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
       if (error) throw error;
       
-      // Attendre quelques secondes pour que le traitement commence
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Vérifier le statut jusqu'à ce que le traitement soit terminé
       let isComplete = false;
       while (!isComplete) {
         const { data: statusData } = await supabase
@@ -336,7 +321,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         } else if (statusData && statusData.status === "failed") {
           throw new Error("La création de la bannière a échoué");
         } else {
-          // Attendre 5 secondes avant de vérifier à nouveau
           await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
@@ -367,7 +351,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         return;
       }
       
-      // Publication Facebook
       if (selectedNetworks.facebook && profile?.facebook_page_id && profile?.facebook_access_token) {
         let imageToUse = null;
         
@@ -399,7 +382,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         }
       }
       
-      // Publication Instagram
       if (selectedNetworks.instagram && profile?.instagram_user_id && profile?.instagram_access_token) {
         let imagesToUse = [];
         
@@ -464,7 +446,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
         const needsBanner = selectedPublicationTypes.includes("banner");
         
-        // Can proceed if slideshow URL exists when needed or banner URL exists when needed
         return (!needsSlideshow || slideshowUrl) && (!needsBanner || bannerUrl);
       case 4: // Social network selection
         return selectedNetworks.facebook || selectedNetworks.instagram;
@@ -474,17 +455,16 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   };
   
   const nextStep = () => {
-    // Special case for step 3 to 3.5
     if (currentStep === 3) {
       const needsGeneration = selectedPublicationTypes.includes("slideshow") || selectedPublicationTypes.includes("banner");
       
       if (needsGeneration) {
-        setCurrentStep(3.5); // Go to generation step
+        setCurrentStep(3.5);
       } else {
-        setCurrentStep(4); // Skip generation step
+        setCurrentStep(4);
       }
     } else if (currentStep === 3.5) {
-      setCurrentStep(4); // From generation to social network selection
+      setCurrentStep(4);
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -492,11 +472,11 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   
   const prevStep = () => {
     if (currentStep === 3.5) {
-      setCurrentStep(3); // From generation back to media selection
+      setCurrentStep(3);
     } else if (currentStep === 4 && 
               (selectedPublicationTypes.includes("slideshow") || 
                selectedPublicationTypes.includes("banner"))) {
-      setCurrentStep(3.5); // From social back to generation if it was used
+      setCurrentStep(3.5);
     } else {
       setCurrentStep(currentStep - 1);
     }
@@ -1040,7 +1020,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress Indicator */}
         <div className="w-full bg-muted h-2 rounded-full mb-6">
           <div 
             className="bg-primary h-2 rounded-full transition-all duration-300"
@@ -1050,12 +1029,10 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           />
         </div>
 
-        {/* Step Content */}
         <div className="py-4">
           {renderStepContent()}
         </div>
 
-        {/* Navigation Buttons */}
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
           <div className="flex gap-2 mt-2 sm:mt-0">
             {currentStep > 1 && (
