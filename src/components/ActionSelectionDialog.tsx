@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -1115,13 +1114,17 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                   {selectedNetworks.facebook ? (
                     <div className="border rounded-md p-4">
                       <FacebookPreviewContent 
-                        text={generatedText}
+                        isLoading={false}
+                        error={null}
+                        generatedText={generatedText}
                         images={
                           selectedPublicationTypes.includes("banner") && bannerUrl 
                             ? [bannerUrl] 
                             : selectedImages.slice(0, 1)
                         }
-                        listing={listing}
+                        onTextChange={(text) => setGeneratedText(text)}
+                        selectedImages={selectedImages}
+                        onSelectedImagesChange={setSelectedImages}
                       />
                     </div>
                   ) : (
@@ -1138,7 +1141,9 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                   {selectedNetworks.instagram ? (
                     <div className="border rounded-md p-4">
                       <InstagramPreviewContent 
-                        text={generatedText}
+                        isLoading={false}
+                        error={null}
+                        generatedText={generatedText}
                         images={
                           selectedPublicationTypes.includes("slideshow") && slideshowUrl
                             ? [slideshowUrl]
@@ -1146,7 +1151,9 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                               ? [bannerUrl]
                               : selectedImages.slice(0, 10)
                         }
-                        listing={listing}
+                        onTextChange={(text) => setGeneratedText(text)}
+                        selectedImages={selectedImages}
+                        onSelectedImagesChange={setSelectedImages}
                       />
                     </div>
                   ) : (
