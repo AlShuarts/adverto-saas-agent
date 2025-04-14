@@ -5,6 +5,28 @@ import { Tables } from "@/integrations/supabase/types";
 
 type SlideshowRender = Tables<"slideshow_renders">;
 
+// Fonction d'aide pour mapper les statuts de l'API Shotstack vers nos statuts internes
+const mapShotstackStatus = (status: string) => {
+  // Mapping des statuts Shotstack vers nos statuts internes
+  switch (status) {
+    case "done":
+    case "complete":
+    case "completed":
+      return "completed";
+    case "failed":
+    case "error":
+      return "error";
+    case "rendering":
+    case "processing":
+      return "processing";
+    case "queued":
+    case "pending":
+      return "pending";
+    default:
+      return status;
+  }
+};
+
 export const useSlideshowStatus = (listingId: string) => {
   return useQuery<SlideshowRender | null>({
     queryKey: ["slideshow-status", listingId],
@@ -33,7 +55,7 @@ export const useSlideshowStatus = (listingId: string) => {
         console.log("Retrieved render status:", render);
 
         // Si le rendu est en attente ou en cours de traitement, vérifier avec l'API Shotstack
-        if (render && (render.status === 'pending' || render.status === 'processing')) {
+        if (render && (render.status === 'pending' || render.status === 'processing' || render.status === 'rendering')) {
           try {
             console.log("Checking render status for ID:", render.render_id);
             
@@ -58,7 +80,8 @@ export const useSlideshowStatus = (listingId: string) => {
               
               // Si le statut a changé, mettre à jour le rendu local immédiatement
               if (response.data.status) {
-                const newStatus = response.data.status === "done" ? "completed" : response.data.status;
+                // Map le statut de Shotstack à nos statuts internes
+                const newStatus = mapShotstackStatus(response.data.status);
                 
                 // Si l'état a changé, mettre à jour dans la base de données
                 if (newStatus !== render.status || 
@@ -97,7 +120,7 @@ export const useSlideshowStatus = (listingId: string) => {
               
               // Mettre à jour le statut localement
               if (response.data.status) {
-                render.status = response.data.status === "done" ? "completed" : response.data.status;
+                render.status = mapShotstackStatus(response.data.status);
               }
             }
           } catch (checkError) {
@@ -113,7 +136,7 @@ export const useSlideshowStatus = (listingId: string) => {
     },
     refetchInterval: (query) => {
       const data = query.state.data as SlideshowRender | undefined;
-      // Continuer à vérifier si le statut est pending ou processing
+      // Continuer à vérifier si le statut est pending ou processing ou rendering
       if (!data || (data.status !== "completed" && data.status !== "done" && data.status !== "error")) {
         return 5000; // Vérifier toutes les 5 secondes
       }

@@ -63,15 +63,22 @@ serve(async (req) => {
         }
 
         // Extraire les informations pertinentes
-        const status = responseData?.response?.status;
+        let status = responseData?.response?.status;
         const url = responseData?.response?.url;
         const error = responseData?.response?.error;
 
-        console.log("✅ Statut du rendu:", status);
+        console.log("✅ Statut original du rendu:", status);
         console.log("✅ URL de la vidéo (si disponible):", url);
+        
+        // Normaliser le statut pour notre base de données
+        if (status === "done") {
+          status = "completed";
+        }
+        
+        console.log("✅ Statut normalisé du rendu:", status);
 
-        // Si le statut est "done" ou "failed", mettre à jour la base de données
-        if (status === "done" || status === "failed") {
+        // Si le statut est "done"/"completed" ou "failed"/"error", mettre à jour la base de données
+        if (status === "completed" || status === "done" || status === "failed" || status === "error") {
           console.log("🔄 Le rendu est terminé, mise à jour de la base de données...");
           
           try {
@@ -88,24 +95,28 @@ serve(async (req) => {
               
               // Préparer les données à mettre à jour
               const updateData: any = {
-                status: status === "done" ? "completed" : "error"
+                status: status === "completed" || status === "done" ? "completed" : "error"
               };
               
-              if (status === "done" && url) {
+              if ((status === "completed" || status === "done") && url) {
                 updateData.video_url = url;
                 console.log("🎬 Mise à jour de l'URL de la vidéo:", url);
               }
               
+              console.log("🔄 Données de mise à jour:", updateData);
+              
               // Mettre à jour le rendu dans la base de données
-              const { error: updateError } = await supabase
+              const { data: updatedRender, error: updateError } = await supabase
                 .from("slideshow_renders")
                 .update(updateData)
-                .eq("render_id", renderId);
+                .eq("render_id", renderId)
+                .select('*')
+                .single();
                 
               if (updateError) {
                 console.error("❌ Erreur lors de la mise à jour du statut du rendu:", updateError);
               } else {
-                console.log("✅ Statut du rendu mis à jour avec succès dans la base de données");
+                console.log("✅ Statut du rendu mis à jour avec succès dans la base de données:", updatedRender);
               }
             } else {
               console.warn("⚠️ Aucun rendu trouvé avec cet ID dans la base de données");
@@ -113,6 +124,11 @@ serve(async (req) => {
           } catch (dbError) {
             console.error("❌ Erreur lors de l'interaction avec la base de données:", dbError);
           }
+        }
+
+        // Normaliser le statut pour la réponse de l'API
+        if (status === "done") {
+          status = "completed";
         }
 
         return new Response(
