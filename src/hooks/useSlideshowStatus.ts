@@ -43,12 +43,29 @@ export const useSlideshowStatus = (listingId: string) => {
             
             while (attempts < maxAttempts) {
               try {
+                if (!render.render_id) {
+                  console.error("Missing render_id for Shotstack status check");
+                  break;
+                }
+                
                 const response = await supabase.functions.invoke('check-render-status', {
                   body: { renderId: render.render_id }
                 });
                 
-                if (!response.error) {
-                  console.log('Render status check response:', response.data);
+                console.log('Full check-render-status response:', response);
+                
+                if (response.error) {
+                  console.error('Error from check-render-status:', response.error);
+                  attempts++;
+                  
+                  if (attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between attempts
+                  }
+                  continue;
+                }
+                
+                if (response.data) {
+                  console.log('Render status check response data:', response.data);
                   
                   // Si le statut a changé, mettre à jour le rendu local
                   if (response.data.status) {
@@ -64,7 +81,7 @@ export const useSlideshowStatus = (listingId: string) => {
                   // Exit the retry loop on success
                   break;
                 } else {
-                  console.error('Error checking render status:', response.error);
+                  console.log('No data returned from check-render-status');
                   attempts++;
                   
                   // Only wait if we're going to retry

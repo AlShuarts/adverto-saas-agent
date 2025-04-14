@@ -235,6 +235,12 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       console.log("Images sélectionnées:", selectedImages);
       console.log("Musique sélectionnée:", selectedMusic);
       
+      // Notification de début
+      toast.info("Génération du diaporama", {
+        description: "Nous préparons votre diaporama...",
+        duration: 3000
+      });
+      
       const { data, error } = await supabase.functions.invoke("create-slideshow", {
         body: {
           listingId: listing.id,
@@ -278,7 +284,10 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     } catch (error) {
       console.error("Erreur lors de la génération du diaporama:", error);
       setSlideshowError("Une erreur est survenue lors de la génération du diaporama: " + (error.message || "erreur inconnue"));
-      toast.error("Erreur lors de la génération du diaporama");
+      toast.error("Erreur lors de la génération du diaporama", {
+        description: error.message || "Une erreur inattendue est survenue",
+        duration: 5000
+      });
       return null;
     } finally {
       setIsGeneratingSlideshow(false);
