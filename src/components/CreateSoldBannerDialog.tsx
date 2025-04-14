@@ -350,7 +350,11 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  onChange={handleBrokerImageChange}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileUpload(e.target.files[0], "broker");
+                    }
+                  }}
                 />
               </div>
               {brokerImage && (
@@ -384,7 +388,11 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  onChange={handleAgencyLogoChange}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileUpload(e.target.files[0], "agency");
+                    }
+                  }}
                 />
               </div>
               {agencyLogo && (
