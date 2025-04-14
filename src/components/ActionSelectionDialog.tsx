@@ -1102,25 +1102,25 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
               </div>
             </div>
             
-            <div className="space-y-4">
-              <h4 className="font-medium">Aperçu des publications</h4>
-              
-              <Tabs defaultValue="facebook" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="facebook" disabled={!selectedNetworks.facebook}>
-                    <Facebook className="w-4 h-4 mr-2" />
-                    Facebook
-                  </TabsTrigger>
-                  <TabsTrigger value="instagram" disabled={!selectedNetworks.instagram}>
-                    <Instagram className="w-4 h-4 mr-2" />
-                    Instagram
-                  </TabsTrigger>
-                </TabsList>
+            <ScrollArea className="h-[400px]">
+              <div className="space-y-4 pr-4">
+                <h4 className="font-medium">Aperçu des publications</h4>
                 
-                <TabsContent value="facebook">
-                  {selectedNetworks.facebook ? (
-                    <div className="border rounded-md p-4">
-                      <ScrollArea className="max-h-[400px]">
+                <Tabs defaultValue="facebook" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="facebook" disabled={!selectedNetworks.facebook}>
+                      <Facebook className="w-4 h-4 mr-2" />
+                      Facebook
+                    </TabsTrigger>
+                    <TabsTrigger value="instagram" disabled={!selectedNetworks.instagram}>
+                      <Instagram className="w-4 h-4 mr-2" />
+                      Instagram
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="facebook">
+                    {selectedNetworks.facebook ? (
+                      <div className="border rounded-md p-4">
                         <FacebookPreviewContent 
                           isLoading={false}
                           error={null}
@@ -1134,22 +1134,20 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                           selectedImages={selectedImages}
                           onSelectedImagesChange={setSelectedImages}
                         />
-                      </ScrollArea>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
-                      <Facebook className="w-8 h-8 mb-2 text-muted-foreground" />
-                      <p className="text-muted-foreground">
-                        Sélectionnez Facebook pour voir l'aperçu.
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="instagram">
-                  {selectedNetworks.instagram ? (
-                    <div className="border rounded-md p-4">
-                      <ScrollArea className="max-h-[400px]">
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
+                        <Facebook className="w-8 h-8 mb-2 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                          Sélectionnez Facebook pour voir l'aperçu.
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="instagram">
+                    {selectedNetworks.instagram ? (
+                      <div className="border rounded-md p-4">
                         <InstagramPreviewContent 
                           isLoading={false}
                           error={null}
@@ -1165,19 +1163,19 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                           selectedImages={selectedImages}
                           onSelectedImagesChange={setSelectedImages}
                         />
-                      </ScrollArea>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
-                      <Instagram className="w-8 h-8 mb-2 text-muted-foreground" />
-                      <p className="text-muted-foreground">
-                        Sélectionnez Instagram pour voir l'aperçu.
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md">
+                        <Instagram className="w-8 h-8 mb-2 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                          Sélectionnez Instagram pour voir l'aperçu.
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </ScrollArea>
           </div>
         );
       
