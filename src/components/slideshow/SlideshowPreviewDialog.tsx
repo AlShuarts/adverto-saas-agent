@@ -87,12 +87,14 @@ export const SlideshowPreviewDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] w-[95vw] max-h-[95vh] h-[95vh] overflow-hidden flex flex-col p-4">
+      <DialogContent className="max-w-[85vw] w-[85vw] max-h-[85vh] overflow-hidden">
         <DialogTitle className="text-xl mb-2">Prévisualisation du diaporama</DialogTitle>
-        <div className="flex flex-col md:flex-row gap-4 flex-grow overflow-hidden">
-          <div className="flex-1 min-h-0 flex flex-col">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[calc(85vh-8rem)] overflow-hidden">
+          {/* Slideshow player side */}
+          <div className="h-full flex flex-col">
             {listing.images && (
-              <div className="aspect-video max-h-[50vh] flex-shrink-0 bg-black rounded-lg overflow-hidden">
+              <div className="relative bg-black rounded-lg overflow-hidden h-full">
                 <SlideshowPlayer
                   images={listing.images}
                   musicUrl={musicUrl}
@@ -101,27 +103,30 @@ export const SlideshowPreviewDialog = ({
             )}
           </div>
           
-          <div className="flex-1 min-h-0 flex flex-col border rounded-lg p-4">
+          {/* Text editor side */}
+          <div className="h-full flex flex-col border rounded-lg p-4">
             <h3 className="text-sm font-medium mb-2">Message de la publication</h3>
-            <ScrollArea className="flex-grow pr-4">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                </div>
-              ) : (
-                <Textarea
-                  value={editedText}
-                  onChange={(e) => setEditedText(e.target.value)}
-                  className="min-h-[200px] resize-none"
-                  placeholder="Entrez votre texte ici..."
-                />
-              )}
-              {error && <p className="text-sm text-red-500">{error}</p>}
+            <ScrollArea className="flex-grow">
+              <div className="pr-4 pb-4">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                ) : (
+                  <Textarea
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    className="min-h-[200px] resize-none w-full"
+                    placeholder="Entrez votre texte ici..."
+                  />
+                )}
+                {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+              </div>
             </ScrollArea>
           </div>
         </div>
         
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t mt-4">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t mt-2">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Annuler
           </Button>
