@@ -117,80 +117,113 @@ export const FacebookPreviewContent = ({
           <p className="text-sm text-muted-foreground">Maintenant</p>
         </div>
       </div>
+      
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin" />
         </div>
       ) : (
         <>
-          <div className="flex justify-end gap-2 mb-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              disabled={!generatedText}
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copier le texte
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsTemplateDialogOpen(true)}
-              disabled={!generatedText}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Sauvegarder comme template
-            </Button>
-          </div>
-          <Textarea
-            value={generatedText}
-            onChange={(e) => onTextChange(e.target.value)}
-            className="mb-4 min-h-[150px]"
-            placeholder="Entrez votre texte ici..."
-          />
-          {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-          {images.length > 0 && (
-            <>
-              <div className="mb-4 p-3 bg-secondary/10 rounded-lg">
-                <p className="text-sm font-medium mb-2">
-                  Sélectionnez les images à publier sur Facebook
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Cliquez sur la case à cocher pour sélectionner/désélectionner une image
-                </p>
-              </div>
-              <ScrollArea className="h-[400px] pr-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {images.map((image, index) => (
-                    <div 
-                      key={index} 
-                      className="relative group border-2 border-transparent hover:border-primary rounded-lg transition-all duration-200"
-                    >
+          <div className="flex flex-col space-y-4">
+            <div className="p-4 rounded-lg bg-card border">
+              <div className="space-y-3">
+                <p className="whitespace-pre-wrap text-sm">{generatedText}</p>
+                {selectedImages.length > 0 && (
+                  <div className="relative">
+                    <div className="aspect-video bg-muted rounded-md overflow-hidden">
                       <img
-                        src={image}
-                        alt={`Image ${index + 1}`}
-                        className="w-full h-48 object-cover rounded"
+                        src={selectedImages[0]}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-2 left-2 bg-black/50 p-1.5 rounded">
-                        <Checkbox
-                          checked={selectedImages.includes(image)}
-                          onCheckedChange={() => handleImageSelect(image)}
-                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                      </div>
-                      <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-xs">
-                        {index + 1}/{images.length}
-                      </div>
                     </div>
-                  ))}
+                    {selectedImages.length > 1 && (
+                      <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        +{selectedImages.length - 1} photo{selectedImages.length > 2 ? 's' : ''}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between pt-3 mt-3 border-t text-sm text-muted-foreground">
+                <span>J'aime</span>
+                <span>Commenter</span>
+                <span>Partager</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyToClipboard}
+                disabled={!generatedText}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copier le texte
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsTemplateDialogOpen(true)}
+                disabled={!generatedText}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Sauvegarder comme template
+              </Button>
+            </div>
+            
+            <Textarea
+              value={generatedText}
+              onChange={(e) => onTextChange(e.target.value)}
+              className="mb-4 min-h-[150px]"
+              placeholder="Entrez votre texte ici..."
+            />
+            
+            {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+            
+            {images.length > 0 && (
+              <>
+                <div className="mb-4 p-3 bg-secondary/10 rounded-lg">
+                  <p className="text-sm font-medium mb-2">
+                    Sélectionnez les images à publier sur Facebook
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Cliquez sur la case à cocher pour sélectionner/désélectionner une image
+                  </p>
                 </div>
-              </ScrollArea>
-              <p className="text-sm text-muted-foreground mt-4 font-medium">
-                {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} sélectionnée{selectedImages.length !== 1 ? 's' : ''} sur {images.length}
-              </p>
-            </>
-          )}
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    {images.map((image, index) => (
+                      <div 
+                        key={index} 
+                        className="relative group border-2 border-transparent hover:border-primary rounded-lg transition-all duration-200"
+                      >
+                        <img
+                          src={image}
+                          alt={`Image ${index + 1}`}
+                          className="w-full h-48 object-cover rounded"
+                        />
+                        <div className="absolute top-2 left-2 bg-black/50 p-1.5 rounded">
+                          <Checkbox
+                            checked={selectedImages.includes(image)}
+                            onCheckedChange={() => handleImageSelect(image)}
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                        </div>
+                        <div className="absolute bottom-2 left-2 bg-black/50 px-2 py-1 rounded text-white text-xs">
+                          {index + 1}/{images.length}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+                <p className="text-sm text-muted-foreground mt-4 font-medium">
+                  {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} sélectionnée{selectedImages.length !== 1 ? 's' : ''} sur {images.length}
+                </p>
+              </>
+            )}
+          </div>
         </>
       )}
 

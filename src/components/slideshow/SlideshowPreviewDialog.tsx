@@ -99,20 +99,20 @@ export const SlideshowPreviewDialog = ({
       </div>
       <div className="py-3">
         <p className="text-sm whitespace-pre-wrap mb-3">{editedText}</p>
-        {listing.images && listing.images.length > 0 && (
-          <div className="aspect-video bg-black rounded-md overflow-hidden">
+        <div className="aspect-video bg-black rounded-md overflow-hidden">
+          {listing.images && listing.images.length > 0 && (
             <img
               src={listing.images[0]}
               alt="Propriété"
               className="w-full h-full object-cover"
             />
-            {listing.images.length > 1 && (
-              <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                +{listing.images.length - 1} photos
-              </div>
-            )}
-          </div>
-        )}
+          )}
+          {listing.images && listing.images.length > 1 && (
+            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+              +{listing.images.length - 1} photos
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex justify-between border-t pt-3 text-sm text-gray-500">
         <span>J'aime</span>
