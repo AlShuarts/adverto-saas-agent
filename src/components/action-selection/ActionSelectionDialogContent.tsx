@@ -234,7 +234,7 @@ export const ActionSelectionDialogContent = () => {
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}
-          canGoToNextStep={canGoToNextStep}
+          canGoToNextStep={canGoToNextStep()}
           onPrevious={prevStep}
           onNext={nextStep}
           onPublish={handlePublishWrapper}
