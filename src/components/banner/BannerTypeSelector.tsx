@@ -1,6 +1,6 @@
 
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type BannerTypeSelectorProps = {
   bannerType: "VENDU" | "A_VENDRE";
@@ -9,20 +9,22 @@ type BannerTypeSelectorProps = {
 
 export const BannerTypeSelector = ({ bannerType, setBannerType }: BannerTypeSelectorProps) => {
   return (
-    <div>
+    <div className="space-y-2">
       <Label htmlFor="bannerType">Type de bannière</Label>
-      <Select 
+      <RadioGroup 
         value={bannerType} 
         onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
+        className="flex space-x-4"
       >
-        <SelectTrigger id="bannerType">
-          <SelectValue placeholder="Sélectionnez le type de bannière" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="VENDU">VENDU</SelectItem>
-          <SelectItem value="A_VENDRE">À VENDRE</SelectItem>
-        </SelectContent>
-      </Select>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="VENDU" id="option-vendu" />
+          <Label htmlFor="option-vendu" className="cursor-pointer">VENDU</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="A_VENDRE" id="option-a-vendre" />
+          <Label htmlFor="option-a-vendre" className="cursor-pointer">À VENDRE</Label>
+        </div>
+      </RadioGroup>
     </div>
   );
 };
