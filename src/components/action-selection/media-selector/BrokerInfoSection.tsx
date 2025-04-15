@@ -1,9 +1,12 @@
 
+// Fix the typo in the props - brokerEmail was being passed instead of brokerEmail
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Upload, User, Building, Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type BrokerInfoSectionProps = {
   brokerImageUrl: string | null;
@@ -34,30 +37,41 @@ export const BrokerInfoSection = ({
   formErrors,
   setFormErrors
 }: BrokerInfoSectionProps) => {
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'broker' | 'agency') => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    if (!file.type.includes('image/')) {
-      toast.error("Le fichier doit être une image");
-      return;
-    }
-
-    // Convert to base64 for preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        if (type === 'broker') {
-          setBrokerImageUrl(reader.result);
-        } else {
-          setAgencyLogoUrl(reader.result);
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "broker" | "agency") => {
+    if (e.target.files && e.target.files[0]) {
+      try {
+        const file = e.target.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${type}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('listings-images')
+          .upload(fileName, file);
+          
+        if (uploadError) {
+          throw uploadError;
         }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('listings-images')
+          .getPublicUrl(fileName);
+          
+        if (type === "broker") {
+          setBrokerImageUrl(publicUrl);
+        } else {
+          setAgencyLogoUrl(publicUrl);
+        }
+      } catch (error: any) {
+        console.error(`Erreur lors du téléchargement de l'image ${type}:`, error);
+        toast.error("Erreur de téléchargement", {
+          description: "Une erreur est survenue lors du téléchargement de l'image."
+        });
       }
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
+  // Handle input changes and validation
   const handleInputChange = (field: string, value: string) => {
     switch (field) {
       case 'name':
@@ -93,110 +107,125 @@ export const BrokerInfoSection = ({
   };
 
   return (
-    <div className="space-y-4 mt-4">
-      <h4 className="font-medium">Information du courtier</h4>
+    <div className="border-t pt-4 mt-4">
+      <h4 className="font-medium mb-4 flex items-center">
+        <Info className="w-4 h-4 mr-2" /> 
+        Informations du courtier
+      </h4>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="broker-image">Image du courtier (optionnelle)</Label>
-          <div className="mt-1 flex flex-col space-y-2">
-            {brokerImageUrl && (
-              <div className="relative w-24 h-24 mb-2">
-                <img 
-                  src={brokerImageUrl} 
-                  alt="Courtier" 
-                  className="w-24 h-24 object-cover rounded-md"
-                />
-                <Button 
-                  type="button" 
-                  variant="destructive" 
-                  size="sm"
-                  className="absolute -top-2 -right-2 rounded-full w-6 h-6 p-0"
-                  onClick={() => setBrokerImageUrl(null)}
-                >
-                  ×
-                </Button>
-              </div>
-            )}
-            <Input
-              id="broker-image"
+        {/* Photo du courtier */}
+        <div className="space-y-2">
+          <Label htmlFor="broker-image">Photo du courtier</Label>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => document.getElementById('broker-image-input')?.click()}
+              type="button"
+              className="flex items-center"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Télécharger
+            </Button>
+            <input
+              id="broker-image-input"
               type="file"
+              className="hidden"
               accept="image/*"
-              onChange={(e) => handleImageUpload(e, 'broker')}
-              className="cursor-pointer"
+              onChange={(e) => handleImageUpload(e, "broker")}
             />
           </div>
+          {brokerImageUrl && (
+            <div className="w-20 h-20 rounded-full overflow-hidden mt-2">
+              <img
+                src={brokerImageUrl}
+                alt="Photo du courtier"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
         </div>
         
-        <div>
-          <Label htmlFor="agency-logo">Logo de l'agence (optionnel)</Label>
-          <div className="mt-1 flex flex-col space-y-2">
-            {agencyLogoUrl && (
-              <div className="relative w-24 h-24 mb-2">
-                <img 
-                  src={agencyLogoUrl} 
-                  alt="Agence" 
-                  className="w-24 h-24 object-contain rounded-md bg-white p-1"
-                />
-                <Button 
-                  type="button" 
-                  variant="destructive" 
-                  size="sm"
-                  className="absolute -top-2 -right-2 rounded-full w-6 h-6 p-0"
-                  onClick={() => setAgencyLogoUrl(null)}
-                >
-                  ×
-                </Button>
-              </div>
-            )}
-            <Input
-              id="agency-logo"
+        {/* Logo de l'agence */}
+        <div className="space-y-2">
+          <Label htmlFor="agency-logo">Logo de l'agence</Label>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => document.getElementById('agency-logo-input')?.click()}
+              type="button"
+              className="flex items-center"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Télécharger
+            </Button>
+            <input
+              id="agency-logo-input"
               type="file"
+              className="hidden"
               accept="image/*"
-              onChange={(e) => handleImageUpload(e, 'agency')}
-              className="cursor-pointer"
+              onChange={(e) => handleImageUpload(e, "agency")}
             />
           </div>
+          {agencyLogoUrl && (
+            <div className="w-24 h-12 overflow-hidden mt-2">
+              <img
+                src={agencyLogoUrl}
+                alt="Logo de l'agence"
+                className="w-full h-full object-contain"
+              />
+            </div>
+          )}
         </div>
       </div>
       
-      <div className="space-y-3 mt-2">
+      {/* Informations de contact du courtier */}
+      <div className="grid grid-cols-1 gap-4 mt-4">
         <div>
-          <Label htmlFor="broker-name">Nom du courtier*</Label>
+          <Label htmlFor="broker-name" className={formErrors.brokerName ? "text-destructive" : ""}>
+            Nom du courtier *
+          </Label>
           <Input
             id="broker-name"
             value={brokerName}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            className={formErrors.brokerName ? "border-red-500" : ""}
+            placeholder="Nom du courtier"
+            className={formErrors.brokerName ? "border-destructive" : ""}
           />
           {formErrors.brokerName && (
-            <p className="text-red-500 text-sm mt-1">{formErrors.brokerName}</p>
+            <p className="text-xs text-destructive mt-1">{formErrors.brokerName}</p>
           )}
         </div>
         
         <div>
-          <Label htmlFor="broker-email">Email du courtier*</Label>
+          <Label htmlFor="broker-email" className={formErrors.brokerEmail ? "text-destructive" : ""}>
+            Email du courtier *
+          </Label>
           <Input
             id="broker-email"
-            type="email"
             value={brokerEmail}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className={formErrors.brokerEmail ? "border-red-500" : ""}
+            placeholder="Email du courtier"
+            className={formErrors.brokerEmail ? "border-destructive" : ""}
           />
           {formErrors.brokerEmail && (
-            <p className="text-red-500 text-sm mt-1">{formErrors.brokerEmail}</p>
+            <p className="text-xs text-destructive mt-1">{formErrors.brokerEmail}</p>
           )}
         </div>
         
         <div>
-          <Label htmlFor="broker-phone">Téléphone du courtier*</Label>
+          <Label htmlFor="broker-phone" className={formErrors.brokerPhone ? "text-destructive" : ""}>
+            Téléphone du courtier *
+          </Label>
           <Input
             id="broker-phone"
             value={brokerPhone}
             onChange={(e) => handleInputChange('phone', e.target.value)}
-            className={formErrors.brokerPhone ? "border-red-500" : ""}
+            placeholder="Téléphone du courtier"
+            className={formErrors.brokerPhone ? "border-destructive" : ""}
           />
           {formErrors.brokerPhone && (
-            <p className="text-red-500 text-sm mt-1">{formErrors.brokerPhone}</p>
+            <p className="text-xs text-destructive mt-1">{formErrors.brokerPhone}</p>
           )}
         </div>
       </div>

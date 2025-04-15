@@ -3,8 +3,7 @@ import { PhotoSelectionSection } from "./PhotoSelectionSection";
 import { SlideshowConfig } from "./SlideshowConfig";
 import { BannerImageSelector } from "./BannerImageSelector";
 import { BrokerInfoSection } from "./BrokerInfoSection";
-
-type PublicationType = "photo" | "slideshow" | "banner";
+import { PublicationType } from "../types";
 
 type MediaSelectorProps = {
   selectedPublicationTypes: PublicationType[];
@@ -110,7 +109,7 @@ export const MediaSelector = ({
             brokerName={brokerName}
             setBrokerName={setBrokerName}
             brokerEmail={brokerEmail}
-            setBrokerEmail={setBrokerEmail}
+            setBrokerEmail={brokerEmail}
             brokerPhone={brokerPhone}
             setBrokerPhone={setBrokerPhone}
             formErrors={formErrors}

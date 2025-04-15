@@ -11,7 +11,7 @@ type TemplateStepProps = {
   generatedText: string;
   setGeneratedText: (text: string) => void;
   isGeneratingText: boolean;
-  onGenerateText: () => void;
+  onGenerateText: () => Promise<void>;
 };
 
 export const TemplateStep = ({
@@ -26,6 +26,12 @@ export const TemplateStep = ({
   isGeneratingText,
   onGenerateText
 }: TemplateStepProps) => {
+  
+  // Convert the function to return a Promise for compatibility with the prop type
+  const handleGenerateText = async () => {
+    await onGenerateText();
+  };
+  
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Étape 2: Choisir un template et générer le texte</h3>
@@ -40,7 +46,7 @@ export const TemplateStep = ({
         generatedText={generatedText}
         setGeneratedText={setGeneratedText}
         isGeneratingText={isGeneratingText}
-        onGenerateText={onGenerateText}
+        onGenerateText={handleGenerateText}
       />
     </div>
   );

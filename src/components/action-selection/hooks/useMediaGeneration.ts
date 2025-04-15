@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
@@ -71,6 +70,8 @@ export const useMediaGeneration = (listingId: string) => {
         duration: 5000
       });
       return null;
+    } finally {
+      setIsGeneratingSlideshow(false);
     }
   };
 
