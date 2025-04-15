@@ -15,7 +15,7 @@ export const BannerTypeSelector = ({ bannerType, setBannerType }: BannerTypeSele
         value={bannerType} 
         onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
       >
-        <SelectTrigger>
+        <SelectTrigger id="bannerType">
           <SelectValue placeholder="Sélectionnez le type de bannière" />
         </SelectTrigger>
         <SelectContent>
