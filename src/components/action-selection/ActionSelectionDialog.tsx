@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -16,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 // Import our new component files
 import { PublicationTypeSelector } from "./PublicationTypeSelector";
 import { TemplateSelector } from "./TemplateSelector";
-import { MediaSelector } from "./MediaSelector";
+import { MediaSelector } from "./media-selector";
 import { MediaGenerationStep } from "./MediaGenerationStep";
 import { SocialNetworkSelector } from "./SocialNetworkSelector";
 import { PublicationPreview } from "./PublicationPreview";
@@ -617,7 +616,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             handleMusicChange={handleMusicChange}
             previewMusic={previewMusic}
             setBannerType={setBannerType}
-            // Add the missing props for broker and agency information
             brokerImageUrl={brokerImageUrl}
             setBrokerImageUrl={setBrokerImageUrl}
             agencyLogoUrl={agencyLogoUrl}
