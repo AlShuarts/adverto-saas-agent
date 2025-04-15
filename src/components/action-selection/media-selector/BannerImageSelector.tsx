@@ -2,6 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { BrokerInfoSection } from "./BrokerInfoSection";
 
 type BannerImageSelectorProps = {
   images: string[];
@@ -9,6 +10,19 @@ type BannerImageSelectorProps = {
   selectBannerImage: (imageUrl: string) => void;
   bannerType: "VENDU" | "À VENDRE";
   setBannerType: (type: "VENDU" | "À VENDRE") => void;
+  // Broker info props
+  brokerImageUrl: string | null;
+  setBrokerImageUrl: (url: string | null) => void;
+  agencyLogoUrl: string | null;
+  setAgencyLogoUrl: (url: string | null) => void;
+  brokerName: string;
+  setBrokerName: (name: string) => void;
+  brokerEmail: string;
+  setBrokerEmail: (email: string) => void;
+  brokerPhone: string;
+  setBrokerPhone: (phone: string) => void;
+  formErrors: {[key: string]: string};
+  setFormErrors: (errors: {[key: string]: string}) => void;
 };
 
 export const BannerImageSelector = ({
@@ -16,7 +30,20 @@ export const BannerImageSelector = ({
   bannerImage,
   selectBannerImage,
   bannerType,
-  setBannerType
+  setBannerType,
+  // Broker info props
+  brokerImageUrl,
+  setBrokerImageUrl,
+  agencyLogoUrl,
+  setAgencyLogoUrl,
+  brokerName,
+  setBrokerName,
+  brokerEmail,
+  setBrokerEmail,
+  brokerPhone,
+  setBrokerPhone,
+  formErrors,
+  setFormErrors
 }: BannerImageSelectorProps) => {
   return (
     <div className="space-y-4">
@@ -58,6 +85,21 @@ export const BannerImageSelector = ({
           </div>
         </ScrollArea>
       </div>
+      
+      <BrokerInfoSection
+        brokerImageUrl={brokerImageUrl}
+        setBrokerImageUrl={setBrokerImageUrl}
+        agencyLogoUrl={agencyLogoUrl}
+        setAgencyLogoUrl={setAgencyLogoUrl}
+        brokerName={brokerName}
+        setBrokerName={setBrokerName}
+        brokerEmail={brokerEmail}
+        setBrokerEmail={setBrokerEmail}
+        brokerPhone={brokerPhone}
+        setBrokerPhone={setBrokerPhone}
+        formErrors={formErrors}
+        setFormErrors={setFormErrors}
+      />
     </div>
   );
 };

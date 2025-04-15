@@ -2,7 +2,6 @@
 import { PhotoSelectionSection } from "./PhotoSelectionSection";
 import { SlideshowConfig } from "./SlideshowConfig";
 import { BannerImageSelector } from "./BannerImageSelector";
-import { BrokerInfoSection } from "./BrokerInfoSection";
 import { PublicationType } from "../types";
 
 type MediaSelectorProps = {
@@ -97,9 +96,6 @@ export const MediaSelector = ({
             selectBannerImage={selectBannerImage}
             bannerType={bannerType}
             setBannerType={setBannerType}
-          />
-          
-          <BrokerInfoSection 
             brokerImageUrl={brokerImageUrl}
             setBrokerImageUrl={setBrokerImageUrl}
             agencyLogoUrl={agencyLogoUrl}
