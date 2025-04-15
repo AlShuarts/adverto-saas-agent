@@ -99,7 +99,7 @@ export const BannerImageSelector = ({
         </div>
       </div>
       
-      <Separator />
+      <Separator className="my-6" />
       
       <div className="bg-muted/20 p-4 rounded-md">
         <h4 className="font-medium mb-4">2. Information du courtier (requis pour la bannière)</h4>

@@ -43,7 +43,7 @@ export const BrokerInfoForm = ({
   }, [setBrokerEmail, brokerEmail]);
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="grid gap-2">
         <Label htmlFor="brokerName" className={formErrors.brokerName ? "text-destructive" : ""}>
           Nom du courtier *
@@ -109,6 +109,6 @@ export const BrokerInfoForm = ({
           <p className="text-xs text-destructive">{formErrors.brokerPhone}</p>
         )}
       </div>
-    </>
+    </div>
   );
 };
