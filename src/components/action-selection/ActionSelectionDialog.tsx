@@ -387,7 +387,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             
             <SocialNetworkSelector
               selectedNetworks={selectedNetworks}
-              onNetworkChange={(networks) => setSelectedNetworks(networks as {facebook: boolean, instagram: boolean})}
+              onNetworkChange={(networks) => setSelectedNetworks(networks)}
             />
             
             <PublicationPreview

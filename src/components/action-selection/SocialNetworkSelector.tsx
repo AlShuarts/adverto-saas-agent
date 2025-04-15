@@ -26,7 +26,7 @@ export const SocialNetworkSelector = ({
               checked={selectedNetworks.facebook}
               onCheckedChange={(checked) => onNetworkChange({
                 ...selectedNetworks,
-                facebook: !!checked
+                facebook: checked === true
               })}
             />
             <div className="space-y-2">
@@ -51,7 +51,7 @@ export const SocialNetworkSelector = ({
               checked={selectedNetworks.instagram}
               onCheckedChange={(checked) => onNetworkChange({
                 ...selectedNetworks,
-                instagram: !!checked
+                instagram: checked === true
               })}
             />
             <div className="space-y-2">
