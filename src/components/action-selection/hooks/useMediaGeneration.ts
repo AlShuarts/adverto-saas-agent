@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
@@ -77,7 +78,7 @@ export const useMediaGeneration = (listingId: string) => {
 
   const generateBanner = async (
     bannerImage: string | null, 
-    bannerType: "VENDU" | "À VENDRE",
+    bannerType: "VENDU" | "A_VENDRE",
     brokerInfo?: {
       brokerImageUrl: string | null;
       agencyLogoUrl: string | null;
