@@ -11,8 +11,8 @@ type BannerImageSelectorProps = {
   images: string[];
   bannerImage: string | null;
   selectBannerImage: (imageUrl: string) => void;
-  bannerType: "VENDU" | "À VENDRE";
-  setBannerType: (type: "VENDU" | "À VENDRE") => void;
+  bannerType: "VENDU" | "A_VENDRE";
+  setBannerType: (type: "VENDU" | "A_VENDRE") => void;
   // Broker info props
   brokerImageUrl: string | null;
   setBrokerImageUrl: (url: string | null) => void;
@@ -63,14 +63,14 @@ export const BannerImageSelector = ({
           <Label htmlFor="banner-type">Type de bannière</Label>
           <Select 
             value={bannerType} 
-            onValueChange={(value) => setBannerType(value as "VENDU" | "À VENDRE")}
+            onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
           >
             <SelectTrigger id="banner-type" className="mt-1">
               <SelectValue placeholder="Type de bannière" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="VENDU">VENDU</SelectItem>
-              <SelectItem value="À VENDRE">À VENDRE</SelectItem>
+              <SelectItem value="A_VENDRE">À VENDRE</SelectItem>
             </SelectContent>
           </Select>
         </div>
