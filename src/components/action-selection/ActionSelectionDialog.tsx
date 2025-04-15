@@ -94,6 +94,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     setBannerUrl,
     setIsGeneratingSlideshow,
     setSlideshowRenderId,
+    setIsGeneratingBanner, // Add this missing import
     generateSlideshow,
     generateBanner
   } = useMediaGeneration(listing.id);
@@ -376,7 +377,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                 onGenerateBanner={handleGenerateBanner}
                 onRegenerateBanner={() => {
                   setBannerUrl(null);
-                  setIsGeneratingBanner(false);
+                  setIsGeneratingBanner(false); // Fixed: using the proper setter function
                 }}
               />
             )}
@@ -390,7 +391,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             
             <SocialNetworkSelector
               selectedNetworks={selectedNetworks}
-              onNetworkChange={setSelectedNetworks}
+              onNetworkChange={(networks) => setSelectedNetworks(networks)} // Fixed: ensuring we pass a boolean type
             />
             
             <PublicationPreview
