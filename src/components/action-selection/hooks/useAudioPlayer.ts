@@ -1,0 +1,66 @@
+
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+export const useAudioPlayer = () => {
+  const [audioPlaying, setAudioPlaying] = useState<HTMLAudioElement | null>(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [musicList, setMusicList] = useState<string[]>([]);
+  const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
+
+  const fetchMusic = async () => {
+    const { data, error } = await supabase.storage.from('background-music').list();
+    
+    if (!error && data) {
+      const musicFiles = data
+        .filter(file => !file.name.startsWith('.'))
+        .map(file => file.name);
+      
+      setMusicList(musicFiles);
+      if (musicFiles.length > 0) {
+        setSelectedMusic(musicFiles[0]);
+      }
+    }
+  };
+
+  const handleMusicChange = (value: string) => {
+    stopAudio();
+    setSelectedMusic(value);
+  };
+
+  const previewMusic = (musicName: string) => {
+    if (currentlyPlaying === musicName) {
+      stopAudio();
+      return;
+    }
+    stopAudio();
+    const audio = new Audio();
+    audio.src = `${supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl}`;
+    audio.volume = 0.5;
+    audio.play();
+    setAudioPlaying(audio);
+    setCurrentlyPlaying(musicName);
+  };
+
+  const stopAudio = () => {
+    if (audioPlaying) {
+      audioPlaying.pause();
+      audioPlaying.currentTime = 0;
+      setAudioPlaying(null);
+      setCurrentlyPlaying(null);
+    }
+  };
+
+  return {
+    audioPlaying,
+    currentlyPlaying,
+    musicList,
+    selectedMusic,
+    setMusicList,
+    setSelectedMusic,
+    fetchMusic,
+    handleMusicChange,
+    previewMusic,
+    stopAudio
+  };
+};

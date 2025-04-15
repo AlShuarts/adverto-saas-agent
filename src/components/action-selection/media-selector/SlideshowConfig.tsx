@@ -1,20 +1,20 @@
 
-import { useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { MoveVertical, Play, Pause } from "lucide-react";
 
 type SlideshowConfigProps = {
   images: string[];
   selectedImages: string[];
-  toggleImageSelection: (imageUrl: string) => void;
-  onDragEnd: (result: any) => void;
   musicList: string[];
   selectedMusic?: string;
   currentlyPlaying: string | null;
+  toggleImageSelection: (imageUrl: string) => void;
+  onDragEnd: (result: any) => void;
   handleMusicChange: (value: string) => void;
   previewMusic: (musicName: string) => void;
 };
@@ -22,11 +22,11 @@ type SlideshowConfigProps = {
 export const SlideshowConfig = ({
   images,
   selectedImages,
-  toggleImageSelection,
-  onDragEnd,
   musicList,
   selectedMusic,
   currentlyPlaying,
+  toggleImageSelection,
+  onDragEnd,
   handleMusicChange,
   previewMusic
 }: SlideshowConfigProps) => {
@@ -130,5 +130,3 @@ export const SlideshowConfig = ({
     </div>
   );
 };
-
-import { Checkbox } from "@/components/ui/checkbox";
