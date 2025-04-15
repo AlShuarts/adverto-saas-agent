@@ -10,7 +10,6 @@ type SocialStepProps = {
   isSubmitting: boolean;
   onSubmit: () => Promise<void>;
   hasRequiredInfo: boolean;
-  // Added these missing props that are being passed
   generatedText: string;
   setGeneratedText: (text: string) => void;
   images: string[];
