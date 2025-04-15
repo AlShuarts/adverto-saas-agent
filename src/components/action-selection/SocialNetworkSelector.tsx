@@ -18,7 +18,10 @@ export const SocialNetworkSelector = ({
         <Checkbox 
           id="facebook" 
           checked={selectedNetworks.facebook}
-          onCheckedChange={(checked) => onNetworkChange("facebook", checked === true)}
+          onCheckedChange={(checked) => {
+            // Ensure we always pass a boolean value
+            onNetworkChange("facebook", checked === true)
+          }}
         />
         <Label htmlFor="facebook" className="cursor-pointer">Facebook</Label>
       </div>
@@ -27,7 +30,10 @@ export const SocialNetworkSelector = ({
         <Checkbox 
           id="instagram" 
           checked={selectedNetworks.instagram}
-          onCheckedChange={(checked) => onNetworkChange("instagram", checked === true)}
+          onCheckedChange={(checked) => {
+            // Ensure we always pass a boolean value
+            onNetworkChange("instagram", checked === true)
+          }}
         />
         <Label htmlFor="instagram" className="cursor-pointer">Instagram</Label>
       </div>

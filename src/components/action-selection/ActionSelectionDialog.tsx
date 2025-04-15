@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -345,34 +344,48 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         return (
           <GenerationStep
             selectedPublicationTypes={selectedPublicationTypes}
-            isGeneratingSlideshow={isGeneratingSlideshow}
-            slideshowUrl={slideshowUrl}
-            slideshowError={slideshowError}
-            slideshowRenderId={slideshowRenderId}
+            selectedNetworks={selectedNetworks}
             selectedImages={selectedImages}
-            onGenerateSlideshow={handleGenerateSlideshow}
+            bannerImage={bannerImage}
+            bannerType={bannerType}
+            selectedMusic={selectedMusic}
+            generateSlideshow={generateSlideshow}
+            generateBanner={generateBanner}
+            isGeneratingSlideshow={isGeneratingSlideshow}
+            isGeneratingBanner={isGeneratingBanner}
+            slideshowRenderId={slideshowRenderId}
+            slideshowError={slideshowError}
+            bannerError={bannerError}
+            brokerImageUrl={brokerImageUrl}
+            agencyLogoUrl={agencyLogoUrl}
+            brokerName={brokerName}
+            brokerEmail={brokerEmail}
+            brokerPhone={brokerPhone}
+            setFormErrors={setFormErrors}
             onRegenerateSlideshow={() => {
               setSlideshowUrl(null);
               setSlideshowRenderId(null);
               setIsGeneratingSlideshow(false);
             }}
-            onCheckStatus={refetchSlideshowStatus}
-            isGeneratingBanner={isGeneratingBanner}
-            bannerUrl={bannerUrl}
-            bannerError={bannerError}
-            onGenerateBanner={handleGenerateBanner}
             onRegenerateBanner={() => {
               setBannerUrl(null);
               setIsGeneratingBanner(false);
             }}
+            slideshowUrl={slideshowUrl}
+            bannerUrl={bannerUrl}
+            refetchSlideshowStatus={refetchSlideshowStatus}
           />
         );
       
       case 4:
         return (
           <SocialStep
+            selectedPublicationTypes={selectedPublicationTypes}
             selectedNetworks={selectedNetworks}
-            onNetworkChange={setSelectedNetworks}
+            setSelectedNetworks={setSelectedNetworks}
+            isSubmitting={isPublishing}
+            onSubmit={handlePublish}
+            hasRequiredInfo={!!generatedText}
             generatedText={generatedText}
             setGeneratedText={setGeneratedText}
             images={listing.images || []}
@@ -381,7 +394,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             slideshowUrl={slideshowUrl}
             bannerUrl={bannerUrl}
             selectedMusic={selectedMusic}
-            selectedPublicationTypes={selectedPublicationTypes}
           />
         );
       

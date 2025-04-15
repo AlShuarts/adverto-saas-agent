@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PublicationType, SocialNetworks } from "../types";
@@ -35,6 +34,9 @@ type GenerationStepProps = {
   setFormErrors: (errors: {[key: string]: string}) => void;
   onRegenerateSlideshow?: () => void;
   onRegenerateBanner?: () => void;
+  slideshowUrl: string | null;
+  bannerUrl: string | null;
+  refetchSlideshowStatus: () => void;
 };
 
 export const GenerationStep = ({
@@ -58,16 +60,17 @@ export const GenerationStep = ({
   brokerPhone,
   setFormErrors,
   onRegenerateSlideshow,
-  onRegenerateBanner
+  onRegenerateBanner,
+  slideshowUrl,
+  bannerUrl,
+  refetchSlideshowStatus
 }: GenerationStepProps) => {
   const [generationStep, setGenerationStep] = useState<"none" | "slideshow" | "banner">("none");
   
-  // Convert the returning Promise to void for the onClick handler
   const handleGenerateSlideshow = async () => {
     await generateSlideshow(selectedImages, selectedMusic);
   };
   
-  // Convert the returning Promise to void for the onClick handler
   const handleGenerateBanner = async () => {
     const result = await generateBanner(
       bannerImage,
@@ -81,7 +84,6 @@ export const GenerationStep = ({
       }
     );
     
-    // Handle errors if needed
     if (result.errors) {
       setFormErrors(result.errors);
     }
@@ -92,7 +94,6 @@ export const GenerationStep = ({
       <h3 className="text-lg font-medium">Étape 4: Générer les médias</h3>
       
       <div className="space-y-4">
-        {/* Slideshow Generation Button */}
         {selectedPublicationTypes.includes("slideshow") && (
           <div className="p-4 border rounded-md">
             <h4 className="font-medium">Génération du diaporama</h4>
@@ -120,7 +121,6 @@ export const GenerationStep = ({
           </div>
         )}
         
-        {/* Banner Generation Button */}
         {selectedPublicationTypes.includes("banner") && (
           <div className="p-4 border rounded-md">
             <h4 className="font-medium">Génération de la bannière</h4>
