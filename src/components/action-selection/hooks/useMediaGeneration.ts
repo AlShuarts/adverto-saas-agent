@@ -87,35 +87,27 @@ export const useMediaGeneration = (listingId: string) => {
       brokerPhone: string;
     }
   ) => {
-    if (!bannerImage) {
-      toast.error("Erreur", {
-        description: "Veuillez sélectionner une image pour la bannière.",
-      });
-      return { errors: { bannerImage: "Veuillez sélectionner une image" } };
-    }
-
-    // Validate broker info if needed
-    if (brokerInfo) {
-      const errors: Record<string, string> = {};
-      
-      if (brokerInfo.brokerName && brokerInfo.brokerName.trim() === '') {
-        errors.brokerName = "Veuillez fournir un nom de courtier";
-      }
-      if (brokerInfo.brokerEmail && !brokerInfo.brokerEmail.includes('@')) {
-        errors.brokerEmail = "Veuillez fournir un email valide";
-      }
-      if (brokerInfo.brokerPhone && brokerInfo.brokerPhone.trim() === '') {
-        errors.brokerPhone = "Veuillez fournir un numéro de téléphone";
-      }
-      
-      if (Object.keys(errors).length > 0) {
-        return { errors };
-      }
-    }
-    
     try {
       setIsGeneratingBanner(true);
       setBannerError(null);
+      
+      console.log("Génération de la bannière pour le listing:", listingId);
+      console.log("Image principale:", bannerImage);
+      console.log("Type de bannière:", bannerType);
+      console.log("Informations du courtier:", brokerInfo);
+      
+      if (!bannerImage) {
+        throw new Error("Image principale non sélectionnée");
+      }
+      
+      if (!brokerInfo || !brokerInfo.brokerName || !brokerInfo.brokerEmail || !brokerInfo.brokerPhone) {
+        throw new Error("Informations du courtier incomplètes");
+      }
+      
+      toast.info("Création de la bannière", {
+        description: "Nous préparons votre bannière...",
+        duration: 3000
+      });
       
       const { data, error } = await supabase.functions.invoke("create-sold-banner", {
         body: {
@@ -123,24 +115,40 @@ export const useMediaGeneration = (listingId: string) => {
           config: {
             bannerType: bannerType,
             mainImage: bannerImage,
-            ...brokerInfo
+            brokerName: brokerInfo.brokerName,
+            brokerEmail: brokerInfo.brokerEmail,
+            brokerPhone: brokerInfo.brokerPhone,
+            brokerImage: brokerInfo.brokerImageUrl,
+            agencyLogo: brokerInfo.agencyLogoUrl
           }
         }
       });
       
       if (error) throw error;
       
+      console.log("Réponse de create-sold-banner:", data);
+      
+      // Attendre 3 secondes avant de vérifier le statut
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       let isComplete = false;
-      while (!isComplete) {
-        const { data: statusData } = await supabase
+      let attempts = 0;
+      const maxAttempts = 10; // Maximum attempts to check status
+      
+      while (!isComplete && attempts < maxAttempts) {
+        attempts++;
+        const { data: statusData, error: statusError } = await supabase
           .from("sold_banner_renders")
           .select("image_url, status")
           .eq("listing_id", listingId)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
+        
+        if (statusError) {
+          console.error("Erreur lors de la vérification du statut:", statusError);
+          if (attempts >= maxAttempts) throw statusError;
+        }
         
         if (statusData && statusData.status === "completed" && statusData.image_url) {
           setBannerUrl(statusData.image_url);
@@ -152,8 +160,13 @@ export const useMediaGeneration = (listingId: string) => {
         } else if (statusData && statusData.status === "failed") {
           throw new Error("La création de la bannière a échoué");
         } else {
+          // Attendre 5 secondes avant la prochaine vérification
           await new Promise(resolve => setTimeout(resolve, 5000));
         }
+      }
+      
+      if (!isComplete) {
+        throw new Error("Délai d'attente dépassé pour la génération de la bannière");
       }
       
       return { success: true };

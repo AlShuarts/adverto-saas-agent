@@ -1,16 +1,18 @@
 
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { FormError } from "./FormError";
 
 type BannerTypeSelectorProps = {
   bannerType: "VENDU" | "A_VENDRE";
   setBannerType: (type: "VENDU" | "A_VENDRE") => void;
+  error?: string;
 };
 
-export const BannerTypeSelector = ({ bannerType, setBannerType }: BannerTypeSelectorProps) => {
+export const BannerTypeSelector = ({ bannerType, setBannerType, error }: BannerTypeSelectorProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="bannerType">Type de bannière</Label>
+      <Label htmlFor="bannerType" className={error ? "text-destructive" : ""}>Type de bannière</Label>
       <RadioGroup 
         value={bannerType} 
         onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
@@ -25,6 +27,7 @@ export const BannerTypeSelector = ({ bannerType, setBannerType }: BannerTypeSele
           <Label htmlFor="option-a-vendre" className="cursor-pointer">À VENDRE</Label>
         </div>
       </RadioGroup>
+      <FormError error={error} />
     </div>
   );
 };

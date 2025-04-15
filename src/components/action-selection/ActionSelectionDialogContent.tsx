@@ -178,6 +178,7 @@ export const ActionSelectionDialogContent = () => {
             brokerName={brokerName}
             brokerEmail={brokerEmail}
             brokerPhone={brokerPhone}
+            formErrors={formErrors}
             setFormErrors={setFormErrors}
             onRegenerateSlideshow={() => {
               // Reset slideshow state in useMediaGeneration

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { FormError } from "./FormError";
 
 type BrokerInfoFormProps = {
   brokerName: string;
@@ -61,9 +62,7 @@ export const BrokerInfoForm = ({
           placeholder="Nom du courtier"
           className={formErrors.brokerName ? "border-destructive" : ""}
         />
-        {formErrors.brokerName && (
-          <p className="text-xs text-destructive">{formErrors.brokerName}</p>
-        )}
+        <FormError error={formErrors.brokerName} />
       </div>
       
       <div className="grid gap-2">
@@ -83,9 +82,7 @@ export const BrokerInfoForm = ({
           placeholder="Email du courtier"
           className={formErrors.brokerEmail ? "border-destructive" : ""}
         />
-        {formErrors.brokerEmail && (
-          <p className="text-xs text-destructive">{formErrors.brokerEmail}</p>
-        )}
+        <FormError error={formErrors.brokerEmail} />
       </div>
       
       <div className="grid gap-2">
@@ -105,9 +102,7 @@ export const BrokerInfoForm = ({
           placeholder="Téléphone du courtier"
           className={formErrors.brokerPhone ? "border-destructive" : ""}
         />
-        {formErrors.brokerPhone && (
-          <p className="text-xs text-destructive">{formErrors.brokerPhone}</p>
-        )}
+        <FormError error={formErrors.brokerPhone} />
       </div>
     </div>
   );

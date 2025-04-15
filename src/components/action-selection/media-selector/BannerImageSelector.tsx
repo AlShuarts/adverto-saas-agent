@@ -1,12 +1,12 @@
 
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BrokerInfoSection } from "./BrokerInfoSection";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, AlertTriangle } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { FormError } from "@/components/banner/FormError";
+import { BannerTypeSelector } from "@/components/banner/BannerTypeSelector";
 
 type BannerImageSelectorProps = {
   images: string[];
@@ -71,26 +71,11 @@ export const BannerImageSelector = ({
         <h4 className="font-medium">1. Sélection du type de bannière et de l'image principale</h4>
         
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="banner-type" className={formErrors.bannerType ? "text-destructive" : ""}>Type de bannière</Label>
-            <RadioGroup 
-              value={bannerType} 
-              onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
-              className="flex space-x-4 mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="VENDU" id="vendu" />
-                <Label htmlFor="vendu" className="cursor-pointer">VENDU</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="A_VENDRE" id="a-vendre" />
-                <Label htmlFor="a-vendre" className="cursor-pointer">À VENDRE</Label>
-              </div>
-            </RadioGroup>
-            {formErrors.bannerType && (
-              <p className="text-xs text-destructive mt-1">{formErrors.bannerType}</p>
-            )}
-          </div>
+          <BannerTypeSelector 
+            bannerType={bannerType} 
+            setBannerType={setBannerType}
+            error={formErrors.bannerType}
+          />
           
           <div className="space-y-2">
             <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale</Label>
@@ -119,9 +104,7 @@ export const BannerImageSelector = ({
                 ))}
               </div>
             </ScrollArea>
-            {formErrors.bannerImage && (
-              <p className="text-xs text-destructive">{formErrors.bannerImage}</p>
-            )}
+            <FormError error={formErrors.bannerImage} />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Loader2, Tag, Video, Play } from "lucide-react";
+import { FormError } from "@/components/banner/FormError";
 
 type MediaGenerationStepProps = {
   selectedPublicationTypes: Array<"photo" | "slideshow" | "banner">;
@@ -11,6 +12,7 @@ type MediaGenerationStepProps = {
   slideshowError: string | null;
   bannerError: string | null;
   slideshowRenderId: string | null;
+  formErrors: {[key: string]: string};
   generateSlideshow: () => Promise<string | null>;
   generateBanner: () => Promise<void>;
   selectedImages: string[];
@@ -26,6 +28,7 @@ export const MediaGenerationStep = ({
   slideshowError,
   bannerError,
   slideshowRenderId,
+  formErrors,
   generateSlideshow,
   generateBanner,
   selectedImages,
@@ -152,6 +155,12 @@ export const MediaGenerationStep = ({
                       </>
                     ) : "Générer la bannière"}
                   </Button>
+                  
+                  {Object.entries(formErrors).length > 0 && (
+                    <div className="text-sm text-red-500 mt-2">
+                      Veuillez remplir correctement tous les champs requis à l'étape précédente.
+                    </div>
+                  )}
                   
                   {bannerError && (
                     <div className="text-sm text-red-500 mt-2">
