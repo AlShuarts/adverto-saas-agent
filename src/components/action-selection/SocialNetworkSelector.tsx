@@ -15,6 +15,14 @@ export const SocialNetworkSelector = ({
   selectedNetworks,
   onNetworkChange,
 }: SocialNetworkSelectorProps) => {
+  // Helper function to ensure we always get a boolean value
+  const handleCheckedChange = (network: 'facebook' | 'instagram', checked: boolean | string) => {
+    onNetworkChange({
+      ...selectedNetworks,
+      [network]: checked === true
+    });
+  };
+
   return (
     <div className="space-y-4 border rounded-md p-4">
       <h4 className="font-medium">Sélection des réseaux sociaux</h4>
@@ -24,10 +32,7 @@ export const SocialNetworkSelector = ({
             <Checkbox 
               id="network-facebook" 
               checked={selectedNetworks.facebook}
-              onCheckedChange={(checked) => onNetworkChange({
-                ...selectedNetworks,
-                facebook: checked === true
-              })}
+              onCheckedChange={(checked) => handleCheckedChange('facebook', checked)}
             />
             <div className="space-y-2">
               <Label 
@@ -49,10 +54,7 @@ export const SocialNetworkSelector = ({
             <Checkbox 
               id="network-instagram" 
               checked={selectedNetworks.instagram}
-              onCheckedChange={(checked) => onNetworkChange({
-                ...selectedNetworks,
-                instagram: checked === true
-              })}
+              onCheckedChange={(checked) => handleCheckedChange('instagram', checked)}
             />
             <div className="space-y-2">
               <Label 
