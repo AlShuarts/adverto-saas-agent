@@ -90,8 +90,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     setSlideshowUrl,
     setBannerUrl,
     setIsGeneratingSlideshow,
-    setSlideshowRenderId,
     setIsGeneratingBanner,
+    setSlideshowRenderId,
     generateSlideshow,
     generateBanner
   } = useMediaGeneration(listing.id);
