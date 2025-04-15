@@ -4,6 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BrokerInfoSection } from "./BrokerInfoSection";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 type BannerImageSelectorProps = {
   images: string[];
@@ -48,6 +50,13 @@ export const BannerImageSelector = ({
 }: BannerImageSelectorProps) => {
   return (
     <div className="space-y-6">
+      <Alert variant="default" className="bg-muted/30">
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          La création d'une bannière nécessite la sélection d'une image principale et les informations du courtier.
+        </AlertDescription>
+      </Alert>
+      
       <div className="space-y-4 bg-muted/20 p-4 rounded-md">
         <h4 className="font-medium">1. Sélection du type de bannière et de l'image principale</h4>
         <div>

@@ -87,7 +87,7 @@ export const MediaSelector = ({
       )}
       
       {selectedPublicationTypes.includes("banner") && (
-        <div className="space-y-4 border rounded-md p-4">
+        <div className="space-y-4">
           <h4 className="font-medium">Configuration de la bannière</h4>
           
           <BannerImageSelector
