@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
@@ -44,15 +43,13 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     instagram: false
   });
   
-  // Add state for broker and agency information
   const [brokerImageUrl, setBrokerImageUrl] = useState<string | null>(null);
   const [agencyLogoUrl, setAgencyLogoUrl] = useState<string | null>(null);
   const [brokerName, setBrokerName] = useState<string>("");
   const [brokerEmail, setBrokerEmail] = useState<string>("");
   const [brokerPhone, setBrokerPhone] = useState<string>("");
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
-  
-  // Import custom hooks
+
   const { 
     facebookTemplates, 
     instagramTemplates, 
@@ -94,7 +91,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     setBannerUrl,
     setIsGeneratingSlideshow,
     setSlideshowRenderId,
-    setIsGeneratingBanner, // Add this missing import
+    setIsGeneratingBanner,
     generateSlideshow,
     generateBanner
   } = useMediaGeneration(listing.id);
@@ -155,7 +152,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     setGeneratedText("");
     setSlideshowUrl(null);
     setBannerUrl(null);
-    // Reset broker and agency information
     setBrokerImageUrl(null);
     setAgencyLogoUrl(null);
     setBrokerName("");
@@ -377,7 +373,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                 onGenerateBanner={handleGenerateBanner}
                 onRegenerateBanner={() => {
                   setBannerUrl(null);
-                  setIsGeneratingBanner(false); // Fixed: using the proper setter function
+                  setIsGeneratingBanner(false);
                 }}
               />
             )}
@@ -391,7 +387,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             
             <SocialNetworkSelector
               selectedNetworks={selectedNetworks}
-              onNetworkChange={(networks) => setSelectedNetworks(networks)} // Fixed: ensuring we pass a boolean type
+              onNetworkChange={(networks) => setSelectedNetworks(networks as {facebook: boolean, instagram: boolean})}
             />
             
             <PublicationPreview
@@ -447,7 +443,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   );
 };
 
-// Add missing imports at the top
 import { useProfile } from "@/hooks/useProfile";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -96,7 +95,6 @@ export const useMediaGeneration = (listingId: string) => {
       return;
     }
     
-    // Validate broker information
     const errors: {[key: string]: string} = {};
     
     if (!brokerInfo.brokerName) {
@@ -190,6 +188,7 @@ export const useMediaGeneration = (listingId: string) => {
     setBannerUrl,
     setIsGeneratingSlideshow,
     setSlideshowRenderId,
+    setIsGeneratingBanner,
     generateSlideshow,
     generateBanner
   };
