@@ -81,6 +81,23 @@ export const ActionSelectionDialogContent = () => {
     listing
   } = useActionSelection();
 
+  // Wrapper functions to match the expected types in GenerationStep
+  const generateSlideshowWrapper = async () => {
+    return handleGenerateSlideshow();
+  };
+
+  const generateBannerWrapper = async () => {
+    const result = await handleGenerateBanner();
+    if (result.errors) {
+      setFormErrors(result.errors);
+    }
+  };
+
+  // Wrapper function to match the expected type in SocialStep
+  const handlePublishWrapper = async () => {
+    await handlePublish();
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1: 
@@ -148,8 +165,8 @@ export const ActionSelectionDialogContent = () => {
             bannerImage={bannerImage}
             bannerType={bannerType}
             selectedMusic={selectedMusic}
-            generateSlideshow={handleGenerateSlideshow}
-            generateBanner={handleGenerateBanner}
+            generateSlideshow={generateSlideshowWrapper}
+            generateBanner={generateBannerWrapper}
             isGeneratingSlideshow={isGeneratingSlideshow}
             isGeneratingBanner={isGeneratingBanner}
             slideshowRenderId={slideshowRenderId}
@@ -180,7 +197,7 @@ export const ActionSelectionDialogContent = () => {
             selectedNetworks={selectedNetworks}
             setSelectedNetworks={setSelectedNetworks}
             isSubmitting={isPublishing}
-            onSubmit={handlePublish}
+            onSubmit={handlePublishWrapper}
             hasRequiredInfo={!!generatedText}
             generatedText={generatedText}
             setGeneratedText={setGeneratedText}
@@ -217,10 +234,10 @@ export const ActionSelectionDialogContent = () => {
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}
-          canGoToNextStep={canGoToNextStep()}
+          canGoToNextStep={canGoToNextStep}
           onPrevious={prevStep}
           onNext={nextStep}
-          onPublish={handlePublish}
+          onPublish={handlePublishWrapper}
           onCancel={onClose}
           isLastStep={currentStep === 4}
         />
