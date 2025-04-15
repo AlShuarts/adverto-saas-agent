@@ -5,12 +5,9 @@ import { Tables } from "@/integrations/supabase/types";
 import { ListingImageCarousel } from "./ListingImageCarousel";
 import { formatPrice } from "@/utils/priceFormatter";
 import { useProfile } from "@/hooks/useProfile";
-import { Button } from "@/components/ui/button";
-import { Tag, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { CreateSoldBannerButton } from "./CreateSoldBannerButton";
 import { SoldBannerStatus } from "./SoldBannerStatus";
 import { Switch } from "@/components/ui/switch";
 import { useQueryClient } from "@tanstack/react-query";
@@ -96,7 +93,6 @@ export const PublishedListingCard = ({ listing }: PublishedListingCardProps) => 
         </div>
         
         <div className="w-full grid grid-cols-1 gap-2">
-          <CreateSoldBannerButton listing={listing} />
           <SoldBannerStatus listing={listing} />
         </div>
       </CardFooter>
