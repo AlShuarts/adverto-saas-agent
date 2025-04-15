@@ -26,9 +26,17 @@ export const SocialStep = ({
   setSelectedNetworks,
   isSubmitting,
   onSubmit,
-  hasRequiredInfo
+  hasRequiredInfo,
+  generatedText,
+  setGeneratedText,
+  images,
+  selectedImages,
+  setSelectedImages,
+  slideshowUrl,
+  bannerUrl,
+  selectedMusic
 }: SocialStepProps) => {
-  // Handle network change
+  // Handle network change with explicit boolean conversion
   const handleNetworkChange = (network: keyof SocialNetworks, checked: boolean) => {
     setSelectedNetworks({
       ...selectedNetworks,

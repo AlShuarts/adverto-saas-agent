@@ -19,7 +19,7 @@ export const SocialNetworkSelector = ({
           id="facebook" 
           checked={selectedNetworks.facebook}
           onCheckedChange={(checked) => {
-            // Ensure we always pass a boolean value
+            // Force conversion to boolean
             onNetworkChange("facebook", checked === true)
           }}
         />
@@ -31,7 +31,7 @@ export const SocialNetworkSelector = ({
           id="instagram" 
           checked={selectedNetworks.instagram}
           onCheckedChange={(checked) => {
-            // Ensure we always pass a boolean value
+            // Force conversion to boolean
             onNetworkChange("instagram", checked === true)
           }}
         />
