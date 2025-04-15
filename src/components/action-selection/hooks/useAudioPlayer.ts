@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useAudioPlayer = () => {
@@ -8,7 +8,7 @@ export const useAudioPlayer = () => {
   const [musicList, setMusicList] = useState<string[]>([]);
   const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
 
-  const fetchMusic = async () => {
+  const fetchMusic = useCallback(async () => {
     const { data, error } = await supabase.storage.from('background-music').list();
     
     if (!error && data) {
@@ -21,14 +21,14 @@ export const useAudioPlayer = () => {
         setSelectedMusic(musicFiles[0]);
       }
     }
-  };
+  }, []);
 
-  const handleMusicChange = (value: string) => {
+  const handleMusicChange = useCallback((value: string) => {
     stopAudio();
     setSelectedMusic(value);
-  };
+  }, []);
 
-  const previewMusic = (musicName: string) => {
+  const previewMusic = useCallback((musicName: string) => {
     if (currentlyPlaying === musicName) {
       stopAudio();
       return;
@@ -40,24 +40,22 @@ export const useAudioPlayer = () => {
     audio.play();
     setAudioPlaying(audio);
     setCurrentlyPlaying(musicName);
-  };
+  }, [currentlyPlaying]);
 
-  const stopAudio = () => {
+  const stopAudio = useCallback(() => {
     if (audioPlaying) {
       audioPlaying.pause();
       audioPlaying.currentTime = 0;
       setAudioPlaying(null);
       setCurrentlyPlaying(null);
     }
-  };
+  }, [audioPlaying]);
 
   return {
     audioPlaying,
     currentlyPlaying,
     musicList,
     selectedMusic,
-    setMusicList,
-    setSelectedMusic,
     fetchMusic,
     handleMusicChange,
     previewMusic,

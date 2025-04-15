@@ -1,11 +1,10 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { toast } from "sonner";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { toast } from "sonner";
 
 export const useMediaGeneration = (listingId: string) => {
-  const { toast: uiToast } = useToast();
   const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
   const [slideshowUrl, setSlideshowUrl] = useState<string | null>(null);
@@ -74,49 +73,44 @@ export const useMediaGeneration = (listingId: string) => {
       return null;
     }
   };
-  
+
   const generateBanner = async (
-    bannerImage: string | null,
+    bannerImage: string | null, 
     bannerType: "VENDU" | "À VENDRE",
-    brokerInfo: {
-      brokerImageUrl: string | null,
-      agencyLogoUrl: string | null,
-      brokerName: string,
-      brokerEmail: string,
-      brokerPhone: string,
+    brokerInfo?: {
+      brokerImageUrl: string | null;
+      agencyLogoUrl: string | null;
+      brokerName: string;
+      brokerEmail: string;
+      brokerPhone: string;
     }
   ) => {
     if (!bannerImage) {
-      uiToast({
-        title: "Erreur",
+      toast.error("Erreur", {
         description: "Veuillez sélectionner une image pour la bannière.",
-        variant: "destructive"
       });
-      return;
+      return { errors: { bannerImage: "Veuillez sélectionner une image" } };
     }
-    
-    const errors: {[key: string]: string} = {};
-    
-    if (!brokerInfo.brokerName) {
-      errors.brokerName = "Le nom du courtier est requis";
-    }
-    
-    if (!brokerInfo.brokerEmail) {
-      errors.brokerEmail = "L'email du courtier est requis";
-    } else if (!/\S+@\S+\.\S+/.test(brokerInfo.brokerEmail)) {
-      errors.brokerEmail = "Format d'email invalide";
-    }
-    
-    if (!brokerInfo.brokerPhone) {
-      errors.brokerPhone = "Le téléphone du courtier est requis";
-    }
-    
-    if (Object.keys(errors).length > 0) {
-      return { errors };
+
+    // Validate broker info if needed
+    if (brokerInfo) {
+      const errors: Record<string, string> = {};
+      
+      if (brokerInfo.brokerName && brokerInfo.brokerName.trim() === '') {
+        errors.brokerName = "Veuillez fournir un nom de courtier";
+      }
+      if (brokerInfo.brokerEmail && !brokerInfo.brokerEmail.includes('@')) {
+        errors.brokerEmail = "Veuillez fournir un email valide";
+      }
+      
+      if (Object.keys(errors).length > 0) {
+        return { errors };
+      }
     }
     
     try {
       setIsGeneratingBanner(true);
+      setBannerError(null);
       
       const { data, error } = await supabase.functions.invoke("create-sold-banner", {
         body: {
@@ -124,11 +118,7 @@ export const useMediaGeneration = (listingId: string) => {
           config: {
             bannerType: bannerType,
             mainImage: bannerImage,
-            brokerImage: brokerInfo.brokerImageUrl,
-            agencyLogo: brokerInfo.agencyLogoUrl,
-            brokerName: brokerInfo.brokerName,
-            brokerEmail: brokerInfo.brokerEmail,
-            brokerPhone: brokerInfo.brokerPhone
+            ...brokerInfo
           }
         }
       });
@@ -150,12 +140,10 @@ export const useMediaGeneration = (listingId: string) => {
         if (statusData && statusData.status === "completed" && statusData.image_url) {
           setBannerUrl(statusData.image_url);
           isComplete = true;
-          uiToast({
-            title: "Bannière créée",
+          toast.success("Bannière créée", {
             description: "La bannière a été générée avec succès.",
           });
           await ensureAndIncrementStatistic('banner');
-          return { success: true, bannerUrl: statusData.image_url };
         } else if (statusData && statusData.status === "failed") {
           throw new Error("La création de la bannière a échoué");
         } else {
@@ -163,14 +151,15 @@ export const useMediaGeneration = (listingId: string) => {
         }
       }
       
+      return { success: true };
+      
     } catch (error) {
       console.error("Erreur lors de la création de la bannière:", error);
-      uiToast({
-        title: "Erreur",
+      setBannerError("Une erreur est survenue: " + error.message);
+      toast.error("Erreur", {
         description: "Une erreur est survenue lors de la création de la bannière.",
-        variant: "destructive"
       });
-      return { success: false, error };
+      return { success: false, error: error.message };
     } finally {
       setIsGeneratingBanner(false);
     }
@@ -187,8 +176,8 @@ export const useMediaGeneration = (listingId: string) => {
     setSlideshowUrl,
     setBannerUrl,
     setIsGeneratingSlideshow,
-    setSlideshowRenderId,
     setIsGeneratingBanner,
+    setSlideshowRenderId,
     generateSlideshow,
     generateBanner
   };

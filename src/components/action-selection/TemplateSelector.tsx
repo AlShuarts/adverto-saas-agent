@@ -1,10 +1,9 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
 type TemplateSelectorProps = {
   facebookTemplates: { id: string; name: string; content?: string }[];
@@ -29,7 +28,7 @@ export const TemplateSelector = ({
   generatedText,
   setGeneratedText,
   isGeneratingText,
-  onGenerateText,
+  onGenerateText
 }: TemplateSelectorProps) => {
   return (
     <div className="space-y-6">

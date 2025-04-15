@@ -8,7 +8,7 @@ type SlideshowStepProps = {
   slideshowError: string | null;
   slideshowRenderId: string | null;
   selectedImages: string[];
-  onGenerateSlideshow: () => void;
+  onGenerateSlideshow: () => Promise<string | null>;
   onRegenerateSlideshow: () => void;
   onCheckStatus: () => void;
 };
@@ -21,7 +21,7 @@ export const SlideshowStep = ({
   selectedImages,
   onGenerateSlideshow,
   onRegenerateSlideshow,
-  onCheckStatus
+  onCheckStatus,
 }: SlideshowStepProps) => {
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -48,6 +48,7 @@ export const SlideshowStep = ({
               <p className="text-xs text-muted-foreground">
                 Votre diaporama est en train d'être généré. Veuillez patienter.
               </p>
+              
               <Button 
                 variant="outline" 
                 size="sm"

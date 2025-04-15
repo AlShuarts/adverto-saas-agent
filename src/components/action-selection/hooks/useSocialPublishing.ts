@@ -1,20 +1,27 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { toast } from "sonner";
 
-export const useSocialPublishing = (listing: Tables<"listings">, profile: any) => {
-  const { toast: uiToast } = useToast();
+type Profile = {
+  id: string;
+  facebook_page_id?: string;
+  facebook_access_token?: string;
+};
+
+type PublicationType = "photo" | "slideshow" | "banner";
+
+export const useSocialPublishing = (
+  listing: Tables<"listings">,
+  profile?: Profile | null
+) => {
   const [isPublishing, setIsPublishing] = useState(false);
-  const queryClient = useQueryClient();
 
   const publish = async (
     selectedNetworks: { facebook: boolean; instagram: boolean },
-    selectedPublicationTypes: Array<"photo" | "slideshow" | "banner">,
+    selectedPublicationTypes: PublicationType[],
     generatedText: string,
     selectedImages: string[],
     bannerUrl: string | null,
@@ -27,10 +34,8 @@ export const useSocialPublishing = (listing: Tables<"listings">, profile: any) =
       const tasks = [];
       
       if (!generatedText) {
-        uiToast({
-          title: "Erreur",
+        toast.error("Erreur", {
           description: "Veuillez générer un texte pour votre publication.",
-          variant: "destructive"
         });
         return { success: false };
       }
@@ -101,22 +106,17 @@ export const useSocialPublishing = (listing: Tables<"listings">, profile: any) =
       
       await Promise.allSettled(tasks);
       
-      uiToast({
-        title: "Publications complétées",
+      toast.success("Publications complétées", {
         description: "Vos publications ont été créées avec succès sur les réseaux sociaux sélectionnés.",
       });
-      
-      queryClient.invalidateQueries({ queryKey: ["listings"] });
       
       return { success: true };
     } catch (error) {
       console.error("Erreur lors de la publication:", error);
-      uiToast({
-        title: "Erreur",
+      toast.error("Erreur", {
         description: "Une erreur est survenue lors de la publication sur les réseaux sociaux.",
-        variant: "destructive"
       });
-      return { success: false, error };
+      return { success: false };
     } finally {
       setIsPublishing(false);
     }

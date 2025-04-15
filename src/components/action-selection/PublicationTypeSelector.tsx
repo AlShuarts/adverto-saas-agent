@@ -10,9 +10,9 @@ type PublicationTypeSelectorProps = {
   onPublicationTypeChange: (type: PublicationType, checked: boolean) => void;
 };
 
-export const PublicationTypeSelector = ({
-  selectedPublicationTypes,
-  onPublicationTypeChange,
+export const PublicationTypeSelector = ({ 
+  selectedPublicationTypes, 
+  onPublicationTypeChange 
 }: PublicationTypeSelectorProps) => {
   return (
     <div className="space-y-6">

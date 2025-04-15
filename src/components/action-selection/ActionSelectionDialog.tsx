@@ -1,8 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSlideshowStatus } from "@/hooks/useSlideshowStatus";
+import { useProfile } from "@/hooks/useProfile";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // Import our hooks
 import { useTemplates } from "./hooks/useTemplates";
@@ -227,6 +231,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     );
     
     if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
       onClose();
     }
   };
@@ -387,7 +392,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             
             <SocialNetworkSelector
               selectedNetworks={selectedNetworks}
-              onNetworkChange={(networks) => setSelectedNetworks(networks)}
+              onNetworkChange={setSelectedNetworks}
             />
             
             <PublicationPreview
@@ -442,7 +447,3 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     </Dialog>
   );
 };
-
-import { useProfile } from "@/hooks/useProfile";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";

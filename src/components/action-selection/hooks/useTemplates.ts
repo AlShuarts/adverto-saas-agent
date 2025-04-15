@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useTemplates = () => {
@@ -8,7 +8,7 @@ export const useTemplates = () => {
   const [selectedFacebookTemplateId, setSelectedFacebookTemplateId] = useState<string>("none");
   const [selectedInstagramTemplateId, setSelectedInstagramTemplateId] = useState<string>("none");
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     const { data: fbTemplates, error: fbError } = await supabase
       .from('facebook_templates')
       .select('id, name, content');
@@ -24,12 +24,12 @@ export const useTemplates = () => {
     if (!igError && igTemplates) {
       setInstagramTemplates(igTemplates);
     }
-  };
+  }, []);
 
-  const resetTemplates = () => {
+  const resetTemplates = useCallback(() => {
     setSelectedFacebookTemplateId("none");
     setSelectedInstagramTemplateId("none");
-  };
+  }, []);
 
   return {
     facebookTemplates,

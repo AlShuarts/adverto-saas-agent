@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 type StepNavigationProps = {
   currentStep: number;
@@ -24,7 +24,7 @@ export const StepNavigation = ({
   isLastStep
 }: StepNavigationProps) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 border-t pt-4 mt-2 w-full">
+    <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 w-full">
       <div className="flex-1 flex">
         {currentStep > 1 && (
           <Button
@@ -48,17 +48,7 @@ export const StepNavigation = ({
           Annuler
         </Button>
         
-        {!isLastStep ? (
-          <Button
-            type="button"
-            onClick={onNext}
-            disabled={!canGoToNextStep}
-            className="flex items-center"
-          >
-            Suivant
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        ) : (
+        {isLastStep ? (
           <Button
             type="button"
             onClick={onPublish}
@@ -70,6 +60,16 @@ export const StepNavigation = ({
                 Publication...
               </>
             ) : "Publier"}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={onNext}
+            disabled={!canGoToNextStep}
+            className="flex items-center"
+          >
+            Suivant
+            <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         )}
       </div>

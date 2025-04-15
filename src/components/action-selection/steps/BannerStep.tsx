@@ -6,7 +6,7 @@ type BannerStepProps = {
   isGeneratingBanner: boolean;
   bannerUrl: string | null;
   bannerError: string | null;
-  onGenerateBanner: () => void;
+  onGenerateBanner: () => Promise<void>;
   onRegenerateBanner: () => void;
 };
 
@@ -15,7 +15,7 @@ export const BannerStep = ({
   bannerUrl,
   bannerError,
   onGenerateBanner,
-  onRegenerateBanner
+  onRegenerateBanner,
 }: BannerStepProps) => {
   return (
     <div className="space-y-4 border rounded-md p-4">
