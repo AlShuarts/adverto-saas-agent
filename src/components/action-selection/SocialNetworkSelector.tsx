@@ -2,11 +2,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Facebook, Instagram } from "lucide-react";
-
-type SocialNetworks = {
-  facebook: boolean;
-  instagram: boolean;
-};
+import { SocialNetworks } from "./types";
 
 type SocialNetworkSelectorProps = {
   selectedNetworks: SocialNetworks;

@@ -15,17 +15,14 @@ import { useAudioPlayer } from "./hooks/useAudioPlayer";
 import { useMediaGeneration } from "./hooks/useMediaGeneration";
 import { useSocialPublishing } from "./hooks/useSocialPublishing";
 
-// Import our new component files
-import { PublicationTypeSelector } from "./PublicationTypeSelector";
-import { TemplateSelector } from "./TemplateSelector";
-import { MediaSelector } from "./media-selector";
-import { SlideshowStep } from "./steps/SlideshowStep";
-import { BannerStep } from "./steps/BannerStep";
-import { SocialNetworkSelector } from "./SocialNetworkSelector";
-import { PublicationPreview } from "./PublicationPreview";
+// Import our step components
+import { PublicationStep } from "./steps/PublicationStep";
+import { TemplateStep } from "./steps/TemplateStep";
+import { MediaStep } from "./steps/MediaStep";
+import { GenerationStep } from "./steps/GenerationStep";
+import { SocialStep } from "./steps/SocialStep";
 import { StepNavigation } from "./steps/StepNavigation";
-
-type PublicationType = "photo" | "slideshow" | "banner";
+import { PublicationType, SocialNetworks } from "./types";
 
 type ActionSelectionDialogProps = {
   listing: Tables<"listings">;
@@ -42,7 +39,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [bannerType, setBannerType] = useState<"VENDU" | "À VENDRE">("VENDU");
   const [bannerImage, setBannerImage] = useState<string | null>(null);
-  const [selectedNetworks, setSelectedNetworks] = useState({
+  const [selectedNetworks, setSelectedNetworks] = useState<SocialNetworks>({
     facebook: false,
     instagram: false
   });
@@ -197,11 +194,11 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   };
   
   const handleGenerateSlideshow = async () => {
-    await generateSlideshow(selectedImages, selectedMusic);
+    return await generateSlideshow(selectedImages, selectedMusic);
   };
   
   const handleGenerateBanner = async () => {
-    const result = await generateBanner(
+    return await generateBanner(
       bannerImage,
       bannerType,
       {
@@ -212,10 +209,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
         brokerPhone
       }
     );
-    
-    if (result?.errors) {
-      setFormErrors(result.errors);
-    }
   };
   
   const handlePublish = async () => {
@@ -294,7 +287,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     switch (currentStep) {
       case 1: 
         return (
-          <PublicationTypeSelector
+          <PublicationStep
             selectedPublicationTypes={selectedPublicationTypes}
             onPublicationTypeChange={handlePublicationTypeChange}
           />
@@ -302,7 +295,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
       case 2: 
         return (
-          <TemplateSelector 
+          <TemplateStep
             facebookTemplates={facebookTemplates}
             instagramTemplates={instagramTemplates}
             selectedFacebookTemplateId={selectedFacebookTemplateId}
@@ -318,7 +311,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
       case 3: 
         return (
-          <MediaSelector
+          <MediaStep
             selectedPublicationTypes={selectedPublicationTypes}
             images={listing.images || []}
             selectedImages={selectedImages}
@@ -350,64 +343,46 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       
       case 3.5:
         return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">Étape 3.5: Génération des médias</h3>
-            
-            {selectedPublicationTypes.includes("slideshow") && (
-              <SlideshowStep
-                isGeneratingSlideshow={isGeneratingSlideshow}
-                slideshowUrl={slideshowUrl}
-                slideshowError={slideshowError}
-                slideshowRenderId={slideshowRenderId}
-                selectedImages={selectedImages}
-                onGenerateSlideshow={handleGenerateSlideshow}
-                onRegenerateSlideshow={() => {
-                  setSlideshowUrl(null);
-                  setSlideshowRenderId(null);
-                  setIsGeneratingSlideshow(false);
-                }}
-                onCheckStatus={refetchSlideshowStatus}
-              />
-            )}
-            
-            {selectedPublicationTypes.includes("banner") && (
-              <BannerStep
-                isGeneratingBanner={isGeneratingBanner}
-                bannerUrl={bannerUrl}
-                bannerError={bannerError}
-                onGenerateBanner={handleGenerateBanner}
-                onRegenerateBanner={() => {
-                  setBannerUrl(null);
-                  setIsGeneratingBanner(false);
-                }}
-              />
-            )}
-          </div>
+          <GenerationStep
+            selectedPublicationTypes={selectedPublicationTypes}
+            isGeneratingSlideshow={isGeneratingSlideshow}
+            slideshowUrl={slideshowUrl}
+            slideshowError={slideshowError}
+            slideshowRenderId={slideshowRenderId}
+            selectedImages={selectedImages}
+            onGenerateSlideshow={handleGenerateSlideshow}
+            onRegenerateSlideshow={() => {
+              setSlideshowUrl(null);
+              setSlideshowRenderId(null);
+              setIsGeneratingSlideshow(false);
+            }}
+            onCheckStatus={refetchSlideshowStatus}
+            isGeneratingBanner={isGeneratingBanner}
+            bannerUrl={bannerUrl}
+            bannerError={bannerError}
+            onGenerateBanner={handleGenerateBanner}
+            onRegenerateBanner={() => {
+              setBannerUrl(null);
+              setIsGeneratingBanner(false);
+            }}
+          />
         );
       
       case 4:
         return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium">Étape 4: Publier sur les réseaux sociaux</h3>
-            
-            <SocialNetworkSelector
-              selectedNetworks={selectedNetworks}
-              onNetworkChange={setSelectedNetworks}
-            />
-            
-            <PublicationPreview
-              selectedNetworks={selectedNetworks}
-              generatedText={generatedText}
-              setGeneratedText={setGeneratedText}
-              images={listing.images || []}
-              selectedImages={selectedImages}
-              setSelectedImages={setSelectedImages}
-              slideshowUrl={slideshowUrl}
-              bannerUrl={bannerUrl}
-              selectedMusic={selectedMusic}
-              selectedPublicationTypes={selectedPublicationTypes}
-            />
-          </div>
+          <SocialStep
+            selectedNetworks={selectedNetworks}
+            onNetworkChange={setSelectedNetworks}
+            generatedText={generatedText}
+            setGeneratedText={setGeneratedText}
+            images={listing.images || []}
+            selectedImages={selectedImages}
+            setSelectedImages={setSelectedImages}
+            slideshowUrl={slideshowUrl}
+            bannerUrl={bannerUrl}
+            selectedMusic={selectedMusic}
+            selectedPublicationTypes={selectedPublicationTypes}
+          />
         );
       
       default:
