@@ -70,6 +70,14 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [slideshowError, setSlideshowError] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
   
+  // Add new state variables for broker and agency information
+  const [brokerImageUrl, setBrokerImageUrl] = useState<string | null>(null);
+  const [agencyLogoUrl, setAgencyLogoUrl] = useState<string | null>(null);
+  const [brokerName, setBrokerName] = useState<string>("");
+  const [brokerEmail, setBrokerEmail] = useState<string>("");
+  const [brokerPhone, setBrokerPhone] = useState<string>("");
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  
   const { 
     data: slideshowRender, 
     isLoading: isSlideshowStatusLoading,
@@ -123,6 +131,13 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     setGeneratedText("");
     setSlideshowUrl(null);
     setBannerUrl(null);
+    // Reset broker and agency information
+    setBrokerImageUrl(null);
+    setAgencyLogoUrl(null);
+    setBrokerName("");
+    setBrokerEmail("");
+    setBrokerPhone("");
+    setFormErrors({});
   };
 
   const fetchTemplates = async () => {
@@ -323,6 +338,29 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       return;
     }
     
+    // Validate broker information
+    const errors: {[key: string]: string} = {};
+    
+    if (!brokerName) {
+      errors.brokerName = "Le nom du courtier est requis";
+    }
+    
+    if (!brokerEmail) {
+      errors.brokerEmail = "L'email du courtier est requis";
+    } else if (!/\S+@\S+\.\S+/.test(brokerEmail)) {
+      errors.brokerEmail = "Format d'email invalide";
+    }
+    
+    if (!brokerPhone) {
+      errors.brokerPhone = "Le téléphone du courtier est requis";
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      toast.error("Veuillez compléter toutes les informations du courtier");
+      return;
+    }
+    
     try {
       setIsGeneratingBanner(true);
       
@@ -331,7 +369,12 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
           listingId: listing.id,
           config: {
             bannerType: bannerType,
-            mainImage: bannerImage
+            mainImage: bannerImage,
+            brokerImage: brokerImageUrl,
+            agencyLogo: agencyLogoUrl,
+            brokerName: brokerName,
+            brokerEmail: brokerEmail,
+            brokerPhone: brokerPhone
           }
         }
       });
@@ -574,6 +617,19 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             handleMusicChange={handleMusicChange}
             previewMusic={previewMusic}
             setBannerType={setBannerType}
+            // Add the missing props for broker and agency information
+            brokerImageUrl={brokerImageUrl}
+            setBrokerImageUrl={setBrokerImageUrl}
+            agencyLogoUrl={agencyLogoUrl}
+            setAgencyLogoUrl={setAgencyLogoUrl}
+            brokerName={brokerName}
+            setBrokerName={setBrokerName}
+            brokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
+            brokerPhone={brokerPhone}
+            setBrokerPhone={setBrokerPhone}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
           />
         );
       
