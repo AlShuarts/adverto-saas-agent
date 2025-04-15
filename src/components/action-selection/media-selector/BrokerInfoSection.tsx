@@ -1,5 +1,4 @@
 
-// Fix the typo in the props - brokerEmail was being passed instead of brokerEmail
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,6 +61,8 @@ export const BrokerInfoSection = ({
         } else {
           setAgencyLogoUrl(publicUrl);
         }
+
+        toast.success("Image téléchargée avec succès");
       } catch (error: any) {
         console.error(`Erreur lors du téléchargement de l'image ${type}:`, error);
         toast.error("Erreur de téléchargement", {
