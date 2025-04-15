@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,6 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const [isCreating, setIsCreating] = useState(false);
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
   
-  // Initialize form values with profile data when available
   const [brokerName, setBrokerName] = useState(
     profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : ""
   );
@@ -36,7 +34,6 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
   const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
   const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
       setSelectedImage(listing.images?.[0] || "");
@@ -86,10 +83,8 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       
       setIsCreating(true);
       
-      // Incrémenter les statistiques de génération de bannière
       await ensureAndIncrementStatistic('banner');
       
-      // Configuration pour la bannière
       const config = {
         mainImage: selectedImage,
         brokerImage,

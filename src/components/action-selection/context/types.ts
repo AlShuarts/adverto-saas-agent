@@ -1,4 +1,3 @@
-
 import { Tables } from "@/integrations/supabase/types";
 
 // Publication types
@@ -38,7 +37,7 @@ export interface ActionSelectionState {
   selectedImages: string[];
   
   // Banner
-  bannerType: "VENDU" | "À VENDRE";
+  bannerType: "VENDU" | "A_VENDRE";
   bannerImage: string | null;
   
   // Audio
@@ -89,7 +88,7 @@ export interface ActionSelectionContextType extends ActionSelectionState {
   onDragEnd: (result: any) => void;
   
   // Banner
-  setBannerType: (type: "VENDU" | "À VENDRE") => void;
+  setBannerType: (type: "VENDU" | "A_VENDRE") => void;
   selectBannerImage: (imageUrl: string) => void;
   
   // Audio

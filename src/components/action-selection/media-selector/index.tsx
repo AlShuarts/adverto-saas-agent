@@ -9,7 +9,7 @@ type MediaSelectorProps = {
   images: string[];
   selectedImages: string[];
   bannerImage: string | null;
-  bannerType: "VENDU" | "À VENDRE";
+  bannerType: "VENDU" | "A_VENDRE";
   musicList: string[];
   selectedMusic?: string;
   currentlyPlaying: string | null;
@@ -18,7 +18,7 @@ type MediaSelectorProps = {
   selectBannerImage: (imageUrl: string) => void;
   handleMusicChange: (value: string) => void;
   previewMusic: (musicName: string) => void;
-  setBannerType: (type: "VENDU" | "À VENDRE") => void;
+  setBannerType: (type: "VENDU" | "A_VENDRE") => void;
   // Broker info props
   brokerImageUrl: string | null;
   setBrokerImageUrl: (url: string | null) => void;

@@ -12,7 +12,7 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPublicationTypes, setSelectedPublicationTypes] = useState<PublicationType[]>([]);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [bannerType, setBannerType] = useState<"VENDU" | "À VENDRE">("VENDU");
+  const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [selectedNetworks, setSelectedNetworks] = useState<SocialNetworks>({
     facebook: false,

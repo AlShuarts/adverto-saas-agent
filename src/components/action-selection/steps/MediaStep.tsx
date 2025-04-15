@@ -7,7 +7,7 @@ type MediaStepProps = {
   images: string[];
   selectedImages: string[];
   bannerImage: string | null;
-  bannerType: "VENDU" | "À VENDRE";
+  bannerType: "VENDU" | "A_VENDRE";
   musicList: string[];
   selectedMusic: string | undefined;
   currentlyPlaying: string | null;
@@ -16,7 +16,7 @@ type MediaStepProps = {
   selectBannerImage: (imageUrl: string) => void;
   handleMusicChange: (value: string) => void;
   previewMusic: (musicName: string) => void;
-  setBannerType: (type: "VENDU" | "À VENDRE") => void;
+  setBannerType: (type: "VENDU" | "A_VENDRE") => void;
   brokerImageUrl: string | null;
   setBrokerImageUrl: (url: string | null) => void;
   agencyLogoUrl: string | null;
