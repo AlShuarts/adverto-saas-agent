@@ -65,8 +65,6 @@ export const MediaSelector = ({
 }: MediaSelectorProps) => {
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
-      
       {selectedPublicationTypes.includes("photo") && (
         <PhotoSelectionSection 
           images={images}
@@ -109,7 +107,7 @@ export const MediaSelector = ({
             brokerName={brokerName}
             setBrokerName={setBrokerName}
             brokerEmail={brokerEmail}
-            setBrokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
             brokerPhone={brokerPhone}
             setBrokerPhone={setBrokerPhone}
             formErrors={formErrors}

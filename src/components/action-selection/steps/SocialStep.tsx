@@ -1,61 +1,61 @@
 
 import { SocialNetworkSelector } from "../SocialNetworkSelector";
-import { PublicationPreview } from "../PublicationPreview";
-import { PublicationType } from "../types";
-
-type SocialNetworks = {
-  facebook: boolean;
-  instagram: boolean;
-};
+import { PublicationType, SocialNetworks } from "../types";
+import { Button } from "@/components/ui/button";
 
 type SocialStepProps = {
-  selectedNetworks: SocialNetworks;
-  onNetworkChange: (networks: SocialNetworks) => void;
-  generatedText: string;
-  setGeneratedText: (text: string) => void;
-  images: string[];
-  selectedImages: string[];
-  setSelectedImages: (images: string[]) => void;
-  slideshowUrl: string | null;
-  bannerUrl: string | null;
-  selectedMusic: string | undefined;
   selectedPublicationTypes: PublicationType[];
+  selectedNetworks: SocialNetworks;
+  setSelectedNetworks: (networks: SocialNetworks) => void;
+  isSubmitting: boolean;
+  onSubmit: () => Promise<void>;
+  hasRequiredInfo: boolean;
 };
 
-export const SocialStep = ({
+export const SocialStep = ({ 
+  selectedPublicationTypes, 
   selectedNetworks,
-  onNetworkChange,
-  generatedText,
-  setGeneratedText,
-  images,
-  selectedImages,
-  setSelectedImages,
-  slideshowUrl,
-  bannerUrl,
-  selectedMusic,
-  selectedPublicationTypes
+  setSelectedNetworks,
+  isSubmitting,
+  onSubmit,
+  hasRequiredInfo
 }: SocialStepProps) => {
+  // Handle network change
+  const handleNetworkChange = (network: keyof SocialNetworks, checked: boolean) => {
+    setSelectedNetworks({
+      ...selectedNetworks,
+      [network]: checked
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 4: Publier sur les réseaux sociaux</h3>
+      <h3 className="text-lg font-medium">Étape 5: Publier sur les réseaux sociaux</h3>
       
-      <SocialNetworkSelector
-        selectedNetworks={selectedNetworks}
-        onNetworkChange={onNetworkChange}
-      />
-      
-      <PublicationPreview
-        selectedNetworks={selectedNetworks}
-        generatedText={generatedText}
-        setGeneratedText={setGeneratedText}
-        images={images}
-        selectedImages={selectedImages}
-        setSelectedImages={setSelectedImages}
-        slideshowUrl={slideshowUrl}
-        bannerUrl={bannerUrl}
-        selectedMusic={selectedMusic}
-        selectedPublicationTypes={selectedPublicationTypes}
-      />
+      <div className="space-y-4 border rounded-md p-4">
+        <h4 className="font-medium">Sélection des réseaux</h4>
+        <p className="text-sm text-muted-foreground">
+          Choisissez les réseaux sociaux sur lesquels vous souhaitez publier votre contenu.
+        </p>
+        
+        <SocialNetworkSelector 
+          selectedNetworks={selectedNetworks}
+          onNetworkChange={handleNetworkChange}
+        />
+        
+        <Button 
+          type="button" 
+          onClick={onSubmit}
+          disabled={
+            isSubmitting || 
+            !hasRequiredInfo || 
+            (!selectedNetworks.facebook && !selectedNetworks.instagram)
+          }
+          className="w-full sm:w-auto mt-4"
+        >
+          {isSubmitting ? "Publication en cours..." : "Publier maintenant"}
+        </Button>
+      </div>
     </div>
   );
 };

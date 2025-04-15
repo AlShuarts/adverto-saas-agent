@@ -33,6 +33,8 @@ type GenerationStepProps = {
   brokerEmail: string;
   brokerPhone: string;
   setFormErrors: (errors: {[key: string]: string}) => void;
+  onRegenerateSlideshow?: () => void;
+  onRegenerateBanner?: () => void;
 };
 
 export const GenerationStep = ({
@@ -55,6 +57,8 @@ export const GenerationStep = ({
   brokerEmail,
   brokerPhone,
   setFormErrors,
+  onRegenerateSlideshow,
+  onRegenerateBanner
 }: GenerationStepProps) => {
   const [generationStep, setGenerationStep] = useState<"none" | "slideshow" | "banner">("none");
   
