@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PublicationType, SocialNetworks } from "../types";
@@ -9,18 +10,8 @@ type GenerationStepProps = {
   bannerImage: string | null;
   bannerType: "VENDU" | "À VENDRE";
   selectedMusic?: string;
-  generateSlideshow: (selectedImages: string[], selectedMusic?: string) => Promise<string | null>;
-  generateBanner: (
-    bannerImage: string | null,
-    bannerType: "VENDU" | "À VENDRE",
-    brokerInfo?: {
-      brokerImageUrl: string | null;
-      agencyLogoUrl: string | null;
-      brokerName: string;
-      brokerEmail: string;
-      brokerPhone: string;
-    }
-  ) => Promise<{ success?: boolean; errors?: Record<string, string>; }>;
+  generateSlideshow: () => Promise<string | null>;
+  generateBanner: () => Promise<void>;
   isGeneratingSlideshow: boolean;
   isGeneratingBanner: boolean;
   slideshowRenderId: string | null;
@@ -68,25 +59,11 @@ export const GenerationStep = ({
   const [generationStep, setGenerationStep] = useState<"none" | "slideshow" | "banner">("none");
   
   const handleGenerateSlideshow = async () => {
-    await generateSlideshow(selectedImages, selectedMusic);
+    await generateSlideshow();
   };
   
   const handleGenerateBanner = async () => {
-    const result = await generateBanner(
-      bannerImage,
-      bannerType,
-      {
-        brokerImageUrl,
-        agencyLogoUrl,
-        brokerName,
-        brokerEmail,
-        brokerPhone
-      }
-    );
-    
-    if (result.errors) {
-      setFormErrors(result.errors);
-    }
+    await generateBanner();
   };
 
   return (

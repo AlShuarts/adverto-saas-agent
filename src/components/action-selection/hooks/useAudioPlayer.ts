@@ -52,7 +52,8 @@ export const useAudioPlayer = () => {
   }, [audioPlaying]);
 
   return {
-    audioPlaying,
+    // Fixed audioPlaying property to be a boolean as expected by the context
+    audioPlaying: !!audioPlaying,
     currentlyPlaying,
     musicList,
     selectedMusic,

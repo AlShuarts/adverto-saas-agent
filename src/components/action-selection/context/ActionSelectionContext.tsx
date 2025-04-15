@@ -84,7 +84,7 @@ type ActionSelectionContextType = {
   bannerError: string | null;
   slideshowRenderId: string | null;
   handleGenerateSlideshow: () => Promise<string | null>;
-  handleGenerateBanner: () => Promise<void>;
+  handleGenerateBanner: () => Promise<{ success?: boolean; errors?: Record<string, string>; }>;
   refetchSlideshowStatus: () => void;
   
   // Social networks
@@ -94,7 +94,7 @@ type ActionSelectionContextType = {
   
   // Publishing
   isPublishing: boolean;
-  handlePublish: () => Promise<void>;
+  handlePublish: () => Promise<{ success?: boolean; error?: string }>;
   
   // Dialog control
   onClose: () => void;
@@ -275,11 +275,11 @@ export const ActionSelectionProvider = ({
     await generateText(selectedFacebookTemplateId, facebookTemplates);
   };
   
-  const handleGenerateSlideshow = async () => {
+  const handleGenerateSlideshow = async (): Promise<string | null> => {
     return await generateSlideshow(selectedImages, selectedMusic);
   };
   
-  const handleGenerateBanner = async () => {
+  const handleGenerateBanner = async (): Promise<{ success?: boolean; errors?: Record<string, string> }> => {
     return await generateBanner(
       bannerImage,
       bannerType,
@@ -300,7 +300,7 @@ export const ActionSelectionProvider = ({
     });
   };
   
-  const handlePublish = async () => {
+  const handlePublish = async (): Promise<{ success?: boolean; error?: string }> => {
     const result = await publish(
       selectedNetworks,
       selectedPublicationTypes,
@@ -316,9 +316,11 @@ export const ActionSelectionProvider = ({
       queryClient.invalidateQueries({ queryKey: ["listings"] });
       onClose();
     }
+    
+    return result;
   };
   
-  const canGoToNextStep = () => {
+  const canGoToNextStep = (): boolean => {
     switch (currentStep) {
       case 1: 
         return selectedPublicationTypes.length > 0;
@@ -333,8 +335,8 @@ export const ActionSelectionProvider = ({
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
         const needsBanner = selectedPublicationTypes.includes("banner");
         
-        const slideshowReady = !needsSlideshow || slideshowUrl;
-        const bannerReady = !needsBanner || bannerUrl;
+        const slideshowReady = !needsSlideshow || !!slideshowUrl;
+        const bannerReady = !needsBanner || !!bannerUrl;
         
         return slideshowReady && bannerReady;
       case 4: 
