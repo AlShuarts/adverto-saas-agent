@@ -60,12 +60,12 @@ export const BannerImageSelector = ({
       <div className="space-y-4 bg-muted/20 p-4 rounded-md">
         <h4 className="font-medium">1. Sélection du type de bannière et de l'image principale</h4>
         <div>
-          <Label htmlFor="banner-type">Type de bannière</Label>
+          <Label htmlFor="banner-type" className={formErrors.bannerType ? "text-destructive" : ""}>Type de bannière</Label>
           <Select 
             value={bannerType} 
             onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
           >
-            <SelectTrigger id="banner-type" className="mt-1">
+            <SelectTrigger id="banner-type" className={`mt-1 ${formErrors.bannerType ? "border-destructive" : ""}`}>
               <SelectValue placeholder="Type de bannière" />
             </SelectTrigger>
             <SelectContent>
@@ -73,11 +73,14 @@ export const BannerImageSelector = ({
               <SelectItem value="A_VENDRE">À VENDRE</SelectItem>
             </SelectContent>
           </Select>
+          {formErrors.bannerType && (
+            <p className="text-xs text-destructive mt-1">{formErrors.bannerType}</p>
+          )}
         </div>
         
         <div className="space-y-2">
-          <Label>Sélection de l'image principale</Label>
-          <ScrollArea className="h-[220px] border rounded-lg p-2">
+          <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale</Label>
+          <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
               {images?.map(imageUrl => (
                 <div
@@ -85,7 +88,13 @@ export const BannerImageSelector = ({
                   className={`relative cursor-pointer border-2 ${
                     bannerImage === imageUrl ? "border-primary" : "border-transparent"
                   } rounded overflow-hidden`}
-                  onClick={() => selectBannerImage(imageUrl)}
+                  onClick={() => {
+                    selectBannerImage(imageUrl);
+                    if (formErrors.bannerImage) {
+                      const { bannerImage, ...rest } = formErrors;
+                      setFormErrors(rest);
+                    }
+                  }}
                 >
                   <img
                     src={imageUrl}
@@ -96,6 +105,9 @@ export const BannerImageSelector = ({
               ))}
             </div>
           </ScrollArea>
+          {formErrors.bannerImage && (
+            <p className="text-xs text-destructive">{formErrors.bannerImage}</p>
+          )}
         </div>
       </div>
       

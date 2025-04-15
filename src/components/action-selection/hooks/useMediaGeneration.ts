@@ -104,6 +104,9 @@ export const useMediaGeneration = (listingId: string) => {
       if (brokerInfo.brokerEmail && !brokerInfo.brokerEmail.includes('@')) {
         errors.brokerEmail = "Veuillez fournir un email valide";
       }
+      if (brokerInfo.brokerPhone && brokerInfo.brokerPhone.trim() === '') {
+        errors.brokerPhone = "Veuillez fournir un numéro de téléphone";
+      }
       
       if (Object.keys(errors).length > 0) {
         return { errors };

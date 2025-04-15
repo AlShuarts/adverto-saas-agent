@@ -148,6 +148,32 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
   
   // Banner generation handler
   const handleGenerateBanner = async (): Promise<{ success?: boolean; errors?: Record<string, string> }> => {
+    // Validation
+    const errors: Record<string, string> = {};
+    
+    if (!bannerImage) {
+      errors.bannerImage = "Veuillez sélectionner une image pour la bannière";
+    }
+    
+    if (!brokerName || brokerName.trim() === '') {
+      errors.brokerName = "Le nom du courtier est requis";
+    }
+    
+    if (!brokerEmail || brokerEmail.trim() === '') {
+      errors.brokerEmail = "L'email du courtier est requis";
+    } else if (!/\S+@\S+\.\S+/.test(brokerEmail)) {
+      errors.brokerEmail = "L'email semble invalide";
+    }
+    
+    if (!brokerPhone || brokerPhone.trim() === '') {
+      errors.brokerPhone = "Le téléphone du courtier est requis";
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return { errors };
+    }
+
     return await generateBanner(
       bannerImage,
       bannerType,

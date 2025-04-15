@@ -8,7 +8,7 @@ type GenerationStepProps = {
   selectedNetworks: SocialNetworks;
   selectedImages: string[];
   bannerImage: string | null;
-  bannerType: "VENDU" | "A_VENDRE";  // Updated here
+  bannerType: "VENDU" | "A_VENDRE";
   selectedMusic?: string;
   generateSlideshow: () => Promise<string | null>;
   generateBanner: () => Promise<void>;

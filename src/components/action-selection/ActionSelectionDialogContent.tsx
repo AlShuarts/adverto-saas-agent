@@ -91,6 +91,7 @@ export const ActionSelectionDialogContent = () => {
     if (result.errors) {
       setFormErrors(result.errors);
     }
+    return;
   };
 
   // Wrapper function to match the expected type in SocialStep
