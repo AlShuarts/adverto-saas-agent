@@ -17,10 +17,11 @@ export const SocialNetworkSelector = ({
   selectedNetworks,
   onNetworkChange,
 }: SocialNetworkSelectorProps) => {
+  // Ensure we're dealing with boolean values
   const handleNetworkChange = (network: keyof SocialNetworks, checked: boolean) => {
     onNetworkChange({
       ...selectedNetworks,
-      [network]: checked
+      [network]: Boolean(checked)
     });
   };
 

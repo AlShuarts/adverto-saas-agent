@@ -13,7 +13,7 @@ export const useMediaGeneration = (listingId: string) => {
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [slideshowRenderId, setSlideshowRenderId] = useState<string | null>(null);
 
-  const generateSlideshow = async (selectedImages: string[], selectedMusic?: string) => {
+  const generateSlideshow = async (selectedImages: string[], selectedMusic?: string): Promise<string | null> => {
     try {
       setIsGeneratingSlideshow(true);
       setSlideshowError(null);
