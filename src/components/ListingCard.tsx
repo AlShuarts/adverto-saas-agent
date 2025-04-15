@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
@@ -137,7 +136,6 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
         </div>
         
         <div className="w-full grid grid-cols-1 gap-2">
-          {/* Nouveau bouton pour le dialogue d'actions */}
           <Button
             variant="default"
             size="sm"
@@ -147,96 +145,9 @@ export const ListingCard = ({ listing }: ListingCardProps) => {
             <ListChecks className="w-4 h-4 mr-2" />
             Effectuer des actions
           </Button>
-          
-          {/* Boutons existants - on les garde pour compatibilité */}
-          {profile?.facebook_page_id ? (
-            <>
-              <FacebookPublishButton listing={listing} />
-              <InstagramPublishButton listing={listing} />
-            </>
-          ) : (
-            <>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
-                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Sélectionner un template" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun template</SelectItem>
-                    {templates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleFacebookPreviewClick}
-                  className="w-full"
-                >
-                  <Share className="w-4 h-4 mr-2" />
-                  Prévisualiser sur Facebook
-                </Button>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleInstagramPreviewClick}
-                className="w-full"
-              >
-                <Share className="w-4 h-4 mr-2" />
-                Prévisualiser sur Instagram
-              </Button>
-            </>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSlideshowDialog(true)}
-            className="w-full"
-          >
-            <Video className="w-4 h-4 mr-2" />
-            Créer un diaporama
-          </Button>
-          <SlideshowStatus listing={listing} />
-          
-          {listing.is_published && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.href = "/published-listings"}
-              className="w-full"
-            >
-              <Bookmark className="w-4 h-4 mr-2" />
-              Voir dans les listings publiés
-            </Button>
-          )}
         </div>
       </CardFooter>
 
-      <FacebookPreview
-        listing={listing}
-        isOpen={showFacebookPreview}
-        onClose={() => setShowFacebookPreview(false)}
-        onPublish={handlePublishAttempt}
-        selectedTemplateId={selectedTemplateId}
-      />
-
-      <InstagramPreview
-        listing={listing}
-        isOpen={showInstagramPreview}
-        onClose={() => setShowInstagramPreview(false)}
-        onPublish={handlePublishAttempt}
-      />
-
-      <CreateSlideshowDialog
-        listing={listing}
-        isOpen={showSlideshowDialog}
-        onClose={() => setShowSlideshowDialog(false)}
-      />
-      
       <ActionSelectionDialog
         listing={listing}
         isOpen={showActionsDialog}
