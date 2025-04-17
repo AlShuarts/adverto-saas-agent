@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play, RefreshCw, Music } from "lucide-react";
 
@@ -11,6 +10,7 @@ type SlideshowGenerationSectionProps = {
   refetchSlideshowStatus: () => void;
   selectedImages: string[];
   selectedMusic?: string | undefined;
+  onRegenerateSlideshow: () => void;
 };
 
 export const SlideshowGenerationSection = ({
@@ -21,7 +21,8 @@ export const SlideshowGenerationSection = ({
   generateSlideshow,
   refetchSlideshowStatus,
   selectedImages,
-  selectedMusic
+  selectedMusic,
+  onRegenerateSlideshow
 }: SlideshowGenerationSectionProps) => {
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -115,9 +116,7 @@ export const SlideshowGenerationSection = ({
             </span>
             <Button 
               variant="outline" 
-              onClick={() => {
-                // Implement regeneration logic here
-              }}
+              onClick={onRegenerateSlideshow}
             >
               Régénérer
             </Button>

@@ -1,4 +1,3 @@
-
 import { Loader2, Tag, User, Building, Mail, Phone, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertyImageSelector } from "@/components/banner/PropertyImageSelector";
@@ -29,6 +28,7 @@ type BannerGenerationSectionProps = {
   formErrors: {[key: string]: string};
   setFormErrors: (errors: {[key: string]: string}) => void;
   selectedImages: string[];
+  onRegenerateBanner: () => void;
 };
 
 export const BannerGenerationSection = ({
@@ -52,7 +52,8 @@ export const BannerGenerationSection = ({
   setAgencyLogoUrl,
   formErrors,
   setFormErrors,
-  selectedImages
+  selectedImages,
+  onRegenerateBanner
 }: BannerGenerationSectionProps) => {
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -170,9 +171,7 @@ export const BannerGenerationSection = ({
               </span>
               <Button 
                 variant="outline"
-                onClick={() => {
-                  // Implement regeneration logic
-                }}
+                onClick={onRegenerateBanner}
               >
                 Régénérer
               </Button>
