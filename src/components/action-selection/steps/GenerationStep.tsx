@@ -1,5 +1,5 @@
 
-import { MediaGenerationStep } from "../MediaGenerationStep";
+import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
 import { PublicationType } from "../types";
 import { SocialNetworks } from "../context/types";
 

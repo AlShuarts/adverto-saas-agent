@@ -1,31 +1,20 @@
 
 import { useState, useEffect } from 'react';
-import { PublicationType, SocialNetworks, ActionSelectionState } from './types';
+import { PublicationType } from './types';
 import { Tables } from "@/integrations/supabase/types";
 import { useTemplates } from '../hooks/useTemplates';
 import { useTextGeneration } from '../hooks/useTextGeneration';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useMediaGeneration } from '../hooks/useMediaGeneration';
+import { useMediaSelection } from '../hooks/useMediaSelection';
+import { useBrokerInfo } from '../hooks/useBrokerInfo';
+import { useSocialNetworkSelection } from '../hooks/useSocialNetworkSelection';
 
 export const useActionSelectionState = (listing: Tables<"listings">) => {
   // Initialize state
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPublicationTypes, setSelectedPublicationTypes] = useState<PublicationType[]>([]);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
-  const [bannerImage, setBannerImage] = useState<string | null>(null);
-  const [selectedNetworks, setSelectedNetworks] = useState<SocialNetworks>({
-    facebook: false,
-    instagram: false
-  });
   
-  const [brokerImageUrl, setBrokerImageUrl] = useState<string | null>(null);
-  const [agencyLogoUrl, setAgencyLogoUrl] = useState<string | null>(null);
-  const [brokerName, setBrokerName] = useState<string>("");
-  const [brokerEmail, setBrokerEmail] = useState<string>("");
-  const [brokerPhone, setBrokerPhone] = useState<string>("");
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
-
   // Import custom hooks
   const { 
     facebookTemplates, 
@@ -72,6 +61,43 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     generateSlideshow,
     generateBanner
   } = useMediaGeneration(listing.id);
+
+  const {
+    selectedImages,
+    setSelectedImages,
+    bannerType,
+    setBannerType,
+    bannerImage,
+    setBannerImage,
+    resetMediaSelection,
+    toggleImageSelection,
+    onDragEnd,
+    selectBannerImage
+  } = useMediaSelection();
+
+  const {
+    brokerImageUrl,
+    setBrokerImageUrl,
+    agencyLogoUrl,
+    setAgencyLogoUrl,
+    brokerName,
+    setBrokerName,
+    brokerEmail,
+    setBrokerEmail,
+    brokerPhone,
+    setBrokerPhone,
+    formErrors,
+    setFormErrors,
+    resetBrokerInfo,
+    validateBrokerInfo
+  } = useBrokerInfo();
+
+  const {
+    selectedNetworks,
+    setSelectedNetworks,
+    resetNetworks,
+    handleNetworkChange
+  } = useSocialNetworkSelection();
   
   // Initialize and reset
   useEffect(() => {
@@ -84,39 +110,12 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setCurrentStep(1);
     setSelectedPublicationTypes([]);
     resetTemplates();
-    setSelectedImages([]);
-    setBannerImage(listing.images?.[0] || null);
-    setSelectedNetworks({ facebook: false, instagram: false });
+    resetMediaSelection(listing.images?.[0] || null);
+    resetNetworks();
+    resetBrokerInfo();
     setGeneratedText("");
     setSlideshowUrl(null);
     setBannerUrl(null);
-    setBrokerImageUrl(null);
-    setAgencyLogoUrl(null);
-    setBrokerName("");
-    setBrokerEmail("");
-    setBrokerPhone("");
-    setFormErrors({});
-  };
-
-  // Media selection handlers
-  const toggleImageSelection = (imageUrl: string) => {
-    setSelectedImages(prev => 
-      prev.includes(imageUrl)
-        ? prev.filter(url => url !== imageUrl)
-        : [...prev, imageUrl]
-    );
-  };
-  
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return;
-    const items = Array.from(selectedImages);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    setSelectedImages(items);
-  };
-  
-  const selectBannerImage = (imageUrl: string) => {
-    setBannerImage(imageUrl);
   };
   
   // Publication type handler
@@ -128,14 +127,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     );
   };
   
-  // Network handler
-  const handleNetworkChange = (network: keyof SocialNetworks, checked: boolean) => {
-    setSelectedNetworks({
-      ...selectedNetworks,
-      [network]: checked
-    });
-  };
-
   // Text generation handler
   const handleGenerateText = async () => {
     await generateText(selectedFacebookTemplateId, facebookTemplates);
@@ -149,24 +140,10 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
   // Banner generation handler
   const handleGenerateBanner = async (): Promise<{ success?: boolean; errors?: Record<string, string> }> => {
     // Validation
-    const errors: Record<string, string> = {};
+    const errors = validateBrokerInfo();
     
     if (!bannerImage) {
       errors.bannerImage = "Veuillez sélectionner une image pour la bannière";
-    }
-    
-    if (!brokerName || brokerName.trim() === '') {
-      errors.brokerName = "Le nom du courtier est requis";
-    }
-    
-    if (!brokerEmail || brokerEmail.trim() === '') {
-      errors.brokerEmail = "L'email du courtier est requis";
-    } else if (!/\S+@\S+\.\S+/.test(brokerEmail)) {
-      errors.brokerEmail = "L'email semble invalide";
-    }
-    
-    if (!brokerPhone || brokerPhone.trim() === '') {
-      errors.brokerPhone = "Le téléphone du courtier est requis";
     }
     
     if (Object.keys(errors).length > 0) {
@@ -192,25 +169,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     currentStep,
     setCurrentStep,
     selectedPublicationTypes,
-    selectedImages,
-    setSelectedImages,
-    bannerType,
-    setBannerType,
-    bannerImage,
-    selectedNetworks,
-    setSelectedNetworks,
-    brokerImageUrl,
-    setBrokerImageUrl,
-    agencyLogoUrl,
-    setAgencyLogoUrl,
-    brokerName,
-    setBrokerName,
-    brokerEmail,
-    setBrokerEmail,
-    brokerPhone,
-    setBrokerPhone,
-    formErrors,
-    setFormErrors,
     
     // From hooks
     facebookTemplates,
@@ -246,12 +204,37 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setIsGeneratingBanner,
     setSlideshowRenderId,
     
-    // Handlers
+    // From media selection hook
+    selectedImages,
+    setSelectedImages,
+    bannerType,
+    setBannerType,
+    bannerImage,
     toggleImageSelection,
     onDragEnd,
     selectBannerImage,
-    handlePublicationTypeChange,
+    
+    // From broker info hook
+    brokerImageUrl,
+    setBrokerImageUrl,
+    agencyLogoUrl,
+    setAgencyLogoUrl,
+    brokerName,
+    setBrokerName,
+    brokerEmail,
+    setBrokerEmail,
+    brokerPhone,
+    setBrokerPhone,
+    formErrors,
+    setFormErrors,
+    
+    // From network selection hook
+    selectedNetworks,
+    setSelectedNetworks,
     handleNetworkChange,
+    
+    // Handlers
+    handlePublicationTypeChange,
     handleGenerateText,
     handleGenerateSlideshow,
     handleGenerateBanner
