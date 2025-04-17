@@ -89,7 +89,7 @@ export const BannerImageSelector = ({
       )}
       
       <ScrollArea className="h-[500px]">
-        <Accordion type="single" collapsible defaultValue="banner-type" className="w-full">
+        <Accordion type="multiple" defaultValue={["banner-type", "broker-info", "banner-image"]} className="w-full">
           <AccordionItem value="banner-type">
             <AccordionTrigger className="text-base font-medium">Type de bannière</AccordionTrigger>
             <AccordionContent>
@@ -103,7 +103,7 @@ export const BannerImageSelector = ({
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="broker-info" defaultValue="broker-info">
+          <AccordionItem value="broker-info">
             <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
             <AccordionContent>
               <BrokerInfoSection
