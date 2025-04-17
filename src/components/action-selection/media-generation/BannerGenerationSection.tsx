@@ -6,6 +6,7 @@ import { ImageUploader } from "@/components/banner/ImageUploader";
 import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
 import { FormError } from "@/components/banner/FormError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type BannerGenerationSectionProps = {
   isGeneratingBanner: boolean;
@@ -57,10 +58,8 @@ export const BannerGenerationSection = ({
   onRegenerateBanner
 }: BannerGenerationSectionProps) => {
   
-  // Check if we have the required information to generate a banner
   const hasRequiredInfo = !!bannerImage && !!brokerName && !!brokerEmail && !!brokerPhone;
   
-  // Get a list of missing required fields
   const getMissingFields = () => {
     const missing = [];
     if (!bannerImage) missing.push("image de propriété");
@@ -79,69 +78,63 @@ export const BannerGenerationSection = ({
         <span>Configuration de la bannière</span>
       </h4>
       
-      <div className="space-y-6">
-        {/* Sélecteur d'image */}
-        <div className="bg-secondary/10 rounded-lg p-4">
-          <h5 className="text-sm font-medium mb-3">Image de propriété</h5>
-          <PropertyImageSelector
-            images={selectedImages.length > 0 ? selectedImages : []}
-            selectedImage={bannerImage || ""}
-            setSelectedImage={selectBannerImage}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-          />
-        </div>
-        
-        {/* Type de bannière */}
-        <div className="bg-secondary/10 rounded-lg p-4">
-          <h5 className="text-sm font-medium mb-3">Type de bannière</h5>
-          <BannerTypeSelector
-            bannerType={bannerType}
-            setBannerType={setBannerType}
-            error={formErrors.bannerType}
-          />
-        </div>
-        
-        {/* Informations du courtier */}
-        <div className="bg-secondary/10 rounded-lg p-4">
-          <h5 className="text-sm font-medium mb-4 flex items-center">
-            <User size={16} className="mr-2 text-primary" />
-            Informations du courtier
-          </h5>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <ImageUploader
-              type="broker"
-              imageUrl={brokerImageUrl}
-              setImageUrl={setBrokerImageUrl}
-            />
-            
-            <ImageUploader
-              type="agency"
-              imageUrl={agencyLogoUrl}
-              setImageUrl={setAgencyLogoUrl}
+      <ScrollArea className="max-h-[500px] pr-4">
+        <div className="space-y-6">
+          <div className="bg-secondary/10 rounded-lg p-4">
+            <h5 className="text-sm font-medium mb-3">Image de propriété</h5>
+            <PropertyImageSelector
+              images={selectedImages.length > 0 ? selectedImages : []}
+              selectedImage={bannerImage || ""}
+              setSelectedImage={selectBannerImage}
+              formErrors={formErrors}
+              setFormErrors={setFormErrors}
             />
           </div>
           
-          <BrokerInfoForm
-            brokerName={brokerName}
-            setBrokerName={setBrokerName}
-            brokerEmail={brokerEmail}
-            setBrokerEmail={setBrokerEmail}
-            brokerPhone={brokerPhone}
-            setBrokerPhone={setBrokerPhone}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-          />
+          <div className="bg-secondary/10 rounded-lg p-4">
+            <h5 className="text-sm font-medium mb-3">Type de bannière</h5>
+            <BannerTypeSelector
+              bannerType={bannerType}
+              setBannerType={setBannerType}
+              error={formErrors.bannerType}
+            />
+          </div>
+          
+          <div className="bg-secondary/10 rounded-lg p-4">
+            <h5 className="text-sm font-medium mb-4 flex items-center">
+              <User size={16} className="mr-2 text-primary" />
+              Informations du courtier
+            </h5>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <ImageUploader
+                type="broker"
+                imageUrl={brokerImageUrl}
+                setImageUrl={setBrokerImageUrl}
+              />
+              
+              <ImageUploader
+                type="agency"
+                imageUrl={agencyLogoUrl}
+                setImageUrl={setAgencyLogoUrl}
+              />
+            </div>
+            
+            <BrokerInfoForm
+              brokerName={brokerName}
+              setBrokerName={setBrokerName}
+              brokerEmail={brokerEmail}
+              setBrokerEmail={setBrokerEmail}
+              brokerPhone={brokerPhone}
+              setBrokerPhone={setBrokerPhone}
+              formErrors={formErrors}
+              setFormErrors={setFormErrors}
+            />
+          </div>
         </div>
-      </div>
+      </ScrollArea>
       
       <div className="border-t pt-4 mt-6">
-        <h4 className="font-medium mb-4 flex items-center">
-          <Tag size={16} className="mr-2 text-primary" />
-          Génération de la bannière
-        </h4>
-        
         {!hasRequiredInfo && (
           <Alert variant="default" className="mb-4 bg-amber-50">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
