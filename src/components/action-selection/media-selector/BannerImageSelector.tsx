@@ -87,7 +87,7 @@ export const BannerImageSelector = ({
         </Alert>
       )}
       
-      <ScrollArea className="h-[500px]">
+      <ScrollArea className="h-[500px] pr-4">
         <Accordion type="multiple" defaultValue={["banner-type", "broker-info", "banner-image"]} className="w-full">
           <AccordionItem value="banner-type">
             <AccordionTrigger className="text-base font-medium">Type de bannière</AccordionTrigger>
@@ -105,7 +105,7 @@ export const BannerImageSelector = ({
           <AccordionItem value="broker-info">
             <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
             <AccordionContent>
-              <div className="p-2 space-y-4">
+              <div className="p-4 space-y-4">
                 <BrokerInfoSection
                   brokerImageUrl={brokerImageUrl}
                   setBrokerImageUrl={setBrokerImageUrl}
@@ -127,7 +127,7 @@ export const BannerImageSelector = ({
           <AccordionItem value="banner-image">
             <AccordionTrigger className="text-base font-medium">Sélection de l'image principale</AccordionTrigger>
             <AccordionContent>
-              <div className="space-y-2">
+              <div className="space-y-2 p-4">
                 <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale *</Label>
                 <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
