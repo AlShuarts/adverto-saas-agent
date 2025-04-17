@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PublicationStep } from "./steps/PublicationStep";
 import { TemplateStep } from "./steps/TemplateStep";
 import { MediaStep } from "./steps/MediaStep";
+import { MediaGenerationStep } from "./MediaGenerationStep";
 import { GenerationStep } from "./steps/GenerationStep";
 import { SocialStep } from "./steps/SocialStep";
 import { StepNavigation } from "./steps/StepNavigation";
@@ -159,13 +160,25 @@ export const ActionSelectionDialogContent = () => {
       
       case 3.5:
         return (
-          <GenerationStep
+          <MediaGenerationStep
             selectedPublicationTypes={selectedPublicationTypes}
-            selectedNetworks={selectedNetworks}
             selectedImages={selectedImages}
             bannerImage={bannerImage}
             bannerType={bannerType}
-            selectedMusic={selectedMusic}
+            setBannerType={setBannerType}
+            selectBannerImage={selectBannerImage}
+            brokerImageUrl={brokerImageUrl}
+            setBrokerImageUrl={setBrokerImageUrl}
+            agencyLogoUrl={agencyLogoUrl}
+            setAgencyLogoUrl={setAgencyLogoUrl}
+            brokerName={brokerName}
+            setBrokerName={setBrokerName}
+            brokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
+            brokerPhone={brokerPhone}
+            setBrokerPhone={setBrokerPhone}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
             generateSlideshow={generateSlideshowWrapper}
             generateBanner={generateBannerWrapper}
             isGeneratingSlideshow={isGeneratingSlideshow}
@@ -173,19 +186,6 @@ export const ActionSelectionDialogContent = () => {
             slideshowRenderId={slideshowRenderId}
             slideshowError={slideshowError}
             bannerError={bannerError}
-            brokerImageUrl={brokerImageUrl}
-            agencyLogoUrl={agencyLogoUrl}
-            brokerName={brokerName}
-            brokerEmail={brokerEmail}
-            brokerPhone={brokerPhone}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-            onRegenerateSlideshow={() => {
-              // Reset slideshow state in useMediaGeneration
-            }}
-            onRegenerateBanner={() => {
-              // Reset banner state in useMediaGeneration
-            }}
             slideshowUrl={slideshowUrl}
             bannerUrl={bannerUrl}
             refetchSlideshowStatus={refetchSlideshowStatus}
