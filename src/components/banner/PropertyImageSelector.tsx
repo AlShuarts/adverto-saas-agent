@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormError } from "./FormError";
 import { ImageIcon, AlertCircle } from "lucide-react";
@@ -40,7 +39,7 @@ export const PropertyImageSelector = ({
       {images.length > 0 ? (
         <>
           {!selectedImage && (
-            <Alert variant="warning" className="bg-amber-50 mb-2">
+            <Alert variant="default" className="bg-amber-50 mb-2">
               <AlertCircle className="h-4 w-4 text-amber-500" />
               <AlertDescription className="text-amber-700 text-xs">
                 Veuillez sélectionner une image pour continuer

@@ -1,4 +1,3 @@
-
 import { Loader2, Tag, User, Building, Mail, Phone, ImageIcon, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertyImageSelector } from "@/components/banner/PropertyImageSelector";
@@ -144,7 +143,7 @@ export const BannerGenerationSection = ({
         </h4>
         
         {!hasRequiredInfo && (
-          <Alert variant="warning" className="mb-4 bg-amber-50">
+          <Alert variant="default" className="mb-4 bg-amber-50">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
             <AlertDescription className="text-amber-700">
               Des informations obligatoires sont manquantes: {missingFields.join(', ')}
