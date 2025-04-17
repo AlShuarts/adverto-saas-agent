@@ -78,7 +78,7 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="Entrez le nom du courtier"
+          placeholder="Entrez le nom complet du courtier"
           className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300 bg-amber-50" : ""}`}
         />
         {!brokerName && !formErrors.brokerName && (
@@ -106,7 +106,7 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="Entrez l'email du courtier"
+          placeholder="exemple@domaine.com"
           className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300 bg-amber-50" : ""}`}
         />
         {!brokerEmail && !formErrors.brokerEmail && (
@@ -134,7 +134,7 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="Entrez le téléphone du courtier"
+          placeholder="(514) 123-4567"
           className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300 bg-amber-50" : ""}`}
         />
         {!brokerPhone && !formErrors.brokerPhone && (
