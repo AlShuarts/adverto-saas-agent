@@ -83,20 +83,7 @@ export const BannerGenerationSection = ({
       
       <ScrollArea className="max-h-[500px] pr-4">
         <div className="space-y-6">
-          <Accordion type="multiple" defaultValue={["banner-image", "banner-type", "broker-info"]} className="w-full">
-            <AccordionItem value="banner-image">
-              <AccordionTrigger className="text-sm font-medium">Image de propriété</AccordionTrigger>
-              <AccordionContent className="p-2">
-                <PropertyImageSelector
-                  images={selectedImages.length > 0 ? selectedImages : []}
-                  selectedImage={bannerImage || ""}
-                  setSelectedImage={selectBannerImage}
-                  formErrors={formErrors}
-                  setFormErrors={setFormErrors}
-                />
-              </AccordionContent>
-            </AccordionItem>
-            
+          <Accordion type="multiple" defaultValue={["banner-type", "broker-info", "banner-image"]} className="w-full">
             <AccordionItem value="banner-type">
               <AccordionTrigger className="text-sm font-medium">Type de bannière</AccordionTrigger>
               <AccordionContent className="p-2">
@@ -139,6 +126,19 @@ export const BannerGenerationSection = ({
                     setFormErrors={setFormErrors}
                   />
                 </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="banner-image">
+              <AccordionTrigger className="text-sm font-medium">Image de propriété</AccordionTrigger>
+              <AccordionContent className="p-2">
+                <PropertyImageSelector
+                  images={selectedImages.length > 0 ? selectedImages : []}
+                  selectedImage={bannerImage || ""}
+                  setSelectedImage={selectBannerImage}
+                  formErrors={formErrors}
+                  setFormErrors={setFormErrors}
+                />
               </AccordionContent>
             </AccordionItem>
           </Accordion>

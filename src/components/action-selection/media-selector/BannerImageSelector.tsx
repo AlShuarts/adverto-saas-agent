@@ -91,7 +91,7 @@ export const BannerImageSelector = ({
       <ScrollArea className="h-[500px]">
         <Accordion type="single" collapsible defaultValue="banner-type" className="w-full">
           <AccordionItem value="banner-type">
-            <AccordionTrigger className="text-base font-medium">Configuration de la bannière</AccordionTrigger>
+            <AccordionTrigger className="text-base font-medium">Type de bannière</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 p-2">
                 <BannerTypeSelector 
@@ -99,40 +99,10 @@ export const BannerImageSelector = ({
                   setBannerType={setBannerType}
                   error={formErrors.bannerType}
                 />
-                
-                <div className="space-y-2">
-                  <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale *</Label>
-                  <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
-                      {images?.map(imageUrl => (
-                        <div
-                          key={imageUrl}
-                          className={`relative cursor-pointer border-2 ${
-                            bannerImage === imageUrl ? "border-primary" : "border-transparent"
-                          } rounded overflow-hidden`}
-                          onClick={() => {
-                            selectBannerImage(imageUrl);
-                            if (formErrors.bannerImage) {
-                              const { bannerImage, ...rest } = formErrors;
-                              setFormErrors(rest);
-                            }
-                          }}
-                        >
-                          <img
-                            src={imageUrl}
-                            alt="Property"
-                            className="w-full h-24 object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                  <FormError error={formErrors.bannerImage} />
-                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
-          
+
           <AccordionItem value="broker-info">
             <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
             <AccordionContent>
@@ -150,6 +120,41 @@ export const BannerImageSelector = ({
                 formErrors={formErrors}
                 setFormErrors={setFormErrors}
               />
+            </AccordionContent>
+          </AccordionItem>
+          
+          <AccordionItem value="banner-image">
+            <AccordionTrigger className="text-base font-medium">Sélection de l'image principale</AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2">
+                <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale *</Label>
+                <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
+                    {images?.map(imageUrl => (
+                      <div
+                        key={imageUrl}
+                        className={`relative cursor-pointer border-2 ${
+                          bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                        } rounded overflow-hidden`}
+                        onClick={() => {
+                          selectBannerImage(imageUrl);
+                          if (formErrors.bannerImage) {
+                            const { bannerImage, ...rest } = formErrors;
+                            setFormErrors(rest);
+                          }
+                        }}
+                      >
+                        <img
+                          src={imageUrl}
+                          alt="Property"
+                          className="w-full h-24 object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+                <FormError error={formErrors.bannerImage} />
+              </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
