@@ -237,42 +237,39 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
 
   if (latestRender.status === "pending") {
     return (
-      <div className="border rounded-md p-4 text-center">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-6 w-6 animate-spin mb-2" />
-          <h3 className="text-lg font-medium">Bannière "{bannerType}" en cours de création</h3>
-          <p className="text-sm text-muted-foreground">
-            Cela peut prendre quelques instants...
-          </p>
-          {hasError && (
-            <Alert variant="destructive" className="mt-4 mb-2">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{errorMessage || "Une erreur s'est produite."}</AlertDescription>
-            </Alert>
+      <div className="flex flex-col items-center">
+        <Loader2 className="h-6 w-6 animate-spin mb-2" />
+        <h3 className="text-lg font-medium">Bannière "{bannerType}" en cours de création</h3>
+        <p className="text-sm text-muted-foreground">
+          Cela peut prendre quelques instants...
+        </p>
+        {hasError && (
+          <Alert variant="destructive" className="mt-4 mb-2">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{errorMessage || "Une erreur s'est produite."}</AlertDescription>
+          </Alert>
+        )}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mt-3"
+          onClick={() => checkRenderStatus(latestRender.render_id)}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
           )}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-3"
-            onClick={() => checkRenderStatus(latestRender.render_id)}
-            disabled={isRefreshing}
-          >
-            {isRefreshing ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            Vérifier le statut
-          </Button>
-        </div>
+          Vérifier le statut
+        </Button>
       </div>
     );
   }
 
   if (latestRender.status === "completed" && latestRender.image_url) {
     return (
-      <div className="border rounded-md p-4">
-        <h3 className="text-lg font-medium mb-2">Bannière "{bannerType}"</h3>
+      <div className="space-y-2">
         <div className="aspect-video overflow-hidden rounded-md mb-4">
           <img
             src={latestRender.image_url}
@@ -339,23 +336,5 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     );
   }
 
-  return (
-    <div className="border rounded-md p-4 text-center">
-      <Alert variant="destructive" className="mb-4">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          Une erreur est survenue lors de la création de la bannière.
-          {errorMessage ? ` ${errorMessage}` : ""}
-        </AlertDescription>
-      </Alert>
-      <Button
-        variant="outline"
-        size="sm"
-        className="mt-2"
-        onClick={() => fetchRenders()}
-      >
-        Réessayer
-      </Button>
-    </div>
-  );
+  return null;
 };
