@@ -79,7 +79,7 @@ export const useMediaGeneration = (listingId: string) => {
   const generateBanner = async (
     bannerImage: string | null, 
     bannerType: "VENDU" | "A_VENDRE",
-    brokerInfo?: {
+    brokerInfo: {
       brokerImageUrl: string | null;
       agencyLogoUrl: string | null;
       brokerName: string;
@@ -138,6 +138,10 @@ export const useMediaGeneration = (listingId: string) => {
       
       console.log("Réponse de create-sold-banner:", data);
       
+      if (!data || !data.renderId) {
+        throw new Error("Aucun ID de rendu n'a été retourné");
+      }
+      
       // Attendre 3 secondes avant de vérifier le statut
       await new Promise(resolve => setTimeout(resolve, 3000));
       
@@ -150,7 +154,7 @@ export const useMediaGeneration = (listingId: string) => {
         const { data: statusData, error: statusError } = await supabase
           .from("sold_banner_renders")
           .select("image_url, status")
-          .eq("listing_id", listingId)
+          .eq("render_id", data.renderId)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();

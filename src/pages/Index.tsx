@@ -6,12 +6,11 @@ import { FeaturesSection } from "@/components/FeaturesSection";
 import { ListingsSection } from "@/components/ListingsSection";
 import { useFacebookSDK } from "@/hooks/useFacebookSDK";
 import { useProfile } from "@/hooks/useProfile";
-import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "sonner";
 
 const Index = () => {
   const { fbInitialized } = useFacebookSDK();
   const { profile, loading, getProfile, connectFacebook, connectInstagram } = useProfile();
-  const { toast } = useToast();
 
   return (
     <div className="min-h-screen bg-secondary">
@@ -24,6 +23,7 @@ const Index = () => {
       />
       <ListingsSection />
       <FeaturesSection />
+      <Toaster position="top-right" />
     </div>
   );
 };
