@@ -1,11 +1,13 @@
+
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BrokerInfoSection } from "./BrokerInfoSection";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, AlertTriangle } from "lucide-react";
 import { FormError } from "@/components/banner/FormError";
 import { BannerTypeSelector } from "@/components/banner/BannerTypeSelector";
+import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
+import { ImageUploader } from "@/components/banner/ImageUploader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 type BannerImageSelectorProps = {
@@ -35,7 +37,6 @@ export const BannerImageSelector = ({
   selectBannerImage,
   bannerType,
   setBannerType,
-  // Broker info props
   brokerImageUrl,
   setBrokerImageUrl,
   agencyLogoUrl,
@@ -92,7 +93,7 @@ export const BannerImageSelector = ({
           <AccordionItem value="banner-type">
             <AccordionTrigger className="text-base font-medium">Type de bannière</AccordionTrigger>
             <AccordionContent>
-              <div className="space-y-4 p-2">
+              <div className="space-y-4 p-4">
                 <BannerTypeSelector 
                   bannerType={bannerType} 
                   setBannerType={setBannerType}
@@ -105,12 +106,24 @@ export const BannerImageSelector = ({
           <AccordionItem value="broker-info">
             <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
             <AccordionContent>
-              <div className="p-4 space-y-4">
-                <BrokerInfoSection
-                  brokerImageUrl={brokerImageUrl}
-                  setBrokerImageUrl={setBrokerImageUrl}
-                  agencyLogoUrl={agencyLogoUrl}
-                  setAgencyLogoUrl={setAgencyLogoUrl}
+              <div className="space-y-6 p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ImageUploader 
+                    type="broker"
+                    imageUrl={brokerImageUrl}
+                    setImageUrl={setBrokerImageUrl}
+                  />
+                  
+                  <ImageUploader 
+                    type="agency"
+                    imageUrl={agencyLogoUrl}
+                    setImageUrl={setAgencyLogoUrl}
+                  />
+                </div>
+                
+                <Separator className="my-4" />
+                
+                <BrokerInfoForm
                   brokerName={brokerName}
                   setBrokerName={setBrokerName}
                   brokerEmail={brokerEmail}
