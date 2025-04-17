@@ -100,6 +100,17 @@ export const ActionSelectionDialogContent = () => {
     await handlePublish();
   };
 
+  // Helper functions for regeneration
+  const handleRegenerateSlideshow = () => {
+    // Reset slideshow state here
+    // No-op for now
+  };
+
+  const handleRegenerateBanner = () => {
+    // Reset banner state here
+    // No-op for now
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1: 
@@ -160,7 +171,7 @@ export const ActionSelectionDialogContent = () => {
       
       case 3.5:
         return (
-          <MediaGenerationStep
+          <GenerationStep
             selectedPublicationTypes={selectedPublicationTypes}
             selectedImages={selectedImages}
             bannerImage={bannerImage}
@@ -177,6 +188,7 @@ export const ActionSelectionDialogContent = () => {
             setBrokerEmail={setBrokerEmail}
             brokerPhone={brokerPhone}
             setBrokerPhone={setBrokerPhone}
+            selectedMusic={selectedMusic}
             formErrors={formErrors}
             setFormErrors={setFormErrors}
             generateSlideshow={generateSlideshowWrapper}
@@ -189,6 +201,8 @@ export const ActionSelectionDialogContent = () => {
             slideshowUrl={slideshowUrl}
             bannerUrl={bannerUrl}
             refetchSlideshowStatus={refetchSlideshowStatus}
+            onRegenerateSlideshow={handleRegenerateSlideshow}
+            onRegenerateBanner={handleRegenerateBanner}
           />
         );
       

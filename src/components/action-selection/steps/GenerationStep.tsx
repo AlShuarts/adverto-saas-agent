@@ -5,7 +5,6 @@ import { SocialNetworks } from "../context/types";
 
 type GenerationStepProps = {
   selectedPublicationTypes: PublicationType[];
-  selectedNetworks: SocialNetworks;
   selectedImages: string[];
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
@@ -67,6 +66,8 @@ export const GenerationStep = ({
   slideshowUrl,
   bannerUrl,
   refetchSlideshowStatus,
+  onRegenerateSlideshow,
+  onRegenerateBanner,
 }: GenerationStepProps) => {
   return (
     <MediaGenerationStep
