@@ -1,17 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PropertyImageSelector } from "./PropertyImageSelector";
-import { BannerTypeSelector } from "./BannerTypeSelector";
-import { BrokerInfoForm } from "./BrokerInfoForm";
-import { ImageUploader } from "./ImageUploader";
+import { DialogFormContent } from "./DialogFormContent";
 
 type CreateSoldBannerDialogProps = {
   listing: Tables<"listings">;
@@ -47,7 +44,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
     }
   }, [isOpen, listing.images, profile]);
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const errors: {[key: string]: string} = {};
     
     if (!selectedImage) {
@@ -82,7 +79,6 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       }
       
       setIsCreating(true);
-      
       await ensureAndIncrementStatistic('banner');
       
       const config = {
@@ -95,8 +91,6 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
         bannerType
       };
       
-      console.log("Sending banner creation request with config:", config);
-      
       const { data, error } = await supabase.functions.invoke('create-sold-banner', {
         body: {
           listingId: listing.id,
@@ -105,8 +99,6 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       });
       
       if (error) throw error;
-      
-      console.log("Banner creation response:", data);
       
       toast.success(
         bannerType === "VENDU" 
@@ -126,65 +118,33 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       setIsCreating(false);
     }
   };
-  
-  const bannerTitle = bannerType === "VENDU" ? "VENDU" : "À VENDRE";
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Créer une bannière &quot;{bannerTitle}&quot;</DialogTitle>
+          <DialogTitle>Créer une bannière &quot;{bannerType === "VENDU" ? "VENDU" : "À VENDRE"}&quot;</DialogTitle>
         </DialogHeader>
         
-        {(!listing.images || listing.images.length === 0) && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Cette propriété n'a pas d'images. Veuillez d'abord ajouter des images à la propriété.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="grid gap-4 py-4">
-          <BannerTypeSelector bannerType={bannerType} setBannerType={setBannerType} />
-          
-          <PropertyImageSelector 
-            images={listing.images || []} 
-            selectedImage={selectedImage} 
-            setSelectedImage={setSelectedImage}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-          />
-          
-          <BrokerInfoForm 
-            brokerName={brokerName}
-            setBrokerName={setBrokerName}
-            brokerEmail={brokerEmail}
-            setBrokerEmail={setBrokerEmail}
-            brokerPhone={brokerPhone}
-            setBrokerPhone={setBrokerPhone}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <ImageUploader 
-              type="broker" 
-              imageUrl={brokerImage} 
-              setImageUrl={setBrokerImage} 
-            />
-            
-            <ImageUploader 
-              type="agency" 
-              imageUrl={agencyLogo} 
-              setImageUrl={setAgencyLogo} 
-            />
-          </div>
-          
-          <div className="text-sm text-muted-foreground mt-2">
-            * Champs obligatoires
-          </div>
-        </div>
+        <DialogFormContent 
+          listing={listing}
+          selectedImage={selectedImage}
+          setSelectedImage={setSelectedImage}
+          brokerName={brokerName}
+          setBrokerName={setBrokerName}
+          brokerEmail={brokerEmail}
+          setBrokerEmail={setBrokerEmail}
+          brokerPhone={brokerPhone}
+          setBrokerPhone={setBrokerPhone}
+          brokerImage={brokerImage}
+          setBrokerImage={setBrokerImage}
+          agencyLogo={agencyLogo}
+          setAgencyLogo={setAgencyLogo}
+          bannerType={bannerType}
+          setBannerType={setBannerType}
+          formErrors={formErrors}
+          setFormErrors={setFormErrors}
+        />
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
@@ -201,7 +161,7 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
                 Création en cours...
               </>
             ) : (
-              `Créer la bannière "${bannerTitle}"`
+              `Créer la bannière "${bannerType === "VENDU" ? "VENDU" : "À VENDRE"}"`
             )}
           </Button>
         </DialogFooter>

@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tag } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
-import { CreateSoldBannerDialog } from "./banner/CreateSoldBannerDialog";
+import { CreateSoldBannerDialog } from "./banner/dialog/CreateSoldBannerDialog";
 
 type CreateSoldBannerButtonProps = {
   listing: Tables<"listings">;
