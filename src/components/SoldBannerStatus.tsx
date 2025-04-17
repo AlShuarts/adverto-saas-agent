@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,7 @@ type SoldBannerRender = {
   status: string;
   image_url: string | null;
   created_at: string;
-  banner_type: string; // "VENDU" ou "A_VENDRE"
+  banner_type: string;
   user_id: string;
   updated_at: string;
 };
@@ -56,10 +55,9 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       
       console.log("Bannières récupérées:", data);
       
-      // Ensure all records have the banner_type property
       const processedData = data?.map(render => ({
         ...render,
-        banner_type: render.banner_type || "VENDU" // Use the actual property now that it exists in the DB
+        banner_type: render.banner_type || "VENDU"
       })) || [];
       
       setRenders(processedData as SoldBannerRender[]);
@@ -73,7 +71,6 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     }
   };
 
-  // Vérification manuelle du statut d'un rendu
   const checkRenderStatus = async (renderId: string) => {
     try {
       setIsRefreshing(true);
@@ -93,11 +90,9 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
       
       console.log('Réponse de la vérification du statut:', data);
       
-      // Si le statut a été mis à jour, actualiser la liste
       if (data.status === "done" || data.videoUrl || data.url) {
         fetchRenders();
         
-        // Si la bannière est prête, afficher une notification
         if (data.status === "done") {
           toast.success("Votre bannière est prête !", {
             description: "Vous pouvez maintenant la télécharger ou la partager.",
@@ -118,12 +113,10 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     }
   };
 
-  // Publier la bannière sur Facebook
   const handleFacebookShare = async (imageUrl: string, bannerType: string) => {
     try {
       setIsPublishing(true);
       
-      // Créer un message pour la publication
       const propertyType = listing.property_type ? `${listing.property_type} ` : '';
       const message = bannerType === 'VENDU' 
         ? `🎉 ${propertyType}${bannerType} 🎉\n\n${listing.address || 'Propriété'}`
@@ -142,18 +135,15 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     }
   };
 
-  // Publier la bannière sur Instagram
   const handleInstagramShare = async (imageUrl: string, bannerType: string) => {
     try {
       setIsPublishing(true);
       
-      // Créer un message pour la publication Instagram
       const propertyType = listing.property_type ? `${listing.property_type} ` : '';
       const message = bannerType === 'VENDU' 
         ? `🎉 ${propertyType}${bannerType} 🎉\n\n${listing.address || 'Propriété'}`
         : `🏠 ${propertyType}À VENDRE 🏠\n\n${listing.address || 'Propriété'}\n\n${listing.bedrooms || ''} ch. | ${listing.bathrooms || ''} sdb. | ${listing.price ? new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(listing.price) : ''}`;
       
-      // Incrémenter les statistiques pour Instagram
       await ensureAndIncrementStatistic('instagram');
       
       const { error } = await supabase.functions.invoke('instagram-publish', {
@@ -184,7 +174,6 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     }
   }, [listing.id]);
 
-  // Abonnement aux changements en temps réel
   useEffect(() => {
     const channel = supabase
       .channel('sold_banner_renders_changes')
@@ -200,7 +189,6 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
           console.log('Changement dans les bannières:', payload);
           fetchRenders();
 
-          // Si une bannière est terminée, afficher une notification
           if (
             payload.eventType === 'UPDATE' &&
             payload.new.status === 'completed' &&
@@ -220,19 +208,17 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     };
   }, [listing.id]);
 
-  // Vérifier périodiquement le statut des bannières en attente
   useEffect(() => {
     if (renders.length > 0 && renders[0].status === "pending") {
       const checkInterval = setInterval(() => {
         console.log("Vérification automatique du statut du rendu...");
         checkRenderStatus(renders[0].render_id);
-      }, 15000); // Vérifier toutes les 15 secondes
+      }, 15000);
       
       return () => clearInterval(checkInterval);
     }
   }, [renders]);
 
-  // Si aucun render ou chargement
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-4">
@@ -247,10 +233,8 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
   }
 
   const latestRender = renders[0];
-  // Make sure we properly format A_VENDRE to "À VENDRE" for display
   const bannerType = latestRender.banner_type === 'VENDU' ? 'VENDU' : 'À VENDRE';
 
-  // Si la bannière est en cours de création
   if (latestRender.status === "pending") {
     return (
       <div className="border rounded-md p-4 text-center">
@@ -285,7 +269,6 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     );
   }
 
-  // Si la bannière est prête
   if (latestRender.status === "completed" && latestRender.image_url) {
     return (
       <div className="border rounded-md p-4">
@@ -340,7 +323,6 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
             variant="default"
             size="sm"
             onClick={() => {
-              // Télécharger l'image
               const link = document.createElement("a");
               link.href = latestRender.image_url || "";
               link.download = `${bannerType.toLowerCase()}-${listing.address || "propriete"}.png`;
@@ -357,7 +339,6 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
     );
   }
 
-  // En cas d'erreur
   return (
     <div className="border rounded-md p-4 text-center">
       <Alert variant="destructive" className="mb-4">
