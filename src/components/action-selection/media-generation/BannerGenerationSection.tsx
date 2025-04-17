@@ -1,10 +1,12 @@
-import { Loader2, Tag, User, Building, Mail, Phone, ImageIcon } from "lucide-react";
+
+import { Loader2, Tag, User, Building, Mail, Phone, ImageIcon, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertyImageSelector } from "@/components/banner/PropertyImageSelector";
 import { BannerTypeSelector } from "@/components/banner/BannerTypeSelector";
 import { ImageUploader } from "@/components/banner/ImageUploader";
 import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
 import { FormError } from "@/components/banner/FormError";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type BannerGenerationSectionProps = {
   isGeneratingBanner: boolean;
@@ -55,6 +57,22 @@ export const BannerGenerationSection = ({
   selectedImages,
   onRegenerateBanner
 }: BannerGenerationSectionProps) => {
+  
+  // Check if we have the required information to generate a banner
+  const hasRequiredInfo = !!bannerImage && !!brokerName && !!brokerEmail && !!brokerPhone;
+  
+  // Get a list of missing required fields
+  const getMissingFields = () => {
+    const missing = [];
+    if (!bannerImage) missing.push("image de propriété");
+    if (!brokerName) missing.push("nom du courtier");
+    if (!brokerEmail) missing.push("email du courtier");
+    if (!brokerPhone) missing.push("téléphone du courtier");
+    return missing;
+  };
+  
+  const missingFields = getMissingFields();
+  
   return (
     <div className="space-y-4 border rounded-md p-4">
       <h4 className="font-medium flex items-center space-x-2">
@@ -125,6 +143,15 @@ export const BannerGenerationSection = ({
           Génération de la bannière
         </h4>
         
+        {!hasRequiredInfo && (
+          <Alert variant="warning" className="mb-4 bg-amber-50">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-amber-700">
+              Des informations obligatoires sont manquantes: {missingFields.join(', ')}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {!bannerUrl ? (
           <div className="flex flex-col items-center justify-center py-4">
             {isGeneratingBanner ? (
@@ -138,15 +165,18 @@ export const BannerGenerationSection = ({
               <>
                 <Button 
                   onClick={generateBanner} 
-                  disabled={isGeneratingBanner}
+                  disabled={isGeneratingBanner || !hasRequiredInfo}
                   className="w-full bg-primary hover:bg-primary/90"
+                  variant={hasRequiredInfo ? "default" : "outline"}
                 >
                   {isGeneratingBanner ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Génération en cours...
                     </>
-                  ) : "Générer la bannière"}
+                  ) : (
+                    hasRequiredInfo ? "Générer la bannière" : "Veuillez remplir tous les champs requis"
+                  )}
                 </Button>
                 
                 {Object.entries(formErrors).length > 0 && (

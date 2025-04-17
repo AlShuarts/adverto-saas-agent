@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { FormError } from "./FormError";
-import { Mail, Phone, User } from "lucide-react";
+import { Mail, Phone, User, AlertCircle } from "lucide-react";
 
 type BrokerInfoFormProps = {
   brokerName: string;
@@ -46,8 +46,13 @@ export const BrokerInfoForm = ({
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium">Informations obligatoires</span>
+        <span className="text-xs text-muted-foreground">* = Champ obligatoire</span>
+      </div>
+      
       <div className="grid gap-2">
-        <Label htmlFor="brokerName" className={formErrors.brokerName ? "text-destructive flex items-center" : "flex items-center"}>
+        <Label htmlFor="brokerName" className={`flex items-center ${formErrors.brokerName ? "text-destructive" : ""}`}>
           <User className="h-4 w-4 mr-2 text-muted-foreground" />
           Nom du courtier *
         </Label>
@@ -62,13 +67,20 @@ export const BrokerInfoForm = ({
             }
           }}
           placeholder="Entrez le nom du courtier"
-          className={formErrors.brokerName ? "border-destructive" : ""}
+          className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300 bg-amber-50" : ""}`}
+          required
         />
+        {!brokerName && !formErrors.brokerName && (
+          <div className="flex items-center text-xs text-amber-600 mt-1">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Ce champ est obligatoire
+          </div>
+        )}
         <FormError error={formErrors.brokerName} />
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="brokerEmail" className={formErrors.brokerEmail ? "text-destructive flex items-center" : "flex items-center"}>
+        <Label htmlFor="brokerEmail" className={`flex items-center ${formErrors.brokerEmail ? "text-destructive" : ""}`}>
           <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
           Email du courtier *
         </Label>
@@ -84,13 +96,20 @@ export const BrokerInfoForm = ({
             }
           }}
           placeholder="Entrez l'email du courtier"
-          className={formErrors.brokerEmail ? "border-destructive" : ""}
+          className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300 bg-amber-50" : ""}`}
+          required
         />
+        {!brokerEmail && !formErrors.brokerEmail && (
+          <div className="flex items-center text-xs text-amber-600 mt-1">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Ce champ est obligatoire
+          </div>
+        )}
         <FormError error={formErrors.brokerEmail} />
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="brokerPhone" className={formErrors.brokerPhone ? "text-destructive flex items-center" : "flex items-center"}>
+        <Label htmlFor="brokerPhone" className={`flex items-center ${formErrors.brokerPhone ? "text-destructive" : ""}`}>
           <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
           Téléphone du courtier *
         </Label>
@@ -106,8 +125,15 @@ export const BrokerInfoForm = ({
             }
           }}
           placeholder="Entrez le téléphone du courtier"
-          className={formErrors.brokerPhone ? "border-destructive" : ""}
+          className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300 bg-amber-50" : ""}`}
+          required
         />
+        {!brokerPhone && !formErrors.brokerPhone && (
+          <div className="flex items-center text-xs text-amber-600 mt-1">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Ce champ est obligatoire
+          </div>
+        )}
         <FormError error={formErrors.brokerPhone} />
       </div>
     </div>

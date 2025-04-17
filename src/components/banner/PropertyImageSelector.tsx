@@ -1,8 +1,9 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormError } from "./FormError";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type PropertyImageSelectorProps = {
   images: string[];
@@ -31,13 +32,22 @@ export const PropertyImageSelector = ({
 
   return (
     <div className="space-y-3">
-      <Label className={formErrors.selectedImage ? "text-destructive flex items-center" : "flex items-center"}>
+      <Label className={`${formErrors.selectedImage ? "text-destructive flex items-center" : "flex items-center"}`}>
         <ImageIcon className="h-4 w-4 mr-2 text-muted-foreground" />
         Sélectionnez une image pour la bannière *
       </Label>
       
       {images.length > 0 ? (
         <>
+          {!selectedImage && (
+            <Alert variant="warning" className="bg-amber-50 mb-2">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-700 text-xs">
+                Veuillez sélectionner une image pour continuer
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <ScrollArea className="h-[150px]">
             <div className="grid grid-cols-3 md:grid-cols-4 gap-3 pr-4">
               {images.map((image, index) => (

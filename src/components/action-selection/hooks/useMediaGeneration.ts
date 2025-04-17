@@ -91,18 +91,28 @@ export const useMediaGeneration = (listingId: string) => {
       setIsGeneratingBanner(true);
       setBannerError(null);
       
+      // Validate required fields
+      if (!bannerImage) {
+        throw new Error("Veuillez sélectionner une image principale pour la bannière");
+      }
+      
+      if (!brokerInfo) {
+        throw new Error("Informations du courtier manquantes");
+      }
+      
+      const missingFields = [];
+      if (!brokerInfo.brokerName) missingFields.push("nom du courtier");
+      if (!brokerInfo.brokerEmail) missingFields.push("email du courtier");
+      if (!brokerInfo.brokerPhone) missingFields.push("téléphone du courtier");
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Veuillez remplir les champs suivants: ${missingFields.join(', ')}`);
+      }
+      
       console.log("Génération de la bannière pour le listing:", listingId);
       console.log("Image principale:", bannerImage);
       console.log("Type de bannière:", bannerType);
       console.log("Informations du courtier:", brokerInfo);
-      
-      if (!bannerImage) {
-        throw new Error("Image principale non sélectionnée");
-      }
-      
-      if (!brokerInfo || !brokerInfo.brokerName || !brokerInfo.brokerEmail || !brokerInfo.brokerPhone) {
-        throw new Error("Informations du courtier incomplètes");
-      }
       
       toast.info("Création de la bannière", {
         description: "Nous préparons votre bannière...",
@@ -173,9 +183,9 @@ export const useMediaGeneration = (listingId: string) => {
       
     } catch (error) {
       console.error("Erreur lors de la création de la bannière:", error);
-      setBannerError("Une erreur est survenue: " + error.message);
+      setBannerError(error.message || "Une erreur est survenue lors de la création de la bannière");
       toast.error("Erreur", {
-        description: "Une erreur est survenue lors de la création de la bannière.",
+        description: error.message || "Une erreur est survenue lors de la création de la bannière",
       });
       return { success: false, error: error.message };
     } finally {
