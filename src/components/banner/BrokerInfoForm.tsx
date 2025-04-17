@@ -80,7 +80,6 @@ export const BrokerInfoForm = ({
           }}
           placeholder="Entrez le nom du courtier"
           className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300 bg-amber-50" : ""}`}
-          required
         />
         {!brokerName && !formErrors.brokerName && (
           <div className="flex items-center text-xs text-amber-600 mt-1">
@@ -109,7 +108,6 @@ export const BrokerInfoForm = ({
           }}
           placeholder="Entrez l'email du courtier"
           className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300 bg-amber-50" : ""}`}
-          required
         />
         {!brokerEmail && !formErrors.brokerEmail && (
           <div className="flex items-center text-xs text-amber-600 mt-1">
@@ -138,7 +136,6 @@ export const BrokerInfoForm = ({
           }}
           placeholder="Entrez le téléphone du courtier"
           className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300 bg-amber-50" : ""}`}
-          required
         />
         {!brokerPhone && !formErrors.brokerPhone && (
           <div className="flex items-center text-xs text-amber-600 mt-1">

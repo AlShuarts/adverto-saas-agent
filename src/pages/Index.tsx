@@ -12,6 +12,13 @@ const Index = () => {
   const { fbInitialized } = useFacebookSDK();
   const { profile, loading, getProfile, connectFacebook, connectInstagram } = useProfile();
 
+  // Assurer que le profil est chargé au démarrage
+  useEffect(() => {
+    if (!profile && !loading) {
+      getProfile();
+    }
+  }, [profile, loading, getProfile]);
+
   return (
     <div className="min-h-screen bg-secondary">
       <Navbar />
