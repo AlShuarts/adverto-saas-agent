@@ -78,7 +78,7 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="Entrez le nom complet du courtier"
+          placeholder="Exemple: Jean Dupont"
           className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300 bg-amber-50" : ""}`}
         />
         {!brokerName && !formErrors.brokerName && (
@@ -106,7 +106,7 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="exemple@domaine.com"
+          placeholder="jean.dupont@immobilier.com"
           className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300 bg-amber-50" : ""}`}
         />
         {!brokerEmail && !formErrors.brokerEmail && (
@@ -134,7 +134,7 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="(514) 123-4567"
+          placeholder="(514) 555-1234"
           className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300 bg-amber-50" : ""}`}
         />
         {!brokerPhone && !formErrors.brokerPhone && (
