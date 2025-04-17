@@ -1,7 +1,8 @@
 
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { FormError } from "./FormError";
+import { ImageIcon } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 type PropertyImageSelectorProps = {
   images: string[];
@@ -11,49 +12,63 @@ type PropertyImageSelectorProps = {
   setFormErrors: (errors: {[key: string]: string}) => void;
 };
 
-export const PropertyImageSelector = ({ 
-  images, 
-  selectedImage, 
+export const PropertyImageSelector = ({
+  images,
+  selectedImage,
   setSelectedImage,
   formErrors,
   setFormErrors
 }: PropertyImageSelectorProps) => {
+  
+  const handleSelectImage = (image: string) => {
+    setSelectedImage(image);
+    
+    if (formErrors.selectedImage) {
+      const { selectedImage, ...rest } = formErrors;
+      setFormErrors(rest);
+    }
+  };
+
   return (
-    <div className="grid gap-2">
-      <Label htmlFor="propertyImage" className={formErrors.selectedImage ? "text-destructive" : ""}>
-        Image de la propriété *
+    <div className="space-y-3">
+      <Label className={formErrors.selectedImage ? "text-destructive flex items-center" : "flex items-center"}>
+        <ImageIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+        Sélectionnez une image pour la bannière *
       </Label>
-      <Select 
-        value={selectedImage} 
-        onValueChange={(value) => {
-          setSelectedImage(value);
-          if (formErrors.selectedImage) {
-            const { selectedImage, ...rest } = formErrors;
-            setFormErrors(rest);
-          }
-        }}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Sélectionnez une image" />
-        </SelectTrigger>
-        <SelectContent>
-          {images?.map((image, index) => (
-            <SelectItem key={index} value={image}>
-              Image {index + 1}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
       
-      <FormError error={formErrors.selectedImage} />
-      
-      {selectedImage && (
-        <div className="aspect-video overflow-hidden rounded-md mt-2">
-          <img
-            src={selectedImage}
-            alt="Image sélectionnée"
-            className="w-full h-full object-cover"
-          />
+      {images.length > 0 ? (
+        <>
+          <ScrollArea className="h-[150px]">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-3 pr-4">
+              {images.map((image, index) => (
+                <div
+                  key={index}
+                  className={`relative cursor-pointer transition-all rounded-md overflow-hidden ${
+                    selectedImage === image
+                      ? "ring-2 ring-primary ring-offset-2"
+                      : "hover:opacity-90"
+                  }`}
+                  onClick={() => handleSelectImage(image)}
+                >
+                  <div className="aspect-video">
+                    <img
+                      src={image}
+                      alt={`Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          
+          <FormError error={formErrors.selectedImage} />
+        </>
+      ) : (
+        <div className="text-center p-4 bg-muted/20 border border-dashed rounded-md">
+          <p className="text-sm text-muted-foreground">
+            Aucune image disponible. Veuillez d'abord sélectionner des images à l'étape précédente.
+          </p>
         </div>
       )}
     </div>

@@ -33,6 +33,8 @@ type MediaGenerationStepProps = {
   agencyLogoUrl: string | null;
   setAgencyLogoUrl: (url: string | null) => void;
   setFormErrors: (errors: {[key: string]: string}) => void;
+  onRegenerateSlideshow: () => void;
+  onRegenerateBanner: () => void;
 };
 
 export const MediaGenerationStep = ({
@@ -64,7 +66,9 @@ export const MediaGenerationStep = ({
   setBrokerImageUrl,
   agencyLogoUrl,
   setAgencyLogoUrl,
-  setFormErrors
+  setFormErrors,
+  onRegenerateSlideshow,
+  onRegenerateBanner
 }: MediaGenerationStepProps) => {
   return (
     <div className="space-y-6">
@@ -80,6 +84,7 @@ export const MediaGenerationStep = ({
           refetchSlideshowStatus={refetchSlideshowStatus}
           selectedImages={selectedImages}
           selectedMusic={selectedMusic}
+          onRegenerateSlideshow={onRegenerateSlideshow}
         />
       )}
       
@@ -106,6 +111,7 @@ export const MediaGenerationStep = ({
           formErrors={formErrors}
           setFormErrors={setFormErrors}
           selectedImages={selectedImages}
+          onRegenerateBanner={onRegenerateBanner}
         />
       )}
     </div>

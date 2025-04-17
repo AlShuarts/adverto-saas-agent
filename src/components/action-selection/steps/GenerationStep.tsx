@@ -100,6 +100,8 @@ export const GenerationStep = ({
       setBrokerPhone={setBrokerPhone}
       setFormErrors={setFormErrors}
       selectedMusic={selectedMusic}
+      onRegenerateSlideshow={onRegenerateSlideshow}
+      onRegenerateBanner={onRegenerateBanner}
     />
   );
 };

@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { FormError } from "./FormError";
+import { Mail, Phone, User } from "lucide-react";
 
 type BrokerInfoFormProps = {
   brokerName: string;
@@ -46,7 +47,8 @@ export const BrokerInfoForm = ({
   return (
     <div className="space-y-4">
       <div className="grid gap-2">
-        <Label htmlFor="brokerName" className={formErrors.brokerName ? "text-destructive" : ""}>
+        <Label htmlFor="brokerName" className={formErrors.brokerName ? "text-destructive flex items-center" : "flex items-center"}>
+          <User className="h-4 w-4 mr-2 text-muted-foreground" />
           Nom du courtier *
         </Label>
         <Input
@@ -59,18 +61,20 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="Nom du courtier"
+          placeholder="Entrez le nom du courtier"
           className={formErrors.brokerName ? "border-destructive" : ""}
         />
         <FormError error={formErrors.brokerName} />
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="brokerEmail" className={formErrors.brokerEmail ? "text-destructive" : ""}>
+        <Label htmlFor="brokerEmail" className={formErrors.brokerEmail ? "text-destructive flex items-center" : "flex items-center"}>
+          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
           Email du courtier *
         </Label>
         <Input
           id="brokerEmail"
+          type="email"
           value={brokerEmail}
           onChange={(e) => {
             setBrokerEmail(e.target.value);
@@ -79,18 +83,20 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="Email du courtier"
+          placeholder="Entrez l'email du courtier"
           className={formErrors.brokerEmail ? "border-destructive" : ""}
         />
         <FormError error={formErrors.brokerEmail} />
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="brokerPhone" className={formErrors.brokerPhone ? "text-destructive" : ""}>
+        <Label htmlFor="brokerPhone" className={formErrors.brokerPhone ? "text-destructive flex items-center" : "flex items-center"}>
+          <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
           Téléphone du courtier *
         </Label>
         <Input
           id="brokerPhone"
+          type="tel"
           value={brokerPhone}
           onChange={(e) => {
             setBrokerPhone(e.target.value);
@@ -99,7 +105,7 @@ export const BrokerInfoForm = ({
               setFormErrors(rest);
             }
           }}
-          placeholder="Téléphone du courtier"
+          placeholder="Entrez le téléphone du courtier"
           className={formErrors.brokerPhone ? "border-destructive" : ""}
         />
         <FormError error={formErrors.brokerPhone} />

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, User, Building, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -52,49 +52,72 @@ export const ImageUploader = ({ type, imageUrl, setImageUrl }: ImageUploaderProp
     }
   };
   
+  const removeImage = () => {
+    setImageUrl(null);
+  };
+  
   const label = type === "broker" ? "Photo du courtier" : "Logo de l'agence";
   const inputId = type === "broker" ? "brokerImageInput" : "agencyLogoInput";
+  const icon = type === "broker" ? <User className="h-4 w-4 mr-2" /> : <Building className="h-4 w-4 mr-2" />;
   
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={inputId}>{label}</Label>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          onClick={() => document.getElementById(inputId)?.click()}
-          disabled={isUploading}
-          type="button"
-        >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Upload className="h-4 w-4 mr-2" />
-          )}
-          Télécharger
-        </Button>
-        <Input
-          id={inputId}
-          type="file"
-          className="hidden"
-          accept="image/*"
-          onChange={handleImageChange}
-        />
-      </div>
-      {imageUrl && (
-        <div className={
-          type === "broker" 
-            ? "w-20 h-20 rounded-full overflow-hidden mt-2" 
-            : "w-24 h-12 overflow-hidden mt-2"
-        }>
-          <img
-            src={imageUrl}
-            alt={type === "broker" ? "Photo du courtier" : "Logo de l'agence"}
-            className={
-              type === "broker" 
-                ? "w-full h-full object-cover" 
-                : "w-full h-full object-contain"
-            }
+      <Label htmlFor={inputId} className="flex items-center">
+        {icon}
+        {label}
+      </Label>
+      
+      {!imageUrl ? (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => document.getElementById(inputId)?.click()}
+            disabled={isUploading}
+            type="button"
+            className="w-full flex items-center justify-center"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Télécharger
+              </>
+            )}
+          </Button>
+          <Input
+            id={inputId}
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageChange}
           />
+        </div>
+      ) : (
+        <div className="relative">
+          <div className={
+            type === "broker" 
+              ? "w-24 h-24 rounded-full overflow-hidden border border-muted" 
+              : "w-32 h-16 overflow-hidden border border-muted rounded-md"
+          }>
+            <img
+              src={imageUrl}
+              alt={type === "broker" ? "Photo du courtier" : "Logo de l'agence"}
+              className={
+                type === "broker" 
+                  ? "w-full h-full object-cover" 
+                  : "w-full h-full object-contain"
+              }
+            />
+          </div>
+          <Button
+            variant="destructive"
+            size="icon"
+            className="absolute -top-2 -right-2 w-6 h-6 rounded-full"
+            onClick={removeImage}
+          >
+            <X className="h-3 w-3" />
+          </Button>
         </div>
       )}
     </div>
