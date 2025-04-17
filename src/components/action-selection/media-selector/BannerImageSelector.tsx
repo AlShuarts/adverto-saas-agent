@@ -1,4 +1,3 @@
-
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BrokerInfoSection } from "./BrokerInfoSection";
@@ -106,20 +105,22 @@ export const BannerImageSelector = ({
           <AccordionItem value="broker-info">
             <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
             <AccordionContent>
-              <BrokerInfoSection
-                brokerImageUrl={brokerImageUrl}
-                setBrokerImageUrl={setBrokerImageUrl}
-                agencyLogoUrl={agencyLogoUrl}
-                setAgencyLogoUrl={setAgencyLogoUrl}
-                brokerName={brokerName}
-                setBrokerName={setBrokerName}
-                brokerEmail={brokerEmail}
-                setBrokerEmail={setBrokerEmail}
-                brokerPhone={brokerPhone}
-                setBrokerPhone={setBrokerPhone}
-                formErrors={formErrors}
-                setFormErrors={setFormErrors}
-              />
+              <div className="p-2 space-y-4">
+                <BrokerInfoSection
+                  brokerImageUrl={brokerImageUrl}
+                  setBrokerImageUrl={setBrokerImageUrl}
+                  agencyLogoUrl={agencyLogoUrl}
+                  setAgencyLogoUrl={setAgencyLogoUrl}
+                  brokerName={brokerName}
+                  setBrokerName={setBrokerName}
+                  brokerEmail={brokerEmail}
+                  setBrokerEmail={setBrokerEmail}
+                  brokerPhone={brokerPhone}
+                  setBrokerPhone={setBrokerPhone}
+                  formErrors={formErrors}
+                  setFormErrors={setFormErrors}
+                />
+              </div>
             </AccordionContent>
           </AccordionItem>
           
