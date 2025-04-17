@@ -1,4 +1,3 @@
-
 import { PublicationStep } from "./PublicationStep";
 import { TemplateStep } from "./TemplateStep";
 import { MediaStep } from "./MediaStep";
@@ -74,9 +73,7 @@ type StepRendererProps = {
 };
 
 export const renderStepContent = (props: StepRendererProps) => {
-  const { currentStep } = props;
-  
-  switch (currentStep) {
+  switch (props.currentStep) {
     case 1: 
       return (
         <PublicationStep
@@ -149,10 +146,9 @@ export const renderStepContent = (props: StepRendererProps) => {
           brokerName={props.brokerName}
           setBrokerName={props.setBrokerName}
           brokerEmail={props.brokerEmail}
-          setBrokerEmail={props.brokerEmail}
+          setBrokerEmail={props.setBrokerEmail}
           brokerPhone={props.brokerPhone}
           setBrokerPhone={props.setBrokerPhone}
-          selectedMusic={props.selectedMusic}
           formErrors={props.formErrors}
           setFormErrors={props.setFormErrors}
           generateSlideshow={props.generateSlideshowWrapper}
