@@ -1,13 +1,10 @@
 
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Upload, User, Building, Info, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { ImageUploader } from "@/components/banner/ImageUploader";
 import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
+import { Separator } from "@/components/ui/separator";
 
 type BrokerInfoSectionProps = {
   brokerImageUrl: string | null;
@@ -39,9 +36,15 @@ export const BrokerInfoSection = ({
   setFormErrors
 }: BrokerInfoSectionProps) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2">
+      <div className="space-y-2">
+        <h5 className="text-sm font-medium">Images (Optionnelles)</h5>
+        <p className="text-xs text-muted-foreground">
+          Ces images apparaîtront sur la bannière. Vous pouvez les téléverser ou continuer sans images.
+        </p>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Photo du courtier et logo de l'agence */}
         <ImageUploader 
           type="broker"
           imageUrl={brokerImageUrl}
@@ -55,12 +58,10 @@ export const BrokerInfoSection = ({
         />
       </div>
       
-      <div className="space-y-4 mt-6">
-        <h5 className="text-sm font-medium flex items-center">
-          <Info className="h-4 w-4 mr-2" />
-          Informations de contact du courtier
-        </h5>
-        
+      <Separator className="my-4" />
+      
+      <div className="space-y-4">
+        <h5 className="text-sm font-medium">Informations de contact (Obligatoires)</h5>
         <BrokerInfoForm 
           brokerName={brokerName}
           setBrokerName={setBrokerName}

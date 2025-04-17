@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { FormError } from "./FormError";
 import { Mail, Phone, User, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type BrokerInfoFormProps = {
   brokerName: string;
@@ -44,8 +45,19 @@ export const BrokerInfoForm = ({
     fetchEmail();
   }, [setBrokerEmail, brokerEmail]);
 
+  const hasAllRequiredFields = brokerName && brokerEmail && brokerPhone;
+
   return (
     <div className="space-y-4">
+      {!hasAllRequiredFields && (
+        <Alert variant="default" className="bg-amber-50">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-700">
+            Tous les champs marqués d'un astérisque (*) sont obligatoires pour générer la bannière
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium">Informations obligatoires</span>
         <span className="text-xs text-muted-foreground">* = Champ obligatoire</span>

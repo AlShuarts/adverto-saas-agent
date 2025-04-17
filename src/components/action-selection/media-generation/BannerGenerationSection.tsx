@@ -1,3 +1,4 @@
+
 import { Loader2, Tag, User, Building, Mail, Phone, ImageIcon, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertyImageSelector } from "@/components/banner/PropertyImageSelector";
@@ -7,6 +8,8 @@ import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
 import { FormError } from "@/components/banner/FormError";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Separator } from "@/components/ui/separator";
 
 type BannerGenerationSectionProps = {
   isGeneratingBanner: boolean;
@@ -80,57 +83,65 @@ export const BannerGenerationSection = ({
       
       <ScrollArea className="max-h-[500px] pr-4">
         <div className="space-y-6">
-          <div className="bg-secondary/10 rounded-lg p-4">
-            <h5 className="text-sm font-medium mb-3">Image de propriété</h5>
-            <PropertyImageSelector
-              images={selectedImages.length > 0 ? selectedImages : []}
-              selectedImage={bannerImage || ""}
-              setSelectedImage={selectBannerImage}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
-            />
-          </div>
-          
-          <div className="bg-secondary/10 rounded-lg p-4">
-            <h5 className="text-sm font-medium mb-3">Type de bannière</h5>
-            <BannerTypeSelector
-              bannerType={bannerType}
-              setBannerType={setBannerType}
-              error={formErrors.bannerType}
-            />
-          </div>
-          
-          <div className="bg-secondary/10 rounded-lg p-4">
-            <h5 className="text-sm font-medium mb-4 flex items-center">
-              <User size={16} className="mr-2 text-primary" />
-              Informations du courtier
-            </h5>
+          <Accordion type="multiple" defaultValue={["banner-image", "banner-type", "broker-info"]} className="w-full">
+            <AccordionItem value="banner-image">
+              <AccordionTrigger className="text-sm font-medium">Image de propriété</AccordionTrigger>
+              <AccordionContent className="p-2">
+                <PropertyImageSelector
+                  images={selectedImages.length > 0 ? selectedImages : []}
+                  selectedImage={bannerImage || ""}
+                  setSelectedImage={selectBannerImage}
+                  formErrors={formErrors}
+                  setFormErrors={setFormErrors}
+                />
+              </AccordionContent>
+            </AccordionItem>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <ImageUploader
-                type="broker"
-                imageUrl={brokerImageUrl}
-                setImageUrl={setBrokerImageUrl}
-              />
-              
-              <ImageUploader
-                type="agency"
-                imageUrl={agencyLogoUrl}
-                setImageUrl={setAgencyLogoUrl}
-              />
-            </div>
+            <AccordionItem value="banner-type">
+              <AccordionTrigger className="text-sm font-medium">Type de bannière</AccordionTrigger>
+              <AccordionContent className="p-2">
+                <BannerTypeSelector
+                  bannerType={bannerType}
+                  setBannerType={setBannerType}
+                  error={formErrors.bannerType}
+                />
+              </AccordionContent>
+            </AccordionItem>
             
-            <BrokerInfoForm
-              brokerName={brokerName}
-              setBrokerName={setBrokerName}
-              brokerEmail={brokerEmail}
-              setBrokerEmail={setBrokerEmail}
-              brokerPhone={brokerPhone}
-              setBrokerPhone={setBrokerPhone}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
-            />
-          </div>
+            <AccordionItem value="broker-info">
+              <AccordionTrigger className="text-sm font-medium">Informations du courtier</AccordionTrigger>
+              <AccordionContent>
+                <div className="p-2 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <ImageUploader
+                      type="broker"
+                      imageUrl={brokerImageUrl}
+                      setImageUrl={setBrokerImageUrl}
+                    />
+                    
+                    <ImageUploader
+                      type="agency"
+                      imageUrl={agencyLogoUrl}
+                      setImageUrl={setAgencyLogoUrl}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <BrokerInfoForm
+                    brokerName={brokerName}
+                    setBrokerName={setBrokerName}
+                    brokerEmail={brokerEmail}
+                    setBrokerEmail={setBrokerEmail}
+                    brokerPhone={brokerPhone}
+                    setBrokerPhone={setBrokerPhone}
+                    formErrors={formErrors}
+                    setFormErrors={setFormErrors}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </ScrollArea>
       
