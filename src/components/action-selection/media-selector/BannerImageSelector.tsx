@@ -103,7 +103,7 @@ export const BannerImageSelector = ({
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="broker-info">
+          <AccordionItem value="broker-info" defaultValue="broker-info">
             <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
             <AccordionContent>
               <BrokerInfoSection
