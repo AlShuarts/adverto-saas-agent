@@ -1,7 +1,6 @@
 
 import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
 import { PublicationType } from "../types";
-import { SocialNetworks } from "../context/types";
 
 type GenerationStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -44,6 +43,7 @@ export const GenerationStep = ({
   bannerType,
   setBannerType,
   selectBannerImage,
+  selectedMusic,
   brokerImageUrl,
   setBrokerImageUrl,
   agencyLogoUrl,
@@ -99,6 +99,7 @@ export const GenerationStep = ({
       brokerPhone={brokerPhone}
       setBrokerPhone={setBrokerPhone}
       setFormErrors={setFormErrors}
+      selectedMusic={selectedMusic}
     />
   );
 };

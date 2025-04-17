@@ -16,6 +16,7 @@ type MediaGenerationStepProps = {
   generateSlideshow: () => Promise<string | null>;
   generateBanner: () => Promise<void>;
   selectedImages: string[];
+  selectedMusic: string | undefined;
   refetchSlideshowStatus: () => void;
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
@@ -47,6 +48,7 @@ export const MediaGenerationStep = ({
   generateSlideshow,
   generateBanner,
   selectedImages,
+  selectedMusic,
   refetchSlideshowStatus,
   bannerImage,
   bannerType,
@@ -77,6 +79,7 @@ export const MediaGenerationStep = ({
           generateSlideshow={generateSlideshow}
           refetchSlideshowStatus={refetchSlideshowStatus}
           selectedImages={selectedImages}
+          selectedMusic={selectedMusic}
         />
       )}
       

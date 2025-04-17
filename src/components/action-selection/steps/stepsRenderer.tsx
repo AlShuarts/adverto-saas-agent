@@ -1,3 +1,4 @@
+
 import { PublicationStep } from "./PublicationStep";
 import { TemplateStep } from "./TemplateStep";
 import { MediaStep } from "./MediaStep";
@@ -163,6 +164,7 @@ export const renderStepContent = (props: StepRendererProps) => {
           refetchSlideshowStatus={props.refetchSlideshowStatus}
           onRegenerateSlideshow={props.handleRegenerateSlideshow}
           onRegenerateBanner={props.handleRegenerateBanner}
+          selectedMusic={props.selectedMusic}
         />
       );
     

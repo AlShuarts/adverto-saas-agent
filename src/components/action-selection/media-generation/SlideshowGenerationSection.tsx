@@ -1,6 +1,6 @@
 
-import { Loader2, Video, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Loader2, Video, Play } from "lucide-react";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -10,6 +10,7 @@ type SlideshowGenerationSectionProps = {
   generateSlideshow: () => Promise<string | null>;
   refetchSlideshowStatus: () => void;
   selectedImages: string[];
+  selectedMusic?: string | undefined;
 };
 
 export const SlideshowGenerationSection = ({
@@ -20,6 +21,7 @@ export const SlideshowGenerationSection = ({
   generateSlideshow,
   refetchSlideshowStatus,
   selectedImages,
+  selectedMusic
 }: SlideshowGenerationSectionProps) => {
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -46,10 +48,11 @@ export const SlideshowGenerationSection = ({
               <p className="text-xs text-muted-foreground">
                 Votre diaporama est en train d'être généré. Veuillez patienter.
               </p>
+              
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={refetchSlideshowStatus}
+                onClick={() => refetchSlideshowStatus()}
               >
                 Vérifier le statut
               </Button>
@@ -83,7 +86,12 @@ export const SlideshowGenerationSection = ({
             <span className="text-green-500 flex items-center gap-1">
               <Video className="w-4 h-4" /> Diaporama généré avec succès
             </span>
-            <Button variant="outline">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Implement regeneration logic here
+              }}
+            >
               Régénérer
             </Button>
           </div>
