@@ -133,6 +133,7 @@ export const renderStepContent = (props: StepRendererProps) => {
           onRegenerateBanner={props.handleRegenerateBanner}
           selectedMusic={props.selectedMusic}
           toggleImageSelection={props.toggleImageSelection}
+          listing={props.listing}
         />
       );
     
