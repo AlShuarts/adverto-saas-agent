@@ -20,11 +20,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InstagramPreviewContent } from "./InstagramPreviewContent";
 import { FacebookPreviewContent } from "./FacebookPreviewContent";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ImageIcon } from "@/components/ui/image-icon";
-import { BannerTypeSelector } from "@/components/ui/banner-type-selector";
-import { ImageUploader } from "@/components/ui/image-uploader";
-import { BrokerInfoForm } from "@/components/ui/broker-info-form";
-import { PropertyImageSelector } from "@/components/ui/property-image-selector";
+import { ImageIcon } from "lucide-react";
+import { BannerTypeSelector } from "./banner/BannerTypeSelector";
+import { ImageUploader } from "./banner/ImageUploader";
+import { BrokerInfoForm } from "./banner/BrokerInfoForm";
+import { PropertyImageSelector } from "./banner/PropertyImageSelector";
 
 type PublicationType = "photo" | "slideshow" | "banner";
 
