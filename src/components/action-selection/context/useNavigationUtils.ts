@@ -17,6 +17,7 @@ export const useNavigationUtils = (
       case 1: 
         return selectedPublicationTypes.length > 0;
       case 2: 
+        // Always allow proceeding from step 2 to generation step (3.5)
         return true;
       case 3.5: 
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
