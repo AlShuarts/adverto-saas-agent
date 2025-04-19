@@ -1,10 +1,11 @@
-
 import { ImageIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BannerType } from "./components/BannerType";
 import { ImageSelection } from "./components/ImageSelection";
+import { PublicationType } from "../types";
 
 type MediaGenerationStepProps = {
+  selectedPublicationTypes?: PublicationType[];
   isGeneratingBanner: boolean;
   bannerUrl: string | null;
   bannerError: string | null;
@@ -28,9 +29,16 @@ type MediaGenerationStepProps = {
   listing: {
     images: string[];
   };
+  isGeneratingSlideshow?: boolean;
+  slideshowUrl?: string | null;
+  slideshowError?: string | null;
+  slideshowRenderId?: string | null;
+  generateSlideshow?: () => Promise<void>;
+  refetchSlideshowStatus?: () => void;
 };
 
 export const MediaGenerationStep = ({
+  selectedPublicationTypes,
   bannerType,
   setBannerType,
   bannerImage,
@@ -48,6 +56,16 @@ export const MediaGenerationStep = ({
   formErrors,
   setFormErrors,
   listing,
+  isGeneratingBanner,
+  bannerUrl,
+  bannerError,
+  generateBanner,
+  isGeneratingSlideshow,
+  slideshowUrl,
+  slideshowError,
+  slideshowRenderId,
+  generateSlideshow,
+  refetchSlideshowStatus,
 }: MediaGenerationStepProps) => {
   return (
     <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">

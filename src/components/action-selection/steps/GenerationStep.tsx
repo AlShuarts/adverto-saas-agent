@@ -1,3 +1,4 @@
+
 import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
 import { PublicationType } from "../types";
 import { Tables } from "@/integrations/supabase/types";
@@ -86,7 +87,6 @@ export const GenerationStep = ({
       formErrors={formErrors}
       generateSlideshow={generateSlideshow}
       generateBanner={generateBanner}
-      selectedImages={selectedImages}
       refetchSlideshowStatus={refetchSlideshowStatus}
       bannerImage={bannerImage}
       bannerType={bannerType}
@@ -103,10 +103,6 @@ export const GenerationStep = ({
       brokerPhone={brokerPhone}
       setBrokerPhone={setBrokerPhone}
       setFormErrors={setFormErrors}
-      selectedMusic={selectedMusic}
-      onRegenerateSlideshow={onRegenerateSlideshow}
-      onRegenerateBanner={onRegenerateBanner}
-      toggleImageSelection={toggleImageSelection}
       listing={listing}
     />
   );
