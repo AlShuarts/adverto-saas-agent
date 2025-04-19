@@ -20,6 +20,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { InstagramPreviewContent } from "./InstagramPreviewContent";
 import { FacebookPreviewContent } from "./FacebookPreviewContent";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ImageIcon } from "@/components/ui/image-icon";
+import { BannerTypeSelector } from "@/components/ui/banner-type-selector";
+import { ImageUploader } from "@/components/ui/image-uploader";
+import { BrokerInfoForm } from "@/components/ui/broker-info-form";
+import { PropertyImageSelector } from "@/components/ui/property-image-selector";
 
 type PublicationType = "photo" | "slideshow" | "banner";
 
@@ -81,7 +86,18 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [slideshowError, setSlideshowError] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
   
-  
+  const [brokerImageUrl, setBrokerImageUrl] = useState<string | null>(null);
+  const [agencyLogoUrl, setAgencyLogoUrl] = useState<string | null>(null);
+  const [brokerName, setBrokerName] = useState<string>("");
+  const [brokerEmail, setBrokerEmail] = useState<string>("");
+  const [brokerPhone, setBrokerPhone] = useState<string>("");
+  const [formErrors, setFormErrors] = useState({
+    bannerType: "",
+    brokerName: "",
+    brokerEmail: "",
+    brokerPhone: ""
+  });
+
   const { 
     data: slideshowRender, 
     isLoading: isSlideshowStatusLoading,
@@ -554,7 +570,10 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const renderSlideshowGenerationStep = () => {
     return (
       <div className="space-y-4 border rounded-md p-4">
-        <h4 className="font-medium">Génération du diaporama</h4>
+        <h4 className="font-medium flex items-center space-x-2">
+          <Video className="text-primary" />
+          <span>Génération du diaporama</span>
+        </h4>
         
         {!slideshowUrl ? (
           <div className="flex flex-col items-center justify-center py-4">
@@ -641,6 +660,125 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                   Prévisualiser le diaporama
                 </Button>
               </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderBannerGenerationStep = () => {
+    return (
+      <div className="space-y-4 border rounded-md p-4">
+        <h4 className="font-medium flex items-center space-x-2">
+          <ImageIcon size={18} className="text-primary" />
+          <span>Configuration de la bannière</span>
+        </h4>
+        
+        <div className="space-y-6">
+          <div className="space-y-2 border rounded-md p-4 bg-white">
+            <h3 className="text-base font-medium">Type de bannière</h3>
+            <BannerTypeSelector
+              bannerType={bannerType}
+              setBannerType={setBannerType}
+              error={formErrors.bannerType}
+            />
+          </div>
+          
+          <div className="space-y-4 border rounded-md p-4 bg-white">
+            <h3 className="text-base font-medium text-primary border-b pb-2">
+              Informations du courtier
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <ImageUploader
+                type="broker"
+                imageUrl={brokerImageUrl}
+                setImageUrl={setBrokerImageUrl}
+              />
+              
+              <ImageUploader
+                type="agency"
+                imageUrl={agencyLogoUrl}
+                setImageUrl={setAgencyLogoUrl}
+              />
+            </div>
+            
+            <BrokerInfoForm
+              brokerName={brokerName}
+              setBrokerName={setBrokerName}
+              brokerEmail={brokerEmail}
+              setBrokerEmail={setBrokerEmail}
+              brokerPhone={brokerPhone}
+              setBrokerPhone={setBrokerPhone}
+              formErrors={formErrors}
+              setFormErrors={setFormErrors}
+            />
+          </div>
+          
+          <div className="space-y-2 border rounded-md p-4 bg-white">
+            <h3 className="text-base font-medium">Image de propriété</h3>
+            <PropertyImageSelector
+              images={selectedImages.length > 0 ? selectedImages : []}
+              selectedImage={bannerImage || ""}
+              setSelectedImage={selectBannerImage}
+              formErrors={formErrors}
+              setFormErrors={setFormErrors}
+            />
+          </div>
+        </div>
+
+        {!bannerUrl ? (
+          <div className="flex flex-col items-center justify-center py-4">
+            {isGeneratingBanner ? (
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Création de la bannière en cours...
+                </p>
+              </div>
+            ) : (
+              <>
+                <Button 
+                  onClick={generateBanner} 
+                  disabled={isGeneratingBanner || !bannerImage}
+                  className="w-full"
+                >
+                  {isGeneratingBanner ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Génération en cours...
+                    </>
+                  ) : "Générer la bannière"}
+                </Button>
+                
+                {bannerError && (
+                  <div className="text-sm text-red-500 mt-2">
+                    {bannerError}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-green-500 flex items-center gap-1">
+                <Tag className="w-4 h-4" /> Bannière générée avec succès
+              </span>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setBannerUrl(null);
+                  setIsGeneratingBanner(false);
+                }}
+              >
+                Régénérer
+              </Button>
+            </div>
+            
+            <div className="border rounded-md p-2 bg-muted/20">
+              <img src={bannerUrl} alt="Bannière générée" className="max-h-[200px] mx-auto" />
             </div>
           </div>
         )}
@@ -979,66 +1117,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             
             {selectedPublicationTypes.includes("slideshow") && renderSlideshowGenerationStep()}
             
-            {selectedPublicationTypes.includes("banner") && (
-              <div className="space-y-4 border rounded-md p-4">
-                <h4 className="font-medium">Génération de la bannière</h4>
-                
-                {!bannerUrl ? (
-                  <div className="flex flex-col items-center justify-center py-4">
-                    {isGeneratingBanner ? (
-                      <div className="flex flex-col items-center space-y-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground">
-                          Création de la bannière en cours...
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <Button 
-                          onClick={generateBanner} 
-                          disabled={isGeneratingBanner || !bannerImage}
-                          className="w-full"
-                        >
-                          {isGeneratingBanner ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Génération en cours...
-                            </>
-                          ) : "Générer la bannière"}
-                        </Button>
-                        
-                        {bannerError && (
-                          <div className="text-sm text-red-500 mt-2">
-                            {bannerError}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-500 flex items-center gap-1">
-                        <Tag className="w-4 h-4" /> Bannière générée avec succès
-                      </span>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setBannerUrl(null);
-                          setIsGeneratingBanner(false);
-                        }}
-                      >
-                        Régénérer
-                      </Button>
-                    </div>
-                    
-                    <div className="border rounded-md p-2 bg-muted/20">
-                      <img src={bannerUrl} alt="Bannière générée" className="max-h-[200px] mx-auto" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            {selectedPublicationTypes.includes("banner") && renderBannerGenerationStep()}
           </div>
         );
       
