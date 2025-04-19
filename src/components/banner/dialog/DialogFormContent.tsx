@@ -64,21 +64,31 @@ export const DialogFormContent = ({
           <BannerTypeSelector bannerType={bannerType} setBannerType={setBannerType} />
         </div>
         
+        {/* Sélection de l'image principale */}
+        <div className="space-y-2 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Sélection de l'image principale</h3>
+          <PropertyImageSelector 
+            images={listing.images || []} 
+            selectedImage={selectedImage} 
+            setSelectedImage={setSelectedImage}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+          />
+        </div>
+        
         {/* Informations du courtier - Section visiblement mise en évidence */}
         <div className="space-y-2 border rounded-md p-4 bg-white">
-          <h3 className="text-base font-medium font-bold text-primary">Informations du courtier</h3>
-          <div className="bg-white rounded-md p-3">
-            <BrokerInfoForm 
-              brokerName={brokerName}
-              setBrokerName={setBrokerName}
-              brokerEmail={brokerEmail}
-              setBrokerEmail={setBrokerEmail}
-              brokerPhone={brokerPhone}
-              setBrokerPhone={setBrokerPhone}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
-            />
-          </div>
+          <h3 className="text-base font-medium text-primary font-bold border-b pb-2 mb-3">Informations du courtier</h3>
+          <BrokerInfoForm 
+            brokerName={brokerName}
+            setBrokerName={setBrokerName}
+            brokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
+            brokerPhone={brokerPhone}
+            setBrokerPhone={setBrokerPhone}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+          />
         </div>
         
         {/* Images du courtier et de l'agence */}
@@ -97,18 +107,6 @@ export const DialogFormContent = ({
               setImageUrl={setAgencyLogo} 
             />
           </div>
-        </div>
-        
-        {/* Sélection de l'image principale */}
-        <div className="space-y-2 border rounded-md p-4 bg-white">
-          <h3 className="text-base font-medium">Sélection de l'image principale</h3>
-          <PropertyImageSelector 
-            images={listing.images || []} 
-            selectedImage={selectedImage} 
-            setSelectedImage={setSelectedImage}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-          />
         </div>
       </div>
       

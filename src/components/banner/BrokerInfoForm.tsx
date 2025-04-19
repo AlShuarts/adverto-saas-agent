@@ -48,7 +48,7 @@ export const BrokerInfoForm = ({
   const hasAllRequiredFields = brokerName && brokerEmail && brokerPhone;
 
   return (
-    <div className="space-y-4 bg-background rounded-lg">
+    <div className="space-y-4">
       {!hasAllRequiredFields && (
         <Alert variant="default" className="bg-amber-50 mb-4">
           <AlertCircle className="h-4 w-4 text-amber-500" />
