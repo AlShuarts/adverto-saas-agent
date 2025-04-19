@@ -73,7 +73,8 @@ export const MediaGenerationStep = ({
   setAgencyLogoUrl,
   setFormErrors,
   onRegenerateSlideshow,
-  onRegenerateBanner
+  onRegenerateBanner,
+  toggleImageSelection,
 }: MediaGenerationStepProps) => {
   return (
     <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">
@@ -93,10 +94,10 @@ export const MediaGenerationStep = ({
           
           {/* Main Image Selection */}
           <div className="space-y-4 border rounded-md p-4 bg-gray-800">
-            <h3 className="text-base font-medium text-white">Image principale</h3>
+            <h3 className="text-base font-medium text-white">Images</h3>
             <Label className={`${formErrors.bannerImage ? "text-destructive" : "text-gray-200"} flex items-center`}>
               <ImageIcon className="h-4 w-4 mr-2 text-primary" />
-              Sélectionnez l'image principale *
+              Sélectionnez les images *
             </Label>
             <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : "border-gray-700"}`}>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
@@ -108,28 +109,39 @@ export const MediaGenerationStep = ({
                         bannerImage === imageUrl ? "border-primary" : "border-transparent"
                       } rounded overflow-hidden transition-all hover:opacity-90`}
                       onClick={() => {
-                        selectBannerImage(imageUrl);
+                        toggleImageSelection(imageUrl);
                         if (formErrors.bannerImage) {
                           const { bannerImage, ...rest } = formErrors;
                           setFormErrors(rest);
                         }
                       }}
                     >
+                      <div className={`absolute inset-0 bg-primary/10 ${
+                        selectedImages.includes(imageUrl) ? "opacity-100" : "opacity-0"
+                      } transition-opacity`} />
                       <img
                         src={imageUrl}
                         alt="Property"
                         className="w-full h-24 object-cover"
                       />
+                      <div className={`absolute bottom-0 right-0 m-1 w-5 h-5 rounded-full ${
+                        selectedImages.includes(imageUrl) ? "bg-primary" : "bg-gray-600"
+                      } flex items-center justify-center text-white text-xs`}>
+                        {selectedImages.indexOf(imageUrl) + 1}
+                      </div>
                     </div>
                   ))
                 ) : (
                   <div className="col-span-3 flex items-center justify-center h-32 text-gray-400">
-                    Aucune image disponible. Veuillez sélectionner des images à l'étape précédente.
+                    Aucune image disponible.
                   </div>
                 )}
               </div>
             </ScrollArea>
             <FormError error={formErrors.bannerImage} />
+            <div className="text-sm text-gray-400">
+              * Sélectionnez la première image pour la bannière
+            </div>
           </div>
 
           {/* Broker Information */}
