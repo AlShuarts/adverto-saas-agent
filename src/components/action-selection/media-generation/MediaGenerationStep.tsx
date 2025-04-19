@@ -4,6 +4,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { BannerType } from "./components/BannerType";
 import { ImageSelection } from "./components/ImageSelection";
 import { PublicationType } from "../types";
+import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
+import { ImageUploader } from "@/components/banner/ImageUploader";
+import { Separator } from "@/components/ui/separator";
+import { BannerGenerationSection } from "./BannerGenerationSection";
 
 type MediaGenerationStepProps = {
   selectedPublicationTypes?: PublicationType[];
@@ -36,6 +40,8 @@ type MediaGenerationStepProps = {
   slideshowRenderId?: string | null;
   generateSlideshow?: () => Promise<string | null>; // Updated return type to match implementation
   refetchSlideshowStatus?: () => void;
+  onRegenerateBanner?: () => void;
+  selectedImages?: string[];
 };
 
 export const MediaGenerationStep = ({
@@ -67,6 +73,8 @@ export const MediaGenerationStep = ({
   slideshowRenderId,
   generateSlideshow,
   refetchSlideshowStatus,
+  onRegenerateBanner,
+  selectedImages
 }: MediaGenerationStepProps) => {
   return (
     <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">
@@ -74,20 +82,30 @@ export const MediaGenerationStep = ({
       
       <ScrollArea className="h-[600px] pr-4">
         <div className="space-y-6">
-          {/* Banner Type Selection */}
-          <BannerType
+          {/* Banner Generation Section */}
+          <BannerGenerationSection 
+            isGeneratingBanner={isGeneratingBanner}
+            bannerUrl={bannerUrl}
+            bannerError={bannerError}
+            generateBanner={generateBanner}
+            bannerImage={bannerImage}
             bannerType={bannerType}
             setBannerType={setBannerType}
-            formErrors={formErrors}
-          />
-          
-          {/* Image Selection */}
-          <ImageSelection
-            images={listing.images || []}
-            selectedImage={bannerImage}
-            onSelectImage={selectBannerImage}
+            selectBannerImage={selectBannerImage}
+            brokerName={brokerName}
+            setBrokerName={setBrokerName}
+            brokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
+            brokerPhone={brokerPhone}
+            setBrokerPhone={setBrokerPhone}
+            brokerImageUrl={brokerImageUrl}
+            setBrokerImageUrl={setBrokerImageUrl}
+            agencyLogoUrl={agencyLogoUrl}
+            setAgencyLogoUrl={setAgencyLogoUrl}
             formErrors={formErrors}
             setFormErrors={setFormErrors}
+            selectedImages={selectedImages || listing.images || []}
+            onRegenerateBanner={onRegenerateBanner}
           />
         </div>
       </ScrollArea>

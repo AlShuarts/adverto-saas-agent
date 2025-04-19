@@ -104,6 +104,8 @@ export const GenerationStep = ({
       setBrokerPhone={setBrokerPhone}
       setFormErrors={setFormErrors}
       listing={listing}
+      onRegenerateBanner={onRegenerateBanner}
+      selectedImages={selectedImages}
     />
   );
 };
