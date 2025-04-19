@@ -67,7 +67,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
   
-  const [bannerType, setBannerType] = useState<"VENDU" | "À VENDRE">("VENDU");
+  const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   
   const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
@@ -91,12 +91,8 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
   const [brokerName, setBrokerName] = useState<string>("");
   const [brokerEmail, setBrokerEmail] = useState<string>("");
   const [brokerPhone, setBrokerPhone] = useState<string>("");
-  const [formErrors, setFormErrors] = useState({
-    bannerType: "",
-    brokerName: "",
-    brokerEmail: "",
-    brokerPhone: ""
-  });
+  
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
 
   const { 
     data: slideshowRender, 
@@ -105,7 +101,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     refetch: refetchSlideshowStatus
   } = useSlideshowStatus(listing.id);
 
-  
   useEffect(() => {
     if (slideshowRender && selectedPublicationTypes.includes("slideshow")) {
       if ((slideshowRender.status === "completed" || slideshowRender.status === "done") && slideshowRender.video_url) {
@@ -133,7 +128,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
     }
   }, [slideshowRender, refetchSlideshowStatus, slideshowRenderId, selectedPublicationTypes]);
 
-  
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(1);
@@ -184,7 +178,6 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
       fetchMusic();
     }
   }, [isOpen, listing.images]);
-  
   
   const handlePublicationTypeChange = (type: PublicationType, checked: boolean) => {
     setSelectedPublicationTypes(prev => 
@@ -680,7 +673,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
             <h3 className="text-base font-medium">Type de bannière</h3>
             <BannerTypeSelector
               bannerType={bannerType}
-              setBannerType={setBannerType}
+              setBannerType={(type) => setBannerType(type)}
               error={formErrors.bannerType}
             />
           </div>
@@ -712,7 +705,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
               brokerPhone={brokerPhone}
               setBrokerPhone={setBrokerPhone}
               formErrors={formErrors}
-              setFormErrors={setFormErrors}
+              setFormErrors={(errors: {[key: string]: string}) => setFormErrors(errors)}
             />
           </div>
           
@@ -723,7 +716,7 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
               selectedImage={bannerImage || ""}
               setSelectedImage={selectBannerImage}
               formErrors={formErrors}
-              setFormErrors={setFormErrors}
+              setFormErrors={(errors: {[key: string]: string}) => setFormErrors(errors)}
             />
           </div>
         </div>
@@ -1071,14 +1064,14 @@ export const ActionSelectionDialog = ({ listing, isOpen, onClose }: ActionSelect
                   <Label htmlFor="banner-type">Type de bannière</Label>
                   <Select 
                     value={bannerType} 
-                    onValueChange={(value) => setBannerType(value as "VENDU" | "À VENDRE")}
+                    onValueChange={(value) => setBannerType(value as "VENDU" | "A_VENDRE")}
                   >
                     <SelectTrigger id="banner-type" className="mt-1">
                       <SelectValue placeholder="Type de bannière" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="VENDU">VENDU</SelectItem>
-                      <SelectItem value="À VENDRE">À VENDRE</SelectItem>
+                      <SelectItem value="A_VENDRE">A_VENDRE</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
