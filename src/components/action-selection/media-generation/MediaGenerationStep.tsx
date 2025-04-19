@@ -1,4 +1,3 @@
-
 import { ImageIcon } from "lucide-react";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
@@ -42,6 +41,9 @@ type MediaGenerationStepProps = {
   onRegenerateSlideshow: () => void;
   onRegenerateBanner: () => void;
   toggleImageSelection: (imageUrl: string) => void;
+  listing: {
+    images: string[];
+  };
 };
 
 export const MediaGenerationStep = ({
@@ -76,7 +78,8 @@ export const MediaGenerationStep = ({
   setFormErrors,
   onRegenerateSlideshow,
   onRegenerateBanner,
-  toggleImageSelection
+  toggleImageSelection,
+  listing
 }: MediaGenerationStepProps) => {
   return (
     <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">
@@ -101,7 +104,7 @@ export const MediaGenerationStep = ({
               <ImageIcon className="h-4 w-4 mr-2 text-primary" />
               Sélectionnez l'image pour la bannière *
             </Label>
-            {!selectedImages || selectedImages.length === 0 ? (
+            {!listing?.images || listing.images.length === 0 ? (
               <Alert variant="destructive">
                 <AlertDescription>
                   Aucune image disponible. Veuillez d'abord ajouter des images.
@@ -110,7 +113,7 @@ export const MediaGenerationStep = ({
             ) : (
               <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : "border-gray-700"}`}>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
-                  {selectedImages.map((imageUrl) => (
+                  {listing.images.map((imageUrl) => (
                     <div
                       key={imageUrl}
                       className={`relative cursor-pointer border-2 ${

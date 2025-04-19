@@ -1,6 +1,6 @@
-
 import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
 import { PublicationType } from "../types";
+import { Tables } from "@/integrations/supabase/types";
 
 type GenerationStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -35,6 +35,7 @@ type GenerationStepProps = {
   bannerUrl: string | null;
   refetchSlideshowStatus: () => void;
   toggleImageSelection: (imageUrl: string) => void;
+  listing: Tables<"listings">;
 };
 
 export const GenerationStep = ({
@@ -70,6 +71,7 @@ export const GenerationStep = ({
   onRegenerateSlideshow,
   onRegenerateBanner,
   toggleImageSelection,
+  listing,
 }: GenerationStepProps) => {
   return (
     <MediaGenerationStep
@@ -105,6 +107,7 @@ export const GenerationStep = ({
       onRegenerateSlideshow={onRegenerateSlideshow}
       onRegenerateBanner={onRegenerateBanner}
       toggleImageSelection={toggleImageSelection}
+      listing={listing}
     />
   );
 };
