@@ -1,0 +1,85 @@
+
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { toast } from "sonner";
+
+export const useSlideshowGeneration = (listingId: string) => {
+  const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
+  const [slideshowUrl, setSlideshowUrl] = useState<string | null>(null);
+  const [slideshowError, setSlideshowError] = useState<string | null>(null);
+  const [slideshowRenderId, setSlideshowRenderId] = useState<string | null>(null);
+
+  const generateSlideshow = async (selectedImages: string[], selectedMusic?: string): Promise<string | null> => {
+    try {
+      setIsGeneratingSlideshow(true);
+      setSlideshowError(null);
+      
+      console.log("Génération du diaporama pour le listing:", listingId);
+      console.log("Images sélectionnées:", selectedImages);
+      console.log("Musique sélectionnée:", selectedMusic);
+      
+      toast.info("Génération du diaporama", {
+        description: "Nous préparons votre diaporama...",
+        duration: 3000
+      });
+      
+      const { data, error } = await supabase.functions.invoke("create-slideshow", {
+        body: {
+          listingId: listingId,
+          config: {
+            imageDuration: 3,
+            showDetails: true,
+            showPrice: true,
+            showAddress: true,
+            selectedImages: selectedImages,
+            selectedMusic: selectedMusic
+          }
+        }
+      });
+      
+      if (error) {
+        console.error("Erreur lors de l'appel à create-slideshow:", error);
+        throw error;
+      }
+      
+      console.log("Réponse de create-slideshow:", data);
+      
+      if (data.renderId) {
+        setSlideshowRenderId(data.renderId);
+        await ensureAndIncrementStatistic('slideshow');
+        
+        toast.success("Diaporama en cours de génération", {
+          description: "Ce processus peut prendre quelques minutes",
+          duration: 5000
+        });
+        
+        return data.renderId;
+      } else {
+        throw new Error("Aucun ID de rendu n'a été retourné");
+      }
+      
+    } catch (error) {
+      console.error("Erreur lors de la génération du diaporama:", error);
+      setSlideshowError("Une erreur est survenue lors de la génération du diaporama: " + (error.message || "erreur inconnue"));
+      toast.error("Erreur lors de la génération du diaporama", {
+        description: error.message || "Une erreur inattendue est survenue",
+        duration: 5000
+      });
+      return null;
+    } finally {
+      setIsGeneratingSlideshow(false);
+    }
+  };
+
+  return {
+    isGeneratingSlideshow,
+    slideshowUrl,
+    slideshowError,
+    slideshowRenderId,
+    setSlideshowUrl,
+    setIsGeneratingSlideshow,
+    setSlideshowRenderId,
+    generateSlideshow
+  };
+};
