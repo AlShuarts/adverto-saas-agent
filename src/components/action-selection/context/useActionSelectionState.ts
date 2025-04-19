@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
-import { PublicationType } from './types';
+import { useState } from 'react';
 import { Tables } from "@/integrations/supabase/types";
+import { PublicationType } from './types';
 import { useTemplates } from '../hooks/useTemplates';
 import { useTextGeneration } from '../hooks/useTextGeneration';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
@@ -9,11 +9,12 @@ import { useMediaGeneration } from '../hooks/useMediaGeneration';
 import { useMediaSelection } from '../hooks/useMediaSelection';
 import { useBrokerInfo } from '../hooks/useBrokerInfo';
 import { useSocialNetworkSelection } from '../hooks/useSocialNetworkSelection';
+import { useInitialization } from '../hooks/useInitialization';
+import { usePublicationTypeHandler } from '../hooks/usePublicationTypeHandler';
+import { useMediaGenerationHandlers } from '../hooks/useMediaGenerationHandlers';
 
 export const useActionSelectionState = (listing: Tables<"listings">) => {
-  // Initialize state
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedPublicationTypes, setSelectedPublicationTypes] = useState<PublicationType[]>([]);
   
   // Import custom hooks
   const { 
@@ -98,14 +99,25 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     resetNetworks,
     handleNetworkChange
   } = useSocialNetworkSelection();
+
+  const { 
+    selectedPublicationTypes, 
+    setSelectedPublicationTypes, 
+    handlePublicationTypeChange 
+  } = usePublicationTypeHandler();
+
+  const { handleGenerateSlideshow, handleGenerateBanner } = useMediaGenerationHandlers(
+    listing.id,
+    selectedImages,
+    selectedMusic,
+    slideshowRenderId,
+    setSlideshowUrl,
+    setIsGeneratingSlideshow,
+    generateSlideshow,
+    generateBanner
+  );
   
   // Initialize and reset
-  useEffect(() => {
-    resetState();
-    fetchTemplates();
-    fetchMusic();
-  }, [listing.images]);
-  
   const resetState = () => {
     setCurrentStep(1);
     setSelectedPublicationTypes([]);
@@ -117,52 +129,8 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setSlideshowUrl(null);
     setBannerUrl(null);
   };
-  
-  // Publication type handler
-  const handlePublicationTypeChange = (type: PublicationType, checked: boolean) => {
-    setSelectedPublicationTypes(prev => 
-      checked 
-        ? [...prev, type] 
-        : prev.filter(t => t !== type)
-    );
-  };
-  
-  // Text generation handler
-  const handleGenerateText = async () => {
-    await generateText(selectedFacebookTemplateId, facebookTemplates);
-  };
 
-  // Slideshow generation handler
-  const handleGenerateSlideshow = async (): Promise<string | null> => {
-    return await generateSlideshow(selectedImages, selectedMusic);
-  };
-  
-  // Banner generation handler
-  const handleGenerateBanner = async (): Promise<{ success?: boolean; errors?: Record<string, string> }> => {
-    // Validation
-    const errors = validateBrokerInfo();
-    
-    if (!bannerImage) {
-      errors.bannerImage = "Veuillez sélectionner une image pour la bannière";
-    }
-    
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return { errors };
-    }
-
-    return await generateBanner(
-      bannerImage,
-      bannerType,
-      {
-        brokerImageUrl,
-        agencyLogoUrl,
-        brokerName,
-        brokerEmail,
-        brokerPhone
-      }
-    );
-  };
+  useInitialization(listing, resetState, fetchTemplates, fetchMusic);
 
   return {
     // State
@@ -204,7 +172,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setIsGeneratingBanner,
     setSlideshowRenderId,
     
-    // From media selection hook
     selectedImages,
     setSelectedImages,
     bannerType,
@@ -214,7 +181,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     onDragEnd,
     selectBannerImage,
     
-    // From broker info hook
     brokerImageUrl,
     setBrokerImageUrl,
     agencyLogoUrl,
@@ -228,15 +194,14 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     formErrors,
     setFormErrors,
     
-    // From network selection hook
     selectedNetworks,
     setSelectedNetworks,
     handleNetworkChange,
     
-    // Handlers
     handlePublicationTypeChange,
-    handleGenerateText,
+    handleGenerateText: () => generateText(selectedFacebookTemplateId, facebookTemplates),
     handleGenerateSlideshow,
-    handleGenerateBanner
+    handleGenerateBanner: (bannerImage: string | null, bannerType: "VENDU" | "A_VENDRE", brokerInfo: any) => 
+      handleGenerateBanner(bannerImage, bannerType, brokerInfo, validateBrokerInfo, setFormErrors)
   };
 };
