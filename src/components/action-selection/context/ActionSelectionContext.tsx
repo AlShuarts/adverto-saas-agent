@@ -145,7 +145,17 @@ export const ActionSelectionProvider = ({
       bannerError: state.bannerError,
       slideshowRenderId: state.slideshowRenderId,
       handleGenerateSlideshow: state.handleGenerateSlideshow,
-      handleGenerateBanner: state.handleGenerateBanner,
+      handleGenerateBanner: () => {
+        // Create a wrapper function that accesses the state values directly
+        const brokerInfo = {
+          brokerImageUrl: state.brokerImageUrl,
+          agencyLogoUrl: state.agencyLogoUrl,
+          brokerName: state.brokerName,
+          brokerEmail: state.brokerEmail,
+          brokerPhone: state.brokerPhone
+        };
+        return state.handleGenerateBanner(state.bannerImage, state.bannerType, brokerInfo);
+      },
       refetchSlideshowStatus: slideshowMonitor.refetchSlideshowStatus,
       
       // Social networks
