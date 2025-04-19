@@ -48,102 +48,101 @@ export const BrokerInfoForm = ({
   const hasAllRequiredFields = brokerName && brokerEmail && brokerPhone;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 border rounded-lg shadow-sm">
+      <h3 className="text-lg font-medium mb-4">Informations du courtier</h3>
+      
       {!hasAllRequiredFields && (
-        <Alert variant="default" className="bg-amber-50">
+        <Alert variant="default" className="bg-amber-50 mb-4">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertDescription className="text-amber-700">
-            Tous les champs marqués d'un astérisque (*) sont obligatoires pour générer la bannière
+            Les trois champs ci-dessous sont obligatoires pour générer la bannière
           </AlertDescription>
         </Alert>
       )}
       
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium">Informations obligatoires</span>
-        <span className="text-xs text-muted-foreground">* = Champ obligatoire</span>
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="brokerName" className={`flex items-center ${formErrors.brokerName ? "text-destructive" : ""}`}>
-          <User className="h-4 w-4 mr-2 text-muted-foreground" />
-          Nom du courtier *
-        </Label>
-        <Input
-          id="brokerName"
-          value={brokerName}
-          onChange={(e) => {
-            setBrokerName(e.target.value);
-            if (formErrors.brokerName) {
-              const { brokerName, ...rest } = formErrors;
-              setFormErrors(rest);
-            }
-          }}
-          placeholder="Exemple: Jean Dupont"
-          className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300 bg-amber-50" : ""}`}
-        />
-        {!brokerName && !formErrors.brokerName && (
-          <div className="flex items-center text-xs text-amber-600 mt-1">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Ce champ est obligatoire
-          </div>
-        )}
-        <FormError error={formErrors.brokerName} />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="brokerEmail" className={`flex items-center ${formErrors.brokerEmail ? "text-destructive" : ""}`}>
-          <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-          Email du courtier *
-        </Label>
-        <Input
-          id="brokerEmail"
-          type="email"
-          value={brokerEmail}
-          onChange={(e) => {
-            setBrokerEmail(e.target.value);
-            if (formErrors.brokerEmail) {
-              const { brokerEmail, ...rest } = formErrors;
-              setFormErrors(rest);
-            }
-          }}
-          placeholder="jean.dupont@immobilier.com"
-          className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300 bg-amber-50" : ""}`}
-        />
-        {!brokerEmail && !formErrors.brokerEmail && (
-          <div className="flex items-center text-xs text-amber-600 mt-1">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Ce champ est obligatoire
-          </div>
-        )}
-        <FormError error={formErrors.brokerEmail} />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="brokerPhone" className={`flex items-center ${formErrors.brokerPhone ? "text-destructive" : ""}`}>
-          <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-          Téléphone du courtier *
-        </Label>
-        <Input
-          id="brokerPhone"
-          type="tel"
-          value={brokerPhone}
-          onChange={(e) => {
-            setBrokerPhone(e.target.value);
-            if (formErrors.brokerPhone) {
-              const { brokerPhone, ...rest } = formErrors;
-              setFormErrors(rest);
-            }
-          }}
-          placeholder="(514) 555-1234"
-          className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300 bg-amber-50" : ""}`}
-        />
-        {!brokerPhone && !formErrors.brokerPhone && (
-          <div className="flex items-center text-xs text-amber-600 mt-1">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Ce champ est obligatoire
-          </div>
-        )}
-        <FormError error={formErrors.brokerPhone} />
+      <div className="grid gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="brokerName" className={`flex items-center ${formErrors.brokerName ? "text-destructive" : ""}`}>
+            <User className="h-4 w-4 mr-2 text-muted-foreground" />
+            Nom du courtier *
+          </Label>
+          <Input
+            id="brokerName"
+            value={brokerName}
+            onChange={(e) => {
+              setBrokerName(e.target.value);
+              if (formErrors.brokerName) {
+                const { brokerName, ...rest } = formErrors;
+                setFormErrors(rest);
+              }
+            }}
+            placeholder="Exemple: Jean Dupont"
+            className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300 bg-amber-50" : ""}`}
+          />
+          {!brokerName && !formErrors.brokerName && (
+            <div className="flex items-center text-xs text-amber-600 mt-1">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Ce champ est obligatoire
+            </div>
+          )}
+          <FormError error={formErrors.brokerName} />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="brokerEmail" className={`flex items-center ${formErrors.brokerEmail ? "text-destructive" : ""}`}>
+            <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+            Email du courtier *
+          </Label>
+          <Input
+            id="brokerEmail"
+            type="email"
+            value={brokerEmail}
+            onChange={(e) => {
+              setBrokerEmail(e.target.value);
+              if (formErrors.brokerEmail) {
+                const { brokerEmail, ...rest } = formErrors;
+                setFormErrors(rest);
+              }
+            }}
+            placeholder="jean.dupont@immobilier.com"
+            className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300 bg-amber-50" : ""}`}
+          />
+          {!brokerEmail && !formErrors.brokerEmail && (
+            <div className="flex items-center text-xs text-amber-600 mt-1">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Ce champ est obligatoire
+            </div>
+          )}
+          <FormError error={formErrors.brokerEmail} />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="brokerPhone" className={`flex items-center ${formErrors.brokerPhone ? "text-destructive" : ""}`}>
+            <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+            Téléphone du courtier *
+          </Label>
+          <Input
+            id="brokerPhone"
+            type="tel"
+            value={brokerPhone}
+            onChange={(e) => {
+              setBrokerPhone(e.target.value);
+              if (formErrors.brokerPhone) {
+                const { brokerPhone, ...rest } = formErrors;
+                setFormErrors(rest);
+              }
+            }}
+            placeholder="(514) 555-1234"
+            className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300 bg-amber-50" : ""}`}
+          />
+          {!brokerPhone && !formErrors.brokerPhone && (
+            <div className="flex items-center text-xs text-amber-600 mt-1">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Ce champ est obligatoire
+            </div>
+          )}
+          <FormError error={formErrors.brokerPhone} />
+        </div>
       </div>
     </div>
   );
