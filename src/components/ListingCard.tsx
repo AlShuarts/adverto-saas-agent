@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ListChecks } from "lucide-react";
 import { ListingDetails } from "./ListingDetails";
 import { ListingPublishToggle } from "./ListingPublishToggle";
-import { ActionSelectionDialog } from "./ActionSelectionDialog";
+import { ActionSelectionDialog } from "./action-selection/ActionSelectionDialog";
 
 type ListingCardProps = {
   listing: Tables<"listings">;
