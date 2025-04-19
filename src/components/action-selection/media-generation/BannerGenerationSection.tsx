@@ -128,13 +128,21 @@ export const BannerGenerationSection = ({
           
           <div className="space-y-2 border rounded-md p-4 bg-gray-800">
             <h3 className="text-base font-medium text-white">Image de propriété</h3>
-            <PropertyImageSelector
-              images={selectedImages.length > 0 ? selectedImages : []}
-              selectedImage={bannerImage || ""}
-              setSelectedImage={selectBannerImage}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
-            />
+            {selectedImages && selectedImages.length > 0 ? (
+              <PropertyImageSelector
+                images={selectedImages}
+                selectedImage={bannerImage || ""}
+                setSelectedImage={selectBannerImage}
+                formErrors={formErrors}
+                setFormErrors={setFormErrors}
+              />
+            ) : (
+              <div className="text-center p-4 bg-gray-700/50 rounded-md">
+                <p className="text-gray-300">
+                  Aucune image disponible. Veuillez sélectionner des images à l'étape précédente.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </ScrollArea>
