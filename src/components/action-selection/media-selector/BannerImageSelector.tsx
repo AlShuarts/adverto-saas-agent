@@ -8,7 +8,6 @@ import { FormError } from "@/components/banner/FormError";
 import { BannerTypeSelector } from "@/components/banner/BannerTypeSelector";
 import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
 import { ImageUploader } from "@/components/banner/ImageUploader";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 type BannerImageSelectorProps = {
   images: string[];
@@ -87,92 +86,81 @@ export const BannerImageSelector = ({
           </AlertDescription>
         </Alert>
       )}
-      
-      <ScrollArea className="h-[500px] pr-4">
-        <Accordion type="multiple" defaultValue={["banner-type", "broker-info", "banner-image"]} className="w-full">
-          <AccordionItem value="banner-type">
-            <AccordionTrigger className="text-base font-medium">Type de bannière</AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-4 p-4">
-                <BannerTypeSelector 
-                  bannerType={bannerType} 
-                  setBannerType={setBannerType}
-                  error={formErrors.bannerType}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
 
-          <AccordionItem value="broker-info">
-            <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-6 p-4">
-                <BrokerInfoForm
-                  brokerName={brokerName}
-                  setBrokerName={setBrokerName}
-                  brokerEmail={brokerEmail}
-                  setBrokerEmail={setBrokerEmail}
-                  brokerPhone={brokerPhone}
-                  setBrokerPhone={setBrokerPhone}
-                  formErrors={formErrors}
-                  setFormErrors={setFormErrors}
-                />
-                
-                <Separator className="my-4" />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <ImageUploader 
-                    type="broker"
-                    imageUrl={brokerImageUrl}
-                    setImageUrl={setBrokerImageUrl}
-                  />
-                  
-                  <ImageUploader 
-                    type="agency"
-                    imageUrl={agencyLogoUrl}
-                    setImageUrl={setAgencyLogoUrl}
+      <div className="space-y-6">
+        {/* Type de bannière */}
+        <div className="space-y-4 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Type de bannière</h3>
+          <BannerTypeSelector 
+            bannerType={bannerType} 
+            setBannerType={setBannerType}
+            error={formErrors.bannerType}
+          />
+        </div>
+
+        {/* Informations du courtier */}
+        <div className="space-y-4 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Informations du courtier</h3>
+          <BrokerInfoForm
+            brokerName={brokerName}
+            setBrokerName={setBrokerName}
+            brokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
+            brokerPhone={brokerPhone}
+            setBrokerPhone={setBrokerPhone}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+          />
+          
+          <Separator className="my-4" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ImageUploader 
+              type="broker"
+              imageUrl={brokerImageUrl}
+              setImageUrl={setBrokerImageUrl}
+            />
+            
+            <ImageUploader 
+              type="agency"
+              imageUrl={agencyLogoUrl}
+              setImageUrl={setAgencyLogoUrl}
+            />
+          </div>
+        </div>
+        
+        {/* Sélection de l'image principale */}
+        <div className="space-y-2 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Sélection de l'image principale</h3>
+          <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale *</Label>
+          <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
+              {images?.map(imageUrl => (
+                <div
+                  key={imageUrl}
+                  className={`relative cursor-pointer border-2 ${
+                    bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                  } rounded overflow-hidden`}
+                  onClick={() => {
+                    selectBannerImage(imageUrl);
+                    if (formErrors.bannerImage) {
+                      const { bannerImage, ...rest } = formErrors;
+                      setFormErrors(rest);
+                    }
+                  }}
+                >
+                  <img
+                    src={imageUrl}
+                    alt="Property"
+                    className="w-full h-24 object-cover"
                   />
                 </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="banner-image">
-            <AccordionTrigger className="text-base font-medium">Sélection de l'image principale</AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-2 p-4">
-                <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale *</Label>
-                <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
-                    {images?.map(imageUrl => (
-                      <div
-                        key={imageUrl}
-                        className={`relative cursor-pointer border-2 ${
-                          bannerImage === imageUrl ? "border-primary" : "border-transparent"
-                        } rounded overflow-hidden`}
-                        onClick={() => {
-                          selectBannerImage(imageUrl);
-                          if (formErrors.bannerImage) {
-                            const { bannerImage, ...rest } = formErrors;
-                            setFormErrors(rest);
-                          }
-                        }}
-                      >
-                        <img
-                          src={imageUrl}
-                          alt="Property"
-                          className="w-full h-24 object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                <FormError error={formErrors.bannerImage} />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </ScrollArea>
+              ))}
+            </div>
+          </ScrollArea>
+          <FormError error={formErrors.bannerImage} />
+        </div>
+      </div>
     </div>
   );
 };

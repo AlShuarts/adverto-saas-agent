@@ -6,7 +6,6 @@ import { BrokerInfoForm } from "../BrokerInfoForm";
 import { ImageUploader } from "../ImageUploader";
 import { BannerTypeSelector } from "../BannerTypeSelector";
 import { Tables } from "@/integrations/supabase/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 type DialogFormContentProps = {
   listing: Tables<"listings">;
@@ -58,62 +57,58 @@ export const DialogFormContent = ({
         </Alert>
       )}
       
-      <Accordion type="multiple" defaultValue={["banner-type", "banner-image", "broker-info", "broker-images"]}>
-        <AccordionItem value="banner-type">
-          <AccordionTrigger className="text-base font-medium">Type de bannière</AccordionTrigger>
-          <AccordionContent className="pt-2">
-            <BannerTypeSelector bannerType={bannerType} setBannerType={setBannerType} />
-          </AccordionContent>
-        </AccordionItem>
+      <div className="space-y-6">
+        {/* Type de bannière */}
+        <div className="space-y-2 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Type de bannière</h3>
+          <BannerTypeSelector bannerType={bannerType} setBannerType={setBannerType} />
+        </div>
         
-        <AccordionItem value="banner-image">
-          <AccordionTrigger className="text-base font-medium">Sélection de l'image principale</AccordionTrigger>
-          <AccordionContent className="pt-2">
-            <PropertyImageSelector 
-              images={listing.images || []} 
-              selectedImage={selectedImage} 
-              setSelectedImage={setSelectedImage}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
+        {/* Informations du courtier */}
+        <div className="space-y-2 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Informations du courtier</h3>
+          <BrokerInfoForm 
+            brokerName={brokerName}
+            setBrokerName={setBrokerName}
+            brokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
+            brokerPhone={brokerPhone}
+            setBrokerPhone={setBrokerPhone}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+          />
+        </div>
+        
+        {/* Images du courtier et de l'agence */}
+        <div className="space-y-2 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Images du courtier et de l'agence</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <ImageUploader 
+              type="broker" 
+              imageUrl={brokerImage} 
+              setImageUrl={setBrokerImage} 
             />
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="broker-info">
-          <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
-          <AccordionContent className="pt-2">
-            <BrokerInfoForm 
-              brokerName={brokerName}
-              setBrokerName={setBrokerName}
-              brokerEmail={brokerEmail}
-              setBrokerEmail={setBrokerEmail}
-              brokerPhone={brokerPhone}
-              setBrokerPhone={setBrokerPhone}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
+            
+            <ImageUploader 
+              type="agency" 
+              imageUrl={agencyLogo} 
+              setImageUrl={setAgencyLogo} 
             />
-          </AccordionContent>
-        </AccordionItem>
+          </div>
+        </div>
         
-        <AccordionItem value="broker-images">
-          <AccordionTrigger className="text-base font-medium">Images du courtier et de l'agence</AccordionTrigger>
-          <AccordionContent className="pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <ImageUploader 
-                type="broker" 
-                imageUrl={brokerImage} 
-                setImageUrl={setBrokerImage} 
-              />
-              
-              <ImageUploader 
-                type="agency" 
-                imageUrl={agencyLogo} 
-                setImageUrl={setAgencyLogo} 
-              />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        {/* Sélection de l'image principale */}
+        <div className="space-y-2 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Sélection de l'image principale</h3>
+          <PropertyImageSelector 
+            images={listing.images || []} 
+            selectedImage={selectedImage} 
+            setSelectedImage={setSelectedImage}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+          />
+        </div>
+      </div>
       
       <div className="text-sm text-muted-foreground mt-2">
         * Champs obligatoires
