@@ -1,11 +1,12 @@
+
 import { ImageIcon } from "lucide-react";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
 import { PublicationType } from "../types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BannerTypeSelector } from "@/components/BannerTypeSelector";
+import { BannerTypeSelector } from "../../../components/banner/BannerTypeSelector";
 import { Label } from "@/components/ui/label";
-import { FormError } from "@/components/FormError";
+import { FormError } from "../../../components/banner/FormError";
 
 type MediaGenerationStepProps = {
   selectedPublicationTypes: Array<"photo" | "slideshow" | "banner">;
