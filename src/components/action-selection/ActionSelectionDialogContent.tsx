@@ -104,10 +104,10 @@ export const ActionSelectionDialogContent = () => {
   };
 
   return (
-    <DialogContent className="max-w-4xl">
+    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800">
       <DialogHeader>
-        <DialogTitle>Publication sur les réseaux sociaux</DialogTitle>
-        <DialogDescription>
+        <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
+        <DialogDescription className="text-gray-400">
           Créez une publication pour diffuser votre bien immobilier sur les réseaux sociaux.
         </DialogDescription>
       </DialogHeader>
@@ -175,7 +175,7 @@ export const ActionSelectionDialogContent = () => {
         </div>
       </ScrollArea>
       
-      <DialogFooter>
+      <DialogFooter className="border-t border-gray-800 pt-4">
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}

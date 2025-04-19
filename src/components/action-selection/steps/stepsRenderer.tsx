@@ -98,7 +98,7 @@ export const renderStepContent = (props: StepRendererProps) => {
         />
       );
     
-    case 3.5:
+    case 3:
       return (
         <GenerationStep
           selectedPublicationTypes={props.selectedPublicationTypes}
