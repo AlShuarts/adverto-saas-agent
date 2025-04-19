@@ -2,6 +2,7 @@
 import { SocialNetworkSelector } from "../SocialNetworkSelector";
 import { PublicationType, SocialNetworks } from "../types";
 import { Button } from "@/components/ui/button";
+import { PublicationPreview } from "../PublicationPreview";
 
 type SocialStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -71,6 +72,27 @@ export const SocialStep = ({
         >
           {isSubmitting ? "Publication en cours..." : "Publier maintenant"}
         </Button>
+      </div>
+
+      {/* Publication Preview Section */}
+      <div className="space-y-4 border rounded-md p-4">
+        <h4 className="font-medium">Prévisualisation</h4>
+        <p className="text-sm text-muted-foreground">
+          Voici à quoi ressembleront vos publications sur les réseaux sociaux sélectionnés.
+        </p>
+        
+        <PublicationPreview 
+          selectedNetworks={selectedNetworks}
+          generatedText={generatedText}
+          setGeneratedText={setGeneratedText}
+          images={images}
+          selectedImages={selectedImages}
+          setSelectedImages={setSelectedImages}
+          slideshowUrl={slideshowUrl}
+          bannerUrl={bannerUrl}
+          selectedMusic={selectedMusic}
+          selectedPublicationTypes={selectedPublicationTypes}
+        />
       </div>
     </div>
   );
