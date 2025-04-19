@@ -1,7 +1,11 @@
+import { ImageIcon } from "lucide-react";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
 import { PublicationType } from "../types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { BannerTypeSelector } from "@/components/BannerTypeSelector";
+import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/FormError";
 
 type MediaGenerationStepProps = {
   selectedPublicationTypes: Array<"photo" | "slideshow" | "banner">;
@@ -75,46 +79,118 @@ export const MediaGenerationStep = ({
       <h3 className="text-lg font-medium text-white">Génération des médias</h3>
       
       <ScrollArea className="h-[600px] pr-4">
-        {selectedPublicationTypes.includes("slideshow") && (
-          <SlideshowGenerationSection
-            isGeneratingSlideshow={isGeneratingSlideshow}
-            slideshowUrl={slideshowUrl}
-            slideshowError={slideshowError}
-            slideshowRenderId={slideshowRenderId}
-            generateSlideshow={generateSlideshow}
-            refetchSlideshowStatus={refetchSlideshowStatus}
-            selectedImages={selectedImages}
-            selectedMusic={selectedMusic}
-            onRegenerateSlideshow={onRegenerateSlideshow}
-          />
-        )}
-        
-        {selectedPublicationTypes.includes("banner") && (
-          <BannerGenerationSection
-            isGeneratingBanner={isGeneratingBanner}
-            bannerUrl={bannerUrl}
-            bannerError={bannerError}
-            generateBanner={generateBanner}
-            bannerImage={bannerImage}
-            bannerType={bannerType}
-            setBannerType={setBannerType}
-            selectBannerImage={selectBannerImage}
-            brokerName={brokerName}
-            setBrokerName={setBrokerName}
-            brokerEmail={brokerEmail}
-            setBrokerEmail={setBrokerEmail}
-            brokerPhone={brokerPhone}
-            setBrokerPhone={setBrokerPhone}
-            brokerImageUrl={brokerImageUrl}
-            setBrokerImageUrl={setBrokerImageUrl}
-            agencyLogoUrl={agencyLogoUrl}
-            setAgencyLogoUrl={setAgencyLogoUrl}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-            selectedImages={selectedImages}
-            onRegenerateBanner={onRegenerateBanner}
-          />
-        )}
+        <div className="space-y-6">
+          {/* Banner Type Selection */}
+          <div className="space-y-4 border rounded-md p-4 bg-gray-800">
+            <h3 className="text-base font-medium text-white">Type de bannière</h3>
+            <BannerTypeSelector
+              bannerType={bannerType}
+              setBannerType={setBannerType}
+              error={formErrors.bannerType}
+            />
+          </div>
+          
+          {/* Main Image Selection */}
+          <div className="space-y-4 border rounded-md p-4 bg-gray-800">
+            <h3 className="text-base font-medium text-white">Image principale</h3>
+            <Label className={`${formErrors.bannerImage ? "text-destructive" : "text-gray-200"} flex items-center`}>
+              <ImageIcon className="h-4 w-4 mr-2 text-primary" />
+              Sélectionnez l'image principale *
+            </Label>
+            <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : "border-gray-700"}`}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
+                {selectedImages?.map(imageUrl => (
+                  <div
+                    key={imageUrl}
+                    className={`relative cursor-pointer border-2 ${
+                      bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                    } rounded overflow-hidden transition-all hover:opacity-90`}
+                    onClick={() => {
+                      selectBannerImage(imageUrl);
+                      if (formErrors.bannerImage) {
+                        const { bannerImage, ...rest } = formErrors;
+                        setFormErrors(rest);
+                      }
+                    }}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt="Property"
+                      className="w-full h-24 object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            <FormError error={formErrors.bannerImage} />
+          </div>
+
+          {/* Broker Information */}
+          <div className="space-y-4 border rounded-md p-4 bg-gray-800">
+            <h3 className="text-base font-medium text-white">Informations du vendeur</h3>
+            <div className="space-y-2">
+              <Label className="flex items-center">
+                <span className="text-gray-200">Nom du vendeur</span>
+                <input
+                  type="text"
+                  value={brokerName}
+                  onChange={(e) => setBrokerName(e.target.value)}
+                  className="ml-2 w-full text-gray-200 bg-gray-800 border border-gray-700 rounded p-2"
+                />
+              </Label>
+              <Label className="flex items-center">
+                <span className="text-gray-200">Email du vendeur</span>
+                <input
+                  type="email"
+                  value={brokerEmail}
+                  onChange={(e) => setBrokerEmail(e.target.value)}
+                  className="ml-2 w-full text-gray-200 bg-gray-800 border border-gray-700 rounded p-2"
+                />
+              </Label>
+              <Label className="flex items-center">
+                <span className="text-gray-200">Téléphone du vendeur</span>
+                <input
+                  type="tel"
+                  value={brokerPhone}
+                  onChange={(e) => setBrokerPhone(e.target.value)}
+                  className="ml-2 w-full text-gray-200 bg-gray-800 border border-gray-700 rounded p-2"
+                />
+              </Label>
+              <Label className="flex items-center">
+                <span className="text-gray-200">Image du vendeur</span>
+                <input
+                  type="url"
+                  value={brokerImageUrl}
+                  onChange={(e) => setBrokerImageUrl(e.target.value)}
+                  className="ml-2 w-full text-gray-200 bg-gray-800 border border-gray-700 rounded p-2"
+                />
+              </Label>
+            </div>
+          </div>
+
+          {/* Generation Controls */}
+          <div className="space-y-4 border rounded-md p-4 bg-gray-800">
+            <h3 className="text-base font-medium text-white">Contrôles de génération</h3>
+            <div className="space-y-2">
+              {selectedPublicationTypes.includes("slideshow") && (
+                <button
+                  onClick={generateSlideshow}
+                  className={`w-full px-4 py-2 rounded bg-primary text-white ${isGeneratingSlideshow ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {isGeneratingSlideshow ? "Génération en cours..." : "Générer la slideshow"}
+                </button>
+              )}
+              {selectedPublicationTypes.includes("banner") && (
+                <button
+                  onClick={generateBanner}
+                  className={`w-full px-4 py-2 rounded bg-primary text-white ${isGeneratingBanner ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {isGeneratingBanner ? "Génération en cours..." : "Générer la bannière"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </ScrollArea>
     </div>
   );
