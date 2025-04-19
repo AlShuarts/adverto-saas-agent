@@ -1,3 +1,4 @@
+
 import { ImageIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BannerType } from "./components/BannerType";
@@ -33,7 +34,7 @@ type MediaGenerationStepProps = {
   slideshowUrl?: string | null;
   slideshowError?: string | null;
   slideshowRenderId?: string | null;
-  generateSlideshow?: () => Promise<void>;
+  generateSlideshow?: () => Promise<string | null>; // Updated return type to match implementation
   refetchSlideshowStatus?: () => void;
 };
 

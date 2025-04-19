@@ -58,7 +58,7 @@ type StepRendererProps = {
   slideshowError: string | null;
   bannerError: string | null;
   slideshowRenderId: string | null;
-  generateSlideshowWrapper: () => Promise<string | null>;
+  generateSlideshowWrapper: () => Promise<string | null>; // Updated to match the return type
   generateBannerWrapper: () => Promise<void>;
   refetchSlideshowStatus: () => void;
   handleRegenerateSlideshow: () => void;
