@@ -76,8 +76,8 @@ export const BannerGenerationSection = ({
   const missingFields = getMissingFields();
   
   return (
-    <div className="space-y-4 border rounded-md p-4">
-      <h4 className="font-medium flex items-center space-x-2">
+    <div className="space-y-4 border rounded-md p-4 bg-gray-900">
+      <h4 className="font-medium flex items-center space-x-2 text-white">
         <ImageIcon size={18} className="text-primary" />
         <span>Configuration de la bannière</span>
       </h4>
@@ -85,9 +85,9 @@ export const BannerGenerationSection = ({
       <ScrollArea className="max-h-[500px] pr-4">
         <div className="space-y-6">
           <Accordion type="multiple" defaultValue={["banner-type", "broker-info", "banner-image"]} className="w-full">
-            <AccordionItem value="banner-type">
-              <AccordionTrigger className="text-sm font-medium">Type de bannière</AccordionTrigger>
-              <AccordionContent className="p-2">
+            <AccordionItem value="banner-type" className="border-gray-700">
+              <AccordionTrigger className="text-sm font-medium text-white hover:text-gray-300">Type de bannière</AccordionTrigger>
+              <AccordionContent className="p-2 bg-gray-800 rounded-md">
                 <BannerTypeSelector
                   bannerType={bannerType}
                   setBannerType={setBannerType}
@@ -96,10 +96,10 @@ export const BannerGenerationSection = ({
               </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="broker-info" defaultValue="broker-info">
-              <AccordionTrigger className="text-sm font-medium">Informations du courtier</AccordionTrigger>
+            <AccordionItem value="broker-info" className="border-gray-700">
+              <AccordionTrigger className="text-sm font-medium text-white hover:text-gray-300">Informations du courtier</AccordionTrigger>
               <AccordionContent>
-                <div className="p-2 space-y-4">
+                <div className="p-2 space-y-4 bg-gray-800 rounded-md">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <ImageUploader
                       type="broker"
@@ -114,7 +114,7 @@ export const BannerGenerationSection = ({
                     />
                   </div>
                   
-                  <Separator />
+                  <Separator className="bg-gray-700" />
                   
                   <BrokerInfoForm
                     brokerName={brokerName}
@@ -130,9 +130,9 @@ export const BannerGenerationSection = ({
               </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="banner-image">
-              <AccordionTrigger className="text-sm font-medium">Image de propriété</AccordionTrigger>
-              <AccordionContent className="p-2">
+            <AccordionItem value="banner-image" className="border-gray-700">
+              <AccordionTrigger className="text-sm font-medium text-white hover:text-gray-300">Image de propriété</AccordionTrigger>
+              <AccordionContent className="p-2 bg-gray-800 rounded-md">
                 <PropertyImageSelector
                   images={selectedImages.length > 0 ? selectedImages : []}
                   selectedImage={bannerImage || ""}
@@ -146,7 +146,7 @@ export const BannerGenerationSection = ({
         </div>
       </ScrollArea>
       
-      <div className="border-t pt-4 mt-6">
+      <div className="border-t border-gray-700 pt-4 mt-6">
         {!bannerUrl ? (
           <div className="flex flex-col items-center justify-center py-4">
             {isGeneratingBanner ? (

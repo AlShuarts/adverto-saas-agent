@@ -17,12 +17,7 @@ export const useNavigationUtils = (
       case 1: 
         return selectedPublicationTypes.length > 0;
       case 2: 
-        return true; 
-      case 3: 
-        return !(
-          (selectedPublicationTypes.includes("photo") && selectedImages.length === 0) ||
-          (selectedPublicationTypes.includes("banner") && !bannerImage)
-        );
+        return true;
       case 3.5: 
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
         const needsBanner = selectedPublicationTypes.includes("banner");
@@ -39,9 +34,8 @@ export const useNavigationUtils = (
   };
   
   const nextStep = () => {
-    if (currentStep === 3) {
+    if (currentStep === 2) {
       const needsGeneration = selectedPublicationTypes.includes("slideshow") || selectedPublicationTypes.includes("banner");
-      
       if (needsGeneration) {
         setCurrentStep(3.5);
       } else {
@@ -56,7 +50,7 @@ export const useNavigationUtils = (
   
   const prevStep = () => {
     if (currentStep === 3.5) {
-      setCurrentStep(3);
+      setCurrentStep(2);
     } else if (currentStep === 4 && 
               (selectedPublicationTypes.includes("slideshow") || 
                selectedPublicationTypes.includes("banner"))) {

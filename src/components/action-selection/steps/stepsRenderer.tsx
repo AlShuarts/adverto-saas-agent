@@ -1,4 +1,3 @@
-
 import { PublicationStep } from "./PublicationStep";
 import { TemplateStep } from "./TemplateStep";
 import { MediaStep } from "./MediaStep";
@@ -96,38 +95,6 @@ export const renderStepContent = (props: StepRendererProps) => {
           setGeneratedText={props.setGeneratedText}
           isGeneratingText={props.isGeneratingText}
           onGenerateText={props.handleGenerateText}
-        />
-      );
-    
-    case 3: 
-      return (
-        <MediaStep
-          selectedPublicationTypes={props.selectedPublicationTypes}
-          images={props.listing.images || []}
-          selectedImages={props.selectedImages}
-          bannerImage={props.bannerImage}
-          bannerType={props.bannerType}
-          musicList={props.musicList}
-          selectedMusic={props.selectedMusic}
-          currentlyPlaying={props.currentlyPlaying}
-          toggleImageSelection={props.toggleImageSelection}
-          onDragEnd={props.onDragEnd}
-          selectBannerImage={props.selectBannerImage}
-          handleMusicChange={props.handleMusicChange}
-          previewMusic={props.previewMusic}
-          setBannerType={props.setBannerType}
-          brokerImageUrl={props.brokerImageUrl}
-          setBrokerImageUrl={props.setBrokerImageUrl}
-          agencyLogoUrl={props.agencyLogoUrl}
-          setAgencyLogoUrl={props.setAgencyLogoUrl}
-          brokerName={props.brokerName}
-          setBrokerName={props.setBrokerName}
-          brokerEmail={props.brokerEmail}
-          setBrokerEmail={props.setBrokerEmail}
-          brokerPhone={props.brokerPhone}
-          setBrokerPhone={props.setBrokerPhone}
-          formErrors={props.formErrors}
-          setFormErrors={props.setFormErrors}
         />
       );
     
