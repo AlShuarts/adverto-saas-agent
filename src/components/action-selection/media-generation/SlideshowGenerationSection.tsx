@@ -10,7 +10,7 @@ type SlideshowGenerationSectionProps = {
   generateSlideshow: () => Promise<string | null>;
   refetchSlideshowStatus: () => void;
   selectedImages: string[];
-  selectedMusic?: string | undefined;
+  selectedMusic?: string;
   onRegenerateSlideshow: () => void;
 };
 

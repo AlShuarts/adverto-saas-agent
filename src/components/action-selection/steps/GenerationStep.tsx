@@ -105,8 +105,10 @@ export const GenerationStep = ({
       setFormErrors={setFormErrors}
       listing={listing}
       onRegenerateBanner={onRegenerateBanner}
+      onRegenerateSlideshow={onRegenerateSlideshow}
       selectedImages={selectedImages}
       toggleImageSelection={toggleImageSelection}
+      selectedMusic={selectedMusic}
     />
   );
 };
