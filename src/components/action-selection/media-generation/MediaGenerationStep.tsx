@@ -1,5 +1,4 @@
 
-import { MediaGenerationStep } from "./components/MediaGenerationStep";
 import { PublicationType } from "../types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BannerGenerationSection } from "./BannerGenerationSection";
@@ -79,8 +78,8 @@ export const MediaGenerationStep = ({
   toggleImageSelection,
   selectedMusic
 }: MediaGenerationStepProps) => {
-  const showBannerSection = selectedPublicationTypes?.includes("BANNER");
-  const showSlideshowSection = selectedPublicationTypes?.includes("SLIDESHOW");
+  const showBannerSection = selectedPublicationTypes?.includes("banner");
+  const showSlideshowSection = selectedPublicationTypes?.includes("slideshow");
 
   return (
     <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">
