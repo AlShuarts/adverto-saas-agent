@@ -34,6 +34,7 @@ type GenerationStepProps = {
   slideshowUrl: string | null;
   bannerUrl: string | null;
   refetchSlideshowStatus: () => void;
+  toggleImageSelection: (imageUrl: string) => void;
 };
 
 export const GenerationStep = ({
@@ -68,6 +69,7 @@ export const GenerationStep = ({
   refetchSlideshowStatus,
   onRegenerateSlideshow,
   onRegenerateBanner,
+  toggleImageSelection,
 }: GenerationStepProps) => {
   return (
     <MediaGenerationStep
@@ -102,6 +104,7 @@ export const GenerationStep = ({
       selectedMusic={selectedMusic}
       onRegenerateSlideshow={onRegenerateSlideshow}
       onRegenerateBanner={onRegenerateBanner}
+      toggleImageSelection={toggleImageSelection}
     />
   );
 };

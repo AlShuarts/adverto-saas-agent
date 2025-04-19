@@ -40,6 +40,7 @@ type MediaGenerationStepProps = {
   setFormErrors: (errors: {[key: string]: string}) => void;
   onRegenerateSlideshow: () => void;
   onRegenerateBanner: () => void;
+  toggleImageSelection: (imageUrl: string) => void;
 };
 
 export const MediaGenerationStep = ({
