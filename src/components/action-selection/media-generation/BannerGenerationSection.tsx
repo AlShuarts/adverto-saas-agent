@@ -1,3 +1,4 @@
+
 import { ImageIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -93,32 +94,36 @@ export const BannerGenerationSection = ({
           
           <div className="space-y-4 border rounded-md p-4 bg-gray-800">
             <h3 className="text-base font-medium text-white">Informations du courtier</h3>
-            <BrokerInfoForm
-              brokerName={brokerName}
-              setBrokerName={setBrokerName}
-              brokerEmail={brokerEmail}
-              setBrokerEmail={setBrokerEmail}
-              brokerPhone={brokerPhone}
-              setBrokerPhone={setBrokerPhone}
-              formErrors={formErrors}
-              setFormErrors={setFormErrors}
-            />
-            
-            <Separator className="bg-gray-700" />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ImageUploader 
-                type="broker"
-                imageUrl={brokerImageUrl}
-                setImageUrl={setBrokerImageUrl}
-              />
-              
-              <ImageUploader 
-                type="agency"
-                imageUrl={agencyLogoUrl}
-                setImageUrl={setAgencyLogoUrl}
-              />
-            </div>
+            <ScrollArea className="h-[300px] pr-4">
+              <div className="space-y-4">
+                <BrokerInfoForm
+                  brokerName={brokerName}
+                  setBrokerName={setBrokerName}
+                  brokerEmail={brokerEmail}
+                  setBrokerEmail={setBrokerEmail}
+                  brokerPhone={brokerPhone}
+                  setBrokerPhone={setBrokerPhone}
+                  formErrors={formErrors}
+                  setFormErrors={setFormErrors}
+                />
+                
+                <Separator className="bg-gray-700" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ImageUploader 
+                    type="broker"
+                    imageUrl={brokerImageUrl}
+                    setImageUrl={setBrokerImageUrl}
+                  />
+                  
+                  <ImageUploader 
+                    type="agency"
+                    imageUrl={agencyLogoUrl}
+                    setImageUrl={setAgencyLogoUrl}
+                  />
+                </div>
+              </div>
+            </ScrollArea>
           </div>
           
           <div className="space-y-2 border rounded-md p-4 bg-gray-800">
