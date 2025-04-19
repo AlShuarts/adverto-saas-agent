@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, AlertTriangle } from "lucide-react";
+import { Info, AlertTriangle, ImageIcon } from "lucide-react";
 import { FormError } from "@/components/banner/FormError";
 import { BannerTypeSelector } from "@/components/banner/BannerTypeSelector";
 import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
@@ -98,6 +98,41 @@ export const BannerImageSelector = ({
           />
         </div>
 
+        {/* Image principale */}
+        <div className="space-y-2 border rounded-md p-4 bg-white">
+          <h3 className="text-base font-medium">Image principale</h3>
+          <Label className={formErrors.bannerImage ? "text-destructive" : ""}>
+            <ImageIcon className="h-4 w-4 mr-2 inline-block text-muted-foreground" />
+            Sélectionnez l'image principale *
+          </Label>
+          <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
+              {images?.map(imageUrl => (
+                <div
+                  key={imageUrl}
+                  className={`relative cursor-pointer border-2 ${
+                    bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                  } rounded overflow-hidden transition-all hover:opacity-90`}
+                  onClick={() => {
+                    selectBannerImage(imageUrl);
+                    if (formErrors.bannerImage) {
+                      const { bannerImage, ...rest } = formErrors;
+                      setFormErrors(rest);
+                    }
+                  }}
+                >
+                  <img
+                    src={imageUrl}
+                    alt="Property"
+                    className="w-full h-24 object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <FormError error={formErrors.bannerImage} />
+        </div>
+
         {/* Informations du courtier */}
         <div className="space-y-4 border rounded-md p-4 bg-white">
           <h3 className="text-base font-medium">Informations du courtier</h3>
@@ -127,38 +162,6 @@ export const BannerImageSelector = ({
               setImageUrl={setAgencyLogoUrl}
             />
           </div>
-        </div>
-        
-        {/* Sélection de l'image principale */}
-        <div className="space-y-2 border rounded-md p-4 bg-white">
-          <h3 className="text-base font-medium">Sélection de l'image principale</h3>
-          <Label className={formErrors.bannerImage ? "text-destructive" : ""}>Sélection de l'image principale *</Label>
-          <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : ""}`}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
-              {images?.map(imageUrl => (
-                <div
-                  key={imageUrl}
-                  className={`relative cursor-pointer border-2 ${
-                    bannerImage === imageUrl ? "border-primary" : "border-transparent"
-                  } rounded overflow-hidden`}
-                  onClick={() => {
-                    selectBannerImage(imageUrl);
-                    if (formErrors.bannerImage) {
-                      const { bannerImage, ...rest } = formErrors;
-                      setFormErrors(rest);
-                    }
-                  }}
-                >
-                  <img
-                    src={imageUrl}
-                    alt="Property"
-                    className="w-full h-24 object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-          <FormError error={formErrors.bannerImage} />
         </div>
       </div>
     </div>
