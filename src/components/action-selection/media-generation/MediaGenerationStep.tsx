@@ -71,8 +71,8 @@ export const MediaGenerationStep = ({
   onRegenerateBanner
 }: MediaGenerationStepProps) => {
   return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 3.5: Génération des médias</h3>
+    <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">
+      <h3 className="text-lg font-medium text-white">Génération des médias</h3>
       
       {selectedPublicationTypes.includes("slideshow") && (
         <SlideshowGenerationSection

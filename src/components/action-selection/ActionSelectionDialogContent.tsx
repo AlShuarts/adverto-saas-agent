@@ -81,7 +81,7 @@ export const ActionSelectionDialogContent = () => {
 
   const generateBannerWrapper = async () => {
     const result = await handleGenerateBanner();
-    if (result.errors) {
+    if (result?.errors) {
       setFormErrors(result.errors);
     }
     return;

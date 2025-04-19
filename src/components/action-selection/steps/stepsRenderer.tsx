@@ -1,6 +1,6 @@
+
 import { PublicationStep } from "./PublicationStep";
 import { TemplateStep } from "./TemplateStep";
-import { MediaStep } from "./MediaStep";
 import { GenerationStep } from "./GenerationStep";
 import { SocialStep } from "./SocialStep";
 import { PublicationType } from "../types";
