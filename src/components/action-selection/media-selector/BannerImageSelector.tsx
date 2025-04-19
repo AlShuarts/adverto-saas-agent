@@ -107,6 +107,19 @@ export const BannerImageSelector = ({
             <AccordionTrigger className="text-base font-medium">Informations du courtier</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-6 p-4">
+                <BrokerInfoForm
+                  brokerName={brokerName}
+                  setBrokerName={setBrokerName}
+                  brokerEmail={brokerEmail}
+                  setBrokerEmail={setBrokerEmail}
+                  brokerPhone={brokerPhone}
+                  setBrokerPhone={setBrokerPhone}
+                  formErrors={formErrors}
+                  setFormErrors={setFormErrors}
+                />
+                
+                <Separator className="my-4" />
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <ImageUploader 
                     type="broker"
@@ -120,19 +133,6 @@ export const BannerImageSelector = ({
                     setImageUrl={setAgencyLogoUrl}
                   />
                 </div>
-                
-                <Separator className="my-4" />
-                
-                <BrokerInfoForm
-                  brokerName={brokerName}
-                  setBrokerName={setBrokerName}
-                  brokerEmail={brokerEmail}
-                  setBrokerEmail={setBrokerEmail}
-                  brokerPhone={brokerPhone}
-                  setBrokerPhone={setBrokerPhone}
-                  formErrors={formErrors}
-                  setFormErrors={setFormErrors}
-                />
               </div>
             </AccordionContent>
           </AccordionItem>
