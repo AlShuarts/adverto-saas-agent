@@ -1,3 +1,4 @@
+
 import { ImageIcon } from "lucide-react";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
@@ -100,39 +101,39 @@ export const MediaGenerationStep = ({
               <ImageIcon className="h-4 w-4 mr-2 text-primary" />
               Sélectionnez l'image pour la bannière *
             </Label>
-            {!selectedImages && (
+            {!selectedImages || selectedImages.length === 0 ? (
               <Alert variant="destructive">
-                {/*<AlertTriangle className="h-4 w-4" />*/}
                 <AlertDescription>
                   Aucune image disponible. Veuillez d'abord ajouter des images.
                 </AlertDescription>
               </Alert>
+            ) : (
+              <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : "border-gray-700"}`}>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
+                  {selectedImages.map((imageUrl) => (
+                    <div
+                      key={imageUrl}
+                      className={`relative cursor-pointer border-2 ${
+                        bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                      } rounded overflow-hidden transition-all hover:opacity-90`}
+                      onClick={() => {
+                        selectBannerImage(imageUrl);
+                        if (formErrors.bannerImage) {
+                          const { bannerImage, ...rest } = formErrors;
+                          setFormErrors(rest);
+                        }
+                      }}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt="Property"
+                        className="w-full h-24 object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             )}
-            <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : "border-gray-700"}`}>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
-                {selectedImages && selectedImages.map((imageUrl) => (
-                  <div
-                    key={imageUrl}
-                    className={`relative cursor-pointer border-2 ${
-                      bannerImage === imageUrl ? "border-primary" : "border-transparent"
-                    } rounded overflow-hidden transition-all hover:opacity-90`}
-                    onClick={() => {
-                      toggleImageSelection(imageUrl);
-                      if (formErrors.bannerImage) {
-                        const { bannerImage, ...rest } = formErrors;
-                        setFormErrors(rest);
-                      }
-                    }}
-                  >
-                    <img
-                      src={imageUrl}
-                      alt="Property"
-                      className="w-full h-24 object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
             <FormError error={formErrors.bannerImage} />
             <div className="text-sm text-gray-400">
               * Sélectionnez une image pour la bannière
