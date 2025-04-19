@@ -100,27 +100,33 @@ export const MediaGenerationStep = ({
             </Label>
             <ScrollArea className={`h-[220px] border rounded-lg p-2 ${formErrors.bannerImage ? "border-destructive" : "border-gray-700"}`}>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
-                {selectedImages?.map(imageUrl => (
-                  <div
-                    key={imageUrl}
-                    className={`relative cursor-pointer border-2 ${
-                      bannerImage === imageUrl ? "border-primary" : "border-transparent"
-                    } rounded overflow-hidden transition-all hover:opacity-90`}
-                    onClick={() => {
-                      selectBannerImage(imageUrl);
-                      if (formErrors.bannerImage) {
-                        const { bannerImage, ...rest } = formErrors;
-                        setFormErrors(rest);
-                      }
-                    }}
-                  >
-                    <img
-                      src={imageUrl}
-                      alt="Property"
-                      className="w-full h-24 object-cover"
-                    />
+                {selectedImages && selectedImages.length > 0 ? (
+                  selectedImages.map(imageUrl => (
+                    <div
+                      key={imageUrl}
+                      className={`relative cursor-pointer border-2 ${
+                        bannerImage === imageUrl ? "border-primary" : "border-transparent"
+                      } rounded overflow-hidden transition-all hover:opacity-90`}
+                      onClick={() => {
+                        selectBannerImage(imageUrl);
+                        if (formErrors.bannerImage) {
+                          const { bannerImage, ...rest } = formErrors;
+                          setFormErrors(rest);
+                        }
+                      }}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt="Property"
+                        className="w-full h-24 object-cover"
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 flex items-center justify-center h-32 text-gray-400">
+                    Aucune image disponible. Veuillez sélectionner des images à l'étape précédente.
                   </div>
-                ))}
+                )}
               </div>
             </ScrollArea>
             <FormError error={formErrors.bannerImage} />
@@ -161,8 +167,19 @@ export const MediaGenerationStep = ({
                 <span className="text-gray-200">Image du vendeur</span>
                 <input
                   type="url"
-                  value={brokerImageUrl}
+                  value={brokerImageUrl || ""}
                   onChange={(e) => setBrokerImageUrl(e.target.value)}
+                  placeholder="URL de l'image du vendeur"
+                  className="ml-2 w-full text-gray-200 bg-gray-800 border border-gray-700 rounded p-2"
+                />
+              </Label>
+              <Label className="flex items-center">
+                <span className="text-gray-200">Logo de l'agence</span>
+                <input
+                  type="url"
+                  value={agencyLogoUrl || ""}
+                  onChange={(e) => setAgencyLogoUrl(e.target.value)}
+                  placeholder="URL du logo de l'agence"
                   className="ml-2 w-full text-gray-200 bg-gray-800 border border-gray-700 rounded p-2"
                 />
               </Label>
@@ -177,6 +194,7 @@ export const MediaGenerationStep = ({
                 <button
                   onClick={generateSlideshow}
                   className={`w-full px-4 py-2 rounded bg-primary text-white ${isGeneratingSlideshow ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={isGeneratingSlideshow}
                 >
                   {isGeneratingSlideshow ? "Génération en cours..." : "Générer la slideshow"}
                 </button>
@@ -185,6 +203,7 @@ export const MediaGenerationStep = ({
                 <button
                   onClick={generateBanner}
                   className={`w-full px-4 py-2 rounded bg-primary text-white ${isGeneratingBanner ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={isGeneratingBanner || !bannerImage}
                 >
                   {isGeneratingBanner ? "Génération en cours..." : "Générer la bannière"}
                 </button>
