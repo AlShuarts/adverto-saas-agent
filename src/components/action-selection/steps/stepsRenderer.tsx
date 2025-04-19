@@ -132,6 +132,7 @@ export const renderStepContent = (props: StepRendererProps) => {
           onRegenerateSlideshow={props.handleRegenerateSlideshow}
           onRegenerateBanner={props.handleRegenerateBanner}
           selectedMusic={props.selectedMusic}
+          toggleImageSelection={props.toggleImageSelection}
         />
       );
     

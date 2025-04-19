@@ -130,6 +130,7 @@ export const ActionSelectionSteps = ({
             onRegenerateSlideshow={handleRegenerateSlideshow}
             onRegenerateBanner={handleRegenerateBanner}
             selectedMusic={selectedMusic}
+            toggleImageSelection={toggleImageSelection}
           />
         );
       case 4:
