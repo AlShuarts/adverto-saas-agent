@@ -64,19 +64,21 @@ export const DialogFormContent = ({
           <BannerTypeSelector bannerType={bannerType} setBannerType={setBannerType} />
         </div>
         
-        {/* Informations du courtier */}
+        {/* Informations du courtier - Section visiblement mise en évidence */}
         <div className="space-y-2 border rounded-md p-4 bg-white">
-          <h3 className="text-base font-medium">Informations du courtier</h3>
-          <BrokerInfoForm 
-            brokerName={brokerName}
-            setBrokerName={setBrokerName}
-            brokerEmail={brokerEmail}
-            setBrokerEmail={setBrokerEmail}
-            brokerPhone={brokerPhone}
-            setBrokerPhone={setBrokerPhone}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-          />
+          <h3 className="text-base font-medium font-bold text-primary">Informations du courtier</h3>
+          <div className="bg-white rounded-md p-3">
+            <BrokerInfoForm 
+              brokerName={brokerName}
+              setBrokerName={setBrokerName}
+              brokerEmail={brokerEmail}
+              setBrokerEmail={setBrokerEmail}
+              brokerPhone={brokerPhone}
+              setBrokerPhone={setBrokerPhone}
+              formErrors={formErrors}
+              setFormErrors={setFormErrors}
+            />
+          </div>
         </div>
         
         {/* Images du courtier et de l'agence */}
