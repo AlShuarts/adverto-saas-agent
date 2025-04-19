@@ -126,6 +126,7 @@ export const useBannerGeneration = (listingId: string) => {
     bannerUrl,
     bannerError,
     setBannerUrl,
+    setIsGeneratingBanner, // Expose this setter
     generateBanner
   };
 };
