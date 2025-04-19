@@ -106,6 +106,7 @@ export const GenerationStep = ({
       listing={listing}
       onRegenerateBanner={onRegenerateBanner}
       selectedImages={selectedImages}
+      toggleImageSelection={toggleImageSelection}
     />
   );
 };

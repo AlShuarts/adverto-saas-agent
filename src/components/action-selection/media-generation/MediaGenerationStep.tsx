@@ -8,6 +8,7 @@ import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
 import { ImageUploader } from "@/components/banner/ImageUploader";
 import { Separator } from "@/components/ui/separator";
 import { BannerGenerationSection } from "./BannerGenerationSection";
+import { PhotoSelectionSection } from "../media-selector/PhotoSelectionSection";
 
 type MediaGenerationStepProps = {
   selectedPublicationTypes?: PublicationType[];
@@ -42,6 +43,7 @@ type MediaGenerationStepProps = {
   refetchSlideshowStatus?: () => void;
   onRegenerateBanner?: () => void;
   selectedImages?: string[];
+  toggleImageSelection?: (imageUrl: string) => void;
 };
 
 export const MediaGenerationStep = ({
@@ -74,7 +76,8 @@ export const MediaGenerationStep = ({
   generateSlideshow,
   refetchSlideshowStatus,
   onRegenerateBanner,
-  selectedImages
+  selectedImages,
+  toggleImageSelection
 }: MediaGenerationStepProps) => {
   return (
     <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">
@@ -82,6 +85,18 @@ export const MediaGenerationStep = ({
       
       <ScrollArea className="h-[600px] pr-4">
         <div className="space-y-6">
+          {/* Image Selection */}
+          {toggleImageSelection && (
+            <div className="mb-6">
+              <h4 className="text-md font-medium text-white mb-3">Sélection des images</h4>
+              <PhotoSelectionSection
+                images={listing.images || []}
+                selectedImages={selectedImages || []}
+                toggleImageSelection={toggleImageSelection}
+              />
+            </div>
+          )}
+
           {/* Banner Generation Section */}
           <BannerGenerationSection 
             isGeneratingBanner={isGeneratingBanner}
