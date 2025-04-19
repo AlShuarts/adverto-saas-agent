@@ -3,6 +3,7 @@ import { SocialNetworkSelector } from "../SocialNetworkSelector";
 import { PublicationType, SocialNetworks } from "../types";
 import { Button } from "@/components/ui/button";
 import { PublicationPreview } from "../PublicationPreview";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type SocialStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -81,18 +82,20 @@ export const SocialStep = ({
           Voici à quoi ressembleront vos publications sur les réseaux sociaux sélectionnés.
         </p>
         
-        <PublicationPreview 
-          selectedNetworks={selectedNetworks}
-          generatedText={generatedText}
-          setGeneratedText={setGeneratedText}
-          images={images}
-          selectedImages={selectedImages}
-          setSelectedImages={setSelectedImages}
-          slideshowUrl={slideshowUrl}
-          bannerUrl={bannerUrl}
-          selectedMusic={selectedMusic}
-          selectedPublicationTypes={selectedPublicationTypes}
-        />
+        <ScrollArea className="h-[500px] w-full pr-4">
+          <PublicationPreview 
+            selectedNetworks={selectedNetworks}
+            generatedText={generatedText}
+            setGeneratedText={setGeneratedText}
+            images={images}
+            selectedImages={selectedImages}
+            setSelectedImages={setSelectedImages}
+            slideshowUrl={slideshowUrl}
+            bannerUrl={bannerUrl}
+            selectedMusic={selectedMusic}
+            selectedPublicationTypes={selectedPublicationTypes}
+          />
+        </ScrollArea>
       </div>
     </div>
   );
