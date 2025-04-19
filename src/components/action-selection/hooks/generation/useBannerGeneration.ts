@@ -1,16 +1,9 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { toast } from "sonner";
-
-type BrokerInfo = {
-  brokerImageUrl: string | null;
-  agencyLogoUrl: string | null;
-  brokerName: string;
-  brokerEmail: string;
-  brokerPhone: string;
-};
+import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { createBanner, checkBannerStatus, type BrokerInfo } from "./services/bannerService";
+import { validateBrokerInfo } from "./utils/bannerValidation";
 
 export const useBannerGeneration = (listingId: string) => {
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
@@ -26,21 +19,9 @@ export const useBannerGeneration = (listingId: string) => {
       setIsGeneratingBanner(true);
       setBannerError(null);
       
-      if (!bannerImage) {
-        throw new Error("Veuillez sélectionner une image principale pour la bannière");
-      }
-      
-      if (!brokerInfo) {
-        throw new Error("Informations du courtier manquantes");
-      }
-      
-      const missingFields = [];
-      if (!brokerInfo.brokerName) missingFields.push("nom du courtier");
-      if (!brokerInfo.brokerEmail) missingFields.push("email du courtier");
-      if (!brokerInfo.brokerPhone) missingFields.push("téléphone du courtier");
-      
-      if (missingFields.length > 0) {
-        throw new Error(`Veuillez remplir les champs suivants: ${missingFields.join(', ')}`);
+      const { isValid, errors } = validateBrokerInfo(bannerImage, brokerInfo);
+      if (!isValid) {
+        throw new Error(`Veuillez remplir les champs suivants: ${errors.join(", ")}`);
       }
       
       toast.info("Création de la bannière", {
@@ -48,27 +29,9 @@ export const useBannerGeneration = (listingId: string) => {
         duration: 3000
       });
       
-      const { data, error } = await supabase.functions.invoke("create-sold-banner", {
-        body: {
-          listingId: listingId,
-          config: {
-            bannerType: bannerType,
-            mainImage: bannerImage,
-            brokerName: brokerInfo.brokerName,
-            brokerEmail: brokerInfo.brokerEmail,
-            brokerPhone: brokerInfo.brokerPhone,
-            brokerImage: brokerInfo.brokerImageUrl,
-            agencyLogo: brokerInfo.agencyLogoUrl
-          }
-        }
-      });
+      if (!bannerImage) return { success: false, error: "Image manquante" };
       
-      if (error) throw error;
-      
-      if (!data || !data.renderId) {
-        throw new Error("Aucun ID de rendu n'a été retourné");
-      }
-      
+      const renderId = await createBanner(listingId, bannerImage, bannerType, brokerInfo);
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       let isComplete = false;
@@ -77,17 +40,7 @@ export const useBannerGeneration = (listingId: string) => {
       
       while (!isComplete && attempts < maxAttempts) {
         attempts++;
-        const { data: statusData, error: statusError } = await supabase
-          .from("sold_banner_renders")
-          .select("image_url, status")
-          .eq("render_id", data.renderId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (statusError) {
-          if (attempts >= maxAttempts) throw statusError;
-        }
+        const statusData = await checkBannerStatus(renderId);
         
         if (statusData && statusData.status === "completed" && statusData.image_url) {
           setBannerUrl(statusData.image_url);
@@ -126,7 +79,7 @@ export const useBannerGeneration = (listingId: string) => {
     bannerUrl,
     bannerError,
     setBannerUrl,
-    setIsGeneratingBanner, // Expose this setter
+    setIsGeneratingBanner,
     generateBanner
   };
 };
