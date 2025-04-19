@@ -8,7 +8,6 @@ import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { SoldBannerStatus } from "./SoldBannerStatus";
 import { Switch } from "@/components/ui/switch";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -74,7 +73,7 @@ export const PublishedListingCard = ({ listing }: PublishedListingCardProps) => 
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex flex-col gap-2 w-full">
+      <CardFooter className="p-4 pt-0">
         <div className="flex items-center justify-between w-full py-2">
           <div className="flex items-center gap-2">
             <Switch 
@@ -90,10 +89,6 @@ export const PublishedListingCard = ({ listing }: PublishedListingCardProps) => 
               Marqué comme vendu
             </label>
           </div>
-        </div>
-        
-        <div className="w-full grid grid-cols-1 gap-2">
-          <SoldBannerStatus listing={listing} />
         </div>
       </CardFooter>
     </Card>
