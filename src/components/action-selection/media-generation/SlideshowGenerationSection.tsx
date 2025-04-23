@@ -30,7 +30,7 @@ export const SlideshowGenerationSection = ({
   toggleImageSelection
 }: SlideshowGenerationSectionProps) => {
   // Mock music data for the MusicSelector
-  const availableMusics = [
+  const musics = [
     { id: "ambient", name: "Ambient Music", url: "/background-music.mp3" },
     { id: "upbeat", name: "Upbeat Music", url: "/background-music.mp3" },
     { id: "classical", name: "Classical Music", url: "/background-music.mp3" }
@@ -69,7 +69,7 @@ export const SlideshowGenerationSection = ({
         <div className="space-y-2 border rounded-md p-4 bg-gray-800">
           <h3 className="text-base font-medium text-white">Musique</h3>
           <MusicSelector 
-            musics={availableMusics} 
+            musics={musics} 
             selectedMusic={selectedMusic || null} 
             onMusicChange={handleMusicChange} 
           />
