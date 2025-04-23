@@ -77,3 +77,25 @@ export const checkBannerStatus = async (renderId: string) => {
     throw err;
   }
 };
+
+// Nouvelle fonction pour vérifier activement le statut via l'edge function
+export const checkBannerStatusViaFunction = async (renderId: string) => {
+  console.log(`Vérification du statut via l'edge function pour le renderId: ${renderId}`);
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('check-render-status', {
+      body: { renderId }
+    });
+    
+    if (error) {
+      console.error("Erreur lors de la vérification du statut via l'edge function:", error);
+      throw error;
+    }
+    
+    console.log("Réponse de la fonction check-render-status:", data);
+    return data;
+  } catch (err) {
+    console.error("Exception lors de la vérification du statut via l'edge function:", err);
+    throw err;
+  }
+};

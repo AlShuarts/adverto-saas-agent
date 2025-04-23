@@ -1,125 +1,114 @@
 
-import { PublicationType } from "../types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BannerGenerationSection } from "./BannerGenerationSection";
-import { PhotoSelectionSection } from "../media-selector/PhotoSelectionSection";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
+import { BannerGenerationSection } from "./BannerGenerationSection";
+import { PublicationType } from "../types";
+import { Tables } from "@/integrations/supabase/types";
 
 type MediaGenerationStepProps = {
-  selectedPublicationTypes?: PublicationType[];
+  selectedPublicationTypes: PublicationType[];
+  selectedImages: string[];
+  isGeneratingSlideshow: boolean;
   isGeneratingBanner: boolean;
+  slideshowUrl: string | null;
   bannerUrl: string | null;
+  slideshowError: string | null;
   bannerError: string | null;
+  slideshowRenderId: string | null;
+  bannerRenderId: string | null;
+  formErrors: {[key: string]: string};
+  generateSlideshow: () => Promise<string | null>;
   generateBanner: () => Promise<void>;
+  refetchSlideshowStatus: () => void;
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
   setBannerType: (type: "VENDU" | "A_VENDRE") => void;
   selectBannerImage: (imageUrl: string) => void;
+  brokerImageUrl: string | null;
+  setBrokerImageUrl: (url: string | null) => void;
+  agencyLogoUrl: string | null;
+  setAgencyLogoUrl: (url: string | null) => void;
   brokerName: string;
   setBrokerName: (name: string) => void;
   brokerEmail: string;
   setBrokerEmail: (email: string) => void;
   brokerPhone: string;
   setBrokerPhone: (phone: string) => void;
-  brokerImageUrl: string | null;
-  setBrokerImageUrl: (url: string | null) => void;
-  agencyLogoUrl: string | null;
-  setAgencyLogoUrl: (url: string | null) => void;
-  formErrors: {[key: string]: string};
   setFormErrors: (errors: {[key: string]: string}) => void;
-  listing: {
-    images: string[];
-  };
-  isGeneratingSlideshow?: boolean;
-  slideshowUrl?: string | null;
-  slideshowError?: string | null;
-  slideshowRenderId?: string | null;
-  generateSlideshow?: () => Promise<string | null>;
-  refetchSlideshowStatus?: () => void;
-  onRegenerateBanner?: () => void;
-  selectedImages?: string[];
-  toggleImageSelection?: (imageUrl: string) => void;
-  selectedMusic?: string;
-  onRegenerateSlideshow?: () => void;
+  onRegenerateSlideshow: () => void;
+  onRegenerateBanner: () => void;
+  selectedMusic: string | undefined;
+  toggleImageSelection: (imageUrl: string) => void;
+  listing: Tables<"listings">;
 };
 
 export const MediaGenerationStep = ({
   selectedPublicationTypes,
+  selectedImages,
+  isGeneratingSlideshow,
+  isGeneratingBanner,
+  slideshowUrl,
+  bannerUrl,
+  slideshowError,
+  bannerError,
+  slideshowRenderId,
+  bannerRenderId,
+  formErrors,
+  generateSlideshow,
+  generateBanner,
+  refetchSlideshowStatus,
+  bannerImage,
   bannerType,
   setBannerType,
-  bannerImage,
   selectBannerImage,
+  brokerImageUrl,
+  setBrokerImageUrl,
+  agencyLogoUrl,
+  setAgencyLogoUrl,
   brokerName,
   setBrokerName,
   brokerEmail,
   setBrokerEmail,
   brokerPhone,
   setBrokerPhone,
-  brokerImageUrl,
-  setBrokerImageUrl,
-  agencyLogoUrl,
-  setAgencyLogoUrl,
-  formErrors,
   setFormErrors,
-  listing,
-  isGeneratingBanner,
-  bannerUrl,
-  bannerError,
-  generateBanner,
-  isGeneratingSlideshow,
-  slideshowUrl,
-  slideshowError,
-  slideshowRenderId,
-  generateSlideshow,
-  refetchSlideshowStatus,
-  onRegenerateBanner,
   onRegenerateSlideshow,
-  selectedImages,
+  onRegenerateBanner,
+  selectedMusic,
   toggleImageSelection,
-  selectedMusic
+  listing
 }: MediaGenerationStepProps) => {
-  const showBannerSection = selectedPublicationTypes?.includes("banner");
-  const showSlideshowSection = selectedPublicationTypes?.includes("slideshow");
+  
+  const showSlideshow = selectedPublicationTypes.includes("slideshow");
+  const showBanner = selectedPublicationTypes.includes("banner");
 
   return (
-    <div className="space-y-6 bg-gray-950 p-6 rounded-lg border border-gray-800">
-      <h3 className="text-lg font-medium text-white">Génération des médias</h3>
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Génération du contenu</h3>
       
-      <ScrollArea className="h-[600px] pr-4">
+      <ScrollArea className="h-[650px] pr-4">
         <div className="space-y-6">
-          {/* Image Selection - Always shown */}
-          {toggleImageSelection && (
-            <div className="mb-6">
-              <h4 className="text-md font-medium text-white mb-3">Sélection des images</h4>
-              <PhotoSelectionSection
-                images={listing.images || []}
-                selectedImages={selectedImages || []}
-                toggleImageSelection={toggleImageSelection}
-              />
-            </div>
-          )}
-
-          {/* Slideshow Generation Section */}
-          {showSlideshowSection && generateSlideshow && (
+          {showSlideshow && (
             <SlideshowGenerationSection
-              isGeneratingSlideshow={isGeneratingSlideshow || false}
-              slideshowUrl={slideshowUrl || null}
-              slideshowError={slideshowError || null}
-              slideshowRenderId={slideshowRenderId || null}
+              isGeneratingSlideshow={isGeneratingSlideshow}
+              slideshowUrl={slideshowUrl}
+              slideshowError={slideshowError}
+              slideshowRenderId={slideshowRenderId}
               generateSlideshow={generateSlideshow}
-              refetchSlideshowStatus={refetchSlideshowStatus || (() => {})}
-              selectedImages={selectedImages || []}
+              refetchSlideshowStatus={refetchSlideshowStatus}
+              onRegenerateSlideshow={onRegenerateSlideshow}
+              selectedImages={selectedImages}
               selectedMusic={selectedMusic}
-              onRegenerateSlideshow={onRegenerateSlideshow || (() => {})}
+              toggleImageSelection={toggleImageSelection}
             />
           )}
-
-          {/* Banner Generation Section */}
-          {showBannerSection && (
-            <BannerGenerationSection 
+          
+          {showBanner && (
+            <BannerGenerationSection
               isGeneratingBanner={isGeneratingBanner}
               bannerUrl={bannerUrl}
               bannerError={bannerError}
+              bannerRenderId={bannerRenderId}
               generateBanner={generateBanner}
               bannerImage={bannerImage}
               bannerType={bannerType}
@@ -137,7 +126,7 @@ export const MediaGenerationStep = ({
               setAgencyLogoUrl={setAgencyLogoUrl}
               formErrors={formErrors}
               setFormErrors={setFormErrors}
-              selectedImages={selectedImages || []}
+              selectedImages={selectedImages}
               onRegenerateBanner={onRegenerateBanner}
             />
           )}

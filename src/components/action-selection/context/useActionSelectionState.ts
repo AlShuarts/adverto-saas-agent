@@ -54,11 +54,13 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     slideshowError,
     bannerError,
     slideshowRenderId,
+    bannerRenderId,
     setSlideshowUrl,
     setBannerUrl,
     setIsGeneratingSlideshow,
     setIsGeneratingBanner,
     setSlideshowRenderId,
+    setBannerRenderId,
     generateSlideshow,
     generateBanner
   } = useMediaGeneration(listing.id);
@@ -166,11 +168,13 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     slideshowError,
     bannerError,
     slideshowRenderId,
+    bannerRenderId,
     setSlideshowUrl,
     setBannerUrl,
     setIsGeneratingSlideshow,
     setIsGeneratingBanner,
     setSlideshowRenderId,
+    setBannerRenderId,
     
     selectedImages,
     setSelectedImages,

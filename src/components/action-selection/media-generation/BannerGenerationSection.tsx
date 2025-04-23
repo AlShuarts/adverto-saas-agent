@@ -10,11 +10,17 @@ import { GeneratingBanner } from "./components/GeneratingBanner";
 import { BannerGenerationButton } from "./components/BannerGenerationButton";
 import { BannerFormAlerts } from "./components/BannerFormAlerts";
 import { BannerPreview } from "./components/BannerPreview";
+import { useState, useEffect } from "react";
+import { checkBannerStatusViaFunction } from "../hooks/generation/services/bannerService";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type BannerGenerationSectionProps = {
   isGeneratingBanner: boolean;
   bannerUrl: string | null;
   bannerError: string | null;
+  bannerRenderId: string | null;
   generateBanner: () => Promise<void>;
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
@@ -40,6 +46,7 @@ export const BannerGenerationSection = ({
   isGeneratingBanner,
   bannerUrl,
   bannerError,
+  bannerRenderId,
   generateBanner,
   bannerImage,
   bannerType,
@@ -61,6 +68,7 @@ export const BannerGenerationSection = ({
   onRegenerateBanner
 }: BannerGenerationSectionProps) => {
   
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const hasRequiredInfo = !!bannerImage && !!brokerName && !!brokerEmail && !!brokerPhone;
   
   const getMissingFields = () => {
@@ -73,6 +81,33 @@ export const BannerGenerationSection = ({
   };
   
   const missingFields = getMissingFields();
+  
+  const checkStatus = async () => {
+    if (!bannerRenderId) return;
+    
+    try {
+      setIsCheckingStatus(true);
+      const statusData = await checkBannerStatusViaFunction(bannerRenderId);
+      
+      if (statusData.status === "done" && statusData.url) {
+        toast.success("Bannière prête !", {
+          description: "La bannière a été générée avec succès."
+        });
+        window.location.reload(); // Actualise pour montrer la bannière
+      } else {
+        toast.info("Génération en cours", {
+          description: `Statut actuel: ${statusData.status || "En attente"}`
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la vérification du statut:", error);
+      toast.error("Erreur de vérification", {
+        description: "Impossible de vérifier le statut de la bannière"
+      });
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
   
   return (
     <div className="space-y-4 border rounded-md p-4 bg-gray-900">
@@ -152,6 +187,29 @@ export const BannerGenerationSection = ({
           <div className="flex flex-col items-center justify-center py-4">
             {isGeneratingBanner ? (
               <GeneratingBanner />
+            ) : bannerRenderId ? (
+              <div className="flex flex-col items-center space-y-4">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+                  <p className="text-amber-500 font-medium">Bannière en cours de génération</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  La création de votre bannière est en cours de traitement. Cela peut prendre quelques minutes.
+                </p>
+                <Button 
+                  variant="outline"
+                  onClick={checkStatus}
+                  disabled={isCheckingStatus}
+                  className="mt-2"
+                >
+                  {isCheckingStatus ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Vérification...
+                    </>
+                  ) : "Vérifier le statut"}
+                </Button>
+              </div>
             ) : (
               <>
                 <BannerGenerationButton 

@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { checkBannerStatusViaFunction } from "@/components/action-selection/hooks/generation/services/bannerService";
 
 type SoldBannerRender = {
   id: string;
@@ -91,35 +92,22 @@ export const useBannerStatus = (listingId: string) => {
       }
       
       // Si non trouvé ou non complété en DB, on essaie via la fonction check-render-status
-      console.log("Appel à check-render-status");
-      const { data, error } = await supabase.functions.invoke('check-render-status', {
-        body: { renderId }
-      });
+      console.log("Appel à check-render-status via la fonction helper");
+      const statusData = await checkBannerStatusViaFunction(renderId);
       
-      if (error) {
-        console.error('Erreur lors de la vérification du statut:', error);
-        setHasError(true);
-        setErrorMessage(error.message);
-        setIsRefreshing(false);
-        return;
-      }
+      console.log('Réponse de la vérification du statut:', statusData);
       
-      console.log('Réponse de la vérification du statut:', data);
-      
-      if (data.status === "done" || data.videoUrl || data.url) {
+      if (statusData.status === "done" || statusData.url) {
         fetchRenders();
-        if (data.status === "done") {
-          toast.success("Votre bannière est prête !", {
-            description: "Vous pouvez maintenant la télécharger ou la partager."
-          });
-        }
-      } else if (data.status === "failed") {
+        toast.success("Votre bannière est prête !", {
+          description: "Vous pouvez maintenant la télécharger ou la partager."
+        });
+      } else if (statusData.status === "failed") {
         setHasError(true);
         setErrorMessage("La génération de la bannière a échoué. Veuillez réessayer.");
-        setIsRefreshing(false);
-      } else {
-        setIsRefreshing(false);
       }
+      
+      setIsRefreshing(false);
     } catch (error) {
       console.error('Erreur lors de la vérification du statut:', error);
       setHasError(true);
@@ -143,12 +131,13 @@ export const useBannerStatus = (listingId: string) => {
         table: 'sold_banner_renders',
         filter: `listing_id=eq.${listingId}`
       }, payload => {
-        console.log('Changement dans les bannières:', payload);
+        console.log('Changement dans les bannières détecté via realtime:', payload);
         fetchRenders();
         
         if (payload.eventType === 'UPDATE' && 
             payload.new.status === 'completed' && 
-            payload.old.status === 'pending') {
+            payload.old.status === 'pending' &&
+            payload.new.image_url) {
           const bannerType = payload.new.banner_type === 'VENDU' ? 'VENDU' : 'À VENDRE';
           toast.success(`Votre bannière "${bannerType}" est prête !`, {
             description: "Vous pouvez maintenant la télécharger ou la partager."
@@ -163,11 +152,12 @@ export const useBannerStatus = (listingId: string) => {
   }, [listingId]);
 
   useEffect(() => {
+    // Vérification automatique si une bannière est en attente
     if (renders.length > 0 && renders[0].status === "pending") {
       const checkInterval = setInterval(() => {
         console.log("Vérification automatique du statut du rendu...");
         checkRenderStatus(renders[0].render_id);
-      }, 15000);
+      }, 15000); // Vérifie toutes les 15 secondes
       
       return () => clearInterval(checkInterval);
     }
@@ -179,6 +169,7 @@ export const useBannerStatus = (listingId: string) => {
     isRefreshing,
     hasError,
     errorMessage,
-    checkRenderStatus
+    checkRenderStatus,
+    fetchRenders
   };
 };

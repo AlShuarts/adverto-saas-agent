@@ -2,13 +2,14 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
-import { createBanner, checkBannerStatus, type BrokerInfo } from "./services/bannerService";
+import { createBanner, checkBannerStatus, checkBannerStatusViaFunction, type BrokerInfo } from "./services/bannerService";
 import { validateBrokerInfo } from "./utils/bannerValidation";
 
 export const useBannerGeneration = (listingId: string) => {
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
+  const [renderId, setRenderId] = useState<string | null>(null);
 
   const generateBanner = async (
     bannerImage: string | null, 
@@ -18,6 +19,7 @@ export const useBannerGeneration = (listingId: string) => {
     try {
       setIsGeneratingBanner(true);
       setBannerError(null);
+      setRenderId(null);
       
       // Log de débogage pour vérifier les données entrantes
       console.log("Données pour la génération de bannière:", {
@@ -46,22 +48,27 @@ export const useBannerGeneration = (listingId: string) => {
         // Autres infos sensibles omises pour les logs
       });
       
-      const renderId = await createBanner(listingId, bannerImage, bannerType, brokerInfo);
-      console.log("RenderId reçu:", renderId);
+      const newRenderId = await createBanner(listingId, bannerImage, bannerType, brokerInfo);
+      console.log("RenderId reçu:", newRenderId);
       
+      // Stocke le renderId pour pouvoir le vérifier plus tard
+      setRenderId(newRenderId);
+      
+      // Attendre un court moment avant de commencer à vérifier le statut
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       let isComplete = false;
       let attempts = 0;
-      const maxAttempts = 20; // Augmentation du nombre de tentatives
+      const maxAttempts = 15;
       
       while (!isComplete && attempts < maxAttempts) {
         attempts++;
         console.log(`Vérification du statut de la bannière (tentative ${attempts}/${maxAttempts})...`);
         
         try {
-          const statusData = await checkBannerStatus(renderId);
-          console.log("Statut reçu:", statusData);
+          // Vérification directe dans la base de données
+          const statusData = await checkBannerStatus(newRenderId);
+          console.log("Statut reçu de la DB:", statusData);
           
           if (statusData && statusData.status === "completed" && statusData.image_url) {
             setBannerUrl(statusData.image_url);
@@ -70,21 +77,51 @@ export const useBannerGeneration = (listingId: string) => {
               description: "La bannière a été générée avec succès.",
             });
             await ensureAndIncrementStatistic('banner');
-          } else if (statusData && statusData.status === "failed") {
-            throw new Error("La création de la bannière a échoué");
-          } else {
-            console.log(`En attente... Statut actuel: ${statusData?.status || "inconnu"}`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            break;
           }
+          
+          if (statusData && statusData.status === "failed") {
+            throw new Error("La création de la bannière a échoué");
+          }
+          
+          // Si pas complété, vérifie également via la fonction edge qui interroge directement l'API Shotstack
+          if (attempts % 3 === 0) { // Vérifie via l'edge function toutes les 3 tentatives
+            const apiStatusData = await checkBannerStatusViaFunction(newRenderId);
+            console.log("Statut reçu de l'API:", apiStatusData);
+            
+            if (apiStatusData && (apiStatusData.status === "done" || apiStatusData.url)) {
+              if (apiStatusData.url) {
+                setBannerUrl(apiStatusData.url);
+                isComplete = true;
+                toast.success("Bannière créée", {
+                  description: "La bannière a été générée avec succès.",
+                });
+                await ensureAndIncrementStatistic('banner');
+                break;
+              }
+            }
+          }
+          
+          console.log("Attente avant la prochaine vérification...");
+          await new Promise(resolve => setTimeout(resolve, 5000));
         } catch (checkError) {
           console.error("Erreur lors de la vérification du statut:", checkError);
-          // Continue malgré l'erreur de vérification
           await new Promise(resolve => setTimeout(resolve, 5000));
         }
       }
       
       if (!isComplete) {
-        throw new Error("Délai d'attente dépassé pour la génération de la bannière");
+        // Si toujours pas complété mais qu'on a un renderId, on place l'interface en attente
+        // et on confie la vérification au composant SoldBannerStatus
+        if (newRenderId) {
+          toast.info("Génération de la bannière en cours", {
+            description: "La création de votre bannière prend plus de temps que prévu. Vous recevrez une notification lorsqu'elle sera prête.",
+            duration: 5000
+          });
+          return { success: true, pending: true, renderId: newRenderId };
+        } else {
+          throw new Error("Délai d'attente dépassé pour la génération de la bannière");
+        }
       }
       
       return { success: true };
@@ -105,6 +142,8 @@ export const useBannerGeneration = (listingId: string) => {
     isGeneratingBanner,
     bannerUrl,
     bannerError,
+    renderId,
+    setRenderId,
     setBannerUrl,
     setIsGeneratingBanner,
     generateBanner

@@ -16,6 +16,7 @@ type GenerationStepProps = {
   isGeneratingSlideshow: boolean;
   isGeneratingBanner: boolean;
   slideshowRenderId: string | null;
+  bannerRenderId: string | null;
   slideshowError: string | null;
   bannerError: string | null;
   brokerImageUrl: string | null;
@@ -64,6 +65,7 @@ export const GenerationStep = ({
   isGeneratingSlideshow,
   isGeneratingBanner,
   slideshowRenderId,
+  bannerRenderId,
   slideshowError,
   bannerError,
   slideshowUrl,
@@ -84,6 +86,7 @@ export const GenerationStep = ({
       slideshowError={slideshowError}
       bannerError={bannerError}
       slideshowRenderId={slideshowRenderId}
+      bannerRenderId={bannerRenderId}
       formErrors={formErrors}
       generateSlideshow={generateSlideshow}
       generateBanner={generateBanner}

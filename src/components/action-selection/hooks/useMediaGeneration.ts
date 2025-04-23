@@ -18,8 +18,10 @@ export const useMediaGeneration = (listingId: string) => {
     isGeneratingBanner,
     bannerUrl,
     bannerError,
+    renderId: bannerRenderId,
+    setRenderId: setBannerRenderId,
     setBannerUrl,
-    setIsGeneratingBanner, // Added this missing setter that needs to be exposed
+    setIsGeneratingBanner,
     generateBanner
   } = useBannerGeneration(listingId);
 
@@ -31,11 +33,13 @@ export const useMediaGeneration = (listingId: string) => {
     slideshowError,
     bannerError,
     slideshowRenderId,
+    bannerRenderId,
     setSlideshowUrl,
     setBannerUrl,
     setIsGeneratingSlideshow,
-    setIsGeneratingBanner, // Exposed this setter
+    setIsGeneratingBanner,
     setSlideshowRenderId,
+    setBannerRenderId,
     generateSlideshow,
     generateBanner
   };
