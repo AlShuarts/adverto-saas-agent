@@ -1,11 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,157 +9,121 @@ serve(async (req) => {
   }
 
   try {
-    const { renderId } = await req.json();
-    
-    console.log("🔍 Vérification du statut pour le rendu ID:", renderId);
+    const body = await req.json();
+    console.log("Requête check-render-status avec les données:", JSON.stringify(body, null, 2));
 
-    if (!renderId) {
-      throw new Error("❌ ID de rendu manquant dans la requête.");
+    if (!body.renderId) {
+      throw new Error("ID de rendu manquant");
     }
 
-    // Vérification de la clé d'API
+    const renderId = body.renderId;
+    console.log(`Vérification du statut pour le renderId: ${renderId}`);
+
+    // Configurer le client Supabase
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // 1. Vérifier d'abord dans la base de données
+    const { data: bannerData, error: bannerError } = await supabase
+      .from("sold_banner_renders")
+      .select("*")
+      .eq("render_id", renderId)
+      .single();
+
+    if (bannerError) {
+      console.error("Erreur lors de la récupération des données de la bannière:", bannerError);
+      throw new Error("Impossible de récupérer les données de la bannière");
+    }
+
+    console.log("Données de la bannière:", bannerData);
+
+    if (bannerData.status === "completed" && bannerData.image_url) {
+      return new Response(
+        JSON.stringify({
+          status: "done",
+          url: bannerData.image_url,
+          message: "Rendu terminé, URL disponible"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2. Si pas complété en DB, vérifier avec l'API Shotstack
     const apiKey = Deno.env.get("SHOTSTACK_API_KEY");
     if (!apiKey) {
-      throw new Error("❌ Clé API Shotstack manquante dans les variables d'environnement.");
+      throw new Error("Clé API Shotstack non configurée");
     }
 
-    // Initialiser le client Supabase
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("❌ Variables d'environnement Supabase manquantes.");
+    console.log("Appel à l'API Shotstack pour vérifier le statut...");
+    const response = await fetch(`https://api.shotstack.io/v1/render/${renderId}`, {
+      method: "GET",
+      headers: {
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("Réponse d'erreur:", errorText);
+      
+      throw new Error(`Erreur lors de la vérification du statut: ${response.status} ${response.statusText}`);
     }
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Effectuer 3 tentatives maximum
-    let attempt = 0;
-    const maxAttempts = 3;
-    let lastError;
+    const result = await response.json();
+    console.log("Réponse de Shotstack:", JSON.stringify(result, null, 2));
 
-    while (attempt < maxAttempts) {
-      try {
-        console.log(`✨ Tentative #${attempt+1} de vérification du statut pour le rendu ID: ${renderId}`);
-        
-        const response = await fetch(`https://api.shotstack.io/stage/render/${renderId}`, {
-          method: "GET",
-          headers: {
-            "x-api-key": apiKey,
-          },
-        });
+    let status = result.response?.status;
+    let url = result.response?.url;
 
-        console.log("👉 Statut de la réponse HTTP:", response.status);
-        
-        const responseData = await response.json();
-        console.log("📝 Réponse de l'API de statut:", JSON.stringify(responseData, null, 2));
+    if (status === "done" && url) {
+      // Mettre à jour le statut dans la base de données
+      const { error: updateError } = await supabase
+        .from("sold_banner_renders")
+        .update({ 
+          status: "completed", 
+          image_url: url,
+          updated_at: new Date()
+        })
+        .eq("render_id", renderId);
 
-        if (!response.ok) {
-          throw new Error(`Shotstack API error: ${response.status} ${JSON.stringify(responseData)}`);
-        }
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du statut:", updateError);
+      } else {
+        console.log(`Statut mis à jour avec succès pour le renderId: ${renderId}`);
+      }
+    } else if (status === "failed") {
+      // Mettre à jour le statut dans la base de données
+      const { error: updateError } = await supabase
+        .from("sold_banner_renders")
+        .update({ 
+          status: "failed",
+          updated_at: new Date()
+        })
+        .eq("render_id", renderId);
 
-        // Extraire les informations pertinentes
-        let status = responseData?.response?.status;
-        const url = responseData?.response?.url;
-        const error = responseData?.response?.error;
-
-        console.log("✅ Statut original du rendu:", status);
-        console.log("✅ URL de la vidéo (si disponible):", url);
-        
-        // Normaliser le statut pour notre base de données
-        let normalizedStatus = status;
-        if (status === "done") {
-          normalizedStatus = "completed";
-        }
-        
-        console.log("✅ Statut normalisé du rendu:", normalizedStatus);
-
-        // Si le statut est "done"/"completed" ou "failed"/"error", mettre à jour la base de données
-        if (status === "completed" || status === "done" || status === "failed" || status === "error") {
-          console.log("🔄 Le rendu est terminé, mise à jour de la base de données...");
-          
-          try {
-            // Rechercher le rendu dans la base de données
-            const { data: renders, error: findError } = await supabase
-              .from("slideshow_renders")
-              .select("*")
-              .eq("render_id", renderId);
-              
-            if (findError) {
-              console.error("❌ Erreur lors de la recherche du rendu:", findError);
-            } else if (renders && renders.length > 0) {
-              console.log("📊 Rendu trouvé dans la base de données:", renders[0]);
-              
-              // Préparer les données à mettre à jour
-              const updateData: any = {
-                status: normalizedStatus
-              };
-              
-              if ((status === "completed" || status === "done") && url) {
-                updateData.video_url = url;
-                console.log("🎬 Mise à jour de l'URL de la vidéo:", url);
-              }
-              
-              console.log("🔄 Données de mise à jour:", updateData);
-              
-              // Mettre à jour le rendu dans la base de données
-              const { data: updatedRender, error: updateError } = await supabase
-                .from("slideshow_renders")
-                .update(updateData)
-                .eq("render_id", renderId)
-                .select('*')
-                .single();
-                
-              if (updateError) {
-                console.error("❌ Erreur lors de la mise à jour du statut du rendu:", updateError);
-              } else {
-                console.log("✅ Statut du rendu mis à jour avec succès dans la base de données:", updatedRender);
-              }
-            } else {
-              console.warn("⚠️ Aucun rendu trouvé avec cet ID dans la base de données");
-            }
-          } catch (dbError) {
-            console.error("❌ Erreur lors de l'interaction avec la base de données:", dbError);
-          }
-        }
-
-        return new Response(
-          JSON.stringify({
-            status: normalizedStatus,
-            url,
-            error,
-            videoUrl: url,
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          }
-        );
-      } catch (error) {
-        console.error(`❌ Erreur lors de la tentative #${attempt+1}:`, error);
-        lastError = error;
-        attempt++;
-        
-        if (attempt < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre 1 seconde entre les tentatives
-        }
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du statut:", updateError);
       }
     }
-    
-    // Toutes les tentatives ont échoué
-    throw lastError || new Error("Échec des tentatives de vérification du statut.");
+
+    return new Response(
+      JSON.stringify({
+        status: status,
+        url: url,
+        message: `Statut actuel: ${status}`
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
   } catch (error) {
-    console.error("Error in check-render-status:", error);
+    console.error("Erreur:", error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });

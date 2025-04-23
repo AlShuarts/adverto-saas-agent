@@ -27,6 +27,8 @@ export const useBannerStatus = (listingId: string) => {
       setIsLoading(true);
       setHasError(false);
       
+      console.log(`Récupération des bannières pour le listing: ${listingId}`);
+      
       const { data, error } = await supabase
         .from("sold_banner_renders")
         .select("*")
@@ -63,6 +65,33 @@ export const useBannerStatus = (listingId: string) => {
       setIsRefreshing(true);
       setHasError(false);
       
+      console.log(`Vérification manuelle du statut pour le renderId: ${renderId}`);
+      
+      // Vérification directe dans la base de données
+      const { data: dbStatus, error: dbError } = await supabase
+        .from("sold_banner_renders")
+        .select("status, image_url")
+        .eq("render_id", renderId)
+        .single();
+        
+      if (dbError) {
+        console.error("Erreur lors de la vérification en DB:", dbError);
+      } else {
+        console.log("Statut en DB:", dbStatus);
+        
+        if (dbStatus?.status === "completed" && dbStatus?.image_url) {
+          console.log("La bannière est prête selon la DB");
+          fetchRenders();
+          toast.success("Votre bannière est prête !", {
+            description: "Vous pouvez maintenant la télécharger ou la partager."
+          });
+          setIsRefreshing(false);
+          return;
+        }
+      }
+      
+      // Si non trouvé ou non complété en DB, on essaie via la fonction check-render-status
+      console.log("Appel à check-render-status");
       const { data, error } = await supabase.functions.invoke('check-render-status', {
         body: { renderId }
       });

@@ -138,7 +138,7 @@ serve(async (req) => {
     const renderId = await renderWithShotstack(renderPayload);
     
     // Enregistrer les informations du rendu dans la base de données
-    await supabase
+    const { data: insertData, error: insertError } = await supabase
       .from("sold_banner_renders")
       .insert({
         listing_id: listingId,
@@ -147,8 +147,60 @@ serve(async (req) => {
         status: "pending",
         banner_type: bannerType
       });
+      
+    if (insertError) {
+      console.error("❌ Erreur lors de l'enregistrement du rendu:", insertError);
+      throw new Error(`Erreur lors de l'enregistrement du rendu: ${insertError.message}`);
+    }
 
     console.log("✅ Rendu créé et enregistré avec succès, ID:", renderId);
+
+    // Mise à jour des statistiques
+    try {
+      // Vérifier si une entrée existe déjà
+      const { data: existingStat, error: fetchError } = await supabase
+        .from('usage_statistics')
+        .select('id, banner_generations')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("⚠️ Erreur lors de la vérification des statistiques:", fetchError);
+      } else if (!existingStat) {
+        // Créer une nouvelle entrée avec les valeurs par défaut
+        const { error: insertError } = await supabase
+          .from('usage_statistics')
+          .insert([{ 
+            user_id: user.id, 
+            description_generations: 0, 
+            slideshow_generations: 0, 
+            banner_generations: 1, 
+            facebook_generations: 0, 
+            instagram_generations: 0 
+          }]);
+        
+        if (insertError) {
+          console.error("⚠️ Erreur lors de la création des statistiques:", insertError);
+        } else {
+          console.log("✅ Nouvelle entrée statistique créée avec succès");
+        }
+      } else {
+        // Incrémenter le compteur existant
+        const currentValue = existingStat.banner_generations || 0;
+        const { error: updateError } = await supabase
+          .from('usage_statistics')
+          .update({ banner_generations: currentValue + 1 })
+          .eq('user_id', user.id);
+        
+        if (updateError) {
+          console.error("⚠️ Erreur lors de la mise à jour des statistiques:", updateError);
+        } else {
+          console.log(`✅ Compteur banner incrémenté de ${currentValue} à ${currentValue + 1}`);
+        }
+      }
+    } catch (statErr) {
+      console.error("⚠️ Exception lors de la mise à jour des statistiques:", statErr);
+    }
 
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Bannière en cours de génération." }),

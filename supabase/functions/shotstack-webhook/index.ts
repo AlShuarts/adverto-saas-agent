@@ -71,10 +71,12 @@ serve(async (req) => {
       .maybeSingle();
 
     if (bannerData) {
-      console.log("🏷️ C'est un rendu de bannière VENDU");
+      console.log("🏷️ C'est un rendu de bannière");
+      console.log("🔍 Données existantes:", JSON.stringify(bannerData, null, 2));
       
       const updateData: any = { 
-        status: status === "done" ? "completed" : status 
+        status: status === "done" ? "completed" : status,
+        updated_at: new Date()
       };
       
       if (status === "done" && body.url) {
