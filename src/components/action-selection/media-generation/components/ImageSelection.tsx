@@ -1,6 +1,5 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "@/components/ui/image";
 import { Check } from "lucide-react";
 
 export type ImageSelectionProps = {

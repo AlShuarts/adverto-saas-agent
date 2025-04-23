@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 
@@ -5,7 +6,7 @@ export const SLIDE_DURATION = 3000; // 3 secondes en millisecondes
 
 type SlideShowCompositionProps = {
   images: string[];
-  musicUrl?: string;
+  musicUrl?: string | null;
   isPlaying?: boolean;
   volume?: number;
   currentIndex: number;
@@ -14,7 +15,9 @@ type SlideShowCompositionProps = {
 
 export const SlideShowComposition = ({ 
   images,
+  musicUrl,
   isPlaying = true,
+  volume = 1,
   currentIndex,
   onIndexChange,
 }: SlideShowCompositionProps) => {

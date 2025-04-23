@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
 
   const progress = ((currentIndex + 1) / images.length) * 100;
 
-  if (!musicUrl) {
+  if (!images || images.length === 0) {
     return null;
   }
 

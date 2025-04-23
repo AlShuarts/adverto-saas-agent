@@ -7,6 +7,7 @@ import { ImageSelection } from "./components/ImageSelection";
 import { MusicSelector } from "@/components/slideshow/MusicSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader } from "lucide-react";
+import { BackgroundMusic } from "@/components/slideshow/backgroundMusic";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -37,6 +38,9 @@ export const SlideshowGenerationSection = ({
     await generateSlideshow();
   };
 
+  // Mock music array as strings instead of BackgroundMusic objects
+  const mockMusicOptions = ["upbeat", "emotional", "professional"];
+
   return (
     <div className="space-y-4">
       <h4 className="text-md font-medium">Diaporama</h4>
@@ -54,7 +58,7 @@ export const SlideshowGenerationSection = ({
                 <h5 className="text-sm font-medium">Musique</h5>
                 <MusicSelector 
                   selectedMusic={selectedMusic}
-                  musics={["upbeat", "emotional", "professional"]}
+                  musics={mockMusicOptions}
                   onMusicChange={() => {}} // This is a dummy function since we're handling music elsewhere
                 />
               </div>
@@ -87,7 +91,10 @@ export const SlideshowGenerationSection = ({
       {slideshowUrl && (
         <Card className="border-zinc-800 bg-zinc-950/50">
           <CardContent className="pt-6 pb-2">
-            <SlideshowPlayer url={slideshowUrl} />
+            <SlideshowPlayer 
+              images={selectedImages}
+              musicUrl={selectedMusic}
+            />
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button 
