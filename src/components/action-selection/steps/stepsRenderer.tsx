@@ -28,7 +28,7 @@ type StepRendererProps = {
   setSelectedImages: (images: string[]) => void;
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
-  musicList: any[];
+  musicList: string[];
   selectedMusic: string | undefined;
   currentlyPlaying: string | null;
   toggleImageSelection: (imageUrl: string) => void;
@@ -59,7 +59,7 @@ type StepRendererProps = {
   bannerError: string | null;
   slideshowRenderId: string | null;
   bannerRenderId: string | null;
-  generateSlideshowWrapper: () => Promise<string | null>; // Updated to match the return type
+  generateSlideshowWrapper: () => Promise<string | null>;
   generateBannerWrapper: () => Promise<void>;
   refetchSlideshowStatus: () => void;
   handleRegenerateSlideshow: () => void;

@@ -1,8 +1,12 @@
 
 import { Button } from "@/components/ui/button";
-import { Video, Loader2, Tag } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { SlideshowPlayer } from "@/components/slideshow/SlideshowPlayer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageSelection } from "./components/ImageSelection";
 import { MusicSelector } from "@/components/slideshow/MusicSelector";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader } from "lucide-react";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -29,125 +33,81 @@ export const SlideshowGenerationSection = ({
   selectedMusic,
   toggleImageSelection
 }: SlideshowGenerationSectionProps) => {
-  // Mock music data for the MusicSelector
-  const musics = [
-    { id: "ambient", name: "Ambient Music", url: "/background-music.mp3" },
-    { id: "upbeat", name: "Upbeat Music", url: "/background-music.mp3" },
-    { id: "classical", name: "Classical Music", url: "/background-music.mp3" }
-  ];
-  
-  const handleMusicChange = (value: string) => {
-    console.log("Music changed:", value);
-    // This is a placeholder since we don't have direct access to the handleMusicChange function
+  const handleGenerateClick = async () => {
+    await generateSlideshow();
   };
 
   return (
-    <div className="space-y-4 border rounded-md p-4 bg-gray-900">
-      <h4 className="font-medium flex items-center space-x-2 text-white">
-        <Video size={18} className="text-primary" />
-        <span>Configuration du diaporama</span>
-      </h4>
+    <div className="space-y-4">
+      <h4 className="text-md font-medium">Diaporama</h4>
       
-      <div className="space-y-4">
-        <div className="space-y-2 border rounded-md p-4 bg-gray-800">
-          <h3 className="text-base font-medium text-white">Images</h3>
-          {selectedImages && selectedImages.length > 0 ? (
-            <ImageSelection
-              images={selectedImages}
-              selectedImages={selectedImages}
-              toggleImageSelection={toggleImageSelection}
-            />
-          ) : (
-            <div className="text-center p-4 bg-gray-700/50 rounded-md">
-              <p className="text-gray-300">
-                Aucune image disponible. Veuillez sélectionner des images à l'étape précédente.
-              </p>
-            </div>
-          )}
-        </div>
-        
-        <div className="space-y-2 border rounded-md p-4 bg-gray-800">
-          <h3 className="text-base font-medium text-white">Musique</h3>
-          <MusicSelector 
-            musics={musics} 
-            selectedMusic={selectedMusic || null} 
-            onMusicChange={handleMusicChange} 
-          />
-        </div>
-      </div>
-      
-      <div className="border-t border-gray-700 pt-4 mt-6">
-        {!slideshowUrl ? (
-          <div className="flex flex-col items-center justify-center py-4">
-            {isGeneratingSlideshow ? (
-              <div className="flex flex-col items-center space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  Création du diaporama en cours...
-                </p>
-              </div>
-            ) : slideshowRenderId ? (
-              <div className="flex flex-col items-center space-y-4">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-                  <p className="text-amber-500 font-medium">Diaporama en cours de génération</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  La création de votre diaporama est en cours de traitement. Cela peut prendre quelques minutes.
-                </p>
-                <Button 
-                  variant="outline"
-                  onClick={refetchSlideshowStatus}
-                  className="mt-2"
-                >
-                  Vérifier le statut
-                </Button>
-              </div>
-            ) : (
-              <Button 
-                onClick={generateSlideshow} 
-                disabled={isGeneratingSlideshow}
-                className="w-full bg-primary hover:bg-primary/90"
-              >
-                {isGeneratingSlideshow ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Génération en cours...
-                  </>
-                ) : "Générer le diaporama"}
-              </Button>
-            )}
-            
-            {slideshowError && (
-              <div className="mt-4 text-red-500 text-sm">
-                Erreur: {slideshowError}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-green-500 flex items-center gap-1">
-                <Tag className="w-4 h-4" /> Diaporama généré avec succès
-              </span>
-              <Button 
-                variant="outline"
-                onClick={onRegenerateSlideshow}
-              >
-                Régénérer
-              </Button>
-            </div>
-            
-            <div className="border rounded-md p-3 bg-muted/20">
-              <video 
-                src={slideshowUrl} 
-                controls 
-                className="w-full aspect-video shadow-md rounded-sm" 
+      {!slideshowUrl && !isGeneratingSlideshow && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-6">
+              <ImageSelection 
+                selectedImages={selectedImages}
+                toggleImageSelection={toggleImageSelection}
               />
+              
+              <div className="space-y-2">
+                <h5 className="text-sm font-medium">Musique</h5>
+                <MusicSelector 
+                  selectedMusic={selectedMusic}
+                  musics={["upbeat", "emotional", "professional"]}
+                  onMusicChange={() => {}} // This is a dummy function since we're handling music elsewhere
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={handleGenerateClick}
+              disabled={selectedImages.length === 0}
+              className="w-full"
+            >
+              Générer le diaporama
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+      
+      {isGeneratingSlideshow && (
+        <Card className="border-zinc-800 bg-zinc-950/50">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+              <Loader className="h-8 w-8 animate-spin text-primary" />
+              <p>Génération du diaporama en cours...</p>
+              <p className="text-xs text-muted-foreground">Cela peut prendre quelques minutes.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {slideshowUrl && (
+        <Card className="border-zinc-800 bg-zinc-950/50">
+          <CardContent className="pt-6 pb-2">
+            <SlideshowPlayer url={slideshowUrl} />
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={onRegenerateSlideshow}
+              className="text-xs"
+            >
+              Régénérer
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+      
+      {slideshowError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {slideshowError}. Veuillez réessayer.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };

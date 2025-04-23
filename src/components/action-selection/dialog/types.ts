@@ -20,6 +20,7 @@ export interface DialogContentProps {
   setSelectedImages: (images: string[]) => void;
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
+  musicList: string[];
   selectedMusic: string | undefined;
   currentlyPlaying: string | null;
   toggleImageSelection: (imageUrl: string) => void;
@@ -55,6 +56,7 @@ export interface DialogContentProps {
   handleRegenerateBanner: () => void;
   selectedNetworks: SocialNetworks;
   setSelectedNetworks: (networks: SocialNetworks) => void;
+  handleNetworkChange: (network: "facebook" | "instagram", checked: boolean) => void;
   isPublishing: boolean;
   handlePublish: () => Promise<void>;
 }
