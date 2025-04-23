@@ -62,6 +62,7 @@ export const ActionSelectionDialogContent = () => {
     slideshowError,
     bannerError,
     slideshowRenderId,
+    bannerRenderId,
     handleGenerateSlideshow,
     handleGenerateBanner,
     refetchSlideshowStatus,
@@ -157,6 +158,7 @@ export const ActionSelectionDialogContent = () => {
         slideshowError={slideshowError}
         bannerError={bannerError}
         slideshowRenderId={slideshowRenderId}
+        bannerRenderId={bannerRenderId}
         generateSlideshow={generateSlideshowWrapper}
         generateBanner={generateBannerWrapper}
         refetchSlideshowStatus={refetchSlideshowStatus}

@@ -144,6 +144,7 @@ export const ActionSelectionProvider = ({
       slideshowError: state.slideshowError,
       bannerError: state.bannerError,
       slideshowRenderId: state.slideshowRenderId,
+      bannerRenderId: state.bannerRenderId,
       handleGenerateSlideshow: state.handleGenerateSlideshow,
       handleGenerateBanner: () => {
         // Create a wrapper function that accesses the state values directly

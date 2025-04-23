@@ -56,6 +56,7 @@ export interface ActionSelectionState {
   slideshowUrl: string | null;
   bannerUrl: string | null;
   slideshowRenderId: string | null;
+  bannerRenderId: string | null;
   
   // Social networks
   selectedNetworks: SocialNetworks;
@@ -113,6 +114,7 @@ export interface ActionSelectionContextType extends ActionSelectionState {
   isGeneratingBanner: boolean;
   slideshowError: string | null;
   bannerError: string | null;
+  bannerRenderId: string | null;
   handleGenerateSlideshow: () => Promise<string | null>;
   handleGenerateBanner: () => Promise<{ success?: boolean; errors?: Record<string, string>; }>;
   refetchSlideshowStatus: () => void;

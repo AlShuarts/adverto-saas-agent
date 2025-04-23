@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Video, Loader2, Tag } from "lucide-react";
 import { ImageSelection } from "./components/ImageSelection";
@@ -13,7 +14,7 @@ type SlideshowGenerationSectionProps = {
   onRegenerateSlideshow: () => void;
   selectedImages: string[];
   selectedMusic: string | undefined;
-  toggleImageSelection: (imageUrl: string) => void; // Add this missing prop
+  toggleImageSelection: (imageUrl: string) => void;
 };
 
 export const SlideshowGenerationSection = ({
@@ -26,8 +27,20 @@ export const SlideshowGenerationSection = ({
   onRegenerateSlideshow,
   selectedImages,
   selectedMusic,
-  toggleImageSelection // Now the prop is included
+  toggleImageSelection
 }: SlideshowGenerationSectionProps) => {
+  // Mock music data for the MusicSelector
+  const availableMusics = [
+    { id: "ambient", name: "Ambient Music", url: "/background-music.mp3" },
+    { id: "upbeat", name: "Upbeat Music", url: "/background-music.mp3" },
+    { id: "classical", name: "Classical Music", url: "/background-music.mp3" }
+  ];
+  
+  const handleMusicChange = (value: string) => {
+    console.log("Music changed:", value);
+    // This is a placeholder since we don't have direct access to the handleMusicChange function
+  };
+
   return (
     <div className="space-y-4 border rounded-md p-4 bg-gray-900">
       <h4 className="font-medium flex items-center space-x-2 text-white">
@@ -55,7 +68,11 @@ export const SlideshowGenerationSection = ({
         
         <div className="space-y-2 border rounded-md p-4 bg-gray-800">
           <h3 className="text-base font-medium text-white">Musique</h3>
-          <MusicSelector selectedMusic={selectedMusic} />
+          <MusicSelector 
+            musics={availableMusics} 
+            selectedMusic={selectedMusic || null} 
+            onMusicChange={handleMusicChange} 
+          />
         </div>
       </div>
       
