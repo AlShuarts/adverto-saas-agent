@@ -17,10 +17,10 @@ export const ImageSelection = ({
   const imagesToDisplay = availableImages || selectedImages;
   
   return (
-    <div className="space-y-2">
-      <h5 className="text-sm font-medium">Photos pour le diaporama</h5>
-      <ScrollArea className="h-[220px]">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+    <div className="space-y-4">
+      <h5 className="text-sm font-medium">Sélection des photos</h5>
+      <ScrollArea className="h-[220px] border rounded p-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {imagesToDisplay.map((image, index) => (
             <div 
               key={index}
@@ -41,6 +41,12 @@ export const ImageSelection = ({
           ))}
         </div>
       </ScrollArea>
+      
+      <div className="mt-2">
+        <p className="text-sm text-muted-foreground">
+          {selectedImages.length} images sélectionnées
+        </p>
+      </div>
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { MusicSelector } from "@/components/slideshow/MusicSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader } from "lucide-react";
 import { BackgroundMusic } from "@/components/slideshow/backgroundMusic";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -49,10 +50,12 @@ export const SlideshowGenerationSection = ({
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-6">
-              <ImageSelection 
-                selectedImages={selectedImages}
-                toggleImageSelection={toggleImageSelection}
-              />
+              <ScrollArea className="h-[280px]">
+                <ImageSelection 
+                  selectedImages={selectedImages}
+                  toggleImageSelection={toggleImageSelection}
+                />
+              </ScrollArea>
               
               <div className="space-y-2">
                 <h5 className="text-sm font-medium">Musique</h5>

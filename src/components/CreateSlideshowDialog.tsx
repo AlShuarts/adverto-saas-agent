@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
@@ -53,7 +53,7 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
     return () => {
       stopAudio();
     };
-  }, [isOpen]);
+  }, [isOpen, stopAudio]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
