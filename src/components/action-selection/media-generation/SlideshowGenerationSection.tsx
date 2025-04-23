@@ -21,6 +21,7 @@ type SlideshowGenerationSectionProps = {
   selectedImages: string[];
   selectedMusic: string | undefined;
   toggleImageSelection: (imageUrl: string) => void;
+  availableImages?: string[]; // Add new prop for available images
 };
 
 export const SlideshowGenerationSection = ({
@@ -33,7 +34,8 @@ export const SlideshowGenerationSection = ({
   onRegenerateSlideshow,
   selectedImages,
   selectedMusic,
-  toggleImageSelection
+  toggleImageSelection,
+  availableImages // Get available images from props
 }: SlideshowGenerationSectionProps) => {
   const handleGenerateClick = async () => {
     await generateSlideshow();
@@ -54,6 +56,7 @@ export const SlideshowGenerationSection = ({
                 <ImageSelection 
                   selectedImages={selectedImages}
                   toggleImageSelection={toggleImageSelection}
+                  availableImages={availableImages} // Pass available images to ImageSelection
                 />
               </ScrollArea>
               
@@ -70,7 +73,7 @@ export const SlideshowGenerationSection = ({
           <CardFooter>
             <Button 
               onClick={handleGenerateClick}
-              disabled={selectedImages.length === 0}
+              disabled={(availableImages && availableImages.length === 0) || selectedImages.length === 0}
               className="w-full"
             >
               Générer le diaporama

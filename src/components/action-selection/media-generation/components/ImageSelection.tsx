@@ -1,6 +1,6 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check } from "lucide-react";
+import { Check, Images } from "lucide-react";
 
 export type ImageSelectionProps = {
   selectedImages: string[];
@@ -15,6 +15,19 @@ export const ImageSelection = ({
 }: ImageSelectionProps) => {
   // If availableImages is not provided, we'll just show the selected images
   const imagesToDisplay = availableImages || selectedImages;
+  
+  if (!imagesToDisplay || imagesToDisplay.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h5 className="text-sm font-medium">Sélection des photos</h5>
+        <div className="flex flex-col items-center justify-center h-[220px] border rounded p-8 text-center">
+          <Images className="h-10 w-10 text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Aucune image disponible</p>
+          <p className="text-sm text-muted-foreground mt-2">Veuillez ajouter des images à cette propriété</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4">

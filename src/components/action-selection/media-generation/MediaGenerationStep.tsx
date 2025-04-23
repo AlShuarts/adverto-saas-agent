@@ -81,6 +81,7 @@ export const MediaGenerationStep = ({
   
   const showSlideshow = selectedPublicationTypes.includes("slideshow");
   const showBanner = selectedPublicationTypes.includes("banner");
+  const availableImages = listing?.images || [];
 
   return (
     <div className="space-y-6">
@@ -100,6 +101,7 @@ export const MediaGenerationStep = ({
               selectedImages={selectedImages}
               selectedMusic={selectedMusic}
               toggleImageSelection={toggleImageSelection}
+              availableImages={availableImages} // Pass the listing images
             />
           )}
           
