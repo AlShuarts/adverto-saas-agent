@@ -2,39 +2,22 @@
 import { useState } from 'react';
 import { Tables } from "@/integrations/supabase/types";
 import { PublicationType } from './types';
-import { useTemplates } from '../hooks/useTemplates';
-import { useTextGeneration } from '../hooks/useTextGeneration';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { useMediaGeneration } from '../hooks/useMediaGeneration';
-import { useMediaSelection } from '../hooks/useMediaSelection';
 import { useBrokerInfo } from '../hooks/useBrokerInfo';
 import { useSocialNetworkSelection } from '../hooks/useSocialNetworkSelection';
 import { useInitialization } from '../hooks/useInitialization';
 import { usePublicationTypeHandler } from '../hooks/usePublicationTypeHandler';
-import { useMediaGenerationHandlers } from '../hooks/useMediaGenerationHandlers';
+import { useMediaState } from '../hooks/useMediaState';
+import { useTemplateState } from '../hooks/useTemplateState';
 
 export const useActionSelectionState = (listing: Tables<"listings">) => {
   const [currentStep, setCurrentStep] = useState(1);
   
-  // Import custom hooks
-  const { 
-    facebookTemplates, 
-    instagramTemplates, 
-    selectedFacebookTemplateId, 
-    selectedInstagramTemplateId,
-    setSelectedFacebookTemplateId,
-    setSelectedInstagramTemplateId,
-    fetchTemplates,
-    resetTemplates
-  } = useTemplates();
+  // Use our new focused hooks
+  const templateState = useTemplateState(listing);
+  const mediaState = useMediaState(listing.id);
   
-  const {
-    isGeneratingText,
-    generatedText,
-    setGeneratedText,
-    generateText
-  } = useTextGeneration(listing);
-  
+  // Use existing hooks
   const {
     audioPlaying,
     currentlyPlaying,
@@ -46,38 +29,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     stopAudio
   } = useAudioPlayer();
   
-  const {
-    isGeneratingSlideshow,
-    isGeneratingBanner,
-    slideshowUrl,
-    bannerUrl,
-    slideshowError,
-    bannerError,
-    slideshowRenderId,
-    bannerRenderId,
-    setSlideshowUrl,
-    setBannerUrl,
-    setIsGeneratingSlideshow,
-    setIsGeneratingBanner,
-    setSlideshowRenderId,
-    setBannerRenderId,
-    generateSlideshow,
-    generateBanner
-  } = useMediaGeneration(listing.id);
-
-  const {
-    selectedImages,
-    setSelectedImages,
-    bannerType,
-    setBannerType,
-    bannerImage,
-    setBannerImage,
-    resetMediaSelection,
-    toggleImageSelection,
-    onDragEnd,
-    selectBannerImage
-  } = useMediaSelection();
-
   const {
     brokerImageUrl,
     setBrokerImageUrl,
@@ -107,52 +58,31 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setSelectedPublicationTypes, 
     handlePublicationTypeChange 
   } = usePublicationTypeHandler();
-
-  const { handleGenerateSlideshow, handleGenerateBanner } = useMediaGenerationHandlers(
-    listing.id,
-    selectedImages,
-    selectedMusic,
-    slideshowRenderId,
-    setSlideshowUrl,
-    setIsGeneratingSlideshow,
-    generateSlideshow,
-    generateBanner
-  );
   
   // Initialize and reset
   const resetState = () => {
     setCurrentStep(1);
     setSelectedPublicationTypes([]);
-    resetTemplates();
-    resetMediaSelection(listing.images?.[0] || null);
+    templateState.resetTemplates();
+    mediaState.resetMediaSelection(listing.images?.[0] || null);
     resetNetworks();
     resetBrokerInfo();
-    setGeneratedText("");
-    setSlideshowUrl(null);
-    setBannerUrl(null);
+    templateState.setGeneratedText("");
+    mediaState.setSlideshowUrl(null);
+    mediaState.setBannerUrl(null);
   };
 
-  useInitialization(listing, resetState, fetchTemplates, fetchMusic);
+  useInitialization(listing, resetState, templateState.fetchTemplates, fetchMusic);
 
   return {
-    // State
     currentStep,
     setCurrentStep,
     selectedPublicationTypes,
     
-    // From hooks
-    facebookTemplates,
-    instagramTemplates,
-    selectedFacebookTemplateId,
-    selectedInstagramTemplateId,
-    setSelectedFacebookTemplateId,
-    setSelectedInstagramTemplateId,
-    resetTemplates,
+    // From template state
+    ...templateState,
     
-    isGeneratingText,
-    generatedText,
-    setGeneratedText,
-    
+    // From audio player
     audioPlaying,
     currentlyPlaying,
     musicList,
@@ -161,30 +91,10 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     previewMusic,
     stopAudio,
     
-    isGeneratingSlideshow,
-    isGeneratingBanner,
-    slideshowUrl,
-    bannerUrl,
-    slideshowError,
-    bannerError,
-    slideshowRenderId,
-    bannerRenderId,
-    setSlideshowUrl,
-    setBannerUrl,
-    setIsGeneratingSlideshow,
-    setIsGeneratingBanner,
-    setSlideshowRenderId,
-    setBannerRenderId,
+    // From media state
+    ...mediaState,
     
-    selectedImages,
-    setSelectedImages,
-    bannerType,
-    setBannerType,
-    bannerImage,
-    toggleImageSelection,
-    onDragEnd,
-    selectBannerImage,
-    
+    // From broker info
     brokerImageUrl,
     setBrokerImageUrl,
     agencyLogoUrl,
@@ -198,14 +108,16 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     formErrors,
     setFormErrors,
     
+    // From social network selection
     selectedNetworks,
     setSelectedNetworks,
     handleNetworkChange,
     
+    // Action handlers
     handlePublicationTypeChange,
-    handleGenerateText: () => generateText(selectedFacebookTemplateId, facebookTemplates),
-    handleGenerateSlideshow,
+    handleGenerateText: () => templateState.generateText(templateState.selectedFacebookTemplateId, templateState.facebookTemplates),
+    handleGenerateSlideshow: mediaState.handleGenerateSlideshow,
     handleGenerateBanner: (bannerImage: string | null, bannerType: "VENDU" | "A_VENDRE", brokerInfo: any) => 
-      handleGenerateBanner(bannerImage, bannerType, brokerInfo, validateBrokerInfo, setFormErrors)
+      mediaState.handleGenerateBanner(bannerImage, bannerType, brokerInfo, validateBrokerInfo, setFormErrors)
   };
 };
