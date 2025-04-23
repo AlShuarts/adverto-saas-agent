@@ -61,6 +61,7 @@ export const ActionSelectionSteps = ({
   slideshowError,
   bannerError,
   slideshowRenderId,
+  bannerRenderId,
   generateSlideshow,
   generateBanner,
   refetchSlideshowStatus,
@@ -122,6 +123,7 @@ export const ActionSelectionSteps = ({
             isGeneratingSlideshow={isGeneratingSlideshow}
             isGeneratingBanner={isGeneratingBanner}
             slideshowRenderId={slideshowRenderId}
+            bannerRenderId={bannerRenderId}
             slideshowError={slideshowError}
             bannerError={bannerError}
             slideshowUrl={slideshowUrl}

@@ -1,6 +1,7 @@
-
 import { Button } from "@/components/ui/button";
-import { Loader2, Video, Play, RefreshCw, Music } from "lucide-react";
+import { Video, Loader2, Tag } from "lucide-react";
+import { ImageSelection } from "./components/ImageSelection";
+import { MusicSelector } from "@/components/slideshow/MusicSelector";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -9,9 +10,10 @@ type SlideshowGenerationSectionProps = {
   slideshowRenderId: string | null;
   generateSlideshow: () => Promise<string | null>;
   refetchSlideshowStatus: () => void;
-  selectedImages: string[];
-  selectedMusic?: string;
   onRegenerateSlideshow: () => void;
+  selectedImages: string[];
+  selectedMusic: string | undefined;
+  toggleImageSelection: (imageUrl: string) => void; // Add this missing prop
 };
 
 export const SlideshowGenerationSection = ({
@@ -21,132 +23,114 @@ export const SlideshowGenerationSection = ({
   slideshowRenderId,
   generateSlideshow,
   refetchSlideshowStatus,
+  onRegenerateSlideshow,
   selectedImages,
   selectedMusic,
-  onRegenerateSlideshow
+  toggleImageSelection // Now the prop is included
 }: SlideshowGenerationSectionProps) => {
   return (
-    <div className="space-y-4 border rounded-md p-4">
-      <h4 className="font-medium flex items-center space-x-2">
+    <div className="space-y-4 border rounded-md p-4 bg-gray-900">
+      <h4 className="font-medium flex items-center space-x-2 text-white">
         <Video size={18} className="text-primary" />
-        <span>Génération du diaporama</span>
-        {selectedMusic && (
-          <div className="ml-auto flex items-center text-xs text-muted-foreground">
-            <Music className="h-3 w-3 mr-1" />
-            <span>Musique: {selectedMusic}</span>
-          </div>
-        )}
+        <span>Configuration du diaporama</span>
       </h4>
       
-      {!slideshowUrl ? (
-        <div className="flex flex-col items-center justify-center py-4">
-          {isGeneratingSlideshow ? (
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">
-                Génération du diaporama en cours...
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Ce processus peut prendre plusieurs minutes.
-              </p>
-            </div>
-          ) : slideshowRenderId && !slideshowError ? (
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">
-                Traitement en cours...
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Votre diaporama est en train d'être généré. Veuillez patienter.
-              </p>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => refetchSlideshowStatus()}
-                className="flex items-center space-x-1"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                <span>Vérifier le statut</span>
-              </Button>
-            </div>
+      <div className="space-y-4">
+        <div className="space-y-2 border rounded-md p-4 bg-gray-800">
+          <h3 className="text-base font-medium text-white">Images</h3>
+          {selectedImages && selectedImages.length > 0 ? (
+            <ImageSelection
+              images={selectedImages}
+              selectedImages={selectedImages}
+              toggleImageSelection={toggleImageSelection}
+            />
           ) : (
-            <>
-              <div className="w-full space-y-4">
-                <div className="grid grid-cols-4 gap-2 mb-4">
-                  {selectedImages.slice(0, 4).map((img, index) => (
-                    <div key={index} className="aspect-square rounded-md overflow-hidden border border-muted">
-                      <img src={img} alt={`Aperçu ${index + 1}`} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-                
-                <Button 
-                  onClick={generateSlideshow} 
-                  disabled={isGeneratingSlideshow || selectedImages.length === 0}
-                  className="w-full bg-primary hover:bg-primary/90"
-                >
-                  {isGeneratingSlideshow ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Génération en cours...
-                    </>
-                  ) : "Générer le diaporama"}
-                </Button>
-                
-                {selectedImages.length === 0 && (
-                  <p className="text-sm text-amber-500 text-center">
-                    Veuillez sélectionner des images pour générer un diaporama
-                  </p>
-                )}
-              </div>
-              
-              {slideshowError && (
-                <div className="text-sm text-red-500 mt-2 p-2 bg-red-500/10 rounded-md w-full text-center">
-                  {slideshowError}
-                </div>
-              )}
-            </>
+            <div className="text-center p-4 bg-gray-700/50 rounded-md">
+              <p className="text-gray-300">
+                Aucune image disponible. Veuillez sélectionner des images à l'étape précédente.
+              </p>
+            </div>
           )}
         </div>
-      ) : (
-        <div className="flex flex-col space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-green-500 flex items-center gap-1">
-              <Video className="w-4 h-4" /> Diaporama généré avec succès
-            </span>
-            <Button 
-              variant="outline" 
-              onClick={onRegenerateSlideshow}
-            >
-              Régénérer
-            </Button>
-          </div>
-          
-          <div className="border rounded-md p-3 bg-muted/20">
-            <div className="aspect-video bg-black rounded-md overflow-hidden mb-3">
-              <video 
-                src={slideshowUrl} 
-                className="w-full h-full object-cover"
-                controls
-                autoPlay={false}
-                muted
-              />
-            </div>
-            <div className="flex justify-center">
+        
+        <div className="space-y-2 border rounded-md p-4 bg-gray-800">
+          <h3 className="text-base font-medium text-white">Musique</h3>
+          <MusicSelector selectedMusic={selectedMusic} />
+        </div>
+      </div>
+      
+      <div className="border-t border-gray-700 pt-4 mt-6">
+        {!slideshowUrl ? (
+          <div className="flex flex-col items-center justify-center py-4">
+            {isGeneratingSlideshow ? (
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Création du diaporama en cours...
+                </p>
+              </div>
+            ) : slideshowRenderId ? (
+              <div className="flex flex-col items-center space-y-4">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+                  <p className="text-amber-500 font-medium">Diaporama en cours de génération</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  La création de votre diaporama est en cours de traitement. Cela peut prendre quelques minutes.
+                </p>
+                <Button 
+                  variant="outline"
+                  onClick={refetchSlideshowStatus}
+                  className="mt-2"
+                >
+                  Vérifier le statut
+                </Button>
+              </div>
+            ) : (
               <Button 
-                variant="secondary"
-                size="sm"
-                onClick={() => window.open(slideshowUrl, '_blank')}
-                className="flex items-center gap-2"
+                onClick={generateSlideshow} 
+                disabled={isGeneratingSlideshow}
+                className="w-full bg-primary hover:bg-primary/90"
               >
-                <Play className="h-4 w-4" />
-                Prévisualiser le diaporama
+                {isGeneratingSlideshow ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Génération en cours...
+                  </>
+                ) : "Générer le diaporama"}
+              </Button>
+            )}
+            
+            {slideshowError && (
+              <div className="mt-4 text-red-500 text-sm">
+                Erreur: {slideshowError}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-green-500 flex items-center gap-1">
+                <Tag className="w-4 h-4" /> Diaporama généré avec succès
+              </span>
+              <Button 
+                variant="outline"
+                onClick={onRegenerateSlideshow}
+              >
+                Régénérer
               </Button>
             </div>
+            
+            <div className="border rounded-md p-3 bg-muted/20">
+              <video 
+                src={slideshowUrl} 
+                controls 
+                className="w-full aspect-video shadow-md rounded-sm" 
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

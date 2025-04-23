@@ -58,6 +58,7 @@ type StepRendererProps = {
   slideshowError: string | null;
   bannerError: string | null;
   slideshowRenderId: string | null;
+  bannerRenderId: string | null;
   generateSlideshowWrapper: () => Promise<string | null>; // Updated to match the return type
   generateBannerWrapper: () => Promise<void>;
   refetchSlideshowStatus: () => void;
@@ -124,6 +125,7 @@ export const renderStepContent = (props: StepRendererProps) => {
           isGeneratingSlideshow={props.isGeneratingSlideshow}
           isGeneratingBanner={props.isGeneratingBanner}
           slideshowRenderId={props.slideshowRenderId}
+          bannerRenderId={props.bannerRenderId}
           slideshowError={props.slideshowError}
           bannerError={props.bannerError}
           slideshowUrl={props.slideshowUrl}

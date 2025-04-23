@@ -47,6 +47,7 @@ export interface DialogContentProps {
   slideshowError: string | null;
   bannerError: string | null;
   slideshowRenderId: string | null;
+  bannerRenderId: string | null;
   generateSlideshow: () => Promise<string | null>;
   generateBanner: () => Promise<void>;
   refetchSlideshowStatus: () => void;
