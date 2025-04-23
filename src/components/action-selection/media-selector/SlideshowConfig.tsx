@@ -41,7 +41,7 @@ export const SlideshowConfig = ({
               {images?.map(imageUrl => (
                 <div key={imageUrl} className="relative group">
                   <img src={imageUrl} alt="Property" className="w-full h-24 object-cover rounded" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={`absolute inset-0 flex items-center justify-center bg-black/50 ${selectedImages.includes(imageUrl) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                     <Checkbox 
                       checked={selectedImages.includes(imageUrl)} 
                       onCheckedChange={() => toggleImageSelection(imageUrl)} 
@@ -63,29 +63,35 @@ export const SlideshowConfig = ({
                   ref={provided.innerRef} 
                   className="border rounded-lg p-2 h-[220px] overflow-y-auto"
                 >
-                  {selectedImages.map((imageUrl, index) => (
-                    <Draggable key={imageUrl} draggableId={imageUrl} index={index}>
-                      {provided => (
-                        <div 
-                          ref={provided.innerRef} 
-                          {...provided.draggableProps} 
-                          {...provided.dragHandleProps} 
-                          className="flex items-center gap-2 mb-2 p-2 bg-secondary rounded"
-                        >
-                          <MoveVertical className="w-4 h-4" />
-                          <img src={imageUrl} alt="Selected" className="w-16 h-12 object-cover rounded" />
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => toggleImageSelection(imageUrl)}
+                  {selectedImages.length > 0 ? (
+                    selectedImages.map((imageUrl, index) => (
+                      <Draggable key={imageUrl} draggableId={imageUrl} index={index}>
+                        {provided => (
+                          <div 
+                            ref={provided.innerRef} 
+                            {...provided.draggableProps} 
+                            {...provided.dragHandleProps} 
+                            className="flex items-center gap-2 mb-2 p-2 bg-secondary rounded"
                           >
-                            Retirer
-                          </Button>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                            <MoveVertical className="w-4 h-4" />
+                            <img src={imageUrl} alt="Selected" className="w-16 h-12 object-cover rounded" />
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => toggleImageSelection(imageUrl)}
+                            >
+                              Retirer
+                            </Button>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      Aucune image sélectionnée
+                    </div>
+                  )}
                   {provided.placeholder}
                 </div>
               )}
