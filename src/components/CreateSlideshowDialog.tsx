@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { SlideshowImageSelector } from "./slideshow/SlideshowImageSelector";
 import { SlideshowMusicSelector } from "./slideshow/SlideshowMusicSelector";
 import { useSlideshowConfig } from "@/hooks/useSlideshowConfig";
-import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+import { useAudioControls } from "@/hooks/useAudioControls";
+import { useSlideshowSubmit } from "@/hooks/useSlideshowSubmit";
+import { supabase } from "@/integrations/supabase/client";
 
 type CreateSlideshowDialogProps = {
   listing: Tables<"listings">;
@@ -17,44 +18,18 @@ type CreateSlideshowDialogProps = {
 };
 
 export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlideshowDialogProps) => {
-  const { 
-    config, 
-    setConfig,
-    musicList,
-    audioPlaying,
-    setAudioPlaying,
-    currentlyPlaying,
-    setCurrentlyPlaying
-  } = useSlideshowConfig(listing);
-  
-  const [isLoading, setIsLoading] = useState(false);
+  const { config, setConfig, musicList } = useSlideshowConfig(listing);
+  const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
+  const { isLoading, handleSubmit } = useSlideshowSubmit(listing, onClose);
 
   const handleMusicChange = (value: string) => {
     stopAudio();
     setConfig(prev => ({ ...prev, selectedMusic: value }));
   };
 
-  const previewMusic = (musicName: string) => {
-    if (currentlyPlaying === musicName) {
-      stopAudio();
-      return;
-    }
-    stopAudio();
-    const audio = new Audio();
-    audio.src = `${supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl}`;
-    audio.volume = config.musicVolume;
-    audio.play();
-    setAudioPlaying(audio);
-    setCurrentlyPlaying(musicName);
-  };
-
-  const stopAudio = () => {
-    if (audioPlaying) {
-      audioPlaying.pause();
-      audioPlaying.currentTime = 0;
-      setAudioPlaying(null);
-      setCurrentlyPlaying(null);
-    }
+  const handlePreviewMusic = (musicName: string) => {
+    const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
+    playAudio(musicName, publicUrl, config.musicVolume);
   };
 
   const toggleImageSelection = (imageUrl: string) => {
@@ -66,44 +41,9 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-      
-      console.log("Configuration envoyée:", config);
-      await ensureAndIncrementStatistic('slideshow');
-      
-      const response = await supabase.functions.invoke("create-slideshow", {
-        body: {
-          listingId: listing.id,
-          config: {
-            imageDuration: 3,
-            showDetails: true,
-            showPrice: true,
-            showAddress: true,
-            selectedImages: config.selectedImages,
-            selectedMusic: config.selectedMusic
-          }
-        }
-      });
-      
-      if (response.error) throw response.error;
-      
-      toast.success("Création du diaporama initiée", {
-        description: "Vous serez notifié lorsque le diaporama sera prêt."
-      });
-      
-      onClose();
-    } catch (error) {
-      console.error("Error creating slideshow:", error);
-      toast.error("Une erreur est survenue lors de la création du diaporama");
-    } finally {
-      setIsLoading(false);
-    }
+    await handleSubmit(config);
   };
 
   useEffect(() => {
@@ -122,7 +62,7 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
           <DialogTitle>Créer un diaporama</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+        <form onSubmit={onSubmit} className="space-y-6 py-4">
           <SlideshowImageSelector
             images={listing.images || []}
             selectedImages={config.selectedImages}
@@ -134,7 +74,7 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
             selectedMusic={config.selectedMusic}
             currentlyPlaying={currentlyPlaying}
             onMusicChange={handleMusicChange}
-            onPreviewMusic={previewMusic}
+            onPreviewMusic={handlePreviewMusic}
           />
 
           <DialogFooter>
