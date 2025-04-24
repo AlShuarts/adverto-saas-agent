@@ -13,13 +13,12 @@ export const renderStepContent = (props: any) => {
       return (
         <PublicationStep
           selectedPublicationTypes={props.selectedPublicationTypes}
-          handlePublicationTypeChange={props.handlePublicationTypeChange}
+          onPublicationTypeChange={props.handlePublicationTypeChange}
         />
       );
     case 2:
       return (
         <TemplateStep
-          selectedPublicationTypes={props.selectedPublicationTypes}
           facebookTemplates={props.facebookTemplates}
           instagramTemplates={props.instagramTemplates}
           selectedFacebookTemplateId={props.selectedFacebookTemplateId}
@@ -29,8 +28,7 @@ export const renderStepContent = (props: any) => {
           generatedText={props.generatedText}
           setGeneratedText={props.setGeneratedText}
           isGeneratingText={props.isGeneratingText}
-          handleGenerateText={props.handleGenerateText}
-          listing={listing}
+          onGenerateText={props.handleGenerateText}
         />
       );
     case 3:
