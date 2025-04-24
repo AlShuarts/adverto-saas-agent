@@ -53,7 +53,7 @@ serve(async (req) => {
     
     // Gestion de la musique
     if (config.musicUrl) {
-      console.log("🎵 URL de la musique reçue:", config.musicUrl);
+      console.log("🎵 URL de la musique déjà fournie:", config.musicUrl);
     } else if (config.selectedMusic) {
       console.log("🎵 Musique sélectionnée (nom de fichier):", config.selectedMusic);
       // Construction de l'URL complète si nécessaire

@@ -63,6 +63,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
 
   // Ajouter un clip audio si une musique est sélectionnée
   if (config.musicUrl) {
+    console.log(`🎵 Ajout de la musique: ${config.musicUrl}`);
     const audioClip = {
       asset: { type: 'audio', src: config.musicUrl },
       start: 0,
@@ -73,6 +74,7 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
   }
   // Fallback pour l'ancien format
   else if (config.selectedMusic) {
+    console.log(`🎵 Utilisation du format legacy pour la musique: ${config.selectedMusic}`);
     const audioUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
     const audioClip = {
       asset: { type: 'audio', src: audioUrl },
@@ -81,6 +83,8 @@ export const generateSlideShowClips = (selectedImages: string[], textElements: s
     };
     clips.push(audioClip);
     console.log(`🎵 Clip audio ajouté (format legacy): ${audioUrl}, durée: ${totalDuration}s`);
+  } else {
+    console.log("🔇 Aucune musique sélectionnée pour le diaporama");
   }
 
   console.log(`✅ Total clips générés: ${clips.length} avec une durée totale de ${totalDuration} secondes`);

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { toast } from "sonner";
@@ -27,7 +27,8 @@ export const useSlideshowGeneration = (listingId: string) => {
       // Convertir l'URL relative de la musique en URL complète si une musique est sélectionnée
       let musicUrl = null;
       if (selectedMusic) {
-        musicUrl = supabase.storage.from('background-music').getPublicUrl(selectedMusic).data.publicUrl;
+        const { data } = supabase.storage.from('background-music').getPublicUrl(selectedMusic);
+        musicUrl = data.publicUrl;
         console.log("URL de la musique:", musicUrl);
       }
       
@@ -41,7 +42,7 @@ export const useSlideshowGeneration = (listingId: string) => {
             showAddress: true,
             selectedImages: selectedImages,
             selectedMusic: selectedMusic,
-            musicUrl: musicUrl // Ajouter l'URL complète de la musique
+            musicUrl: musicUrl
           }
         }
       });
@@ -79,6 +80,35 @@ export const useSlideshowGeneration = (listingId: string) => {
       setIsGeneratingSlideshow(false);
     }
   };
+  
+  const refetchSlideshowStatus = useCallback(async () => {
+    if (slideshowRenderId) {
+      console.log("Vérification manuelle du statut du diaporama:", slideshowRenderId);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('check-render-status', {
+          body: { renderId: slideshowRenderId }
+        });
+        
+        if (error) {
+          console.error("Erreur lors de la vérification du statut:", error);
+          return;
+        }
+        
+        console.log("Réponse de la vérification du statut:", data);
+        
+        if (data.status === 'done' && data.url) {
+          setSlideshowUrl(data.url);
+          toast.success("Votre diaporama est prêt !");
+        } else if (data.status === 'failed') {
+          setSlideshowError("La génération du diaporama a échoué");
+          toast.error("La génération du diaporama a échoué");
+        }
+      } catch (err) {
+        console.error("Erreur lors de la vérification du statut:", err);
+      }
+    }
+  }, [slideshowRenderId]);
 
   return {
     isGeneratingSlideshow,
@@ -88,6 +118,7 @@ export const useSlideshowGeneration = (listingId: string) => {
     setSlideshowUrl,
     setIsGeneratingSlideshow,
     setSlideshowRenderId,
-    generateSlideshow
+    generateSlideshow,
+    refetchSlideshowStatus
   };
 };
