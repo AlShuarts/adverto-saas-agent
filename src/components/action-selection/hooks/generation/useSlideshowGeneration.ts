@@ -24,6 +24,13 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
+      // Convertir l'URL relative de la musique en URL complète si une musique est sélectionnée
+      let musicUrl = null;
+      if (selectedMusic) {
+        musicUrl = supabase.storage.from('background-music').getPublicUrl(selectedMusic).data.publicUrl;
+        console.log("URL de la musique:", musicUrl);
+      }
+      
       const { data, error } = await supabase.functions.invoke("create-slideshow", {
         body: {
           listingId: listingId,
@@ -33,7 +40,8 @@ export const useSlideshowGeneration = (listingId: string) => {
             showPrice: true,
             showAddress: true,
             selectedImages: selectedImages,
-            selectedMusic: selectedMusic
+            selectedMusic: selectedMusic,
+            musicUrl: musicUrl // Ajouter l'URL complète de la musique
           }
         }
       });

@@ -51,8 +51,15 @@ serve(async (req) => {
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
     
-    if (config.selectedMusic) {
-      console.log("🎵 Musique sélectionnée:", config.selectedMusic);
+    // Gestion de la musique
+    if (config.musicUrl) {
+      console.log("🎵 URL de la musique reçue:", config.musicUrl);
+    } else if (config.selectedMusic) {
+      console.log("🎵 Musique sélectionnée (nom de fichier):", config.selectedMusic);
+      // Construction de l'URL complète si nécessaire
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
+      config.musicUrl = `${supabaseUrl}/storage/v1/object/public/background-music/${config.selectedMusic}`;
+      console.log("🎵 URL de la musique générée:", config.musicUrl);
     } else {
       console.log("🔇 Aucune musique sélectionnée");
     }

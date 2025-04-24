@@ -32,6 +32,7 @@ export const SlideshowGenerationSection = ({
   selectedMusic,
 }: SlideshowGenerationSectionProps) => {
   const handleGenerateClick = async () => {
+    console.log("Generating slideshow with music:", selectedMusic);
     await generateSlideshow();
   };
 
