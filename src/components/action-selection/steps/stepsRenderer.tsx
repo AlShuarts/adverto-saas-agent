@@ -2,7 +2,6 @@
 import { PublicationStep } from "./PublicationStep";
 import { TemplateStep } from "./TemplateStep";
 import { MediaStep } from "./MediaStep";
-import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
 import { SocialStep } from "./SocialStep";
 
 export const renderStepContent = (props: any) => {
@@ -61,13 +60,7 @@ export const renderStepContent = (props: any) => {
           formErrors={props.formErrors}
           setFormErrors={props.setFormErrors}
           listing={listing}
-        />
-      );
-    case 4:
-      return (
-        <MediaGenerationStep
-          selectedPublicationTypes={props.selectedPublicationTypes}
-          selectedImages={props.selectedImages}
+          // Add slideshow generation props
           isGeneratingSlideshow={props.isGeneratingSlideshow}
           isGeneratingBanner={props.isGeneratingBanner}
           slideshowUrl={props.slideshowUrl}
@@ -76,30 +69,11 @@ export const renderStepContent = (props: any) => {
           bannerError={props.bannerError}
           slideshowRenderId={props.slideshowRenderId}
           bannerRenderId={props.bannerRenderId}
-          formErrors={props.formErrors}
           generateSlideshow={props.generateSlideshowWrapper}
           generateBanner={props.generateBannerWrapper}
           refetchSlideshowStatus={props.refetchSlideshowStatus}
-          bannerImage={props.bannerImage}
-          bannerType={props.bannerType}
-          setBannerType={props.setBannerType}
-          selectBannerImage={props.selectBannerImage}
-          brokerImageUrl={props.brokerImageUrl}
-          setBrokerImageUrl={props.setBrokerImageUrl}
-          agencyLogoUrl={props.agencyLogoUrl}
-          setAgencyLogoUrl={props.setAgencyLogoUrl}
-          brokerName={props.brokerName}
-          setBrokerName={props.setBrokerName}
-          brokerEmail={props.brokerEmail}
-          setBrokerEmail={props.setBrokerEmail}
-          brokerPhone={props.brokerPhone}
-          setBrokerPhone={props.setBrokerPhone}
-          setFormErrors={props.setFormErrors}
-          onRegenerateSlideshow={props.handleRegenerateSlideshow}
-          onRegenerateBanner={props.handleRegenerateBanner}
-          selectedMusic={props.selectedMusic}
-          toggleImageSelection={props.toggleImageSelection}
-          listing={listing}
+          handleRegenerateSlideshow={props.handleRegenerateSlideshow}
+          handleRegenerateBanner={props.handleRegenerateBanner}
         />
       );
     case 5:

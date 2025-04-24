@@ -186,7 +186,7 @@ export const ActionSelectionDialogContent = () => {
           onNext={nextStep}
           onPublish={handlePublishWrapper}
           onCancel={onClose}
-          isLastStep={currentStep === 4}
+          isLastStep={currentStep === 5}
         />
       </DialogFooter>
     </DialogContent>

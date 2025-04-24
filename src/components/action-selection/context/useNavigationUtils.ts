@@ -19,18 +19,24 @@ export const useNavigationUtils = (
       case 2: 
         return true;
       case 3: 
-        // For slideshow or banner, we only need image selection to move forward
-        // The actual generation will happen in step 4
-        return selectedImages.length > 0 || 
-               (selectedPublicationTypes.includes("banner") && !!bannerImage);
-      case 4: 
-        const needsSlideshow = selectedPublicationTypes.includes("slideshow");
-        const needsBanner = selectedPublicationTypes.includes("banner");
+        // Only check for image selection in step 3
+        // We'll handle content generation directly in this step
+        const hasImages = selectedImages.length > 0;
+        const hasBannerImage = selectedPublicationTypes.includes("banner") && !!bannerImage;
         
-        const slideshowReady = !needsSlideshow || !!slideshowUrl;
-        const bannerReady = !needsBanner || !!bannerUrl;
-        
-        return slideshowReady && bannerReady;
+        if (selectedPublicationTypes.includes("slideshow") || selectedPublicationTypes.includes("banner")) {
+          // For slideshow/banner, check if we've already generated the content
+          const needsSlideshow = selectedPublicationTypes.includes("slideshow");
+          const needsBanner = selectedPublicationTypes.includes("banner");
+          
+          const slideshowReady = !needsSlideshow || !!slideshowUrl;
+          const bannerReady = !needsBanner || !!bannerUrl;
+          
+          return (hasImages || hasBannerImage) && slideshowReady && bannerReady;
+        } else {
+          // For text and photos only, just need images
+          return hasImages || true;
+        }
       case 5:
         return selectedNetworks.facebook || selectedNetworks.instagram;
       default:
@@ -41,13 +47,8 @@ export const useNavigationUtils = (
   const nextStep = () => {
     if (currentStep === 2) {
       setCurrentStep(3);
-    } else if (currentStep === 3 && 
-        !selectedPublicationTypes.includes("slideshow") && 
-        !selectedPublicationTypes.includes("banner")) {
-      setCurrentStep(5);
     } else if (currentStep === 3) {
-      setCurrentStep(4);
-    } else if (currentStep === 4) {
+      // Skip step 4 entirely and go straight to social networks step
       setCurrentStep(5);
     } else {
       setCurrentStep(currentStep + 1);
@@ -55,13 +56,7 @@ export const useNavigationUtils = (
   };
   
   const prevStep = () => {
-    if (currentStep === 5 && 
-        !selectedPublicationTypes.includes("slideshow") && 
-        !selectedPublicationTypes.includes("banner")) {
-      setCurrentStep(3);
-    } else if (currentStep === 5) {
-      setCurrentStep(4);
-    } else if (currentStep === 4) {
+    if (currentStep === 5) {
       setCurrentStep(3);
     } else {
       setCurrentStep(currentStep - 1);

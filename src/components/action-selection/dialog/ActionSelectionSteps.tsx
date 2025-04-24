@@ -1,18 +1,9 @@
 
 import { PublicationStep } from "../steps/PublicationStep";
 import { TemplateStep } from "../steps/TemplateStep";
-import { GenerationStep } from "../steps/GenerationStep";
+import { MediaStep } from "../steps/MediaStep";
 import { SocialStep } from "../steps/SocialStep";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Instagram, Facebook } from "lucide-react";
-import { FacebookPreviewContent } from "../../FacebookPreviewContent";
-import { InstagramPreviewContent } from "../../InstagramPreviewContent";
-import { supabase } from "@/integrations/supabase/client";
 import { DialogContentProps } from "./types";
 
 export const ActionSelectionSteps = ({
@@ -99,13 +90,21 @@ export const ActionSelectionSteps = ({
         );
       case 3:
         return (
-          <GenerationStep
+          <MediaStep
             selectedPublicationTypes={selectedPublicationTypes}
+            images={listing?.images || []}
             selectedImages={selectedImages}
             bannerImage={bannerImage}
             bannerType={bannerType}
-            setBannerType={setBannerType}
+            musicList={[]}
+            selectedMusic={selectedMusic}
+            currentlyPlaying={currentlyPlaying}
+            toggleImageSelection={toggleImageSelection}
+            onDragEnd={onDragEnd}
             selectBannerImage={selectBannerImage}
+            handleMusicChange={handleMusicChange}
+            previewMusic={previewMusic}
+            setBannerType={setBannerType}
             brokerImageUrl={brokerImageUrl}
             setBrokerImageUrl={setBrokerImageUrl}
             agencyLogoUrl={agencyLogoUrl}
@@ -118,41 +117,20 @@ export const ActionSelectionSteps = ({
             setBrokerPhone={setBrokerPhone}
             formErrors={formErrors}
             setFormErrors={setFormErrors}
-            generateSlideshow={generateSlideshow}
-            generateBanner={generateBanner}
+            listing={listing}
             isGeneratingSlideshow={isGeneratingSlideshow}
             isGeneratingBanner={isGeneratingBanner}
-            slideshowRenderId={slideshowRenderId}
-            bannerRenderId={bannerRenderId}
+            slideshowUrl={slideshowUrl}
+            bannerUrl={bannerUrl}
             slideshowError={slideshowError}
             bannerError={bannerError}
-            slideshowUrl={slideshowUrl}
-            bannerUrl={bannerUrl}
+            slideshowRenderId={slideshowRenderId}
+            bannerRenderId={bannerRenderId}
+            generateSlideshow={generateSlideshow}
+            generateBanner={generateBanner}
             refetchSlideshowStatus={refetchSlideshowStatus}
-            onRegenerateSlideshow={handleRegenerateSlideshow}
-            onRegenerateBanner={handleRegenerateBanner}
-            selectedMusic={selectedMusic}
-            toggleImageSelection={toggleImageSelection}
-            listing={listing}
-          />
-        );
-      case 4:
-        return (
-          <SocialStep
-            selectedPublicationTypes={selectedPublicationTypes}
-            selectedNetworks={selectedNetworks}
-            setSelectedNetworks={setSelectedNetworks}
-            isSubmitting={isPublishing}
-            onSubmit={handlePublish}
-            hasRequiredInfo={!!generatedText}
-            generatedText={generatedText}
-            setGeneratedText={setGeneratedText}
-            images={listing.images || []}
-            selectedImages={selectedImages}
-            setSelectedImages={setSelectedImages}
-            slideshowUrl={slideshowUrl}
-            bannerUrl={bannerUrl}
-            selectedMusic={selectedMusic}
+            handleRegenerateSlideshow={handleRegenerateSlideshow}
+            handleRegenerateBanner={handleRegenerateBanner}
           />
         );
       case 5:
@@ -166,7 +144,7 @@ export const ActionSelectionSteps = ({
             hasRequiredInfo={!!generatedText}
             generatedText={generatedText}
             setGeneratedText={setGeneratedText}
-            images={listing.images || []}
+            images={listing?.images || []}
             selectedImages={selectedImages}
             setSelectedImages={setSelectedImages}
             slideshowUrl={slideshowUrl}

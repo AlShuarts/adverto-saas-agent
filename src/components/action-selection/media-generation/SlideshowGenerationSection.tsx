@@ -6,8 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageSelection } from "./components/ImageSelection";
 import { MusicSelector } from "@/components/slideshow/MusicSelector";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader } from "lucide-react";
-import { BackgroundMusic } from "@/components/slideshow/backgroundMusic";
+import { Loader, Video } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 type SlideshowGenerationSectionProps = {
@@ -48,29 +47,29 @@ export const SlideshowGenerationSection = ({
     <div className="space-y-4">
       <h4 className="text-md font-medium">Diaporama</h4>
       
-      {!slideshowUrl && !isGeneratingSlideshow && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-6">
-              <ScrollArea className="h-[280px]">
-                <ImageSelection 
-                  selectedImages={selectedImages}
-                  toggleImageSelection={toggleImageSelection}
-                  availableImages={availableImages} // Pass available images to ImageSelection
-                />
-              </ScrollArea>
-              
-              <div className="space-y-2">
-                <h5 className="text-sm font-medium">Musique</h5>
-                <MusicSelector 
-                  selectedMusic={selectedMusic}
-                  musics={mockMusicOptions}
-                  onMusicChange={() => {}} // This is a dummy function since we're handling music elsewhere
-                />
-              </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-6">
+            <ScrollArea className="h-[280px]">
+              <ImageSelection 
+                selectedImages={selectedImages}
+                toggleImageSelection={toggleImageSelection}
+                availableImages={availableImages} // Pass available images to ImageSelection
+              />
+            </ScrollArea>
+            
+            <div className="space-y-2">
+              <h5 className="text-sm font-medium">Musique</h5>
+              <MusicSelector 
+                selectedMusic={selectedMusic}
+                musics={mockMusicOptions}
+                onMusicChange={() => {}} // This is a dummy function since we're handling music elsewhere
+              />
             </div>
-          </CardContent>
-          <CardFooter>
+          </div>
+        </CardContent>
+        <CardFooter>
+          {!slideshowUrl && !isGeneratingSlideshow && (
             <Button 
               onClick={handleGenerateClick}
               disabled={(availableImages && availableImages.length === 0) || selectedImages.length === 0}
@@ -78,41 +77,53 @@ export const SlideshowGenerationSection = ({
             >
               Générer le diaporama
             </Button>
-          </CardFooter>
-        </Card>
-      )}
-      
-      {isGeneratingSlideshow && (
-        <Card className="border-zinc-800 bg-zinc-950/50">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+          )}
+          
+          {isGeneratingSlideshow && (
+            <div className="w-full flex flex-col items-center justify-center p-4 text-center space-y-4">
               <Loader className="h-8 w-8 animate-spin text-primary" />
               <p>Génération du diaporama en cours...</p>
               <p className="text-xs text-muted-foreground">Cela peut prendre quelques minutes.</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {slideshowUrl && (
-        <Card className="border-zinc-800 bg-zinc-950/50">
-          <CardContent className="pt-6 pb-2">
-            <SlideshowPlayer 
-              images={selectedImages}
-              musicUrl={selectedMusic}
-            />
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button 
-              variant="outline" 
-              onClick={onRegenerateSlideshow}
-              className="text-xs"
-            >
-              Régénérer
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+          )}
+          
+          {slideshowRenderId && !slideshowUrl && !isGeneratingSlideshow && (
+            <div className="w-full flex flex-col items-center space-y-4">
+              <Loader className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">
+                Traitement en cours...
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={refetchSlideshowStatus}
+              >
+                Vérifier le statut
+              </Button>
+            </div>
+          )}
+          
+          {slideshowUrl && (
+            <div className="w-full flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={onRegenerateSlideshow}
+              >
+                Régénérer
+              </Button>
+              
+              <Button 
+                variant="secondary"
+                onClick={() => window.open(slideshowUrl, '_blank')}
+                className="flex items-center gap-2"
+              >
+                <Video className="h-4 w-4" />
+                Prévisualiser le diaporama
+              </Button>
+            </div>
+          )}
+        </CardFooter>
+      </Card>
       
       {slideshowError && (
         <Alert variant="destructive">
