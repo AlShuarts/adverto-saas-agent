@@ -155,6 +155,25 @@ export const ActionSelectionSteps = ({
             selectedMusic={selectedMusic}
           />
         );
+      case 5:
+        return (
+          <SocialStep
+            selectedPublicationTypes={selectedPublicationTypes}
+            selectedNetworks={selectedNetworks}
+            setSelectedNetworks={setSelectedNetworks}
+            isSubmitting={isPublishing}
+            onSubmit={handlePublish}
+            hasRequiredInfo={!!generatedText}
+            generatedText={generatedText}
+            setGeneratedText={setGeneratedText}
+            images={listing.images || []}
+            selectedImages={selectedImages}
+            setSelectedImages={setSelectedImages}
+            slideshowUrl={slideshowUrl}
+            bannerUrl={bannerUrl}
+            selectedMusic={selectedMusic}
+          />
+        );
       default:
         return null;
     }
