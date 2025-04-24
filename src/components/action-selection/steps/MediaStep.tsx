@@ -29,6 +29,7 @@ type MediaStepProps = {
   setBrokerPhone: (phone: string) => void;
   formErrors: {[key: string]: string};
   setFormErrors: (errors: {[key: string]: string}) => void;
+  listing?: any; // Add listing prop
 };
 
 export const MediaStep = ({
@@ -57,15 +58,19 @@ export const MediaStep = ({
   brokerPhone,
   setBrokerPhone,
   formErrors,
-  setFormErrors
+  setFormErrors,
+  listing
 }: MediaStepProps) => {
+  // Make sure we have images available
+  const availableImages = listing?.images || images;
+  
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
       
       <MediaSelector
         selectedPublicationTypes={selectedPublicationTypes}
-        images={images}
+        images={availableImages}
         selectedImages={selectedImages}
         bannerImage={bannerImage}
         bannerType={bannerType}

@@ -20,6 +20,7 @@ type SocialStepProps = {
   slideshowUrl: string | null;
   bannerUrl: string | null;
   selectedMusic: string | undefined;
+  listing?: any; // Add listing prop
 };
 
 export const SocialStep = ({ 
@@ -36,7 +37,8 @@ export const SocialStep = ({
   setSelectedImages,
   slideshowUrl,
   bannerUrl,
-  selectedMusic
+  selectedMusic,
+  listing
 }: SocialStepProps) => {
   // Handle network change with explicit boolean conversion
   const handleNetworkChange = (network: keyof SocialNetworks, checked: boolean) => {
@@ -45,6 +47,9 @@ export const SocialStep = ({
       [network]: checked
     });
   };
+
+  // Make sure we have images available
+  const availableImages = listing?.images || images;
 
   return (
     <div className="space-y-6">
@@ -87,7 +92,7 @@ export const SocialStep = ({
             selectedNetworks={selectedNetworks}
             generatedText={generatedText}
             setGeneratedText={setGeneratedText}
-            images={images}
+            images={availableImages}
             selectedImages={selectedImages}
             setSelectedImages={setSelectedImages}
             slideshowUrl={slideshowUrl}

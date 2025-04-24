@@ -212,7 +212,7 @@ export const FacebookPreviewContent = ({
             
             {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
             
-            {!showSlideshow && images.length > 0 && (
+            {!showSlideshow && images && images.length > 0 && (
               <>
                 <div className="mb-4 p-3 bg-secondary/10 rounded-lg">
                   <p className="text-sm font-medium mb-2">
@@ -252,6 +252,13 @@ export const FacebookPreviewContent = ({
                   {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''} sélectionnée{selectedImages.length !== 1 ? 's' : ''} sur {images.length}
                 </p>
               </>
+            )}
+            {!showSlideshow && (!images || images.length === 0) && (
+              <div className="flex flex-col items-center justify-center h-[200px] bg-muted/20 rounded p-8 text-center">
+                <Images className="h-10 w-10 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Aucune image disponible</p>
+                <p className="text-sm text-muted-foreground mt-2">Veuillez ajouter des images à cette propriété</p>
+              </div>
             )}
           </div>
         </>
