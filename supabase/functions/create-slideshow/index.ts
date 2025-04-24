@@ -63,7 +63,7 @@ serve(async (req) => {
       );
     }
     
-    // Gestion de la musique
+    // Gestion de la musique - version améliorée avec meilleure gestion des cas undefined
     if (config.musicUrl) {
       console.log("🎵 URL de la musique déjà fournie:", config.musicUrl);
     } else if (config.selectedMusic) {
@@ -73,7 +73,8 @@ serve(async (req) => {
       config.musicUrl = `${supabaseUrl}/storage/v1/object/public/background-music/${config.selectedMusic}`;
       console.log("🎵 URL de la musique générée:", config.musicUrl);
     } else {
-      console.log("🔇 Aucune musique sélectionnée");
+      console.log("🔇 Aucune musique sélectionnée, utilisation du diaporama sans musique");
+      // Pas besoin de configurer une musique par défaut si l'utilisateur n'en a pas sélectionné
     }
 
     const listing = await getListingById(supabase, listingId);

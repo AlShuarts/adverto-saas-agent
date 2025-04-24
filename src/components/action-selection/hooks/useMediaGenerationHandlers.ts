@@ -13,7 +13,7 @@ export const useMediaGenerationHandlers = (
   generateBanner: (bannerImage: string, bannerType: "VENDU" | "A_VENDRE", brokerInfo: BrokerInfo) => Promise<{ success?: boolean; errors?: Record<string, string> }>,
 ) => {
   const handleGenerateSlideshow = async (): Promise<string | null> => {
-    console.log("Generating slideshow with music:", selectedMusic);
+    console.log("Generating slideshow with music:", selectedMusic || "aucune musique");
     return await generateSlideshow(selectedImages, selectedMusic);
   };
   

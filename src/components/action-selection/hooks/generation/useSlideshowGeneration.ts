@@ -17,7 +17,7 @@ export const useSlideshowGeneration = (listingId: string) => {
       
       console.log("Génération du diaporama pour le listing:", listingId);
       console.log("Images sélectionnées:", selectedImages);
-      console.log("Musique sélectionnée:", selectedMusic);
+      console.log("Musique sélectionnée:", selectedMusic || "aucune musique");
       
       toast.info("Génération du diaporama", {
         description: "Nous préparons votre diaporama...",
@@ -32,19 +32,29 @@ export const useSlideshowGeneration = (listingId: string) => {
         console.log("URL de la musique:", musicUrl);
       }
       
-      const { data, error } = await supabase.functions.invoke("create-slideshow", {
-        body: {
-          listingId: listingId,
-          config: {
-            imageDuration: 3,
-            showDetails: true,
-            showPrice: true,
-            showAddress: true,
-            selectedImages: selectedImages,
-            selectedMusic: selectedMusic,
-            musicUrl: musicUrl
-          }
+      // Préparation du payload avec gestion du cas où selectedMusic est undefined
+      const payload = {
+        listingId: listingId,
+        config: {
+          imageDuration: 3,
+          showDetails: true,
+          showPrice: true,
+          showAddress: true,
+          selectedImages: selectedImages
         }
+      };
+      
+      // Ajouter musicUrl et selectedMusic au payload seulement s'ils sont définis
+      if (selectedMusic) {
+        payload.config.selectedMusic = selectedMusic;
+      }
+      
+      if (musicUrl) {
+        payload.config.musicUrl = musicUrl;
+      }
+      
+      const { data, error } = await supabase.functions.invoke("create-slideshow", {
+        body: payload
       });
       
       if (error) {

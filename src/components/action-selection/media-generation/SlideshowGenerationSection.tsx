@@ -35,7 +35,7 @@ export const SlideshowGenerationSection = ({
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   
   const handleGenerateClick = async () => {
-    console.log("Générer le diaporama avec la musique:", selectedMusic);
+    console.log("Générer le diaporama avec la musique:", selectedMusic || "aucune musique");
     await generateSlideshow();
   };
 
@@ -161,4 +161,3 @@ export const SlideshowGenerationSection = ({
     </div>
   );
 };
-
