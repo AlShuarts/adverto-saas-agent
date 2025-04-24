@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSlideshowStatus } from '@/hooks/useSlideshowStatus';
 import { PublicationType } from './types';
 import { toast } from 'sonner';
@@ -23,8 +23,11 @@ export const useSlideshowMonitor = (
   const [isCheckingManually, setIsCheckingManually] = useState(false);
 
   // Cette fonction force une vérification directe avec l'API Shotstack
-  const forceCheckRenderStatus = async () => {
-    if (!slideshowRender?.render_id) return;
+  const forceCheckRenderStatus = useCallback(async () => {
+    if (!slideshowRender?.render_id) {
+      console.log("Aucun ID de rendu disponible pour vérification");
+      return;
+    }
     
     setIsCheckingManually(true);
     try {
@@ -35,6 +38,7 @@ export const useSlideshowMonitor = (
       
       if (response.error) {
         console.error("Erreur lors de la vérification manuelle:", response.error);
+        toast.error("Erreur lors de la vérification du statut");
       } else if (response.data) {
         console.log("Réponse de la vérification manuelle:", response.data);
         
@@ -48,6 +52,8 @@ export const useSlideshowMonitor = (
         } else if (response.data.status === "failed" || response.data.status === "error") {
           setIsGeneratingSlideshow(false);
           toast.error("Échec de la génération du diaporama");
+        } else {
+          toast.info(`Statut actuel: ${response.data.status}`);
         }
         
         // Rafraîchir l'état depuis la base de données
@@ -55,10 +61,28 @@ export const useSlideshowMonitor = (
       }
     } catch (err) {
       console.error("Erreur lors de la vérification forcée:", err);
+      toast.error("Erreur lors de la vérification");
     } finally {
       setIsCheckingManually(false);
     }
-  };
+  }, [slideshowRender, refetchSlideshowStatus, setSlideshowUrl, setIsGeneratingSlideshow]);
+
+  // Amélioration de la fonction de refetch pour combiner la requête de base et la vérification manuelle
+  const enhancedRefetchStatus = useCallback(() => {
+    console.log("Vérification améliorée du statut du slideshow");
+    
+    // Commencer par rafraîchir l'état depuis la base de données
+    refetchSlideshowStatus().then(() => {
+      // Puis forcer une vérification avec l'API si nécessaire
+      if (slideshowRender?.render_id && 
+         (slideshowRender.status === "pending" || 
+          slideshowRender.status === "processing" || 
+          slideshowRender.status === "rendering" ||
+          slideshowRender.status === "fetching")) {
+        forceCheckRenderStatus();
+      }
+    });
+  }, [refetchSlideshowStatus, slideshowRender, forceCheckRenderStatus]);
 
   useEffect(() => {
     if (slideshowRender && selectedPublicationTypes.includes("slideshow")) {
@@ -73,7 +97,7 @@ export const useSlideshowMonitor = (
         toast.error("Échec de la génération du diaporama");
       }
       
-      else if (slideshowRender.status === "pending" || slideshowRender.status === "processing" || slideshowRender.status === "rendering") {
+      else if (slideshowRender.status === "pending" || slideshowRender.status === "processing" || slideshowRender.status === "rendering" || slideshowRender.status === "fetching") {
         if (slideshowRenderId) {
           // Planifier une vérification toutes les 5 secondes
           const checkTimer = setTimeout(() => {
@@ -91,13 +115,13 @@ export const useSlideshowMonitor = (
         }
       }
     }
-  }, [slideshowRender, refetchSlideshowStatus, slideshowRenderId, selectedPublicationTypes]);
+  }, [slideshowRender, refetchSlideshowStatus, forceCheckRenderStatus, slideshowRenderId, selectedPublicationTypes, setSlideshowUrl, setIsGeneratingSlideshow]);
 
   return {
     slideshowRender,
     isSlideshowStatusLoading,
     slideshowStatusError,
-    refetchSlideshowStatus,
+    refetchSlideshowStatus: enhancedRefetchStatus,
     forceCheckRenderStatus,
     isCheckingManually
   };

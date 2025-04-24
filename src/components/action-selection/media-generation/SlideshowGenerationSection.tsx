@@ -5,6 +5,7 @@ import { SlideshowPlayer } from "@/components/slideshow/SlideshowPlayer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader, Video, RefreshCw } from "lucide-react";
+import { useState } from "react";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -31,9 +32,24 @@ export const SlideshowGenerationSection = ({
   selectedImages,
   selectedMusic,
 }: SlideshowGenerationSectionProps) => {
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  
   const handleGenerateClick = async () => {
     console.log("Generating slideshow with music:", selectedMusic);
     await generateSlideshow();
+  };
+
+  const handleStatusCheck = () => {
+    setIsCheckingStatus(true);
+    console.log("Checking slideshow status manually");
+    
+    // Call the refetch function
+    refetchSlideshowStatus();
+    
+    // Reset the checking state after a short delay
+    setTimeout(() => {
+      setIsCheckingStatus(false);
+    }, 2000);
   };
 
   return (
@@ -74,11 +90,12 @@ export const SlideshowGenerationSection = ({
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={refetchSlideshowStatus}
+                    onClick={handleStatusCheck}
+                    disabled={isCheckingStatus}
                     className="flex items-center gap-2"
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    Vérifier le statut
+                    <RefreshCw className={`h-4 w-4 ${isCheckingStatus ? 'animate-spin' : ''}`} />
+                    {isCheckingStatus ? 'Vérification...' : 'Vérifier le statut'}
                   </Button>
                 </div>
               </div>
