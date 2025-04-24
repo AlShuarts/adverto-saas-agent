@@ -4,6 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { toast } from "sonner";
 
+// Define the interface for the slideshow configuration
+interface SlideshowConfig {
+  imageDuration: number;
+  showDetails: boolean;
+  showPrice: boolean;
+  showAddress: boolean;
+  selectedImages: string[];
+  selectedMusic?: string;
+  musicUrl?: string;
+}
+
 export const useSlideshowGeneration = (listingId: string) => {
   const [isGeneratingSlideshow, setIsGeneratingSlideshow] = useState(false);
   const [slideshowUrl, setSlideshowUrl] = useState<string | null>(null);
@@ -33,7 +44,10 @@ export const useSlideshowGeneration = (listingId: string) => {
       }
       
       // Préparation du payload avec gestion du cas où selectedMusic est undefined
-      const payload = {
+      const payload: { 
+        listingId: string, 
+        config: SlideshowConfig 
+      } = {
         listingId: listingId,
         config: {
           imageDuration: 3,
