@@ -1,3 +1,4 @@
+
 import { PublicationType, SocialNetworks } from './types';
 
 export const useNavigationUtils = (
@@ -18,6 +19,11 @@ export const useNavigationUtils = (
       case 2: 
         return true;
       case 3: 
+        // For slideshow or banner, we only need image selection to move forward
+        // The actual generation will happen in step 4
+        return selectedImages.length > 0 || 
+               (selectedPublicationTypes.includes("banner") && !!bannerImage);
+      case 4: 
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
         const needsBanner = selectedPublicationTypes.includes("banner");
         
@@ -25,7 +31,7 @@ export const useNavigationUtils = (
         const bannerReady = !needsBanner || !!bannerUrl;
         
         return slideshowReady && bannerReady;
-      case 4: 
+      case 5:
         return selectedNetworks.facebook || selectedNetworks.instagram;
       default:
         return true;
