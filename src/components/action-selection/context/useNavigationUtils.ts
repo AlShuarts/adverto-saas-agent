@@ -35,11 +35,11 @@ export const useNavigationUtils = (
   };
   
   const nextStep = () => {
-    // Si on est à l'étape 2 et qu'on n'a pas sélectionné slideshow ni banner
+    // Si on est à l'étape 2 et qu'on a seulement des photos et un texte (pas de slideshow ni banner)
     if (currentStep === 2 && 
         !selectedPublicationTypes.includes("slideshow") && 
         !selectedPublicationTypes.includes("banner")) {
-      // On passe directement à l'étape 4
+      // On passe directement à l'étape 4 (réseaux sociaux)
       setCurrentStep(4);
     } else if (currentStep === 2) {
       // Sinon on passe à l'étape 3
@@ -51,7 +51,7 @@ export const useNavigationUtils = (
   };
   
   const prevStep = () => {
-    // Si on est à l'étape 4 et qu'on vient de l'étape 2 (car pas de slideshow/banner)
+    // Si on est à l'étape 4 et qu'on n'a pas de slideshow/banner, on retourne à l'étape 2
     if (currentStep === 4 && 
         !selectedPublicationTypes.includes("slideshow") && 
         !selectedPublicationTypes.includes("banner")) {
