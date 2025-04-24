@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
@@ -50,8 +49,8 @@ serve(async (req) => {
 
     // ID du template Shotstack
     const TEMPLATE_ID = "dbbf3bc7-0bff-432b-896e-f736aa04bbd6";
-    // Important: désactiver les templates si l'API ne les prend pas en charge
-    const USE_TEMPLATE = false; // Modification: désactiver l'utilisation des templates
+    // Réactiver l'utilisation des templates avec le bon endpoint
+    const USE_TEMPLATE = true;
 
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
