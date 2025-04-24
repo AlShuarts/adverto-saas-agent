@@ -50,7 +50,8 @@ serve(async (req) => {
 
     // ID du template Shotstack
     const TEMPLATE_ID = "dbbf3bc7-0bff-432b-896e-f736aa04bbd6";
-    const USE_TEMPLATE = true; // Activer/désactiver l'utilisation du template
+    // Important: désactiver les templates si l'API ne les prend pas en charge
+    const USE_TEMPLATE = false; // Modification: désactiver l'utilisation des templates
 
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);

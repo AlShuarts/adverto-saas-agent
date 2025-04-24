@@ -43,7 +43,9 @@ export const renderWithShotstackTemplate = async (templateId: string, mergeVaria
       try {
         console.log(`✨ Tentative d'envoi #${attempts+1} à l'API Shotstack (Template)`);
         
-        const response = await fetch("https://api.shotstack.io/stage/render/template", {
+        // Correction de l'URL: utilisation de l'endpoint "render" standard au lieu de "render/template"
+        // qui n'existe pas selon l'erreur
+        const response = await fetch("https://api.shotstack.io/stage/render", {
           method: "POST",
           headers: {
             "x-api-key": apiKey,
