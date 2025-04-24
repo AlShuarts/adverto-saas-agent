@@ -19,7 +19,7 @@ export const useNavigationUtils = (
       case 2: 
         return true;
       case 3: 
-        // Vérifie que les sélections nécessaires sont faites avant de passer à l'étape suivante
+        // Si on a sélectionné slideshow ou banner, on vérifie que la génération est faite
         const needsSlideshow = selectedPublicationTypes.includes("slideshow");
         const needsBanner = selectedPublicationTypes.includes("banner");
         
@@ -35,19 +35,27 @@ export const useNavigationUtils = (
   };
   
   const nextStep = () => {
-    if (currentStep === 2) {
-      // On passe directement à l'étape 3 (suppression de 3.5)
+    // Si on est à l'étape 2 et qu'on n'a pas sélectionné slideshow ni banner
+    if (currentStep === 2 && 
+        !selectedPublicationTypes.includes("slideshow") && 
+        !selectedPublicationTypes.includes("banner")) {
+      // On passe directement à l'étape 4
+      setCurrentStep(4);
+    } else if (currentStep === 2) {
+      // Sinon on passe à l'étape 3
       setCurrentStep(3);
     } else {
+      // Dans les autres cas, progression normale
       setCurrentStep(currentStep + 1);
     }
   };
   
   const prevStep = () => {
+    // Si on est à l'étape 4 et qu'on vient de l'étape 2 (car pas de slideshow/banner)
     if (currentStep === 4 && 
-       (selectedPublicationTypes.includes("slideshow") || 
-        selectedPublicationTypes.includes("banner"))) {
-      setCurrentStep(3);
+        !selectedPublicationTypes.includes("slideshow") && 
+        !selectedPublicationTypes.includes("banner")) {
+      setCurrentStep(2);
     } else {
       setCurrentStep(currentStep - 1);
     }
