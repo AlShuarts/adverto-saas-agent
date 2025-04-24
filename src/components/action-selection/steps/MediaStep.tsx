@@ -1,3 +1,4 @@
+
 import { MediaSelector } from "../media-selector";
 import { PublicationType } from "../types";
 import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
@@ -160,7 +161,7 @@ export const MediaStep = ({
             setFormErrors={setFormErrors}
             onRegenerateSlideshow={handleRegenerateSlideshow}
             onRegenerateBanner={handleRegenerateBanner}
-            selectedMusic={selectedMusic}
+            selectedMusic={selectedMusic} // Make sure to pass selectedMusic
             toggleImageSelection={toggleImageSelection}
             listing={listing}
           />

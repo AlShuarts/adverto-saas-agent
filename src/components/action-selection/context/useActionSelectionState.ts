@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tables } from "@/integrations/supabase/types";
 import { PublicationType } from './types';
@@ -116,7 +115,7 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     // Action handlers
     handlePublicationTypeChange,
     handleGenerateText: () => templateState.generateText(templateState.selectedFacebookTemplateId, templateState.facebookTemplates),
-    handleGenerateSlideshow: mediaState.handleGenerateSlideshow,
+    handleGenerateSlideshow: () => mediaState.handleGenerateSlideshow(),
     handleGenerateBanner: (bannerImage: string | null, bannerType: "VENDU" | "A_VENDRE", brokerInfo: any) => 
       mediaState.handleGenerateBanner(bannerImage, bannerType, brokerInfo, validateBrokerInfo, setFormErrors)
   };

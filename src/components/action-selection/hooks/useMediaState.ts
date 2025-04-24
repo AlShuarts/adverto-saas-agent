@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMediaSelection } from './useMediaSelection';
 import { useMediaGeneration } from './useMediaGeneration';
@@ -37,10 +36,12 @@ export const useMediaState = (listingId: string) => {
     generateBanner
   } = useMediaGeneration(listingId);
 
+  const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
+
   const { handleGenerateSlideshow, handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    undefined, // selectedMusic will be passed from parent
+    selectedMusic,
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,
@@ -73,6 +74,8 @@ export const useMediaState = (listingId: string) => {
     setIsGeneratingBanner,
     setSlideshowRenderId,
     setBannerRenderId,
+    selectedMusic,
+    setSelectedMusic,
     handleGenerateSlideshow,
     handleGenerateBanner
   };
