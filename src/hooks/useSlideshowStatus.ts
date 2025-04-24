@@ -43,7 +43,7 @@ export const useSlideshowStatus = (listingId: string) => {
 
         if (error) {
           console.error("Error fetching render status:", error);
-          return null;
+          throw error;
         }
 
         if (!renders || renders.length === 0) {
@@ -97,18 +97,22 @@ export const useSlideshowStatus = (listingId: string) => {
                   
                   console.log("Updating render in DB with:", updateData);
                   
-                  const { data: updatedRender, error: updateError } = await supabase
-                    .from("slideshow_renders")
-                    .update(updateData)
-                    .eq("id", render.id)
-                    .select('*')
-                    .single();
-                  
-                  if (updateError) {
-                    console.error("Error updating render:", updateError);
-                  } else if (updatedRender) {
-                    console.log("Render updated successfully:", updatedRender);
-                    return updatedRender;
+                  try {
+                    const { data: updatedRender, error: updateError } = await supabase
+                      .from("slideshow_renders")
+                      .update(updateData)
+                      .eq("id", render.id)
+                      .select('*')
+                      .single();
+                    
+                    if (updateError) {
+                      console.error("Error updating render:", updateError);
+                    } else if (updatedRender) {
+                      console.log("Render updated successfully:", updatedRender);
+                      return updatedRender;
+                    }
+                  } catch (dbError) {
+                    console.error("Database error while updating render:", dbError);
                   }
                 }
               }
@@ -131,7 +135,7 @@ export const useSlideshowStatus = (listingId: string) => {
         return render;
       } catch (error) {
         console.error("Error in useSlideshowStatus:", error);
-        return null;
+        throw error;
       }
     },
     refetchInterval: (query) => {

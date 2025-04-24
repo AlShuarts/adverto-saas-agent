@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { SlideshowPlayer } from "@/components/slideshow/SlideshowPlayer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader, Video } from "lucide-react";
+import { Loader, Video, RefreshCw } from "lucide-react";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -63,16 +63,23 @@ export const SlideshowGenerationSection = ({
             {slideshowRenderId && !slideshowUrl && !isGeneratingSlideshow && (
               <div className="w-full flex flex-col items-center space-y-4">
                 <Loader className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm">
                   Traitement en cours...
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={refetchSlideshowStatus}
-                >
-                  Vérifier le statut
-                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Cela peut prendre 3 à 5 minutes
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={refetchSlideshowStatus}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Vérifier le statut
+                  </Button>
+                </div>
               </div>
             )}
           </div>

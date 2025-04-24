@@ -25,29 +25,60 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // 1. Vérifier d'abord dans la base de données
+    // 1. Vérifier d'abord dans les tables de rendu (slideshow ou banner)
+    
+    // Essayer d'abord la table slideshow_renders
+    const { data: slideshowData, error: slideshowError } = await supabase
+      .from("slideshow_renders")
+      .select("*")
+      .eq("render_id", renderId)
+      .maybeSingle();
+      
+    if (slideshowData) {
+      console.log("Données du slideshow trouvées:", slideshowData);
+      
+      if (slideshowData.status === "completed" && slideshowData.video_url) {
+        return new Response(
+          JSON.stringify({
+            status: "done",
+            videoUrl: slideshowData.video_url,
+            message: "Rendu terminé, URL disponible"
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Si le slideshow n'est pas complété, vérifier avec Shotstack
+      console.log("Le slideshow n'est pas complété, vérification avec l'API Shotstack");
+    } else if (slideshowError) {
+      console.log("Pas de données slideshow trouvées, vérification de la table banner");
+    }
+    
+    // Si pas de slideshow, essayer la table sold_banner_renders
     const { data: bannerData, error: bannerError } = await supabase
       .from("sold_banner_renders")
       .select("*")
       .eq("render_id", renderId)
-      .single();
+      .maybeSingle();
 
-    if (bannerError) {
-      console.error("Erreur lors de la récupération des données de la bannière:", bannerError);
-      throw new Error("Impossible de récupérer les données de la bannière");
-    }
-
-    console.log("Données de la bannière:", bannerData);
-
-    if (bannerData.status === "completed" && bannerData.image_url) {
-      return new Response(
-        JSON.stringify({
-          status: "done",
-          url: bannerData.image_url,
-          message: "Rendu terminé, URL disponible"
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (bannerData) {
+      console.log("Données de la bannière trouvées:", bannerData);
+      
+      if (bannerData.status === "completed" && bannerData.image_url) {
+        return new Response(
+          JSON.stringify({
+            status: "done",
+            url: bannerData.image_url,
+            message: "Rendu terminé, URL disponible"
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else if (bannerError) {
+      console.log("Pas de données banner trouvées non plus:", bannerError);
+      if (!slideshowData) {
+        console.error("Aucune donnée de rendu trouvée pour cet ID");
+      }
     }
 
     // 2. Si pas complété en DB, vérifier avec l'API Shotstack
@@ -57,7 +88,7 @@ serve(async (req) => {
     }
 
     console.log("Appel à l'API Shotstack pour vérifier le statut...");
-    const response = await fetch(`https://api.shotstack.io/v1/render/${renderId}`, {
+    const response = await fetch(`https://api.shotstack.io/stage/render/${renderId}`, {
       method: "GET",
       headers: {
         "x-api-key": apiKey,
@@ -79,34 +110,72 @@ serve(async (req) => {
     let status = result.response?.status;
     let url = result.response?.url;
 
-    if (status === "done" && url) {
-      // Mettre à jour le statut dans la base de données
-      const { error: updateError } = await supabase
-        .from("sold_banner_renders")
-        .update({ 
-          status: "completed", 
-          image_url: url,
-          updated_at: new Date()
-        })
-        .eq("render_id", renderId);
+    // Déterminer et mettre à jour la table appropriée
+    if (status) {
+      if (slideshowData) {
+        // C'est un rendu de slideshow
+        if (status === "done" && url) {
+          // Mettre à jour le statut dans la base de données
+          const { error: updateError } = await supabase
+            .from("slideshow_renders")
+            .update({ 
+              status: "completed", 
+              video_url: url,
+              updated_at: new Date().toISOString()
+            })
+            .eq("render_id", renderId);
 
-      if (updateError) {
-        console.error("Erreur lors de la mise à jour du statut:", updateError);
-      } else {
-        console.log(`Statut mis à jour avec succès pour le renderId: ${renderId}`);
-      }
-    } else if (status === "failed") {
-      // Mettre à jour le statut dans la base de données
-      const { error: updateError } = await supabase
-        .from("sold_banner_renders")
-        .update({ 
-          status: "failed",
-          updated_at: new Date()
-        })
-        .eq("render_id", renderId);
+          if (updateError) {
+            console.error("Erreur lors de la mise à jour du statut du slideshow:", updateError);
+          } else {
+            console.log(`Statut du slideshow mis à jour avec succès pour le renderId: ${renderId}`);
+          }
+        } else if (status === "failed") {
+          // Mettre à jour le statut dans la base de données
+          const { error: updateError } = await supabase
+            .from("slideshow_renders")
+            .update({ 
+              status: "error",
+              updated_at: new Date().toISOString()
+            })
+            .eq("render_id", renderId);
 
-      if (updateError) {
-        console.error("Erreur lors de la mise à jour du statut:", updateError);
+          if (updateError) {
+            console.error("Erreur lors de la mise à jour du statut:", updateError);
+          }
+        }
+      } else if (bannerData) {
+        // C'est un rendu de bannière
+        if (status === "done" && url) {
+          // Mettre à jour le statut dans la base de données
+          const { error: updateError } = await supabase
+            .from("sold_banner_renders")
+            .update({ 
+              status: "completed", 
+              image_url: url,
+              updated_at: new Date().toISOString()
+            })
+            .eq("render_id", renderId);
+
+          if (updateError) {
+            console.error("Erreur lors de la mise à jour du statut de la bannière:", updateError);
+          } else {
+            console.log(`Statut de la bannière mis à jour avec succès pour le renderId: ${renderId}`);
+          }
+        } else if (status === "failed") {
+          // Mettre à jour le statut dans la base de données
+          const { error: updateError } = await supabase
+            .from("sold_banner_renders")
+            .update({ 
+              status: "failed",
+              updated_at: new Date().toISOString()
+            })
+            .eq("render_id", renderId);
+
+          if (updateError) {
+            console.error("Erreur lors de la mise à jour du statut:", updateError);
+          }
+        }
       }
     }
 
@@ -114,6 +183,7 @@ serve(async (req) => {
       JSON.stringify({
         status: status,
         url: url,
+        videoUrl: url, // Pour compatibilité avec le client qui attend parfois videoUrl
         message: `Statut actuel: ${status}`
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
