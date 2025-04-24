@@ -18,26 +18,33 @@ export const useSlideshowMonitor = (
     setLastCheckedTime(Date.now());
     
     try {
-      console.log("Fetching slideshow status for renderId:", slideshowRenderId);
+      console.log("Vérification du statut du diaporama pour le renderId:", slideshowRenderId);
       const { data, error } = await supabase.functions.invoke('check-render-status', {
         body: { renderId: slideshowRenderId }
       });
       
-      if (error) throw error;
-      console.log("Slideshow status response:", data);
+      if (error) {
+        console.error("Erreur lors de la vérification du statut:", error);
+        throw error;
+      }
+      
+      console.log("Réponse de la vérification du statut:", data);
       
       if (data.status === 'done' && data.url) {
+        console.log("✅ Diaporama prêt! URL:", data.url);
         setSlideshowUrl(data.url);
         setIsGeneratingSlideshow(false);
         return data;
       } else if (data.status === 'failed') {
-        console.error("Slideshow rendering failed");
+        console.error("❌ Échec de la génération du diaporama");
         setIsGeneratingSlideshow(false);
+      } else {
+        console.log("⏳ Diaporama toujours en cours de traitement, statut:", data.status);
       }
       
       return data;
     } catch (err) {
-      console.error("Error fetching slideshow status:", err);
+      console.error("Erreur lors de la vérification du statut du diaporama:", err);
       return null;
     }
   }, [slideshowRenderId, setSlideshowUrl, setIsGeneratingSlideshow]);
@@ -54,7 +61,7 @@ export const useSlideshowMonitor = (
 
   // Manuel refetch function with immediate execution
   const refetchSlideshowStatus = useCallback(() => {
-    console.log("Manual refetch of slideshow status triggered");
+    console.log("Vérification manuelle du statut du diaporama");
     return fetchSlideshowStatus();
   }, [fetchSlideshowStatus]);
 

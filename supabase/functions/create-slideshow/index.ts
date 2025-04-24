@@ -2,8 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
-import { generateSlideShowClips } from "./utils/clipGenerator.ts";
-import { renderWithShotstack } from "./services/shotstackService.ts";
+import { generateSlideShowClips, generateTemplateVariables } from "./utils/clipGenerator.ts";
+import { renderWithShotstack, renderWithShotstackTemplate } from "./services/shotstackService.ts";
 import { getListingById, saveRenderRecord } from "./services/databaseService.ts";
 
 const corsHeaders = {
@@ -48,8 +48,20 @@ serve(async (req) => {
       );
     }
 
+    // ID du template Shotstack
+    const TEMPLATE_ID = "dbbf3bc7-0bff-432b-896e-f736aa04bbd6";
+    const USE_TEMPLATE = true; // Activer/désactiver l'utilisation du template
+
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
+    
+    // Vérifier que nous avons au moins une image
+    if (!config.selectedImages || config.selectedImages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "❌ Au moins une image est requise pour créer un diaporama." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
     
     // Gestion de la musique
     if (config.musicUrl) {
@@ -70,29 +82,61 @@ serve(async (req) => {
     const textElements = prepareTextElements(listing, config);
     console.log("📝 Éléments de texte préparés:", textElements);
 
-    const { clips, totalDuration } = generateSlideShowClips(config.selectedImages, textElements, config);
-    console.log("🎬 Nombre de clips générés:", clips.length);
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
     const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
     
     console.log("🔗 URL du webhook configurée:", webhookUrl);
-
-    const renderPayload = {
-      timeline: {
-        background: "#000000",
-        tracks: [
-          { clips }, // Track des images et des textes
-        ],
-      },
-      output: { format: "mp4", resolution: "hd" },
-      callback: webhookUrl,
-    };
-
-    console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
     
-    const renderId = await renderWithShotstack(renderPayload);
+    let renderId;
     
+    if (USE_TEMPLATE) {
+      // Utilisation du template
+      console.log("🧩 Utilisation du template Shotstack ID:", TEMPLATE_ID);
+      
+      // Générer les variables pour le template
+      const { mergeVariables, totalDuration } = generateTemplateVariables(
+        config.selectedImages,
+        textElements,
+        config
+      );
+      
+      // Envoi au service de rendu avec template
+      renderId = await renderWithShotstackTemplate(
+        TEMPLATE_ID,
+        mergeVariables,
+        webhookUrl
+      );
+      
+      console.log("🎬 Rendu initialisé avec le template, ID:", renderId);
+    } else {
+      // Méthode originale, sans template
+      console.log("🧩 Utilisation de la méthode standard (sans template)");
+      
+      const { clips, totalDuration } = generateSlideShowClips(
+        config.selectedImages,
+        textElements,
+        config
+      );
+      
+      console.log("🎬 Nombre de clips générés:", clips.length);
+      
+      const renderPayload = {
+        timeline: {
+          background: "#000000",
+          tracks: [
+            { clips }, // Track des images et des textes
+          ],
+        },
+        output: { format: "mp4", resolution: "hd" },
+        callback: webhookUrl,
+      };
+
+      console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
+      
+      renderId = await renderWithShotstack(renderPayload);
+    }
+    
+    // Enregistrement du rendu dans la base de données
     await saveRenderRecord(supabase, {
       listingId,
       renderId,

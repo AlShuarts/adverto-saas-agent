@@ -35,13 +35,13 @@ export const SlideshowGenerationSection = ({
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   
   const handleGenerateClick = async () => {
-    console.log("Generating slideshow with music:", selectedMusic);
+    console.log("Générer le diaporama avec la musique:", selectedMusic);
     await generateSlideshow();
   };
 
   const handleStatusCheck = () => {
     setIsCheckingStatus(true);
-    console.log("Checking slideshow status manually");
+    console.log("Vérification manuelle du statut du diaporama");
     
     // Call the refetch function
     refetchSlideshowStatus();
@@ -52,6 +52,10 @@ export const SlideshowGenerationSection = ({
     }, 2000);
   };
 
+  // Vérifier si nous avons suffisamment d'images
+  const hasEnoughImages = selectedImages && selectedImages.length > 0;
+  const noImagesWarning = !hasEnoughImages && "Veuillez sélectionner au moins une image";
+
   return (
     <div className="space-y-4">
       <h4 className="text-md font-medium">Diaporama</h4>
@@ -59,14 +63,30 @@ export const SlideshowGenerationSection = ({
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-6">
-            {!slideshowUrl && !isGeneratingSlideshow && (
-              <Button 
-                onClick={handleGenerateClick}
-                disabled={selectedImages.length === 0}
-                className="w-full"
-              >
-                Générer le diaporama
-              </Button>
+            {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
+              <div className="space-y-4">
+                {!hasEnoughImages && (
+                  <Alert variant="warning" className="bg-amber-50 text-amber-800 border-amber-300">
+                    <AlertDescription>
+                      Veuillez sélectionner au moins une image pour générer un diaporama.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                <Button 
+                  onClick={handleGenerateClick}
+                  disabled={!hasEnoughImages}
+                  className="w-full"
+                >
+                  Générer le diaporama
+                </Button>
+                
+                {selectedMusic && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Musique sélectionnée: {selectedMusic}
+                  </p>
+                )}
+              </div>
             )}
             
             {isGeneratingSlideshow && (
@@ -98,6 +118,12 @@ export const SlideshowGenerationSection = ({
                     {isCheckingStatus ? 'Vérification...' : 'Vérifier le statut'}
                   </Button>
                 </div>
+                
+                {selectedMusic && (
+                  <p className="text-xs text-muted-foreground">
+                    Le diaporama sera créé avec la musique: {selectedMusic}
+                  </p>
+                )}
               </div>
             )}
           </div>

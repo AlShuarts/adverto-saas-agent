@@ -1,4 +1,91 @@
 
+/**
+ * Génère des variables pour un template Shotstack
+ * Les variables seront fusionnées avec le template pour créer le diaporama final
+ */
+export const generateTemplateVariables = (selectedImages: string[], textElements: string[], config: any) => {
+  console.log(`📸 Génération de variables pour ${selectedImages.length} images avec ${textElements.length} éléments de texte`);
+  
+  // Variables pour le merge
+  const mergeVariables = [];
+  let totalDuration = 0;
+  const slideDuration = config.imageDuration || 3;
+  
+  // Vérifications de base
+  if (!selectedImages || selectedImages.length === 0) {
+    console.error("❌ Aucune image sélectionnée pour le diaporama");
+    throw new Error("Au moins une image est requise pour créer un diaporama");
+  }
+
+  // Créer des variables pour chaque image
+  for (let i = 0; i < selectedImages.length; i++) {
+    const imageUrl = selectedImages[i];
+    const variableName = `IMAGE_SRC_${i + 1}`;
+    
+    // Ajouter l'URL de l'image comme variable
+    mergeVariables.push({
+      find: variableName,
+      replace: imageUrl
+    });
+
+    // Ajouter le texte correspondant si disponible
+    if (textElements[i]) {
+      const textVariableName = `TEXT_VAR_${i + 1}`;
+      mergeVariables.push({
+        find: textVariableName,
+        replace: textElements[i]
+      });
+    } else {
+      // Texte vide par défaut si non disponible
+      const textVariableName = `TEXT_VAR_${i + 1}`;
+      mergeVariables.push({
+        find: textVariableName,
+        replace: ""
+      });
+    }
+
+    totalDuration += slideDuration;
+  }
+
+  // Ajouter une variable pour l'audio
+  if (config.musicUrl) {
+    console.log(`🎵 Ajout de la musique: ${config.musicUrl}`);
+    mergeVariables.push({
+      find: "AUDIO_SRC",
+      replace: config.musicUrl
+    });
+    
+    // Ajouter la durée totale pour la musique
+    mergeVariables.push({
+      find: "AUDIO_DURATION",
+      replace: totalDuration.toString()
+    });
+  } 
+  // Fallback pour l'ancien format
+  else if (config.selectedMusic) {
+    console.log(`🎵 Utilisation du format legacy pour la musique: ${config.selectedMusic}`);
+    const audioUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    mergeVariables.push({
+      find: "AUDIO_SRC",
+      replace: audioUrl
+    });
+    
+    // Ajouter la durée totale pour la musique
+    mergeVariables.push({
+      find: "AUDIO_DURATION",
+      replace: totalDuration.toString()
+    });
+  } else {
+    console.log("🔇 Aucune musique sélectionnée pour le diaporama");
+  }
+
+  console.log(`✅ Variables générées pour ${selectedImages.length} images avec une durée totale de ${totalDuration} secondes`);
+  console.log(`✅ Total de variables générées: ${mergeVariables.length}`);
+
+  return { mergeVariables, totalDuration };
+};
+
+// Conserver la fonction originale pour la rétrocompatibilité
 export const generateSlideShowClips = (selectedImages: string[], textElements: string[], config: any) => {
   const clips = [];
   let totalDuration = 0;
