@@ -66,7 +66,7 @@ export const SlideshowGenerationSection = ({
             {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
               <div className="space-y-4">
                 {!hasEnoughImages && (
-                  <Alert variant="warning" className="bg-amber-50 text-amber-800 border-amber-300">
+                  <Alert variant="default" className="bg-amber-50 text-amber-800 border-amber-300">
                     <AlertDescription>
                       Veuillez sélectionner au moins une image pour générer un diaporama.
                     </AlertDescription>
@@ -161,3 +161,4 @@ export const SlideshowGenerationSection = ({
     </div>
   );
 };
+
