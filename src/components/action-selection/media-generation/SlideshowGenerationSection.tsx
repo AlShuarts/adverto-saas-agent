@@ -16,6 +16,8 @@ type SlideshowGenerationSectionProps = {
   onRegenerateSlideshow: () => void;
   selectedImages: string[];
   selectedMusic: string | undefined;
+  toggleImageSelection?: (imageUrl: string) => void;
+  availableImages?: string[];
 };
 
 export const SlideshowGenerationSection = ({

@@ -101,7 +101,7 @@ export const MediaGenerationStep = ({
               selectedImages={selectedImages}
               selectedMusic={selectedMusic}
               toggleImageSelection={toggleImageSelection}
-              availableImages={availableImages} // Pass the listing images
+              availableImages={availableImages}
             />
           )}
           
