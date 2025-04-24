@@ -1,6 +1,7 @@
 
 import { MediaSelector } from "../media-selector";
 import { PublicationType } from "../types";
+import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
 
 type MediaStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -29,7 +30,21 @@ type MediaStepProps = {
   setBrokerPhone: (phone: string) => void;
   formErrors: {[key: string]: string};
   setFormErrors: (errors: {[key: string]: string}) => void;
-  listing?: any; // Add listing prop
+  listing?: any;
+  // Add slideshow generation props
+  isGeneratingSlideshow: boolean;
+  isGeneratingBanner: boolean;
+  slideshowUrl: string | null;
+  bannerUrl: string | null;
+  slideshowError: string | null;
+  bannerError: string | null;
+  slideshowRenderId: string | null;
+  bannerRenderId: string | null;
+  generateSlideshow: () => Promise<string | null>;
+  generateBanner: () => Promise<void>;
+  refetchSlideshowStatus: () => void;
+  handleRegenerateSlideshow: () => void;
+  handleRegenerateBanner: () => void;
 };
 
 export const MediaStep = ({
@@ -59,10 +74,26 @@ export const MediaStep = ({
   setBrokerPhone,
   formErrors,
   setFormErrors,
-  listing
+  listing,
+  isGeneratingSlideshow,
+  isGeneratingBanner,
+  slideshowUrl,
+  bannerUrl,
+  slideshowError,
+  bannerError,
+  slideshowRenderId,
+  bannerRenderId,
+  generateSlideshow,
+  generateBanner,
+  refetchSlideshowStatus,
+  handleRegenerateSlideshow,
+  handleRegenerateBanner
 }: MediaStepProps) => {
   // Make sure we have images available
   const availableImages = listing?.images || images;
+  
+  const showSlideshow = selectedPublicationTypes.includes("slideshow");
+  const showBanner = selectedPublicationTypes.includes("banner");
   
   return (
     <div className="space-y-6">
@@ -96,6 +127,45 @@ export const MediaStep = ({
         formErrors={formErrors}
         setFormErrors={setFormErrors}
       />
+      
+      {(showSlideshow || showBanner) && (
+        <MediaGenerationStep
+          selectedPublicationTypes={selectedPublicationTypes}
+          selectedImages={selectedImages}
+          isGeneratingSlideshow={isGeneratingSlideshow}
+          isGeneratingBanner={isGeneratingBanner}
+          slideshowUrl={slideshowUrl}
+          bannerUrl={bannerUrl}
+          slideshowError={slideshowError}
+          bannerError={bannerError}
+          slideshowRenderId={slideshowRenderId}
+          bannerRenderId={bannerRenderId}
+          formErrors={formErrors}
+          generateSlideshow={generateSlideshow}
+          generateBanner={generateBanner}
+          refetchSlideshowStatus={refetchSlideshowStatus}
+          bannerImage={bannerImage}
+          bannerType={bannerType}
+          setBannerType={setBannerType}
+          selectBannerImage={selectBannerImage}
+          brokerImageUrl={brokerImageUrl}
+          setBrokerImageUrl={setBrokerImageUrl}
+          agencyLogoUrl={agencyLogoUrl}
+          setAgencyLogoUrl={setAgencyLogoUrl}
+          brokerName={brokerName}
+          setBrokerName={setBrokerName}
+          brokerEmail={brokerEmail}
+          setBrokerEmail={setBrokerEmail}
+          brokerPhone={brokerPhone}
+          setBrokerPhone={setBrokerPhone}
+          setFormErrors={setFormErrors}
+          onRegenerateSlideshow={handleRegenerateSlideshow}
+          onRegenerateBanner={handleRegenerateBanner}
+          selectedMusic={selectedMusic}
+          toggleImageSelection={toggleImageSelection}
+          listing={listing}
+        />
+      )}
     </div>
   );
 };
