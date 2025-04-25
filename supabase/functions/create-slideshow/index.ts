@@ -1,9 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { prepareTextElements } from "./utils/textElements.ts";
-import { generateTemplateVariables } from "./utils/templateVariables.ts";
-import { generateSlideShowClips } from "./utils/clipGenerator.ts";
-import { renderWithShotstackTemplate, getShotstackTemplates } from "./services/shotstackService.ts";
+import { generateSlideshowTimeline } from "./utils/clipGenerator.ts";
+import { renderWithShotstack } from "./services/shotstackService.ts";
 import { getListingById, saveRenderRecord } from "./services/databaseService.ts";
 import { validateUser } from "./services/authService.ts";
 import { updateUsageStatistics } from "./services/statisticsService.ts";
@@ -42,10 +41,6 @@ serve(async (req) => {
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
 
-    // Template ID pour Shotstack
-    const TEMPLATE_ID = "dbbf3bc7-0bff-432b-896e-f736aa04bbd6";
-    const USE_TEMPLATE = true;
-
     // Récupération des données de l'annonce
     const listing = await getListingById(supabase, listingId);
     console.log("📋 Données du listing:", JSON.stringify(listing, null, 2));
@@ -58,27 +53,13 @@ serve(async (req) => {
     const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook`;
     console.log("🔗 URL du webhook configurée:", webhookUrl);
     
-    let renderId;
+    // Génération de la timeline pour le diaporama
+    const timeline = generateSlideshowTimeline(config.selectedImages, textElements, config);
+    console.log("🎬 Timeline générée:", JSON.stringify(timeline, null, 2));
     
-    if (USE_TEMPLATE) {
-      console.log("🧩 Utilisation du template Shotstack ID:", TEMPLATE_ID);
-      
-      const { mergeVariables, totalDuration } = generateTemplateVariables(
-        config.selectedImages,
-        textElements,
-        config
-      );
-      
-      renderId = await renderWithShotstackTemplate(
-        TEMPLATE_ID,
-        mergeVariables,
-        webhookUrl
-      );
-      
-      console.log("🎬 Rendu initialisé avec le template, ID:", renderId);
-    } else {
-      throw new Error("Mode sans template non supporté");
-    }
+    // Initialisation du rendu avec Shotstack
+    const renderId = await renderWithShotstack(timeline, webhookUrl);
+    console.log("🎬 Rendu initialisé, ID:", renderId);
     
     // Enregistrement du rendu dans la base de données
     await saveRenderRecord(supabase, {
