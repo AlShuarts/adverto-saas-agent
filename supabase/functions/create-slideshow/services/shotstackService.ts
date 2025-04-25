@@ -1,8 +1,43 @@
-
 /**
  * Service pour l'intégration avec l'API Shotstack
  * Permet de générer des diaporamas en utilisant soit des templates, soit des payloads complets
  */
+
+/**
+ * Récupérer la liste des templates disponibles
+ */
+export const getShotstackTemplates = async () => {
+  console.log("🎬 Récupération de la liste des templates Shotstack");
+  
+  try {
+    const apiKey = Deno.env.get("SHOTSTACK_API_KEY");
+    if (!apiKey) {
+      throw new Error("❌ Clé API Shotstack manquante dans les variables d'environnement.");
+    }
+
+    const response = await fetch('https://api.shotstack.io/v1/templates', {
+      method: 'GET',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log("✅ Statut de la réponse:", response.status);
+    
+    const data = await response.json();
+    console.log("📝 Templates disponibles:", JSON.stringify(data, null, 2));
+    
+    if (!response.ok) {
+      throw new Error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText} - ${JSON.stringify(data)}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("❌ Erreur lors de la récupération des templates:", error);
+    throw error;
+  }
+};
 
 /**
  * Rendre un diaporama en utilisant un template Shotstack
