@@ -45,10 +45,8 @@ export const useMediaState = (listingId: string) => {
       return;
     }
 
-    return await generateSlideshow({
-      selectedImages,
-      selectedMusic
-    });
+    // Fix: Pass the parameters directly instead of as an object
+    return await generateSlideshow(selectedImages, selectedMusic);
   };
 
   const { handleGenerateBanner } = useMediaGenerationHandlers(
