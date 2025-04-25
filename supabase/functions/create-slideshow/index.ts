@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { prepareTextElements } from "./utils/textElements.ts";
 import { generateSlideshowTimeline } from "./utils/clipGenerator.ts";
-import { renderWithShotstack } from "./services/shotstackService.ts";
+import { renderWithShotstack } from "./services/shotstack/renderService.ts";
 import { getListingById, saveRenderRecord } from "./services/databaseService.ts";
 import { validateUser } from "./services/authService.ts";
 import { updateUsageStatistics } from "./services/statisticsService.ts";
@@ -37,8 +37,9 @@ serve(async (req) => {
     }
 
     // Validation et préparation de la configuration
+    console.log("🎵 Vérification de la musique dans la requête:", rawConfig.selectedMusic || "aucune musique");
     const config = validateConfig(rawConfig);
-    console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
+    console.log("📜 Configuration validée:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
 
     // Récupération des données de l'annonce

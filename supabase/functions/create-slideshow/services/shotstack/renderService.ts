@@ -35,6 +35,17 @@ export const renderWithShotstack = async (timeline: any, webhookUrl: string) => 
       }
     }
     
+    // Vérifier si la timeline contient une piste audio
+    const hasAudioTrack = timeline.timeline.tracks.some(track => 
+      track.clips && track.clips.some(clip => clip.asset?.type === 'audio')
+    );
+    
+    if (hasAudioTrack) {
+      console.log("✅ Piste audio détectée dans la timeline");
+    } else {
+      console.log("⚠️ Aucune piste audio n'a été détectée dans la timeline");
+    }
+    
     const renderPayload: RenderRequest = {
       timeline: timeline.timeline,
       output: timeline.output,

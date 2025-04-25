@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { MoveVertical, Play, Pause } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type SlideshowConfigProps = {
   images: string[];
@@ -30,6 +31,12 @@ export const SlideshowConfig = ({
   handleMusicChange,
   previewMusic
 }: SlideshowConfigProps) => {
+  // Log pour le débogage
+  useEffect(() => {
+    console.log("SlideshowConfig - selectedMusic:", selectedMusic);
+    console.log("SlideshowConfig - musicList:", musicList);
+  }, [selectedMusic, musicList]);
+
   return (
     <div className="space-y-4 border rounded-md p-4">
       <h4 className="font-medium">Configuration du diaporama</h4>
@@ -105,7 +112,10 @@ export const SlideshowConfig = ({
         <div className="flex items-center gap-2">
           <Select 
             value={selectedMusic} 
-            onValueChange={handleMusicChange}
+            onValueChange={(value) => {
+              console.log("Musique sélectionnée via Select:", value);
+              handleMusicChange(value);
+            }}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Sélectionner une musique" />
@@ -131,6 +141,9 @@ export const SlideshowConfig = ({
                 <Play className="h-4 w-4" />}
             </Button>
           )}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          {selectedMusic ? `Musique sélectionnée: ${selectedMusic}` : "Aucune musique sélectionnée"}
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
@@ -34,7 +35,7 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
-      // Préparation du payload avec gestion correcte de la musique
+      // Préparation du payload en s'assurant que selectedMusic est bien inclus
       const payload = {
         listingId: listingId,
         config: {
@@ -43,8 +44,8 @@ export const useSlideshowGeneration = (listingId: string) => {
           showPrice: true,
           showAddress: true,
           selectedImages: selectedImages,
-          // S'assurer que selectedMusic est bien inclus même s'il est undefined ou vide
-          selectedMusic: selectedMusic
+          // S'assurer que selectedMusic est explicitement inclus, même s'il est undefined
+          selectedMusic: selectedMusic || null
         }
       };
       

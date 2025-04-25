@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useAudioPlayer = () => {
@@ -9,21 +9,27 @@ export const useAudioPlayer = () => {
   const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
 
   const fetchMusic = useCallback(async () => {
-    const { data, error } = await supabase.storage.from('background-music').list();
-    
-    if (!error && data) {
-      const musicFiles = data
-        .filter(file => !file.name.startsWith('.'))
-        .map(file => file.name);
+    try {
+      const { data, error } = await supabase.storage.from('background-music').list();
       
-      setMusicList(musicFiles);
-      if (musicFiles.length > 0) {
-        setSelectedMusic(musicFiles[0]);
+      if (!error && data) {
+        const musicFiles = data
+          .filter(file => !file.name.startsWith('.'))
+          .map(file => file.name);
+        
+        setMusicList(musicFiles);
+        if (musicFiles.length > 0) {
+          setSelectedMusic(musicFiles[0]);
+          console.log("Musique par défaut définie:", musicFiles[0]);
+        }
       }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des musiques:", error);
     }
   }, []);
 
   const handleMusicChange = useCallback((value: string) => {
+    console.log("Musique sélectionnée changée pour:", value);
     stopAudio();
     setSelectedMusic(value);
   }, []);
@@ -35,7 +41,9 @@ export const useAudioPlayer = () => {
     }
     stopAudio();
     const audio = new Audio();
-    audio.src = `${supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl}`;
+    const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
+    console.log("Prévisualisation de la musique:", musicName, "URL:", publicUrl);
+    audio.src = publicUrl;
     audio.volume = 0.5;
     audio.play();
     setAudioPlaying(audio);
@@ -50,6 +58,13 @@ export const useAudioPlayer = () => {
       setCurrentlyPlaying(null);
     }
   }, [audioPlaying]);
+
+  // Log the selected music whenever it changes for debugging
+  useEffect(() => {
+    if (selectedMusic) {
+      console.log("État actuel de la musique sélectionnée:", selectedMusic);
+    }
+  }, [selectedMusic]);
 
   return {
     // Fixed audioPlaying property to be a boolean as expected by the context

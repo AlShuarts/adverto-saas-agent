@@ -1,6 +1,8 @@
 
 export const generateSlideshowTimeline = (selectedImages: string[], textElements: string[], config: any) => {
   console.log("🎬 Génération de la timeline pour", selectedImages.length, "images");
+  console.log("Configuration reçue dans clipGenerator:", JSON.stringify(config, null, 2));
+  
   const tracks: any[] = [];
   const duration = config.imageDuration || 3;
   let totalDuration = selectedImages.length * duration;
@@ -100,6 +102,8 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
         length: totalDuration
       }]
     });
+  } else {
+    console.log("⚠️ Aucune musique n'a été configurée pour ce diaporama");
   }
 
   const timeline = {

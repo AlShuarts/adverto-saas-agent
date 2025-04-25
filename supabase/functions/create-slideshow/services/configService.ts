@@ -22,6 +22,7 @@ export const validateConfig = (config: any) => {
   };
   
   console.log("Configuration après traitement:", JSON.stringify(processedConfig, null, 2));
+  console.log("URL de la musique calculée:", processedConfig.musicUrl);
   
   return processedConfig;
 };

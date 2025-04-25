@@ -20,6 +20,14 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
       
       console.log("Configuration envoyée:", config);
       console.log("Musique sélectionnée:", config.selectedMusic || "aucune");
+      
+      // Vérification si une musique est sélectionnée
+      if (config.selectedMusic) {
+        console.log("Une musique est bien sélectionnée:", config.selectedMusic);
+      } else {
+        console.log("Aucune musique n'est sélectionnée");
+      }
+      
       await ensureAndIncrementStatistic('slideshow');
       
       const payload = {
@@ -30,7 +38,7 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
           showPrice: true,
           showAddress: true,
           selectedImages: config.selectedImages,
-          // Toujours inclure selectedMusic pour une meilleure traçabilité
+          // S'assurer d'envoyer explicitement la musique sélectionnée
           selectedMusic: config.selectedMusic || null
         }
       };
