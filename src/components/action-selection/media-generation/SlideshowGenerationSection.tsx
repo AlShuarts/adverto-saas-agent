@@ -94,6 +94,11 @@ export const SlideshowGenerationSection = ({
                 <Loader className="h-8 w-8 animate-spin text-primary" />
                 <p>Génération du diaporama en cours...</p>
                 <p className="text-xs text-muted-foreground">Cela peut prendre quelques minutes.</p>
+                {selectedMusic && (
+                  <p className="text-xs text-muted-foreground">
+                    Avec musique: {selectedMusic}
+                  </p>
+                )}
               </div>
             )}
             

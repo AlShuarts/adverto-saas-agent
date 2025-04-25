@@ -35,14 +35,6 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
-      // Convertir l'URL relative de la musique en URL complète si une musique est sélectionnée
-      let musicUrl = null;
-      if (selectedMusic) {
-        const { data } = supabase.storage.from('background-music').getPublicUrl(selectedMusic);
-        musicUrl = data.publicUrl;
-        console.log("URL de la musique:", musicUrl);
-      }
-      
       // Préparation du payload avec gestion du cas où selectedMusic est undefined
       const payload: { 
         listingId: string, 
@@ -58,13 +50,10 @@ export const useSlideshowGeneration = (listingId: string) => {
         }
       };
       
-      // Ajouter musicUrl et selectedMusic au payload seulement s'ils sont définis
+      // Ajouter selectedMusic au payload seulement s'il est défini
       if (selectedMusic) {
         payload.config.selectedMusic = selectedMusic;
-      }
-      
-      if (musicUrl) {
-        payload.config.musicUrl = musicUrl;
+        console.log("Musique ajoutée au payload:", selectedMusic);
       }
       
       const { data, error } = await supabase.functions.invoke("create-slideshow", {

@@ -106,7 +106,7 @@ const generateImageAndTextClips = (
 
 const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip | null => {
   if (config.musicUrl) {
-    console.log(`🎵 Ajout de la musique: ${config.musicUrl}`);
+    console.log(`🎵 Ajout de la musique (URL directe): ${config.musicUrl}`);
     return {
       asset: { type: 'audio', src: config.musicUrl },
       start: 0,
@@ -117,6 +117,7 @@ const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip
   if (config.selectedMusic) {
     console.log(`🎵 Utilisation du format legacy pour la musique: ${config.selectedMusic}`);
     const audioUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    console.log(`🎵 URL complète générée pour la musique: ${audioUrl}`);
     return {
       asset: { type: 'audio', src: audioUrl },
       start: 0,

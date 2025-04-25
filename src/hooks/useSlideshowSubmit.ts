@@ -19,6 +19,7 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
       if (!user) throw new Error("User not authenticated");
       
       console.log("Configuration envoyée:", config);
+      console.log("Musique sélectionnée:", config.selectedMusic || "aucune");
       await ensureAndIncrementStatistic('slideshow');
       
       const response = await supabase.functions.invoke("create-slideshow", {

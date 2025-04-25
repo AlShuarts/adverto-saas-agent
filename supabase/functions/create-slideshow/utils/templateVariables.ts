@@ -68,12 +68,13 @@ const generateAudioVariables = (config: SlideshowConfig, totalDuration: number):
   const variables: MergeVariable[] = [];
   
   if (config.musicUrl) {
-    console.log(`🎵 Ajout de la musique: ${config.musicUrl}`);
+    console.log(`🎵 Ajout de la musique (URL directe): ${config.musicUrl}`);
     variables.push({ find: "AUDIO_SRC", replace: config.musicUrl });
   } 
   else if (config.selectedMusic) {
     console.log(`🎵 Utilisation du format legacy pour la musique: ${config.selectedMusic}`);
     const audioUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    console.log(`🎵 URL complète générée pour la musique: ${audioUrl}`);
     variables.push({ find: "AUDIO_SRC", replace: audioUrl });
   } 
   else {
