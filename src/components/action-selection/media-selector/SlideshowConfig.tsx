@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { MoveVertical, Play, Pause } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 type SlideshowConfigProps = {
   images: string[];
@@ -31,11 +31,14 @@ export const SlideshowConfig = ({
   handleMusicChange,
   previewMusic
 }: SlideshowConfigProps) => {
-  // Log de débogage amélioré
+  // Debug logging
   useEffect(() => {
-    console.log("SlideshowConfig - selectedMusic:", selectedMusic);
-    console.log("SlideshowConfig - musicList:", musicList);
-  }, [selectedMusic, musicList]);
+    console.log("SlideshowConfig rendered with:", {
+      selectedMusic,
+      currentlyPlaying,
+      musicList
+    });
+  }, [selectedMusic, currentlyPlaying, musicList]);
 
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -113,7 +116,7 @@ export const SlideshowConfig = ({
           <Select 
             value={selectedMusic} 
             onValueChange={(value) => {
-              console.log("Musique sélectionnée via Select:", value);
+              console.log("Music selection changed in Select:", value);
               handleMusicChange(value);
             }}
           >
@@ -134,17 +137,26 @@ export const SlideshowConfig = ({
               type="button" 
               variant="outline" 
               size="icon" 
-              onClick={() => previewMusic(selectedMusic)}
+              onClick={() => {
+                console.log("Preview button clicked for:", selectedMusic);
+                previewMusic(selectedMusic);
+              }}
+              className="flex-shrink-0"
             >
-              {currentlyPlaying === selectedMusic ? 
-                <Pause className="h-4 w-4" /> : 
-                <Play className="h-4 w-4" />}
+              {currentlyPlaying === selectedMusic ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
             </Button>
           )}
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          {selectedMusic ? `Musique sélectionnée: ${selectedMusic}` : "Aucune musique sélectionnée"}
-        </div>
+        
+        {selectedMusic && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Musique sélectionnée: {selectedMusic.replace(/\.[^/.]+$/, "")}
+          </p>
+        )}
       </div>
     </div>
   );

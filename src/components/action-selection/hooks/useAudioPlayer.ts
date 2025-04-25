@@ -18,40 +18,50 @@ export const useAudioPlayer = () => {
           .map(file => file.name);
         
         setMusicList(musicFiles);
-        if (musicFiles.length > 0) {
+        // Only set default music if no music is currently selected
+        if (musicFiles.length > 0 && !selectedMusic) {
           setSelectedMusic(musicFiles[0]);
-          console.log("Musique par défaut définie:", musicFiles[0]);
+          console.log("Default music set to:", musicFiles[0]);
         }
       }
     } catch (error) {
-      console.error("Erreur lors de la récupération des musiques:", error);
+      console.error("Error fetching music:", error);
     }
-  }, []);
+  }, [selectedMusic]);
 
   const handleMusicChange = useCallback((value: string) => {
-    console.log("Musique sélectionnée changée pour:", value);
+    console.log("Music selection changed to:", value);
     stopAudio();
     setSelectedMusic(value);
   }, []);
 
   const previewMusic = useCallback((musicName: string) => {
+    console.log("Attempting to preview music:", musicName);
+    
     if (currentlyPlaying === musicName) {
+      console.log("Stopping current music preview");
       stopAudio();
       return;
     }
+
     stopAudio();
     const audio = new Audio();
     const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
-    console.log("Prévisualisation de la musique:", musicName, "URL:", publicUrl);
+    console.log("Playing music preview from URL:", publicUrl);
+    
     audio.src = publicUrl;
     audio.volume = 0.5;
-    audio.play();
+    audio.play().catch(error => {
+      console.error("Error playing audio:", error);
+    });
+    
     setAudioPlaying(audio);
     setCurrentlyPlaying(musicName);
   }, [currentlyPlaying]);
 
   const stopAudio = useCallback(() => {
     if (audioPlaying) {
+      console.log("Stopping audio playback");
       audioPlaying.pause();
       audioPlaying.currentTime = 0;
       setAudioPlaying(null);
@@ -59,15 +69,22 @@ export const useAudioPlayer = () => {
     }
   }, [audioPlaying]);
 
-  // Log l'état de la musique sélectionnée à chaque changement
+  // Fetch music on component mount
   useEffect(() => {
-    if (selectedMusic) {
-      console.log("État actuel de la musique sélectionnée:", selectedMusic);
-    }
-  }, [selectedMusic]);
+    console.log("Initial music fetch");
+    fetchMusic();
+  }, []);
+
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log("Music state updated:", {
+      selectedMusic,
+      currentlyPlaying,
+      musicList
+    });
+  }, [selectedMusic, currentlyPlaying, musicList]);
 
   return {
-    // Fixed audioPlaying property to be a boolean as expected by the context
     audioPlaying: !!audioPlaying,
     currentlyPlaying,
     musicList,
