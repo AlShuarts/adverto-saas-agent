@@ -14,20 +14,37 @@ interface RenderRequest {
     };
   };
   callback?: string;
+  merge?: any[];
 }
 
 export const renderWithShotstack = async (timeline: any, webhookUrl: string) => {
   console.log("🚀 Envoi du rendu à Shotstack");
-  console.log("📝 Timeline:", JSON.stringify(timeline, null, 2));
   
   try {
     const apiKey = getShotstackApiKey();
+    
+    // Vérifier que la timeline est correctement formatée
+    if (!timeline || !timeline.timeline || !timeline.timeline.tracks) {
+      throw new Error("Timeline incorrecte ou mal formatée");
+    }
+    
+    // Vérifier que chaque track a des clips
+    for (const track of timeline.timeline.tracks) {
+      if (!track.clips || !Array.isArray(track.clips) || track.clips.length === 0) {
+        console.warn("Track sans clips détecté:", track);
+      }
+    }
     
     const renderPayload: RenderRequest = {
       timeline: timeline.timeline,
       output: timeline.output,
       callback: webhookUrl
     };
+    
+    // Ajouter les remplacements merge si présents
+    if (timeline.merge && Array.isArray(timeline.merge) && timeline.merge.length > 0) {
+      renderPayload.merge = timeline.merge;
+    }
     
     console.log("📝 Payload de rendu:", JSON.stringify(renderPayload, null, 2));
     
@@ -69,4 +86,3 @@ export const renderWithShotstack = async (timeline: any, webhookUrl: string) => 
     throw error;
   }
 };
-

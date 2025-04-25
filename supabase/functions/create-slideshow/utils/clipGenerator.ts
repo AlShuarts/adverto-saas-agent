@@ -3,10 +3,11 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
   console.log("🎬 Génération de la timeline pour", selectedImages.length, "images");
   const tracks: any[] = [];
   const duration = config.imageDuration || 3;
-  let currentStart = 0;
-
+  let totalDuration = selectedImages.length * duration;
+  
   // Track pour les textes
   const textClips: any[] = [];
+  
   textElements.forEach((text, index) => {
     if (text) {
       textClips.push({
@@ -34,7 +35,7 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
             vertical: "center"
           }
         },
-        start: currentStart,
+        start: index * duration,
         length: duration,
         offset: {
           x: 0,
@@ -43,7 +44,6 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
         position: "center"
       });
     }
-    currentStart += duration;
   });
 
   if (textClips.length > 0) {
@@ -53,34 +53,37 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
   }
 
   // Track pour les images
-  currentStart = 0;
   const imageClips: any[] = [];
   
   selectedImages.forEach((imageUrl, index) => {
+    const isFirst = index === 0;
+    const effect = index % 2 === 0 ? "slideLeftSlow" : "slideRightSlow";
+    const offset = {
+      x: index % 2 === 0 ? 0.041 : (index % 3 === 0 ? -0.037 : index % 5 === 0 ? 0.027 : -0.016),
+      y: 0
+    };
+    
     imageClips.push({
       asset: {
         type: "image",
         src: imageUrl
       },
-      start: currentStart,
+      start: index * duration,
       length: duration,
-      effect: index % 2 === 0 ? "slideLeftSlow" : "slideRightSlow",
+      effect: effect,
       fit: "cover",
-      scale: index === 0 ? 1.413 : 1,
+      scale: isFirst ? 1.413 : 1,
       position: "center",
       opacity: 1,
-      offset: {
-        x: 0,
-        y: 0
-      }
+      offset: offset
     });
-    
-    currentStart += duration;
   });
 
-  tracks.push({
-    clips: imageClips
-  });
+  if (imageClips.length > 0) {
+    tracks.push({
+      clips: imageClips
+    });
+  }
 
   // Track audio
   if (config.musicUrl || config.selectedMusic) {
@@ -97,7 +100,7 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
           volume: 1
         },
         start: 0,
-        length: selectedImages.length * duration
+        length: totalDuration
       }]
     });
   }
@@ -120,4 +123,3 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
   console.log("✅ Timeline générée avec succès");
   return { timeline, output };
 };
-

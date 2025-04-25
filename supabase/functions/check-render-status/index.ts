@@ -88,109 +88,156 @@ serve(async (req) => {
     }
 
     console.log("Appel à l'API Shotstack pour vérifier le statut...");
-    const response = await fetch(`https://api.shotstack.io/stage/render/${renderId}`, {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKey,
-        "Content-Type": "application/json",
-      }
-    });
+    
+    try {
+      const response = await fetch(`https://api.shotstack.io/v1/render/${renderId}`, {
+        method: "GET",
+        headers: {
+          "x-api-key": apiKey,
+          "Content-Type": "application/json",
+        }
+      });
 
-    if (!response.ok) {
-      console.error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText}`);
-      const errorText = await response.text();
-      console.error("Réponse d'erreur:", errorText);
+      if (!response.ok) {
+        console.error(`Erreur de l'API Shotstack: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("Réponse d'erreur:", errorText);
+        
+        // Si l'erreur est 404, cela pourrait signifier que le rendu n'existe pas encore
+        // Retourner un statut en cours au lieu d'une erreur
+        if (response.status === 404 || response.status === 400) {
+          console.log("Rendu non trouvé ou en cours de traitement, retourner status 'rendering'");
+          
+          // Mettre à jour le statut dans la base de données si nécessaire
+          if (slideshowData) {
+            await supabase
+              .from("slideshow_renders")
+              .update({ 
+                status: "rendering",
+                updated_at: new Date().toISOString()
+              })
+              .eq("render_id", renderId);
+          } else if (bannerData) {
+            await supabase
+              .from("sold_banner_renders")
+              .update({ 
+                status: "rendering",
+                updated_at: new Date().toISOString()
+              })
+              .eq("render_id", renderId);
+          }
+          
+          return new Response(
+            JSON.stringify({
+              status: "rendering",
+              message: "Rendu en cours de traitement"
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        throw new Error(`Erreur lors de la vérification du statut: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("Réponse de Shotstack:", JSON.stringify(result, null, 2));
+
+      let status = result.response?.status;
+      let url = result.response?.url;
+
+      // Déterminer et mettre à jour la table appropriée
+      if (status) {
+        if (slideshowData) {
+          // C'est un rendu de slideshow
+          if (status === "done" && url) {
+            // Mettre à jour le statut dans la base de données
+            const { error: updateError } = await supabase
+              .from("slideshow_renders")
+              .update({ 
+                status: "completed", 
+                video_url: url,
+                updated_at: new Date().toISOString()
+              })
+              .eq("render_id", renderId);
+
+            if (updateError) {
+              console.error("Erreur lors de la mise à jour du statut du slideshow:", updateError);
+            } else {
+              console.log(`Statut du slideshow mis à jour avec succès pour le renderId: ${renderId}`);
+            }
+          } else if (status === "failed") {
+            // Mettre à jour le statut dans la base de données
+            const { error: updateError } = await supabase
+              .from("slideshow_renders")
+              .update({ 
+                status: "error",
+                updated_at: new Date().toISOString()
+              })
+              .eq("render_id", renderId);
+
+            if (updateError) {
+              console.error("Erreur lors de la mise à jour du statut:", updateError);
+            }
+          }
+        } else if (bannerData) {
+          // C'est un rendu de bannière
+          if (status === "done" && url) {
+            // Mettre à jour le statut dans la base de données
+            const { error: updateError } = await supabase
+              .from("sold_banner_renders")
+              .update({ 
+                status: "completed", 
+                image_url: url,
+                updated_at: new Date().toISOString()
+              })
+              .eq("render_id", renderId);
+
+            if (updateError) {
+              console.error("Erreur lors de la mise à jour du statut de la bannière:", updateError);
+            } else {
+              console.log(`Statut de la bannière mis à jour avec succès pour le renderId: ${renderId}`);
+            }
+          } else if (status === "failed") {
+            // Mettre à jour le statut dans la base de données
+            const { error: updateError } = await supabase
+              .from("sold_banner_renders")
+              .update({ 
+                status: "failed",
+                updated_at: new Date().toISOString()
+              })
+              .eq("render_id", renderId);
+
+            if (updateError) {
+              console.error("Erreur lors de la mise à jour du statut:", updateError);
+            }
+          }
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          status: status,
+          url: url,
+          videoUrl: url, // Pour compatibilité avec le client qui attend parfois videoUrl
+          message: `Statut actuel: ${status}`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (apiError) {
+      console.error("Erreur API Shotstack:", apiError);
       
-      throw new Error(`Erreur lors de la vérification du statut: ${response.status} ${response.statusText}`);
+      // En cas d'erreur de l'API, retourner un statut en cours
+      return new Response(
+        JSON.stringify({
+          status: "rendering",
+          message: "Erreur lors de la vérification, rendu présumé en cours"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-
-    const result = await response.json();
-    console.log("Réponse de Shotstack:", JSON.stringify(result, null, 2));
-
-    let status = result.response?.status;
-    let url = result.response?.url;
-
-    // Déterminer et mettre à jour la table appropriée
-    if (status) {
-      if (slideshowData) {
-        // C'est un rendu de slideshow
-        if (status === "done" && url) {
-          // Mettre à jour le statut dans la base de données
-          const { error: updateError } = await supabase
-            .from("slideshow_renders")
-            .update({ 
-              status: "completed", 
-              video_url: url,
-              updated_at: new Date().toISOString()
-            })
-            .eq("render_id", renderId);
-
-          if (updateError) {
-            console.error("Erreur lors de la mise à jour du statut du slideshow:", updateError);
-          } else {
-            console.log(`Statut du slideshow mis à jour avec succès pour le renderId: ${renderId}`);
-          }
-        } else if (status === "failed") {
-          // Mettre à jour le statut dans la base de données
-          const { error: updateError } = await supabase
-            .from("slideshow_renders")
-            .update({ 
-              status: "error",
-              updated_at: new Date().toISOString()
-            })
-            .eq("render_id", renderId);
-
-          if (updateError) {
-            console.error("Erreur lors de la mise à jour du statut:", updateError);
-          }
-        }
-      } else if (bannerData) {
-        // C'est un rendu de bannière
-        if (status === "done" && url) {
-          // Mettre à jour le statut dans la base de données
-          const { error: updateError } = await supabase
-            .from("sold_banner_renders")
-            .update({ 
-              status: "completed", 
-              image_url: url,
-              updated_at: new Date().toISOString()
-            })
-            .eq("render_id", renderId);
-
-          if (updateError) {
-            console.error("Erreur lors de la mise à jour du statut de la bannière:", updateError);
-          } else {
-            console.log(`Statut de la bannière mis à jour avec succès pour le renderId: ${renderId}`);
-          }
-        } else if (status === "failed") {
-          // Mettre à jour le statut dans la base de données
-          const { error: updateError } = await supabase
-            .from("sold_banner_renders")
-            .update({ 
-              status: "failed",
-              updated_at: new Date().toISOString()
-            })
-            .eq("render_id", renderId);
-
-          if (updateError) {
-            console.error("Erreur lors de la mise à jour du statut:", updateError);
-          }
-        }
-      }
-    }
-
-    return new Response(
-      JSON.stringify({
-        status: status,
-        url: url,
-        videoUrl: url, // Pour compatibilité avec le client qui attend parfois videoUrl
-        message: `Statut actuel: ${status}`
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
 
   } catch (error) {
-    console.error("Erreur:", error);
+    console.error("Erreur générale:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }

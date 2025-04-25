@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Loader2, Video, Play } from "lucide-react";
+import { Loader2, Video, Play, RefreshCw } from "lucide-react";
 
 type SlideshowStepProps = {
   isGeneratingSlideshow: boolean;
@@ -11,6 +11,7 @@ type SlideshowStepProps = {
   onGenerateSlideshow: () => Promise<string | null>;
   onRegenerateSlideshow: () => void;
   onCheckStatus: () => void;
+  isManualChecking?: boolean;
 };
 
 export const SlideshowStep = ({
@@ -22,6 +23,7 @@ export const SlideshowStep = ({
   onGenerateSlideshow,
   onRegenerateSlideshow,
   onCheckStatus,
+  isManualChecking = false,
 }: SlideshowStepProps) => {
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -53,8 +55,20 @@ export const SlideshowStep = ({
                 variant="outline" 
                 size="sm"
                 onClick={onCheckStatus}
+                disabled={isManualChecking}
+                className="flex items-center gap-2"
               >
-                Vérifier le statut
+                {isManualChecking ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Vérification en cours...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Vérifier le statut
+                  </>
+                )}
               </Button>
             </div>
           ) : (
