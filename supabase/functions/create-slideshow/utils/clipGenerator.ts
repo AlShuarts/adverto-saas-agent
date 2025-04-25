@@ -17,34 +17,44 @@ export const generateTemplateVariables = (selectedImages: string[], textElements
     throw new Error("Au moins une image est requise pour créer un diaporama");
   }
 
-  // Créer des variables pour chaque image
-  for (let i = 0; i < selectedImages.length; i++) {
-    const imageUrl = selectedImages[i];
-    const variableName = `IMAGE_SRC_${i + 1}`;
+  // Mapper chaque image à une variable de merge
+  // Nous utilisons un format différent car le template s'attend à des variables spécifiques
+  selectedImages.forEach((imageUrl, index) => {
+    // L'index commence à 1 pour correspondre à la convention du template
+    const slideNumber = index + 1;
     
-    // Ajouter l'URL de l'image comme variable
+    // Ajouter l'URL de l'image
     mergeVariables.push({
-      find: variableName,
+      find: `IMAGE_SRC_${slideNumber}`,
       replace: imageUrl
     });
-
-    // Ajouter le texte correspondant si disponible
-    if (textElements[i]) {
-      const textVariableName = `TEXT_VAR_${i + 1}`;
-      mergeVariables.push({
-        find: textVariableName,
-        replace: textElements[i]
-      });
-    } else {
-      // Texte vide par défaut si non disponible
-      const textVariableName = `TEXT_VAR_${i + 1}`;
-      mergeVariables.push({
-        find: textVariableName,
-        replace: ""
-      });
-    }
-
+    
+    // Ajouter le texte associé si disponible
+    const slideText = textElements[index] || "";
+    mergeVariables.push({
+      find: `TEXT_VAR_${slideNumber}`,
+      replace: slideText
+    });
+    
     totalDuration += slideDuration;
+  });
+  
+  // Maintenant nous devons compléter toutes les variables attendues par le template
+  // même si nous n'avons pas assez d'images
+  // Le template peut attendre un nombre fixe de slides (ex: 10)
+  const MAX_SLIDES = 10; // Nombre maximum de slides attendu par le template
+  
+  // Si on a moins d'images que le maximum attendu, ajouter des variables vides
+  for (let i = selectedImages.length + 1; i <= MAX_SLIDES; i++) {
+    mergeVariables.push({
+      find: `IMAGE_SRC_${i}`,
+      replace: "https://placehold.co/1920x1080/black/white?text=No+Image"
+    });
+    
+    mergeVariables.push({
+      find: `TEXT_VAR_${i}`,
+      replace: ""
+    });
   }
 
   // Ajouter une variable pour l'audio
@@ -77,10 +87,21 @@ export const generateTemplateVariables = (selectedImages: string[], textElements
     });
   } else {
     console.log("🔇 Aucune musique sélectionnée pour le diaporama");
+    // Ajouter quand même une variable audio vide (ou URL par défaut) pour éviter des erreurs
+    mergeVariables.push({
+      find: "AUDIO_SRC",
+      replace: "" // ou une URL vers un fichier audio silencieux
+    });
+    
+    mergeVariables.push({
+      find: "AUDIO_DURATION",
+      replace: totalDuration.toString()
+    });
   }
 
   console.log(`✅ Variables générées pour ${selectedImages.length} images avec une durée totale de ${totalDuration} secondes`);
   console.log(`✅ Total de variables générées: ${mergeVariables.length}`);
+  console.log(`📝 Variables de fusion: ${JSON.stringify(mergeVariables, null, 2)}`);
 
   return { mergeVariables, totalDuration };
 };

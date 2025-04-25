@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
 import { generateSlideShowClips, generateTemplateVariables } from "./utils/clipGenerator.ts";
-import { renderWithShotstack, renderWithShotstackTemplate } from "./services/shotstackService.ts";
+import { renderWithShotstack, renderWithShotstackTemplate, getShotstackTemplates } from "./services/shotstackService.ts";
 import { getListingById, saveRenderRecord } from "./services/databaseService.ts";
 
 const corsHeaders = {
@@ -48,6 +48,11 @@ serve(async (req) => {
     }
 
     // ID du template Shotstack
+    // Pour debug: afficher la liste des templates disponibles
+    // Décommenter cette ligne pour voir tous les templates disponibles
+    // await getShotstackTemplates();
+    
+    // Template standard pour diaporama (assurez-vous que ce template existe)
     const TEMPLATE_ID = "dbbf3bc7-0bff-432b-896e-f736aa04bbd6";
     // Activer l'utilisation des templates avec la nouvelle clé API
     const USE_TEMPLATE = true;

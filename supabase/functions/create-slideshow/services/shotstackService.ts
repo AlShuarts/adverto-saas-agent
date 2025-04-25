@@ -1,3 +1,4 @@
+
 /**
  * Service pour l'intégration avec l'API Shotstack
  * Permet de générer des diaporamas en utilisant soit des templates, soit des payloads complets
@@ -79,7 +80,8 @@ export const renderWithShotstackTemplate = async (templateId: string, mergeVaria
       try {
         console.log(`✨ Tentative d'envoi #${attempts+1} à l'API Shotstack (Template)`);
         
-        const response = await fetch("https://api.shotstack.io/edit/v1/templates/render", {
+        // Utiliser l'URL de l'API correcte pour l'environnement de production
+        const response = await fetch("https://api.shotstack.io/v1/templates/render", {
           method: "POST",
           headers: {
             "x-api-key": apiKey,
