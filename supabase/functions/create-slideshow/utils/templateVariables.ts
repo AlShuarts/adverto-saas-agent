@@ -1,4 +1,3 @@
-
 /**
  * Handles the generation of template variables for Shotstack
  */
@@ -54,8 +53,21 @@ export const generateTemplateVariables = (selectedImages: string[], textElements
     });
   }
 
-  // Add audio variables
-  mergeVariables.push(...generateAudioVariables(config, totalDuration));
+  // Add audio variables with proper validation
+  if (config.musicUrl) {
+    console.log(`🎵 Ajout de la musique depuis l'URL: ${config.musicUrl}`);
+    mergeVariables.push(
+      { find: "AUDIO_SRC", replace: config.musicUrl },
+      { find: "AUDIO_DURATION", replace: totalDuration.toString() }
+    );
+  } else {
+    console.log("🔇 Aucune musique sélectionnée pour le diaporama");
+    // Remove audio track entirely if no music is selected
+    mergeVariables.push(
+      { find: "AUDIO_SRC", replace: "none" },
+      { find: "AUDIO_DURATION", replace: totalDuration.toString() }
+    );
+  }
 
   console.log(`✅ Variables générées pour ${selectedImages.length} images avec une durée totale de ${totalDuration} secondes`);
   console.log(`✅ Total de variables générées: ${mergeVariables.length}`);
@@ -79,7 +91,7 @@ const generateAudioVariables = (config: SlideshowConfig, totalDuration: number):
   } 
   else {
     console.log("🔇 Aucune musique sélectionnée pour le diaporama");
-    variables.push({ find: "AUDIO_SRC", replace: "" });
+    variables.push({ find: "AUDIO_SRC", replace: "none" });
   }
   
   variables.push({ find: "AUDIO_DURATION", replace: totalDuration.toString() });

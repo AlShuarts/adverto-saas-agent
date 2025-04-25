@@ -2,6 +2,6 @@
 export interface SlideshowConfig {
   selectedImages: string[];
   imageDuration?: number;
-  musicUrl?: string;
-  selectedMusic?: string;
+  musicUrl?: string | null;
+  selectedMusic?: string | null;
 }
