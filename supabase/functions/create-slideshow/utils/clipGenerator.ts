@@ -5,11 +5,58 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
   const duration = config.imageDuration || 3;
   let currentStart = 0;
 
+  // Track pour les textes
+  const textClips: any[] = [];
+  textElements.forEach((text, index) => {
+    if (text) {
+      textClips.push({
+        asset: {
+          type: "text",
+          text: text,
+          width: 500,
+          height: index === 0 ? 150 : 50, // Premier texte plus haut pour l'adresse
+          font: {
+            family: "Poppins",
+            color: "#ffffff",
+            opacity: 1,
+            size: 30,
+            weight: 500,
+            lineHeight: 1.5
+          },
+          background: {
+            color: "#000000",
+            opacity: 0.3,
+            borderRadius: 0,
+            padding: 1
+          },
+          alignment: {
+            horizontal: "center",
+            vertical: "center"
+          }
+        },
+        start: currentStart,
+        length: duration,
+        offset: {
+          x: 0,
+          y: -0.4
+        },
+        position: "center"
+      });
+    }
+    currentStart += duration;
+  });
+
+  if (textClips.length > 0) {
+    tracks.push({
+      clips: textClips
+    });
+  }
+
   // Track pour les images
+  currentStart = 0;
   const imageClips: any[] = [];
   
   selectedImages.forEach((imageUrl, index) => {
-    // Image clip
     imageClips.push({
       asset: {
         type: "image",
@@ -17,85 +64,41 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
       },
       start: currentStart,
       length: duration,
-      effect: "zoomIn",
-      transition: {
-        in: index === 0 ? "fade" : "fade",
-        out: "fade"
-      },
-      fit: "cover"
+      effect: index % 2 === 0 ? "slideLeftSlow" : "slideRightSlow",
+      fit: "cover",
+      scale: index === 0 ? 1.413 : 1,
+      position: "center",
+      opacity: 1,
+      offset: {
+        x: 0,
+        y: 0
+      }
     });
-
+    
     currentStart += duration;
   });
 
-  // Ajout du track d'images
   tracks.push({
     clips: imageClips
   });
 
-  // Track pour les textes si disponibles
-  if (textElements.length > 0) {
-    const textClips: any[] = [];
-    currentStart = 0;
+  // Track audio
+  if (config.musicUrl || config.selectedMusic) {
+    const musicUrl = config.musicUrl || 
+      `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
     
-    textElements.forEach((text, index) => {
-      if (text) {
-        textClips.push({
-          asset: {
-            type: "text",
-            text: text,
-            style: "minimal",
-            size: "x-large"
-          },
-          start: currentStart,
-          length: duration,
-          position: "bottom",
-          transition: {
-            in: "fade",
-            out: "fade"
-          }
-        });
-      }
-      
-      currentStart += duration;
-    });
+    console.log("🎵 Ajout de la musique:", musicUrl);
     
-    // N'ajouter le track de texte que s'il y a effectivement des clips de texte
-    if (textClips.length > 0) {
-      tracks.push({
-        clips: textClips
-      });
-    }
-  }
-
-  // Audio track configuration
-  if (config.musicUrl) {
-    console.log("🎵 Ajout de la musique:", config.musicUrl);
     tracks.push({
-      clips: [
-        {
-          asset: {
-            type: "audio",
-            src: config.musicUrl
-          },
-          effect: "fadeInFadeOut"
-        }
-      ]
-    });
-  } else if (config.selectedMusic) {
-    // Utilisation de la musique sélectionnée depuis le bucket Supabase
-    const musicUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
-    console.log("🎵 Ajout de la musique sélectionnée:", musicUrl);
-    tracks.push({
-      clips: [
-        {
-          asset: {
-            type: "audio",
-            src: musicUrl
-          },
-          effect: "fadeInFadeOut"
-        }
-      ]
+      clips: [{
+        asset: {
+          type: "audio",
+          src: musicUrl,
+          volume: 1
+        },
+        start: 0,
+        length: selectedImages.length * duration
+      }]
     });
   }
 
@@ -104,6 +107,17 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
     tracks: tracks
   };
 
+  // Configuration de sortie améliorée
+  const output = {
+    format: "mp4",
+    fps: 25,
+    size: {
+      width: 1280,
+      height: 720
+    }
+  };
+
   console.log("✅ Timeline générée avec succès");
-  return timeline;
+  return { timeline, output };
 };
+

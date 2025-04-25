@@ -7,8 +7,11 @@ interface RenderRequest {
   timeline: any;
   output?: {
     format?: string;
-    resolution?: string;
-    aspectRatio?: string;
+    fps?: number;
+    size?: {
+      width: number;
+      height: number;
+    };
   };
   callback?: string;
 }
@@ -21,12 +24,8 @@ export const renderWithShotstack = async (timeline: any, webhookUrl: string) => 
     const apiKey = getShotstackApiKey();
     
     const renderPayload: RenderRequest = {
-      timeline: timeline,
-      output: {
-        format: "mp4",
-        resolution: "1080",
-        aspectRatio: "16:9"
-      },
+      timeline: timeline.timeline,
+      output: timeline.output,
       callback: webhookUrl
     };
     
@@ -70,3 +69,4 @@ export const renderWithShotstack = async (timeline: any, webhookUrl: string) => 
     throw error;
   }
 };
+
