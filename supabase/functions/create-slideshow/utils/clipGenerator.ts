@@ -86,17 +86,14 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
   }
 
   // Track audio
-  if (config.musicUrl || config.selectedMusic) {
-    const musicUrl = config.musicUrl || 
-      `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
-    
-    console.log("🎵 Ajout de la musique:", musicUrl);
+  if (config.musicUrl) {
+    console.log("🎵 Ajout de la musique:", config.musicUrl);
     
     tracks.push({
       clips: [{
         asset: {
           type: "audio",
-          src: musicUrl,
+          src: config.musicUrl,
           volume: 1
         },
         start: 0,

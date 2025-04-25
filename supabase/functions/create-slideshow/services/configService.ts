@@ -1,3 +1,4 @@
+
 export const validateConfig = (config: any) => {
   if (!config) {
     throw new Error("❌ Configuration manquante.");
@@ -11,15 +12,13 @@ export const validateConfig = (config: any) => {
   console.log("Configuration reçue avant traitement:", JSON.stringify(config, null, 2));
   console.log("Musique sélectionnée:", config.selectedMusic || "aucune");
   
-  // Create a new config object with the processed musicUrl and keep selectedMusic
+  // Create a new config object with the processed musicUrl
   const processedConfig = {
     ...config,
     // Construct musicUrl only if selectedMusic exists and isn't empty
     musicUrl: config.selectedMusic && config.selectedMusic.trim() !== '' ? 
       `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}` : 
-      null,
-    // Keep selectedMusic in the config for reference
-    selectedMusic: config.selectedMusic || null
+      null
   };
   
   console.log("Configuration après traitement:", JSON.stringify(processedConfig, null, 2));
