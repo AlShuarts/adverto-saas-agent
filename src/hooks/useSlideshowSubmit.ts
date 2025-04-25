@@ -22,18 +22,23 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
       console.log("Musique sélectionnée:", config.selectedMusic || "aucune");
       await ensureAndIncrementStatistic('slideshow');
       
-      const response = await supabase.functions.invoke("create-slideshow", {
-        body: {
-          listingId: listing.id,
-          config: {
-            imageDuration: 3,
-            showDetails: true,
-            showPrice: true,
-            showAddress: true,
-            selectedImages: config.selectedImages,
-            selectedMusic: config.selectedMusic
-          }
+      const payload = {
+        listingId: listing.id,
+        config: {
+          imageDuration: 3,
+          showDetails: true,
+          showPrice: true,
+          showAddress: true,
+          selectedImages: config.selectedImages,
+          // S'assurer que selectedMusic est bien inclus s'il existe
+          ...(config.selectedMusic && { selectedMusic: config.selectedMusic })
         }
+      };
+      
+      console.log("Payload complet envoyé:", JSON.stringify(payload, null, 2));
+      
+      const response = await supabase.functions.invoke("create-slideshow", {
+        body: payload
       });
       
       if (response.error) throw response.error;

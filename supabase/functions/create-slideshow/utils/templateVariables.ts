@@ -1,3 +1,4 @@
+
 /**
  * Handles the generation of template variables for Shotstack
  */
@@ -60,9 +61,18 @@ export const generateTemplateVariables = (selectedImages: string[], textElements
       { find: "AUDIO_SRC", replace: config.musicUrl },
       { find: "AUDIO_DURATION", replace: totalDuration.toString() }
     );
+  } else if (config.selectedMusic) {
+    // Construit l'URL à partir du nom de fichier sélectionné
+    const musicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    console.log(`🎵 Ajout de la musique depuis le nom de fichier: ${config.selectedMusic}`);
+    console.log(`🎵 URL complète: ${musicUrl}`);
+    mergeVariables.push(
+      { find: "AUDIO_SRC", replace: musicUrl },
+      { find: "AUDIO_DURATION", replace: totalDuration.toString() }
+    );
   } else {
     console.log("🔇 Aucune musique sélectionnée pour le diaporama");
-    // Remove audio track entirely if no music is selected
+    // Shotstack ne permet pas de valeur vide, utiliser une valeur spéciale
     mergeVariables.push(
       { find: "AUDIO_SRC", replace: "none" },
       { find: "AUDIO_DURATION", replace: totalDuration.toString() }
@@ -74,27 +84,4 @@ export const generateTemplateVariables = (selectedImages: string[], textElements
   console.log(`📝 Variables de fusion: ${JSON.stringify(mergeVariables, null, 2)}`);
 
   return { mergeVariables, totalDuration };
-};
-
-const generateAudioVariables = (config: SlideshowConfig, totalDuration: number): MergeVariable[] => {
-  const variables: MergeVariable[] = [];
-  
-  if (config.musicUrl) {
-    console.log(`🎵 Ajout de la musique (URL directe): ${config.musicUrl}`);
-    variables.push({ find: "AUDIO_SRC", replace: config.musicUrl });
-  } 
-  else if (config.selectedMusic) {
-    console.log(`🎵 Utilisation du format legacy pour la musique: ${config.selectedMusic}`);
-    const audioUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
-    console.log(`🎵 URL complète générée pour la musique: ${audioUrl}`);
-    variables.push({ find: "AUDIO_SRC", replace: audioUrl });
-  } 
-  else {
-    console.log("🔇 Aucune musique sélectionnée pour le diaporama");
-    variables.push({ find: "AUDIO_SRC", replace: "none" });
-  }
-  
-  variables.push({ find: "AUDIO_DURATION", replace: totalDuration.toString() });
-  
-  return variables;
 };

@@ -105,6 +105,7 @@ const generateImageAndTextClips = (
 };
 
 const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip | null => {
+  // Gestion explicite du cas où une musique est sélectionnée
   if (config.musicUrl) {
     console.log(`🎵 Ajout de la musique (URL directe): ${config.musicUrl}`);
     return {
@@ -115,9 +116,9 @@ const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip
   }
   
   if (config.selectedMusic) {
-    console.log(`🎵 Utilisation du format legacy pour la musique: ${config.selectedMusic}`);
-    const audioUrl = `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${config.selectedMusic}`;
-    console.log(`🎵 URL complète générée pour la musique: ${audioUrl}`);
+    const audioUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    console.log(`🎵 Ajout de la musique (nom de fichier): ${config.selectedMusic}`);
+    console.log(`🎵 URL complète générée: ${audioUrl}`);
     return {
       asset: { type: 'audio', src: audioUrl },
       start: 0,
@@ -125,6 +126,6 @@ const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip
     };
   }
   
-  console.log("🔇 Aucune musique sélectionnée pour le diaporama");
+  console.log("🔇 Aucune musique sélectionnée, pas d'audio ajouté au diaporama");
   return null;
 };

@@ -30,6 +30,12 @@ export const renderWithShotstackTemplate = async (templateId: string, mergeVaria
       throw new Error("❌ Aucune variable fournie pour le rendu du template.");
     }
 
+    // Vérifier la valeur de AUDIO_SRC
+    const audioSrcVar = mergeVariables.find(v => v.find === "AUDIO_SRC");
+    if (audioSrcVar && audioSrcVar.replace === "none") {
+      console.log("⚠️ Audio désactivé: La valeur 'none' pour AUDIO_SRC sera gérée par Shotstack");
+    }
+
     const response = await fetch(`${API_URL}/templates/render`, {
       method: "POST",
       headers: {
@@ -71,4 +77,3 @@ export const renderWithShotstackTemplate = async (templateId: string, mergeVaria
     throw error;
   }
 };
-

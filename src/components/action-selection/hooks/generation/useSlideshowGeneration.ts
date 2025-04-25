@@ -35,26 +35,21 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
-      // Préparation du payload avec gestion du cas où selectedMusic est undefined
-      const payload: { 
-        listingId: string, 
-        config: SlideshowConfig 
-      } = {
+      // Préparation du payload avec gestion correcte de la musique
+      const payload = {
         listingId: listingId,
         config: {
           imageDuration: 3,
           showDetails: true,
           showPrice: true,
           showAddress: true,
-          selectedImages: selectedImages
+          selectedImages: selectedImages,
+          // S'assurer que selectedMusic est bien inclus s'il existe
+          ...(selectedMusic && { selectedMusic })
         }
       };
       
-      // Ajouter selectedMusic au payload seulement s'il est défini
-      if (selectedMusic) {
-        payload.config.selectedMusic = selectedMusic;
-        console.log("Musique ajoutée au payload:", selectedMusic);
-      }
+      console.log("Payload envoyé à la fonction:", JSON.stringify(payload, null, 2));
       
       const { data, error } = await supabase.functions.invoke("create-slideshow", {
         body: payload

@@ -15,10 +15,10 @@ export const validateConfig = (config: any) => {
   // Create a new config object with the processed musicUrl
   const processedConfig = {
     ...config,
-    // Only set musicUrl if selectedMusic exists and is not empty
+    // Ne pas ajouter musicUrl s'il n'y a pas de selectedMusic
     musicUrl: config.selectedMusic ? 
       `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}` : 
-      undefined
+      null
   };
   
   console.log("Configuration après traitement:", JSON.stringify(processedConfig, null, 2));
