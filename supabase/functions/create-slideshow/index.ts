@@ -40,11 +40,12 @@ serve(async (req) => {
     console.log("🎵 Vérification de la musique dans la requête:", rawConfig.selectedMusic || "aucune musique");
     const config = validateConfig(rawConfig);
     console.log("📜 Configuration validée:", JSON.stringify(config, null, 2));
-    console.log("🖼️ Images sélectionnées:", config.selectedImages);
+    console.log("🖼️ Images sélectionnées:", config.selectedImages.length, "images");
+    console.log("🎵 URL de musique après traitement:", config.musicUrl || "aucune");
 
     // Récupération des données de l'annonce
     const listing = await getListingById(supabase, listingId);
-    console.log("📋 Données du listing:", JSON.stringify(listing, null, 2));
+    console.log("📋 Données du listing récupérées avec succès");
 
     // Préparation des éléments de texte
     const textElements = prepareTextElements(listing, config);
@@ -56,7 +57,7 @@ serve(async (req) => {
     
     // Génération de la timeline pour le diaporama
     const timeline = generateSlideshowTimeline(config.selectedImages, textElements, config);
-    console.log("🎬 Timeline générée:", JSON.stringify(timeline, null, 2));
+    console.log("🎬 Timeline générée avec succès");
     
     // Initialisation du rendu avec Shotstack
     const renderId = await renderWithShotstack(timeline, webhookUrl);

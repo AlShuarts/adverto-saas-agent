@@ -2,6 +2,7 @@
 export const generateSlideshowTimeline = (selectedImages: string[], textElements: string[], config: any) => {
   console.log("🎬 Génération de la timeline pour", selectedImages.length, "images");
   console.log("Configuration reçue dans clipGenerator:", JSON.stringify(config, null, 2));
+  console.log("URL de musique reçue:", config.musicUrl || "aucune");
   
   const tracks: any[] = [];
   const duration = config.imageDuration || 3;
@@ -87,9 +88,9 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
     });
   }
 
-  // Track audio
+  // Track audio - Vérification améliorée pour la musique
   if (config.musicUrl) {
-    console.log("🎵 Ajout de la musique:", config.musicUrl);
+    console.log("🎵 Ajout de la musique avec l'URL:", config.musicUrl);
     
     tracks.push({
       clips: [{
@@ -103,7 +104,7 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
       }]
     });
   } else {
-    console.log("⚠️ Aucune musique n'a été configurée pour ce diaporama");
+    console.log("⚠️ Aucune URL de musique n'a été fournie, aucune piste audio ne sera ajoutée");
   }
 
   const timeline = {

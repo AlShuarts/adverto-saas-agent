@@ -4,4 +4,7 @@ export interface SlideshowConfig {
   imageDuration?: number;
   musicUrl?: string | null;
   selectedMusic?: string | null;
+  showDetails?: boolean;
+  showPrice?: boolean;
+  showAddress?: boolean;
 }

@@ -59,7 +59,7 @@ export const useAudioPlayer = () => {
     }
   }, [audioPlaying]);
 
-  // Log the selected music whenever it changes for debugging
+  // Log l'état de la musique sélectionnée à chaque changement
   useEffect(() => {
     if (selectedMusic) {
       console.log("État actuel de la musique sélectionnée:", selectedMusic);

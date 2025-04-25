@@ -8,21 +8,28 @@ export const validateConfig = (config: any) => {
     throw new Error("❌ Au moins une image est requise pour créer un diaporama.");
   }
   
-  // Log the incoming configuration for debugging
+  // Log de débogage amélioré
   console.log("Configuration reçue avant traitement:", JSON.stringify(config, null, 2));
-  console.log("Musique sélectionnée:", config.selectedMusic || "aucune");
+  console.log("Musique sélectionnée dans la config:", config.selectedMusic || "aucune");
   
-  // Create a new config object with the processed musicUrl
+  // Traitement de l'URL de la musique
+  let musicUrl = null;
+  
+  // S'assurer que selectedMusic est une chaîne non vide avant de construire l'URL
+  if (config.selectedMusic && typeof config.selectedMusic === 'string' && config.selectedMusic.trim() !== '') {
+    musicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    console.log("URL de musique construite:", musicUrl);
+  } else {
+    console.log("Aucune musique sélectionnée, musicUrl sera null");
+  }
+  
+  // Création d'une copie propre de la configuration avec l'URL de musique correcte
   const processedConfig = {
     ...config,
-    // Construct musicUrl only if selectedMusic exists and isn't empty
-    musicUrl: config.selectedMusic && config.selectedMusic.trim() !== '' ? 
-      `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}` : 
-      null
+    musicUrl: musicUrl
   };
   
   console.log("Configuration après traitement:", JSON.stringify(processedConfig, null, 2));
-  console.log("URL de la musique calculée:", processedConfig.musicUrl);
   
   return processedConfig;
 };

@@ -31,7 +31,7 @@ export const SlideshowConfig = ({
   handleMusicChange,
   previewMusic
 }: SlideshowConfigProps) => {
-  // Log pour le débogage
+  // Log de débogage amélioré
   useEffect(() => {
     console.log("SlideshowConfig - selectedMusic:", selectedMusic);
     console.log("SlideshowConfig - musicList:", musicList);
