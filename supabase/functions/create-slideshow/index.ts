@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { prepareTextElements } from "./utils/textElements.ts";
@@ -47,10 +48,10 @@ serve(async (req) => {
       );
     }
 
-    // ID du template Shotstack
-    const TEMPLATE_ID = "dbbf3bc7-0bff-432b-896e-f736aa04bbd6";
-    // Réactiver l'utilisation des templates avec le bon endpoint
-    const USE_TEMPLATE = true;
+    // ID du template Shotstack - désactivé car template invalide
+    // const TEMPLATE_ID = "dbbf3bc7-0bff-432b-896e-f736aa04bbd6";
+    // Désactivation de l'utilisation des templates car le template spécifié est invalide
+    const USE_TEMPLATE = false;
 
     console.log("📜 Configuration reçue:", JSON.stringify(config, null, 2));
     console.log("🖼️ Images sélectionnées:", config.selectedImages);
@@ -91,24 +92,45 @@ serve(async (req) => {
     let renderId;
     
     if (USE_TEMPLATE) {
-      // Utilisation du template
-      console.log("🧩 Utilisation du template Shotstack ID:", TEMPLATE_ID);
+      // Cette partie est maintenant désactivée car le template est invalide
+      console.log("⚠️ L'utilisation du template a été désactivée car le template est invalide");
       
-      // Générer les variables pour le template
-      const { mergeVariables, totalDuration } = generateTemplateVariables(
+      // Code du template laissé en commentaire pour référence future
+      // const { mergeVariables, totalDuration } = generateTemplateVariables(
+      //   config.selectedImages,
+      //   textElements,
+      //   config
+      // );
+      // renderId = await renderWithShotstackTemplate(
+      //   TEMPLATE_ID,
+      //   mergeVariables,
+      //   webhookUrl
+      // );
+      
+      // Utiliser la méthode standard à la place
+      console.log("🧩 Utilisation de la méthode standard (sans template)");
+      
+      const { clips, totalDuration } = generateSlideShowClips(
         config.selectedImages,
         textElements,
         config
       );
       
-      // Envoi au service de rendu avec template
-      renderId = await renderWithShotstackTemplate(
-        TEMPLATE_ID,
-        mergeVariables,
-        webhookUrl
-      );
+      const renderPayload = {
+        timeline: {
+          background: "#000000",
+          tracks: [
+            { clips }, // Track des images et des textes
+          ],
+        },
+        output: { format: "mp4", resolution: "hd" },
+        callback: webhookUrl,
+      };
+
+      console.log("📤 Payload Shotstack:", JSON.stringify(renderPayload, null, 2));
       
-      console.log("🎬 Rendu initialisé avec le template, ID:", renderId);
+      renderId = await renderWithShotstack(renderPayload);
+      
     } else {
       // Méthode originale, sans template
       console.log("🧩 Utilisation de la méthode standard (sans template)");
