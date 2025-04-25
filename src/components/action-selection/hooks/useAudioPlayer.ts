@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useAudioPlayer = () => {
@@ -7,17 +7,26 @@ export const useAudioPlayer = () => {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [musicList, setMusicList] = useState<string[]>([]);
   const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const fetchMusic = useCallback(async () => {
     try {
+      console.log("Fetching music list...");
       const { data, error } = await supabase.storage.from('background-music').list();
       
-      if (!error && data) {
+      if (error) {
+        console.error("Error fetching music list:", error);
+        return;
+      }
+      
+      if (data) {
         const musicFiles = data
           .filter(file => !file.name.startsWith('.'))
           .map(file => file.name);
         
+        console.log("Music files fetched:", musicFiles);
         setMusicList(musicFiles);
+        
         // Only set default music if no music is currently selected
         if (musicFiles.length > 0 && !selectedMusic) {
           setSelectedMusic(musicFiles[0]);
@@ -45,34 +54,65 @@ export const useAudioPlayer = () => {
     }
 
     stopAudio();
-    const audio = new Audio();
-    const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
-    console.log("Playing music preview from URL:", publicUrl);
     
-    audio.src = publicUrl;
-    audio.volume = 0.5;
-    audio.play().catch(error => {
-      console.error("Error playing audio:", error);
-    });
-    
-    setAudioPlaying(audio);
-    setCurrentlyPlaying(musicName);
+    try {
+      const audio = new Audio();
+      audioRef.current = audio;
+      
+      const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
+      console.log("Playing music preview from URL:", publicUrl);
+      
+      audio.src = publicUrl;
+      audio.volume = 0.5;
+      
+      // Add event listeners for better error handling
+      audio.addEventListener('error', (e) => {
+        console.error("Audio playback error:", e);
+        stopAudio();
+      });
+      
+      audio.addEventListener('ended', () => {
+        console.log("Audio playback ended");
+        setAudioPlaying(null);
+        setCurrentlyPlaying(null);
+      });
+      
+      // Play the audio
+      audio.play()
+        .then(() => {
+          console.log("Audio playing successfully");
+          setAudioPlaying(audio);
+          setCurrentlyPlaying(musicName);
+        })
+        .catch(error => {
+          console.error("Error playing audio:", error);
+          stopAudio();
+        });
+    } catch (error) {
+      console.error("Error setting up audio playback:", error);
+    }
   }, [currentlyPlaying]);
 
   const stopAudio = useCallback(() => {
-    if (audioPlaying) {
+    if (audioRef.current) {
       console.log("Stopping audio playback");
-      audioPlaying.pause();
-      audioPlaying.currentTime = 0;
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
       setAudioPlaying(null);
       setCurrentlyPlaying(null);
     }
-  }, [audioPlaying]);
+  }, []);
 
-  // Fetch music on component mount
+  // Fetch music immediately on component mount
   useEffect(() => {
     console.log("Initial music fetch");
     fetchMusic();
+    
+    // Cleanup function to stop audio when component unmounts
+    return () => {
+      stopAudio();
+    };
   }, []);
 
   // Log state changes for debugging
