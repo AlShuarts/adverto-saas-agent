@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { MoveVertical, Play, Pause } from "lucide-react";
+import { MoveVertical, Play, Pause, Music } from "lucide-react";
 import { useEffect } from "react";
 
 type SlideshowConfigProps = {
@@ -114,7 +114,7 @@ export const SlideshowConfig = ({
         <Label>Musique de fond</Label>
         <div className="flex items-center gap-2">
           <Select 
-            value={selectedMusic} 
+            value={selectedMusic || ""} 
             onValueChange={(value) => {
               console.log("Music selection changed in Select:", value);
               handleMusicChange(value);
@@ -142,6 +142,8 @@ export const SlideshowConfig = ({
                 previewMusic(selectedMusic);
               }}
               className="flex-shrink-0"
+              aria-label={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
+              title={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
             >
               {currentlyPlaying === selectedMusic ? (
                 <Pause className="h-4 w-4" />
@@ -152,9 +154,14 @@ export const SlideshowConfig = ({
           )}
         </div>
         
-        {selectedMusic && (
-          <p className="text-xs text-muted-foreground mt-1">
+        {selectedMusic ? (
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <Music className="h-3 w-3" /> 
             Musique sélectionnée: {selectedMusic.replace(/\.[^/.]+$/, "")}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">
+            Aucune musique sélectionnée
           </p>
         )}
       </div>
