@@ -1,7 +1,7 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { prepareTextElements } from "./utils/textElements.ts";
-import { generateTemplateVariables } from "./utils/clipGenerator.ts";
+import { generateTemplateVariables } from "./utils/templateVariables.ts";
+import { generateSlideShowClips } from "./utils/clipGenerator.ts";
 import { renderWithShotstackTemplate, getShotstackTemplates } from "./services/shotstackService.ts";
 import { getListingById, saveRenderRecord } from "./services/databaseService.ts";
 import { validateUser } from "./services/authService.ts";
@@ -54,7 +54,7 @@ serve(async (req) => {
     console.log("📝 Éléments de texte préparés:", textElements);
 
     // Configuration du webhook
-    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook`;
+    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook";
     console.log("🔗 URL du webhook configurée:", webhookUrl);
     
     let renderId;
