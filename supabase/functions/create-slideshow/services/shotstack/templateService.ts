@@ -33,10 +33,11 @@ export const renderWithShotstackTemplate = async (templateId: string, mergeVaria
     // Vérification spécifique de l'audio
     const audioSrcVar = mergeVariables.find(v => v.find === "AUDIO_SRC");
     if (audioSrcVar) {
-      console.log(`🎵 Valeur audio trouvée: "${audioSrcVar.replace}"`);
+      console.log(`🎵 Variable audio trouvée: "${audioSrcVar.replace}"`);
       
-      if (audioSrcVar.replace === "none" || audioSrcVar.replace === "") {
-        console.log("⚠️ Remplacement de la valeur audio vide/none par un fichier audio vide valide");
+      // S'assurer que nous avons toujours une URL audio valide
+      if (!audioSrcVar.replace || audioSrcVar.replace === "none") {
+        console.log("⚠️ Remplacement de la valeur audio invalide par le fichier audio vide");
         audioSrcVar.replace = "https://shotstack-assets.s3.amazonaws.com/empty-audio.mp3";
       }
     }
