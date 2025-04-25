@@ -30,8 +30,8 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
           showPrice: true,
           showAddress: true,
           selectedImages: config.selectedImages,
-          // S'assurer que selectedMusic est bien inclus s'il existe
-          ...(config.selectedMusic && { selectedMusic: config.selectedMusic })
+          // Toujours inclure selectedMusic pour une meilleure traçabilité
+          selectedMusic: config.selectedMusic || null
         }
       };
       

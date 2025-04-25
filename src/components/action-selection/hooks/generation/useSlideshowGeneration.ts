@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
@@ -44,8 +43,8 @@ export const useSlideshowGeneration = (listingId: string) => {
           showPrice: true,
           showAddress: true,
           selectedImages: selectedImages,
-          // S'assurer que selectedMusic est bien inclus s'il existe
-          ...(selectedMusic && { selectedMusic })
+          // S'assurer que selectedMusic est bien inclus même s'il est undefined ou vide
+          selectedMusic: selectedMusic
         }
       };
       

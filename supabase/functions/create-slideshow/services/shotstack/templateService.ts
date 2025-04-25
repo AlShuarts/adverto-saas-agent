@@ -30,10 +30,15 @@ export const renderWithShotstackTemplate = async (templateId: string, mergeVaria
       throw new Error("❌ Aucune variable fournie pour le rendu du template.");
     }
 
-    // Vérifier la valeur de AUDIO_SRC
+    // Vérification spécifique de l'audio
     const audioSrcVar = mergeVariables.find(v => v.find === "AUDIO_SRC");
-    if (audioSrcVar && audioSrcVar.replace === "none") {
-      console.log("⚠️ Audio désactivé: La valeur 'none' pour AUDIO_SRC sera gérée par Shotstack");
+    if (audioSrcVar) {
+      console.log(`🎵 Valeur audio trouvée: "${audioSrcVar.replace}"`);
+      
+      if (audioSrcVar.replace === "none" || audioSrcVar.replace === "") {
+        console.log("⚠️ Remplacement de la valeur audio vide/none par un fichier audio vide valide");
+        audioSrcVar.replace = "https://shotstack-assets.s3.amazonaws.com/empty-audio.mp3";
+      }
     }
 
     const response = await fetch(`${API_URL}/templates/render`, {

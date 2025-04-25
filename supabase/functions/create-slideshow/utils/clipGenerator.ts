@@ -105,9 +105,9 @@ const generateImageAndTextClips = (
 };
 
 const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip | null => {
-  // Gestion explicite du cas où une musique est sélectionnée
-  if (config.musicUrl) {
-    console.log(`🎵 Ajout de la musique (URL directe): ${config.musicUrl}`);
+  // Gestion explicite du cas où une musique est sélectionnée via URL
+  if (config.musicUrl && config.musicUrl.trim() !== '') {
+    console.log(`🎵 Ajout de la musique depuis l'URL directe: ${config.musicUrl}`);
     return {
       asset: { type: 'audio', src: config.musicUrl },
       start: 0,
@@ -115,8 +115,10 @@ const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip
     };
   }
   
-  if (config.selectedMusic) {
-    const audioUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}`;
+  // Gestion explicite du cas où une musique est sélectionnée via nom de fichier
+  if (config.selectedMusic && config.selectedMusic.trim() !== '') {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const audioUrl = `${supabaseUrl}/storage/v1/object/public/background-music/${config.selectedMusic}`;
     console.log(`🎵 Ajout de la musique (nom de fichier): ${config.selectedMusic}`);
     console.log(`🎵 URL complète générée: ${audioUrl}`);
     return {
@@ -126,6 +128,10 @@ const generateAudioClip = (config: SlideshowConfig, totalDuration: number): Clip
     };
   }
   
-  console.log("🔇 Aucune musique sélectionnée, pas d'audio ajouté au diaporama");
-  return null;
+  console.log("🔇 Aucune musique sélectionnée, utilisation d'un fichier audio vide");
+  return {
+    asset: { type: 'audio', src: "https://shotstack-assets.s3.amazonaws.com/empty-audio.mp3" },
+    start: 0,
+    length: totalDuration
+  };
 };
