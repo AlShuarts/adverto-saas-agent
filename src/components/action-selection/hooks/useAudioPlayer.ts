@@ -1,6 +1,6 @@
 
 import { useAudioControls } from '@/hooks/useAudioControls';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useAudioPlayer = () => {
@@ -28,6 +28,7 @@ export const useAudioPlayer = () => {
         
         // Set default selected music if available
         if (musicFiles.length > 0 && !selectedMusic) {
+          console.log("Default music set to:", musicFiles[0]);
           setSelectedMusic(musicFiles[0]);
         }
       }
@@ -35,6 +36,10 @@ export const useAudioPlayer = () => {
       console.error("Error fetching music:", error);
     }
   }, [selectedMusic]);
+
+  useEffect(() => {
+    fetchMusic();
+  }, [fetchMusic]);
 
   const handleMusicChange = (value: string) => {
     console.log("Music selection changed to:", value);
@@ -58,6 +63,15 @@ export const useAudioPlayer = () => {
       console.error("Error setting up audio playback:", error);
     }
   };
+
+  // Add debug logging for state changes
+  useEffect(() => {
+    console.log("Music state updated:", {
+      selectedMusic,
+      currentlyPlaying,
+      musicList
+    });
+  }, [selectedMusic, currentlyPlaying, musicList]);
 
   return {
     currentlyPlaying,

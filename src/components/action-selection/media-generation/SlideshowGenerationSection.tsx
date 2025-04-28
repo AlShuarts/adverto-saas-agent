@@ -41,6 +41,8 @@ export const SlideshowGenerationSection = ({
     console.log("SlideshowGenerationSection - selectedMusic:", selectedMusic);
   }, [selectedMusic]);
 
+  const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
+
   return (
     <div className="space-y-4">
       <h4 className="text-md font-medium">Génération du diaporama</h4>
@@ -52,7 +54,7 @@ export const SlideshowGenerationSection = ({
             disabled={selectedImages.length === 0}
             className="w-full"
           >
-            Générer le diaporama{selectedMusic ? ` avec musique: ${selectedMusic.replace(/\.[^/.]+$/, "")}` : ""}
+            Générer le diaporama{selectedMusic ? ` avec musique: ${musicName}` : ""}
           </Button>
         </div>
       )}

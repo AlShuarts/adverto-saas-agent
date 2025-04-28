@@ -2,6 +2,7 @@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { BackgroundMusic } from "./backgroundMusic";
+import { useState, useEffect } from "react";
 
 type MusicSelectorProps = {
   musics: BackgroundMusic[] | string[];
@@ -10,6 +11,14 @@ type MusicSelectorProps = {
 };
 
 export const MusicSelector = ({ musics, selectedMusic, onMusicChange }: MusicSelectorProps) => {
+  // Debug logs
+  useEffect(() => {
+    console.log("MusicSelector - Props received:", { 
+      musicsCount: musics.length,
+      selectedMusic,
+    });
+  }, [musics, selectedMusic]);
+  
   return (
     <div className="space-y-2">
       <Label>Musique de fond</Label>
@@ -20,7 +29,7 @@ export const MusicSelector = ({ musics, selectedMusic, onMusicChange }: MusicSel
       >
         {musics.map((music) => {
           const id = typeof music === 'string' ? music : music.id;
-          const name = typeof music === 'string' ? music : music.name;
+          const name = typeof music === 'string' ? music.replace(/\.[^/.]+$/, "") : music.name;
           const value = typeof music === 'string' ? music : music.url;
           
           return (

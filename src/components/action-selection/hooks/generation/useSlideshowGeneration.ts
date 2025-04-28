@@ -45,7 +45,7 @@ export const useSlideshowGeneration = (listingId: string) => {
           showAddress: true,
           selectedImages: selectedImages,
           // S'assurer que selectedMusic est explicitement inclus, même s'il est undefined
-          selectedMusic: selectedMusic || null
+          selectedMusic: selectedMusic
         }
       };
       
