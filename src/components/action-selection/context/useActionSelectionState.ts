@@ -58,6 +58,12 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     handlePublicationTypeChange 
   } = usePublicationTypeHandler();
   
+  // Synchronize the selected music from the audio player to media state
+  // This is crucial for passing the selected music to the slideshow generation
+  if (selectedMusic !== mediaState.selectedMusic) {
+    mediaState.setSelectedMusic(selectedMusic);
+  }
+  
   // Initialize and reset
   const resetState = () => {
     setCurrentStep(1);

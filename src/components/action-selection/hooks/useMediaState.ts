@@ -49,13 +49,17 @@ export const useMediaState = (listingId: string) => {
       return null;
     }
 
-    return await generateSlideshow(selectedImages, undefined);
+    // Pass the selectedMusic parameter instead of undefined
+    return await generateSlideshow(selectedImages, selectedMusic);
   };
+
+  // Track the selected music separately from currently playing
+  const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
 
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    undefined,
+    selectedMusic,  // Pass selectedMusic here instead of undefined
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,
@@ -91,6 +95,8 @@ export const useMediaState = (listingId: string) => {
     handleGenerateSlideshow,
     handleGenerateBanner,
     currentlyPlaying,
-    stopAudio
+    stopAudio,
+    selectedMusic,
+    setSelectedMusic  // Expose the setter to update from parent components
   };
 };

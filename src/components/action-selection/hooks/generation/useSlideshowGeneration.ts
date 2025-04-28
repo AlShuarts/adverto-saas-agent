@@ -35,6 +35,13 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
+      // Prepare the music URL if music is selected
+      let musicUrl = undefined;
+      if (selectedMusic) {
+        musicUrl = supabase.storage.from('background-music').getPublicUrl(selectedMusic).data.publicUrl;
+        console.log("URL de la musique générée:", musicUrl);
+      }
+      
       // Préparation du payload en s'assurant que selectedMusic est bien inclus
       const payload = {
         listingId: listingId,
@@ -44,8 +51,8 @@ export const useSlideshowGeneration = (listingId: string) => {
           showPrice: true,
           showAddress: true,
           selectedImages: selectedImages,
-          // S'assurer que selectedMusic est explicitement inclus, même s'il est undefined
-          selectedMusic: selectedMusic
+          selectedMusic: selectedMusic,
+          musicUrl: musicUrl // Include the full URL for Shotstack
         }
       };
       
