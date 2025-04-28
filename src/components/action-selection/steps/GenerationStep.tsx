@@ -10,7 +10,7 @@ type GenerationStepProps = {
   bannerType: "VENDU" | "A_VENDRE";
   setBannerType: (type: "VENDU" | "A_VENDRE") => void;
   selectBannerImage: (imageUrl: string) => void;
-  selectedMusic: string | undefined;
+  selectedMusic?: string;
   generateSlideshow: () => Promise<string | null>;
   generateBanner: () => Promise<void>;
   isGeneratingSlideshow: boolean;
@@ -38,6 +38,10 @@ type GenerationStepProps = {
   refetchSlideshowStatus: () => void;
   toggleImageSelection: (imageUrl: string) => void;
   listing: Tables<"listings">;
+  handleMusicChange: (music: string) => void;
+  previewMusic: (musicName: string) => void;
+  currentlyPlaying: string | null;
+  musicList: string[];
 };
 
 export const GenerationStep = ({
@@ -75,6 +79,10 @@ export const GenerationStep = ({
   onRegenerateBanner,
   toggleImageSelection,
   listing,
+  handleMusicChange,
+  previewMusic,
+  currentlyPlaying,
+  musicList,
 }: GenerationStepProps) => {
   return (
     <MediaGenerationStep
@@ -112,6 +120,10 @@ export const GenerationStep = ({
       selectedImages={selectedImages}
       toggleImageSelection={toggleImageSelection}
       selectedMusic={selectedMusic}
+      handleMusicChange={handleMusicChange}
+      previewMusic={previewMusic}
+      currentlyPlaying={currentlyPlaying}
+      musicList={musicList}
     />
   );
 };

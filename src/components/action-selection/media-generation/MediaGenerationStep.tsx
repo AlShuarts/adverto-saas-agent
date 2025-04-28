@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
@@ -37,10 +38,10 @@ type MediaGenerationStepProps = {
   setFormErrors: (errors: {[key: string]: string}) => void;
   onRegenerateSlideshow: () => void;
   onRegenerateBanner: () => void;
-  selectedMusic: string | undefined;
+  selectedMusic?: string;
   toggleImageSelection: (imageUrl: string) => void;
   handleMusicChange: (music: string) => void;
-  previewMusic: string | null;
+  previewMusic: (musicName: string) => void;
   currentlyPlaying: string | null;
   listing: Tables<"listings">;
   musicList: string[];
@@ -119,6 +120,7 @@ export const MediaGenerationStep = ({
                 refetchSlideshowStatus={refetchSlideshowStatus}
                 onRegenerateSlideshow={onRegenerateSlideshow}
                 selectedImages={selectedImages}
+                selectedMusic={selectedMusic}
               />
             </>
           )}

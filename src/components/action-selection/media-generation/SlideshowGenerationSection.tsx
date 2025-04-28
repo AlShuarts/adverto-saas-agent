@@ -14,6 +14,7 @@ type SlideshowGenerationSectionProps = {
   selectedImages: string[];
   toggleImageSelection?: (imageUrl: string) => void;
   availableImages?: string[];
+  selectedMusic?: string;
 };
 
 export const SlideshowGenerationSection = ({

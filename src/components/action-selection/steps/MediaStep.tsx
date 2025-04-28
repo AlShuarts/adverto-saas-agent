@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
