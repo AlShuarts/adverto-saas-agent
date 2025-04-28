@@ -39,23 +39,22 @@ export const useMediaState = (listingId: string) => {
     generateBanner
   } = useMediaGeneration(listingId);
 
-  // Let's remove the duplicate state management for music
-  // since it's now handled in useAudioPlayer
   const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
 
   const handleGenerateSlideshow = async () => {
-    console.log("Generating slideshow with selected images");
+    console.log("Generating slideshow with selected images and music");
     if (selectedImages.length === 0) {
       return null;
     }
 
-    return await generateSlideshow(selectedImages, undefined);
+    // Pass selectedMusic from context to generateSlideshow
+    return await generateSlideshow(selectedImages, currentlyPlaying);
   };
 
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    undefined,
+    currentlyPlaying, // Pass selected music to handlers
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,
