@@ -3,8 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FileText, FileImage, Tag } from "lucide-react";
 import { useEffect } from "react";
-
-type PublicationType = "photo" | "slideshow" | "banner";
+import { PublicationType } from "./types";
 
 type PublicationTypeSelectorProps = {
   selectedPublicationTypes: PublicationType[];
@@ -25,19 +24,31 @@ export const PublicationTypeSelector = ({
     onPublicationTypeChange(type, checked);
   };
 
+  // Helper function to handle container click
+  const handleContainerClick = (type: PublicationType) => {
+    const newCheckedState = !selectedPublicationTypes.includes(type);
+    console.log(`Container click: ${type} -> ${newCheckedState}`);
+    onPublicationTypeChange(type, newCheckedState);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
+      <div 
+        className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all"
+        onClick={() => handleContainerClick("photo")}
+      >
         <div className="flex items-start space-x-3">
           <Checkbox 
             id="publication-photo" 
             checked={selectedPublicationTypes.includes("photo")}
             onCheckedChange={(checked) => handleCheckboxChange("photo", !!checked)}
+            onClick={(e) => e.stopPropagation()} // Prevent double trigger with container
           />
           <div className="space-y-2">
             <Label 
               htmlFor="publication-photo" 
               className="flex items-center cursor-pointer"
+              onClick={(e) => e.stopPropagation()} // Prevent double trigger with container
             >
               <FileText className="w-4 h-4 mr-2" />
               Texte avec Photo
@@ -49,17 +60,22 @@ export const PublicationTypeSelector = ({
         </div>
       </div>
       
-      <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
+      <div 
+        className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all"
+        onClick={() => handleContainerClick("slideshow")}
+      >
         <div className="flex items-start space-x-3">
           <Checkbox 
             id="publication-slideshow" 
             checked={selectedPublicationTypes.includes("slideshow")}
             onCheckedChange={(checked) => handleCheckboxChange("slideshow", !!checked)}
+            onClick={(e) => e.stopPropagation()} // Prevent double trigger with container
           />
           <div className="space-y-2">
             <Label 
               htmlFor="publication-slideshow" 
               className="flex items-center cursor-pointer"
+              onClick={(e) => e.stopPropagation()} // Prevent double trigger with container
             >
               <FileImage className="w-4 h-4 mr-2" />
               Texte avec Diaporama
@@ -71,17 +87,22 @@ export const PublicationTypeSelector = ({
         </div>
       </div>
       
-      <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all">
+      <div 
+        className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-all"
+        onClick={() => handleContainerClick("banner")}
+      >
         <div className="flex items-start space-x-3">
           <Checkbox 
             id="publication-banner" 
             checked={selectedPublicationTypes.includes("banner")}
             onCheckedChange={(checked) => handleCheckboxChange("banner", !!checked)}
+            onClick={(e) => e.stopPropagation()} // Prevent double trigger with container
           />
           <div className="space-y-2">
             <Label 
               htmlFor="publication-banner" 
               className="flex items-center cursor-pointer"
+              onClick={(e) => e.stopPropagation()} // Prevent double trigger with container
             >
               <Tag className="w-4 h-4 mr-2" />
               Texte avec Bannière
