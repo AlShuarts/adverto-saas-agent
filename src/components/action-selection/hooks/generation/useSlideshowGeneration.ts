@@ -44,7 +44,7 @@ export const useSlideshowGeneration = (listingId: string) => {
           showPrice: true,
           showAddress: true,
           selectedImages: selectedImages,
-          // S'assurer que selectedMusic est explicitement inclus, même s'il est undefined
+          // S'assurer que selectedMusic est explicitement inclus
           selectedMusic: selectedMusic
         }
       };
