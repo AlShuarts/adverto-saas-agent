@@ -1,39 +1,35 @@
 
-// This service contains functions for validating and preparing slideshow configurations
+export const validateConfig = (config: any) => {
+  if (!config) {
+    throw new Error("❌ Configuration manquante.");
+  }
 
-export const validateConfig = (rawConfig: any) => {
-  console.log("Configuration reçue avant traitement:", JSON.stringify(rawConfig, null, 2));
+  if (!config.selectedImages || config.selectedImages.length === 0) {
+    throw new Error("❌ Au moins une image est requise pour créer un diaporama.");
+  }
   
-  // Check if music is selected
-  console.log("Musique sélectionnée dans la config:", rawConfig.selectedMusic || "aucune");
+  // Log de débogage amélioré
+  console.log("Configuration reçue avant traitement:", JSON.stringify(config, null, 2));
+  console.log("Musique sélectionnée dans la config:", config.selectedMusic || "aucune");
   
-  // If selectedMusic is provided, get the URL
-  let musicUrl = undefined;
-  if (rawConfig.selectedMusic) {
-    console.log("Une musique est sélectionnée:", rawConfig.selectedMusic);
-    
-    // The musicUrl may already be provided in the config
-    if (rawConfig.musicUrl) {
-      musicUrl = rawConfig.musicUrl;
-      console.log("URL de musique déjà fournie:", musicUrl);
-    } else {
-      console.log("Aucune URL de musique fournie, il faudra la générer");
-    }
+  // Traitement de l'URL de la musique
+  let musicUrl = null;
+  
+  // S'assurer que selectedMusic est une chaîne non vide avant de construire l'URL
+  if (config.selectedMusic && typeof config.selectedMusic === 'string' && config.selectedMusic.trim() !== '') {
+    musicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    console.log("URL de musique construite:", musicUrl);
   } else {
     console.log("Aucune musique sélectionnée, musicUrl sera null");
   }
   
-  // Create a validated config object with defaults
-  const config = {
-    imageDuration: rawConfig.imageDuration || 3,
-    showDetails: rawConfig.showDetails !== false,
-    showPrice: rawConfig.showPrice !== false,
-    showAddress: rawConfig.showAddress !== false,
-    selectedImages: rawConfig.selectedImages || [],
-    selectedMusic: rawConfig.selectedMusic || null,
+  // Création d'une copie propre de la configuration avec l'URL de musique correcte
+  const processedConfig = {
+    ...config,
     musicUrl: musicUrl
   };
   
-  console.log("Configuration après traitement:", JSON.stringify(config, null, 2));
-  return config;
+  console.log("Configuration après traitement:", JSON.stringify(processedConfig, null, 2));
+  
+  return processedConfig;
 };

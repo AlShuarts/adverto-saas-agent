@@ -9,7 +9,6 @@ import { useInitialization } from '../hooks/useInitialization';
 import { usePublicationTypeHandler } from '../hooks/usePublicationTypeHandler';
 import { useMediaState } from '../hooks/useMediaState';
 import { useTemplateState } from '../hooks/useTemplateState';
-import { validateBrokerInfo } from '../hooks/generation/utils/bannerValidation';
 
 export const useActionSelectionState = (listing: Tables<"listings">) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -43,7 +42,7 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     formErrors,
     setFormErrors,
     resetBrokerInfo,
-    validateBrokerInfo: validateBrokerInfoFromHook
+    validateBrokerInfo
   } = useBrokerInfo();
 
   const {
@@ -58,12 +57,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setSelectedPublicationTypes, 
     handlePublicationTypeChange 
   } = usePublicationTypeHandler();
-  
-  // Synchronize the selected music from the audio player to media state
-  // This is crucial for passing the selected music to the slideshow generation
-  if (selectedMusic !== mediaState.selectedMusic) {
-    mediaState.setSelectedMusic(selectedMusic);
-  }
   
   // Initialize and reset
   const resetState = () => {

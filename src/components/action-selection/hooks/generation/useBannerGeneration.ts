@@ -31,8 +31,7 @@ export const useBannerGeneration = (listingId: string) => {
       
       const { isValid, errors } = validateBrokerInfo(bannerImage, brokerInfo);
       if (!isValid) {
-        const errorMessages = Object.values(errors).join(", ");
-        throw new Error(`Veuillez remplir les champs suivants: ${errorMessages}`);
+        throw new Error(`Veuillez remplir les champs suivants: ${errors.join(", ")}`);
       }
       
       toast.info("Création de la bannière", {
