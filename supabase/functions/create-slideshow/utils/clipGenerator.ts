@@ -1,24 +1,65 @@
 
-export const generateSlideshowTimeline = (selectedImages: string[], textElements: string[], config: any) => {
+import { SlideshowConfig } from "../types/config.ts";
+
+export const generateSlideshowTimeline = (selectedImages: string[], textElements: string[], config: SlideshowConfig) => {
   console.log("🎬 Génération de la timeline pour", selectedImages.length, "images");
   console.log("Configuration reçue dans clipGenerator:", JSON.stringify(config, null, 2));
   console.log("URL de musique reçue:", config.musicUrl || "aucune");
   
-  const tracks: any[] = [];
-  const duration = config.imageDuration || 3;
-  let totalDuration = selectedImages.length * duration;
+  const tracks = [];
+  const imageDuration = config.imageDuration || 3;
+  const totalDuration = selectedImages.length * imageDuration;
   
-  // Track pour les textes
-  const textClips: any[] = [];
-  
-  textElements.forEach((text, index) => {
-    if (text) {
+  // Piste des images
+  const imageTrack = {
+    clips: selectedImages.map((imageUrl, index) => {
+      const start = index * imageDuration;
+      
+      const effects = ["slideLeftSlow", "slideRightSlow", "slideUpSlow", "slideDownSlow", "zoomInSlow", "zoomOutSlow"];
+      const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+
+      const scaleOptions = [1, 1.1, 1.2, 1.413];
+      const randomScale = scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
+      
+      const offsetOptions = [
+        {x: 0, y: 0}, 
+        {x: 0.041, y: 0}, 
+        {x: -0.016, y: 0},
+        {x: 0, y: 0.016},
+        {x: 0, y: -0.016}
+      ];
+      const randomOffset = offsetOptions[Math.floor(Math.random() * offsetOptions.length)];
+
+      return {
+        asset: {
+          type: "image",
+          src: imageUrl
+        },
+        start,
+        length: imageDuration,
+        effect: randomEffect,
+        fit: "cover",
+        scale: randomScale,
+        position: "center",
+        opacity: 1,
+        offset: randomOffset
+      };
+    })
+  };
+  tracks.push(imageTrack);
+
+  // Piste du texte
+  if (textElements && textElements.length > 0) {
+    const textClips = [];
+    
+    // Texte d'adresse
+    if (textElements[0] && config.showAddress) {
       textClips.push({
         asset: {
           type: "text",
-          text: text,
+          text: textElements[0],
           width: 500,
-          height: index === 0 ? 150 : 50, // Premier texte plus haut pour l'adresse
+          height: 150,
           font: {
             family: "Poppins",
             color: "#ffffff",
@@ -38,90 +79,113 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
             vertical: "center"
           }
         },
-        start: index * duration,
-        length: duration,
+        start: 0,
+        length: imageDuration,
+        position: "center",
         offset: {
-          x: 0,
+          x: 0, 
           y: -0.4
-        },
-        position: "center"
+        }
       });
     }
-  });
-
-  if (textClips.length > 0) {
-    tracks.push({
-      clips: textClips
-    });
-  }
-
-  // Track pour les images
-  const imageClips: any[] = [];
-  
-  selectedImages.forEach((imageUrl, index) => {
-    const isFirst = index === 0;
-    const effect = index % 2 === 0 ? "slideLeftSlow" : "slideRightSlow";
-    const offset = {
-      x: index % 2 === 0 ? 0.041 : (index % 3 === 0 ? -0.037 : index % 5 === 0 ? 0.027 : -0.016),
-      y: 0
-    };
     
-    imageClips.push({
-      asset: {
-        type: "image",
-        src: imageUrl
-      },
-      start: index * duration,
-      length: duration,
-      effect: effect,
-      fit: "cover",
-      scale: isFirst ? 1.413 : 1,
-      position: "center",
-      opacity: 1,
-      offset: offset
-    });
-  });
-
-  if (imageClips.length > 0) {
-    tracks.push({
-      clips: imageClips
-    });
-  }
-
-  // Track audio - Vérification améliorée pour la musique
-  if (config.musicUrl) {
-    console.log("🎵 Ajout de la musique avec l'URL:", config.musicUrl);
-    
-    tracks.push({
-      clips: [{
+    // Texte de prix
+    if (textElements[1] && config.showPrice) {
+      textClips.push({
         asset: {
-          type: "audio",
-          src: config.musicUrl,
-          volume: 1
+          type: "text",
+          text: textElements[1],
+          width: 500,
+          height: 50,
+          font: {
+            family: "Poppins",
+            color: "#ffffff",
+            opacity: 1,
+            size: 30,
+            weight: 500,
+            lineHeight: 1.5
+          },
+          background: {
+            color: "#000000",
+            opacity: 0.3,
+            borderRadius: 0,
+            padding: 1
+          },
+          alignment: {
+            horizontal: "center",
+            vertical: "center"
+          }
         },
-        start: 0,
-        length: totalDuration
-      }]
+        start: imageDuration,
+        length: imageDuration,
+        position: "center",
+        offset: {
+          x: 0, 
+          y: -0.4
+        }
+      });
+    }
+    
+    if (textClips.length > 0) {
+      tracks.push({
+        clips: textClips
+      });
+    }
+  }
+
+  // Piste audio
+  if (config.musicUrl) {
+    console.log("🎵 Ajout de la piste audio avec la musique:", config.musicUrl);
+    tracks.push({
+      clips: [
+        {
+          asset: {
+            type: "audio",
+            src: config.musicUrl,
+            effect: "fadeOut"
+          },
+          start: 0,
+          length: totalDuration,
+          volume: 0.8
+        }
+      ]
     });
   } else {
     console.log("⚠️ Aucune URL de musique n'a été fournie, aucune piste audio ne sera ajoutée");
   }
-
-  const timeline = {
-    background: "#000000",
-    tracks: tracks
-  };
-
-  // Configuration de sortie améliorée
-  const output = {
-    format: "mp4",
-    fps: 25,
-    size: {
-      width: 1280,
-      height: 720
+  
+  // Vérifier si chaque piste contient des clips
+  for (const track of tracks) {
+    if (!track.clips || track.clips.length === 0) {
+      console.warn("⚠️ Une piste sans clips a été détectée");
+    }
+  }
+  
+  // Vérification de la présence d'une piste audio
+  const hasAudioTrack = tracks.some(track => 
+    track.clips && track.clips.some(clip => clip.asset?.type === 'audio')
+  );
+  
+  if (hasAudioTrack) {
+    console.log("✅ Piste audio ajoutée à la timeline");
+  } else {
+    console.log("⚠️ Aucune piste audio n'a été ajoutée à la timeline");
+  }
+  
+  console.log("✅ Timeline générée avec succès");
+  
+  return {
+    timeline: {
+      background: "#000000",
+      tracks
+    },
+    output: {
+      format: "mp4",
+      fps: 25,
+      size: {
+        width: 1280,
+        height: 720
+      }
     }
   };
-
-  console.log("✅ Timeline générée avec succès");
-  return { timeline, output };
 };

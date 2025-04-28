@@ -12,9 +12,9 @@ type SlideshowGenerationSectionProps = {
   refetchSlideshowStatus: () => void;
   onRegenerateSlideshow: () => void;
   selectedImages: string[];
+  selectedMusic?: string;
   toggleImageSelection?: (imageUrl: string) => void;
   availableImages?: string[];
-  selectedMusic?: string;
 };
 
 export const SlideshowGenerationSection = ({
@@ -25,7 +25,8 @@ export const SlideshowGenerationSection = ({
   generateSlideshow,
   refetchSlideshowStatus,
   onRegenerateSlideshow,
-  selectedImages
+  selectedImages,
+  selectedMusic
 }: SlideshowGenerationSectionProps) => {
   const [isManualChecking, setIsManualChecking] = React.useState(false);
   
@@ -34,6 +35,11 @@ export const SlideshowGenerationSection = ({
     refetchSlideshowStatus();
     setTimeout(() => setIsManualChecking(false), 2000);
   };
+
+  // Add debug logging for the selected music
+  React.useEffect(() => {
+    console.log("SlideshowGenerationSection - selectedMusic:", selectedMusic);
+  }, [selectedMusic]);
 
   return (
     <div className="space-y-4">
@@ -46,7 +52,7 @@ export const SlideshowGenerationSection = ({
             disabled={selectedImages.length === 0}
             className="w-full"
           >
-            Générer le diaporama
+            Générer le diaporama{selectedMusic ? ` avec musique: ${selectedMusic.replace(/\.[^/.]+$/, "")}` : ""}
           </Button>
         </div>
       )}
