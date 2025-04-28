@@ -17,7 +17,7 @@ export const useMediaGenerationHandlers = (
     bannerImage: string | null,
     bannerType: "VENDU" | "A_VENDRE",
     brokerInfo: any,
-    validateBrokerInfo: (brokerInfo: any) => { isValid: boolean; errors: Record<string, string> },
+    validateBrokerInfo: (bannerImage: string | null, brokerInfo: any) => { isValid: boolean; errors: Record<string, string> },
     setFormErrors: (errors: Record<string, string>) => void
   ): Promise<{ success?: boolean; errors?: Record<string, string> }> => {
     if (!bannerImage) {
@@ -25,7 +25,7 @@ export const useMediaGenerationHandlers = (
       return { success: false, errors: { "bannerImage": "Image manquante" } };
     }
 
-    const validationResult = validateBrokerInfo(brokerInfo);
+    const validationResult = validateBrokerInfo(bannerImage, brokerInfo);
     if (!validationResult.isValid) {
       setFormErrors(validationResult.errors);
       toast.error("Veuillez vérifier les informations du courtier.");

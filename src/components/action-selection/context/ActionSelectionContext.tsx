@@ -145,7 +145,7 @@ export const ActionSelectionProvider = ({
       slideshowRenderId: state.slideshowRenderId,
       bannerRenderId: state.bannerRenderId,
       handleGenerateSlideshow: state.handleGenerateSlideshow,
-      handleGenerateBanner: () => {
+      handleGenerateBanner: async () => {
         // Create a wrapper function that accesses the state values directly
         const brokerInfo = {
           brokerImageUrl: state.brokerImageUrl,
@@ -154,7 +154,7 @@ export const ActionSelectionProvider = ({
           brokerEmail: state.brokerEmail,
           brokerPhone: state.brokerPhone
         };
-        return state.handleGenerateBanner(state.bannerImage, state.bannerType, brokerInfo);
+        return await state.handleGenerateBanner(state.bannerImage, state.bannerType, brokerInfo);
       },
       refetchSlideshowStatus: slideshowMonitor.refetchSlideshowStatus,
       
