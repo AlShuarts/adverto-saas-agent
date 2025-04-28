@@ -1,4 +1,3 @@
-
 import { PublicationStep } from "./PublicationStep";
 import { TemplateStep } from "./TemplateStep";
 import { MediaStep } from "./MediaStep";
@@ -60,7 +59,6 @@ export const renderStepContent = (props: any) => {
           formErrors={props.formErrors}
           setFormErrors={props.setFormErrors}
           listing={listing}
-          // Add slideshow generation props
           isGeneratingSlideshow={props.isGeneratingSlideshow}
           isGeneratingBanner={props.isGeneratingBanner}
           slideshowUrl={props.slideshowUrl}
@@ -76,7 +74,7 @@ export const renderStepContent = (props: any) => {
           handleRegenerateBanner={props.handleRegenerateBanner}
         />
       );
-    case 5:
+    case 4:
       return (
         <SocialStep
           selectedPublicationTypes={props.selectedPublicationTypes}
@@ -84,7 +82,7 @@ export const renderStepContent = (props: any) => {
           setSelectedNetworks={props.setSelectedNetworks}
           isSubmitting={props.isPublishing}
           onSubmit={props.handlePublishWrapper}
-          hasRequiredInfo={true}
+          hasRequiredInfo={!!props.generatedText}
           generatedText={props.generatedText}
           setGeneratedText={props.setGeneratedText}
           images={listing?.images || []}
