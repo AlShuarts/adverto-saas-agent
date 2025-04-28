@@ -27,13 +27,14 @@ export const useAudioPlayer = () => {
         setMusicList(musicFiles);
         
         if (musicFiles.length > 0 && !selectedMusic) {
+          console.log("Setting initial music selection:", musicFiles[0]);
           setSelectedMusic(musicFiles[0]);
         }
       }
     } catch (error) {
       console.error("Error in fetchMusic:", error);
     }
-  }, [selectedMusic]);
+  }, []); // Removed selectedMusic dependency to avoid circular dependency
 
   useEffect(() => {
     fetchMusic();
