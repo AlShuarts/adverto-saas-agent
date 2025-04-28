@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useMediaSelection } from './useMediaSelection';
 import { useMediaGeneration } from './useMediaGeneration';
@@ -38,46 +39,23 @@ export const useMediaState = (listingId: string) => {
     generateBanner
   } = useMediaGeneration(listingId);
 
-  const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
+  // Let's remove the duplicate state management for music
+  // since it's now handled in useAudioPlayer
   const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
 
-  const handleMusicChange = (value: string) => {
-    console.log("Music selection changed to:", value);
-    stopAudio();
-    setSelectedMusic(value);
-  };
-
-  const previewMusic = (musicName: string) => {
-    console.log("Attempting to preview music:", musicName);
-    if (currentlyPlaying === musicName) {
-      console.log("Stopping current music preview");
-      stopAudio();
-      return;
-    }
-
-    try {
-      const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
-      console.log("Playing music preview from URL:", publicUrl);
-      playAudio(musicName, publicUrl, 0.5);
-    } catch (error) {
-      console.error("Error setting up audio playback:", error);
-    }
-  };
-
   const handleGenerateSlideshow = async () => {
-    console.log("Generating slideshow with selected music:", selectedMusic);
+    console.log("Generating slideshow with selected images");
     if (selectedImages.length === 0) {
-      return;
+      return null;
     }
 
-    // Fix: Pass the parameters directly instead of as an object
-    return await generateSlideshow(selectedImages, selectedMusic);
+    return await generateSlideshow(selectedImages, undefined);
   };
 
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    selectedMusic,
+    undefined,
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,
@@ -110,12 +88,9 @@ export const useMediaState = (listingId: string) => {
     setIsGeneratingBanner,
     setSlideshowRenderId,
     setBannerRenderId,
-    selectedMusic,
-    setSelectedMusic,
-    currentlyPlaying,
-    handleMusicChange,
-    previewMusic,
     handleGenerateSlideshow,
-    handleGenerateBanner
+    handleGenerateBanner,
+    currentlyPlaying,
+    stopAudio
   };
 };
