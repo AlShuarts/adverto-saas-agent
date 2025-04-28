@@ -1,8 +1,10 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 import { toast } from "sonner";
 
+// Define the interface for the slideshow configuration
 interface SlideshowConfig {
   imageDuration: number;
   showDetails: boolean;
@@ -33,6 +35,7 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
+      // Préparation du payload en s'assurant que selectedMusic est bien inclus
       const payload = {
         listingId: listingId,
         config: {
@@ -41,6 +44,7 @@ export const useSlideshowGeneration = (listingId: string) => {
           showPrice: true,
           showAddress: true,
           selectedImages: selectedImages,
+          // S'assurer que selectedMusic est explicitement inclus, même s'il est undefined
           selectedMusic: selectedMusic
         }
       };
@@ -84,7 +88,7 @@ export const useSlideshowGeneration = (listingId: string) => {
       setIsGeneratingSlideshow(false);
     }
   };
-
+  
   const refetchSlideshowStatus = useCallback(async () => {
     if (slideshowRenderId) {
       console.log("Vérification manuelle du statut du diaporama:", slideshowRenderId);
