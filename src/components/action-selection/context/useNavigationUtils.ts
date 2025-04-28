@@ -1,3 +1,4 @@
+
 import { PublicationType, SocialNetworks } from './types';
 
 export const useNavigationUtils = (
@@ -18,10 +19,13 @@ export const useNavigationUtils = (
       case 2: 
         return true;
       case 3: 
+        // Only check for image selection in step 3
+        // We'll handle content generation directly in this step
         const hasImages = selectedImages.length > 0;
         const hasBannerImage = selectedPublicationTypes.includes("banner") && !!bannerImage;
         
         if (selectedPublicationTypes.includes("slideshow") || selectedPublicationTypes.includes("banner")) {
+          // For slideshow/banner, check if we've already generated the content
           const needsSlideshow = selectedPublicationTypes.includes("slideshow");
           const needsBanner = selectedPublicationTypes.includes("banner");
           
@@ -30,9 +34,10 @@ export const useNavigationUtils = (
           
           return (hasImages || hasBannerImage) && slideshowReady && bannerReady;
         } else {
+          // For text and photos only, just need images
           return hasImages || true;
         }
-      case 4:
+      case 5:
         return selectedNetworks.facebook || selectedNetworks.instagram;
       default:
         return true;
@@ -40,13 +45,20 @@ export const useNavigationUtils = (
   };
   
   const nextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep === 2) {
+      setCurrentStep(3);
+    } else if (currentStep === 3) {
+      // Skip step 4 entirely and go straight to social networks step
+      setCurrentStep(5);
+    } else {
       setCurrentStep(currentStep + 1);
     }
   };
   
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (currentStep === 5) {
+      setCurrentStep(3);
+    } else {
       setCurrentStep(currentStep - 1);
     }
   };
