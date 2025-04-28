@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { useMediaSelection } from './useMediaSelection';
 import { useMediaGeneration } from './useMediaGeneration';
 import { useMediaGenerationHandlers } from './useMediaGenerationHandlers';
-import { useAudioControls } from '@/hooks/useAudioControls';
-import { supabase } from "@/integrations/supabase/client";
+import { useAudioPlayer } from './useAudioPlayer';
 
 export const useMediaState = (listingId: string) => {
   const {
@@ -39,23 +38,30 @@ export const useMediaState = (listingId: string) => {
     generateBanner
   } = useMediaGeneration(listingId);
 
-  // Let's remove the duplicate state management for music
-  // since it's now handled in useAudioPlayer
-  const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
+  // Utilisation du hook useAudioPlayer pour la gestion de la musique
+  const { 
+    currentlyPlaying, 
+    musicList, 
+    selectedMusic, 
+    setSelectedMusic,
+    stopAudio,
+    handleMusicChange,
+    previewMusic 
+  } = useAudioPlayer();
 
   const handleGenerateSlideshow = async () => {
-    console.log("Generating slideshow with selected images");
+    console.log("Generating slideshow with selected images and music:", selectedMusic);
     if (selectedImages.length === 0) {
       return null;
     }
 
-    return await generateSlideshow(selectedImages, undefined);
+    return await generateSlideshow(selectedImages, selectedMusic);
   };
 
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    undefined,
+    selectedMusic, // Passer selectedMusic ici
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,
@@ -91,6 +97,11 @@ export const useMediaState = (listingId: string) => {
     handleGenerateSlideshow,
     handleGenerateBanner,
     currentlyPlaying,
-    stopAudio
+    musicList,
+    selectedMusic,
+    setSelectedMusic,
+    stopAudio,
+    handleMusicChange,
+    previewMusic
   };
 };

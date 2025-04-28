@@ -26,7 +26,7 @@ export const useAudioPlayer = () => {
         console.log("Music files fetched:", musicFiles);
         setMusicList(musicFiles);
         
-        // Set default selected music if available
+        // Only set default if no music is selected AND musicFiles contains items
         if (musicFiles.length > 0 && !selectedMusic) {
           console.log("Default music set to:", musicFiles[0]);
           setSelectedMusic(musicFiles[0]);

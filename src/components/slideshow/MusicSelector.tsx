@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 type MusicSelectorProps = {
   musics: BackgroundMusic[] | string[];
-  selectedMusic: string | null;
+  selectedMusic: string | null | undefined;
   onMusicChange: (value: string) => void;
 };
 
@@ -31,6 +31,8 @@ export const MusicSelector = ({ musics, selectedMusic, onMusicChange }: MusicSel
           const id = typeof music === 'string' ? music : music.id;
           const name = typeof music === 'string' ? music.replace(/\.[^/.]+$/, "") : music.name;
           const value = typeof music === 'string' ? music : music.url;
+          
+          console.log(`Rendering music option: ${name}, value: ${value}, isSelected: ${selectedMusic === value}`);
           
           return (
             <div key={id} className="flex items-center space-x-2">
