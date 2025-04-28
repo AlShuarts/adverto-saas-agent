@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMediaSelection } from './useMediaSelection';
 import { useMediaGeneration } from './useMediaGeneration';
@@ -44,7 +43,7 @@ export const useMediaState = (listingId: string) => {
   const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
 
   const handleGenerateSlideshow = async () => {
-    console.log("Generating slideshow with selected images");
+    console.log("Generating slideshow with selected images and music");
     if (selectedImages.length === 0) {
       return null;
     }
@@ -55,7 +54,7 @@ export const useMediaState = (listingId: string) => {
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    undefined,
+    undefined, // Pass selectedMusic here
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,
