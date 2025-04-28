@@ -6,7 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { MoveVertical, Play, Pause, Music } from "lucide-react";
-import { useEffect, useState } from "react";
 
 type SlideshowConfigProps = {
   images: string[];
@@ -32,13 +31,11 @@ export const SlideshowConfig = ({
   previewMusic
 }: SlideshowConfigProps) => {
   // Debug logging
-  useEffect(() => {
-    console.log("SlideshowConfig rendered with:", {
-      selectedMusic,
-      currentlyPlaying,
-      musicList
-    });
-  }, [selectedMusic, currentlyPlaying, musicList]);
+  console.log("SlideshowConfig rendered with:", {
+    selectedMusic,
+    currentlyPlaying,
+    musicList
+  });
 
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -132,28 +129,26 @@ export const SlideshowConfig = ({
             </SelectContent>
           </Select>
           
-          {/* Always show play button when music is available */}
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="icon" 
-            onClick={() => {
-              console.log("Preview button clicked for:", selectedMusic);
-              if (selectedMusic) {
+          {selectedMusic && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="icon" 
+              onClick={() => {
+                console.log("Preview button clicked for:", selectedMusic);
                 previewMusic(selectedMusic);
-              }
-            }}
-            className="flex-shrink-0"
-            disabled={!selectedMusic}
-            aria-label={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
-            title={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
-          >
-            {currentlyPlaying === selectedMusic ? (
-              <Pause className="h-4 w-4" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
-          </Button>
+              }}
+              className="flex-shrink-0"
+              aria-label={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
+              title={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
+            >
+              {currentlyPlaying === selectedMusic ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
         
         {selectedMusic ? (

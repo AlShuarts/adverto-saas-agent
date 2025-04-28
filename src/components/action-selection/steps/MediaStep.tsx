@@ -1,8 +1,9 @@
-
-import { MediaSelector } from "../media-selector";
-import { PublicationType } from "../types";
-import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
+import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
+import { PublicationType } from "../types";
+import { Tables } from "@/integrations/supabase/types";
+import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 
 type MediaStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -31,7 +32,7 @@ type MediaStepProps = {
   setBrokerPhone: (phone: string) => void;
   formErrors: {[key: string]: string};
   setFormErrors: (errors: {[key: string]: string}) => void;
-  listing?: any;
+  listing: Tables<"listings">;
   isGeneratingSlideshow: boolean;
   isGeneratingBanner: boolean;
   slideshowUrl: string | null;
@@ -99,71 +100,59 @@ export const MediaStep = ({
       <div className="space-y-6">
         <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
         
-        <MediaSelector
-          selectedPublicationTypes={selectedPublicationTypes}
-          images={availableImages}
-          selectedImages={selectedImages}
-          bannerImage={bannerImage}
-          bannerType={bannerType}
-          musicList={musicList}
-          selectedMusic={selectedMusic}
-          currentlyPlaying={currentlyPlaying}
-          toggleImageSelection={toggleImageSelection}
-          onDragEnd={onDragEnd}
-          selectBannerImage={selectBannerImage}
-          handleMusicChange={handleMusicChange}
-          previewMusic={previewMusic}
-          setBannerType={setBannerType}
-          brokerImageUrl={brokerImageUrl}
-          setBrokerImageUrl={setBrokerImageUrl}
-          agencyLogoUrl={agencyLogoUrl}
-          setAgencyLogoUrl={setAgencyLogoUrl}
-          brokerName={brokerName}
-          setBrokerName={setBrokerName}
-          brokerEmail={brokerEmail}
-          setBrokerEmail={setBrokerEmail}
-          brokerPhone={brokerPhone}
-          setBrokerPhone={setBrokerPhone}
-          formErrors={formErrors}
-          setFormErrors={setFormErrors}
-        />
+        {showSlideshow && (
+          <div className="space-y-6">
+            <SlideshowConfig
+              images={availableImages}
+              selectedImages={selectedImages}
+              musicList={musicList}
+              selectedMusic={selectedMusic}
+              currentlyPlaying={currentlyPlaying}
+              toggleImageSelection={toggleImageSelection}
+              onDragEnd={onDragEnd}
+              handleMusicChange={handleMusicChange}
+              previewMusic={previewMusic}
+            />
+            
+            <SlideshowGenerationSection
+              isGeneratingSlideshow={isGeneratingSlideshow}
+              slideshowUrl={slideshowUrl}
+              slideshowError={slideshowError}
+              slideshowRenderId={slideshowRenderId}
+              generateSlideshow={generateSlideshow}
+              refetchSlideshowStatus={refetchSlideshowStatus}
+              onRegenerateSlideshow={handleRegenerateSlideshow}
+              selectedImages={selectedImages}
+              selectedMusic={selectedMusic}
+            />
+          </div>
+        )}
         
-        {(showSlideshow || showBanner) && (
-          <MediaGenerationStep
-            selectedPublicationTypes={selectedPublicationTypes}
-            selectedImages={selectedImages}
-            isGeneratingSlideshow={isGeneratingSlideshow}
+        {showBanner && (
+          <BannerGenerationSection
             isGeneratingBanner={isGeneratingBanner}
-            slideshowUrl={slideshowUrl}
             bannerUrl={bannerUrl}
-            slideshowError={slideshowError}
             bannerError={bannerError}
-            slideshowRenderId={slideshowRenderId}
             bannerRenderId={bannerRenderId}
-            formErrors={formErrors}
-            generateSlideshow={generateSlideshow}
             generateBanner={generateBanner}
-            refetchSlideshowStatus={refetchSlideshowStatus}
             bannerImage={bannerImage}
             bannerType={bannerType}
             setBannerType={setBannerType}
             selectBannerImage={selectBannerImage}
-            brokerImageUrl={brokerImageUrl}
-            setBrokerImageUrl={setBrokerImageUrl}
-            agencyLogoUrl={agencyLogoUrl}
-            setAgencyLogoUrl={setAgencyLogoUrl}
             brokerName={brokerName}
             setBrokerName={setBrokerName}
             brokerEmail={brokerEmail}
             setBrokerEmail={setBrokerEmail}
             brokerPhone={brokerPhone}
             setBrokerPhone={setBrokerPhone}
+            brokerImageUrl={brokerImageUrl}
+            setBrokerImageUrl={setBrokerImageUrl}
+            agencyLogoUrl={agencyLogoUrl}
+            setAgencyLogoUrl={setAgencyLogoUrl}
+            formErrors={formErrors}
             setFormErrors={setFormErrors}
-            onRegenerateSlideshow={handleRegenerateSlideshow}
+            selectedImages={selectedImages}
             onRegenerateBanner={handleRegenerateBanner}
-            selectedMusic={selectedMusic} // Make sure to pass selectedMusic
-            toggleImageSelection={toggleImageSelection}
-            listing={listing}
           />
         )}
       </div>
