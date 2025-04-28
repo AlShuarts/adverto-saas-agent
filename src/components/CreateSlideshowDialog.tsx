@@ -25,11 +25,13 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
   const { isLoading, handleSubmit } = useSlideshowSubmit(listing, onClose);
 
   const handleMusicChange = (value: string) => {
+    console.log("Music changed to:", value);
     stopAudio();
     setConfig(prev => ({ ...prev, selectedMusic: value }));
   };
 
   const handlePreviewMusic = (musicName: string) => {
+    console.log("Preview music:", musicName);
     const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
     playAudio(musicName, publicUrl, config.musicVolume);
   };
@@ -45,6 +47,7 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting with config:", config);
     await handleSubmit(config);
   };
 

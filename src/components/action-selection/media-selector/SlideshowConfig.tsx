@@ -112,10 +112,7 @@ export const SlideshowConfig = ({
         <div className="flex items-center gap-2">
           <Select 
             value={selectedMusic || ""} 
-            onValueChange={(value) => {
-              console.log("Music selection changed in Select:", value);
-              handleMusicChange(value);
-            }}
+            onValueChange={handleMusicChange}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Sélectionner une musique" />
@@ -134,10 +131,7 @@ export const SlideshowConfig = ({
               type="button" 
               variant="outline" 
               size="icon" 
-              onClick={() => {
-                console.log("Preview button clicked for:", selectedMusic);
-                previewMusic(selectedMusic);
-              }}
+              onClick={() => previewMusic(selectedMusic)}
               className="flex-shrink-0"
               aria-label={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
               title={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}

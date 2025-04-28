@@ -27,10 +27,9 @@ export const useAudioPlayer = () => {
         console.log("Music files fetched:", musicFiles);
         setMusicList(musicFiles);
         
-        // Only set default music if no music is currently selected
         if (musicFiles.length > 0 && !selectedMusic) {
+          console.log("Setting default music to:", musicFiles[0]);
           setSelectedMusic(musicFiles[0]);
-          console.log("Default music set to:", musicFiles[0]);
         }
       }
     } catch (error) {
@@ -40,8 +39,10 @@ export const useAudioPlayer = () => {
 
   const handleMusicChange = useCallback((value: string) => {
     console.log("Music selection changed to:", value);
-    stopAudio();
-    setSelectedMusic(value);
+    if (value) {
+      stopAudio();
+      setSelectedMusic(value);
+    }
   }, []);
 
   const previewMusic = useCallback((musicName: string) => {
@@ -56,13 +57,11 @@ export const useAudioPlayer = () => {
     stopAudio();
     
     try {
-      const audio = new Audio();
-      audioRef.current = audio;
-      
       const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
       console.log("Playing music preview from URL:", publicUrl);
       
-      audio.src = publicUrl;
+      const audio = new Audio(publicUrl);
+      audioRef.current = audio;
       audio.volume = 0.5;
       
       // Add event listeners for better error handling
@@ -113,7 +112,7 @@ export const useAudioPlayer = () => {
     return () => {
       stopAudio();
     };
-  }, []);
+  }, [fetchMusic]);
 
   // Log state changes for debugging
   useEffect(() => {
