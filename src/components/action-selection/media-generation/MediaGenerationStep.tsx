@@ -45,6 +45,7 @@ type MediaGenerationStepProps = {
   currentlyPlaying: string | null;
   listing: Tables<"listings">;
   musicList: string[];
+  onDragEnd: (result: any) => void;
 };
 
 export const MediaGenerationStep = ({
@@ -85,7 +86,8 @@ export const MediaGenerationStep = ({
   previewMusic,
   currentlyPlaying,
   listing,
-  musicList
+  musicList,
+  onDragEnd
 }: MediaGenerationStepProps) => {
   
   const showSlideshow = selectedPublicationTypes.includes("slideshow");
@@ -109,6 +111,7 @@ export const MediaGenerationStep = ({
                 toggleImageSelection={toggleImageSelection}
                 handleMusicChange={handleMusicChange}
                 previewMusic={previewMusic}
+                onDragEnd={onDragEnd}
               />
               
               <SlideshowGenerationSection

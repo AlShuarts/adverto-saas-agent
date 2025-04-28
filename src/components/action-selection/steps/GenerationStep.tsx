@@ -42,6 +42,7 @@ type GenerationStepProps = {
   previewMusic: (musicName: string) => void;
   currentlyPlaying: string | null;
   musicList: string[];
+  onDragEnd: (result: any) => void;
 };
 
 export const GenerationStep = ({
@@ -83,6 +84,7 @@ export const GenerationStep = ({
   previewMusic,
   currentlyPlaying,
   musicList,
+  onDragEnd
 }: GenerationStepProps) => {
   return (
     <MediaGenerationStep
@@ -124,6 +126,7 @@ export const GenerationStep = ({
       previewMusic={previewMusic}
       currentlyPlaying={currentlyPlaying}
       musicList={musicList}
+      onDragEnd={onDragEnd}
     />
   );
 };
