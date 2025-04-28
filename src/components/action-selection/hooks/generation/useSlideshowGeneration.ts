@@ -35,7 +35,7 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
-      // Préparation du payload avec la musique sélectionnée
+      // Préparation du payload en s'assurant que selectedMusic est bien inclus
       const payload = {
         listingId: listingId,
         config: {
@@ -44,7 +44,8 @@ export const useSlideshowGeneration = (listingId: string) => {
           showPrice: true,
           showAddress: true,
           selectedImages: selectedImages,
-          selectedMusic: selectedMusic // Assurer que selectedMusic est bien inclus
+          // S'assurer que selectedMusic est explicitement inclus, même s'il est undefined
+          selectedMusic: selectedMusic
         }
       };
       

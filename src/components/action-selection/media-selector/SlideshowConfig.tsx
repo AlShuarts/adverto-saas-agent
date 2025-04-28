@@ -1,3 +1,4 @@
+
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -5,7 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { MoveVertical, Play, Pause, Music } from "lucide-react";
-import { MusicSelector } from "@/components/slideshow/MusicSelector";
 
 type SlideshowConfigProps = {
   images: string[];
@@ -34,7 +34,7 @@ export const SlideshowConfig = ({
   console.log("SlideshowConfig rendered with:", {
     selectedMusic,
     currentlyPlaying,
-    musicCount: musicList.length
+    musicList
   });
 
   return (
@@ -107,13 +107,55 @@ export const SlideshowConfig = ({
         </div>
       </div>
       
-      <MusicSelector
-        musics={musicList}
-        selectedMusic={selectedMusic}
-        currentlyPlaying={currentlyPlaying}
-        onMusicChange={handleMusicChange}
-        onPreviewMusic={previewMusic}
-      />
+      <div className="space-y-2">
+        <Label>Musique de fond</Label>
+        <div className="flex items-center gap-2">
+          <Select 
+            value={selectedMusic || ""} 
+            onValueChange={handleMusicChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sélectionner une musique" />
+            </SelectTrigger>
+            <SelectContent>
+              {musicList.map(music => (
+                <SelectItem key={music} value={music}>
+                  {music.replace(/\.[^/.]+$/, "")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {selectedMusic && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="icon" 
+              onClick={() => previewMusic(selectedMusic)}
+              className="flex-shrink-0"
+              aria-label={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
+              title={currentlyPlaying === selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
+            >
+              {currentlyPlaying === selectedMusic ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
+        
+        {selectedMusic ? (
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <Music className="h-3 w-3" /> 
+            Musique sélectionnée: {selectedMusic.replace(/\.[^/.]+$/, "")}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">
+            Aucune musique sélectionnée
+          </p>
+        )}
+      </div>
     </div>
   );
 };

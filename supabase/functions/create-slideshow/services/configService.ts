@@ -1,35 +1,35 @@
 
-import { SlideshowConfig } from "../types/config.ts";
-import { supabase } from "./databaseService.ts";
+export const validateConfig = (config: any) => {
+  if (!config) {
+    throw new Error("❌ Configuration manquante.");
+  }
 
-export const validateConfig = (rawConfig: any): SlideshowConfig => {
-  // Vérification et normalisation de la configuration
-  const config: SlideshowConfig = {
-    imageDuration: rawConfig.imageDuration || 3,
-    showDetails: rawConfig.showDetails !== false,
-    showPrice: rawConfig.showPrice !== false,
-    showAddress: rawConfig.showAddress !== false,
-    selectedImages: Array.isArray(rawConfig.selectedImages) ? rawConfig.selectedImages : [],
-    selectedMusic: rawConfig.selectedMusic || undefined,
-    musicUrl: undefined // Will be populated below if selectedMusic exists
-  };
-
-  console.log("Config reçue:", JSON.stringify(rawConfig, null, 2));
-  console.log("🎵 Configuration de la musique:", rawConfig.selectedMusic);
-
-  // Traitement de la musique
-  if (config.selectedMusic) {
-    console.log("🎵 Musique sélectionnée:", config.selectedMusic);
-    config.musicUrl = supabase.storage.from('background-music')
-      .getPublicUrl(config.selectedMusic).data.publicUrl;
-    console.log("🎵 URL de la musique générée:", config.musicUrl);
+  if (!config.selectedImages || config.selectedImages.length === 0) {
+    throw new Error("❌ Au moins une image est requise pour créer un diaporama.");
+  }
+  
+  // Log de débogage amélioré
+  console.log("Configuration reçue avant traitement:", JSON.stringify(config, null, 2));
+  console.log("Musique sélectionnée dans la config:", config.selectedMusic || "aucune");
+  
+  // Traitement de l'URL de la musique
+  let musicUrl = null;
+  
+  // S'assurer que selectedMusic est une chaîne non vide avant de construire l'URL
+  if (config.selectedMusic && typeof config.selectedMusic === 'string' && config.selectedMusic.trim() !== '') {
+    musicUrl = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/background-music/${config.selectedMusic}`;
+    console.log("URL de musique construite:", musicUrl);
   } else {
-    console.log("🔇 Aucune musique sélectionnée");
+    console.log("Aucune musique sélectionnée, musicUrl sera null");
   }
-
-  if (config.selectedImages.length === 0) {
-    throw new Error("Au moins une image est nécessaire pour créer un diaporama");
-  }
-
-  return config;
+  
+  // Création d'une copie propre de la configuration avec l'URL de musique correcte
+  const processedConfig = {
+    ...config,
+    musicUrl: musicUrl
+  };
+  
+  console.log("Configuration après traitement:", JSON.stringify(processedConfig, null, 2));
+  
+  return processedConfig;
 };

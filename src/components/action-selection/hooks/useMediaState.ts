@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useMediaSelection } from './useMediaSelection';
 import { useMediaGeneration } from './useMediaGeneration';
 import { useMediaGenerationHandlers } from './useMediaGenerationHandlers';
-import { useAudioPlayer } from './useAudioPlayer';
+import { useAudioControls } from '@/hooks/useAudioControls';
+import { supabase } from "@/integrations/supabase/client";
 
 export const useMediaState = (listingId: string) => {
   const {
@@ -38,39 +39,23 @@ export const useMediaState = (listingId: string) => {
     generateBanner
   } = useMediaGeneration(listingId);
 
-  const { 
-    currentlyPlaying, 
-    musicList, 
-    selectedMusic, 
-    setSelectedMusic,
-    stopAudio,
-    handleMusicChange: handleMusicChangeAudio,
-    previewMusic,
-    fetchMusic 
-  } = useAudioPlayer();
-
-  const handleMusicChange = (value: string) => {
-    console.log("Music selection changed in MediaState:", value);
-    handleMusicChangeAudio(value);
-  };
+  // Let's remove the duplicate state management for music
+  // since it's now handled in useAudioPlayer
+  const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
 
   const handleGenerateSlideshow = async () => {
-    console.log("Generating slideshow with selected images and music:", {
-      imageCount: selectedImages.length,
-      selectedMusic
-    });
-    
+    console.log("Generating slideshow with selected images");
     if (selectedImages.length === 0) {
       return null;
     }
 
-    return await generateSlideshow(selectedImages, selectedMusic);
+    return await generateSlideshow(selectedImages, undefined);
   };
 
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    selectedMusic,
+    undefined,
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,
@@ -106,12 +91,6 @@ export const useMediaState = (listingId: string) => {
     handleGenerateSlideshow,
     handleGenerateBanner,
     currentlyPlaying,
-    musicList,
-    selectedMusic,
-    setSelectedMusic,
-    stopAudio,
-    handleMusicChange,
-    previewMusic,
-    fetchMusic
+    stopAudio
   };
 };

@@ -50,10 +50,7 @@ export const SlideshowGenerationSection = ({
       {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
         <div className="flex flex-col items-center justify-center py-4">
           <Button 
-            onClick={() => {
-              console.log("Generating slideshow with music:", selectedMusic);
-              generateSlideshow();
-            }}
+            onClick={generateSlideshow}
             disabled={selectedImages.length === 0}
             className="w-full"
           >

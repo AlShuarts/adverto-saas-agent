@@ -9,9 +9,8 @@ export const useInitialization = (
   fetchMusic: () => void,
 ) => {
   useEffect(() => {
-    console.log("Initializing with new listing images...");
     resetState();
     fetchTemplates();
     fetchMusic();
-  }, [listing.images, resetState, fetchTemplates, fetchMusic]);
+  }, [listing.images]);
 };
