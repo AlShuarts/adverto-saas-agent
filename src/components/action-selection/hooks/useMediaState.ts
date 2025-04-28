@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useMediaSelection } from './useMediaSelection';
 import { useMediaGeneration } from './useMediaGeneration';
@@ -44,7 +45,8 @@ export const useMediaState = (listingId: string) => {
     setSelectedMusic,
     stopAudio,
     handleMusicChange: handleMusicChangeAudio,
-    previewMusic 
+    previewMusic,
+    fetchMusic 
   } = useAudioPlayer();
 
   const handleMusicChange = (value: string) => {
@@ -109,6 +111,7 @@ export const useMediaState = (listingId: string) => {
     setSelectedMusic,
     stopAudio,
     handleMusicChange,
-    previewMusic
+    previewMusic,
+    fetchMusic
   };
 };

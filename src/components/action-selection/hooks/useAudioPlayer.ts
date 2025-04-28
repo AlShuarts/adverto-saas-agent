@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useAudioPlayer = () => {
@@ -8,36 +8,36 @@ export const useAudioPlayer = () => {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    const fetchMusic = async () => {
-      console.log("Fetching music list...");
-      try {
-        const { data, error } = await supabase.storage.from('background-music').list();
-        
-        if (error) {
-          console.error("Error fetching music list:", error);
-          return;
-        }
-        
-        if (data) {
-          const musicFiles = data
-            .filter(file => !file.name.startsWith('.'))
-            .map(file => file.name);
-          
-          console.log("Music files fetched:", musicFiles);
-          setMusicList(musicFiles);
-          
-          if (musicFiles.length > 0 && !selectedMusic) {
-            setSelectedMusic(musicFiles[0]);
-          }
-        }
-      } catch (error) {
-        console.error("Error in fetchMusic:", error);
+  const fetchMusic = useCallback(async () => {
+    console.log("Fetching music list...");
+    try {
+      const { data, error } = await supabase.storage.from('background-music').list();
+      
+      if (error) {
+        console.error("Error fetching music list:", error);
+        return;
       }
-    };
+      
+      if (data) {
+        const musicFiles = data
+          .filter(file => !file.name.startsWith('.'))
+          .map(file => file.name);
+        
+        console.log("Music files fetched:", musicFiles);
+        setMusicList(musicFiles);
+        
+        if (musicFiles.length > 0 && !selectedMusic) {
+          setSelectedMusic(musicFiles[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Error in fetchMusic:", error);
+    }
+  }, [selectedMusic]);
 
+  useEffect(() => {
     fetchMusic();
-  }, []);
+  }, [fetchMusic]);
 
   const handleMusicChange = (value: string) => {
     console.log("Music selection changed to:", value);
@@ -84,6 +84,7 @@ export const useAudioPlayer = () => {
     setSelectedMusic,
     stopAudio,
     handleMusicChange,
-    previewMusic
+    previewMusic,
+    fetchMusic
   };
 };

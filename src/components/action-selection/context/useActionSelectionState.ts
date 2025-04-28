@@ -88,6 +88,7 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     handleMusicChange,
     previewMusic,
     stopAudio,
+    fetchMusic,
     
     // From media state
     ...mediaState,
