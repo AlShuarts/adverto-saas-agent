@@ -1,11 +1,7 @@
 
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { SlideshowPlayer } from "@/components/slideshow/SlideshowPlayer";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Loader, Video, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { Loader2, Video, Play, Pause } from "lucide-react";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -16,7 +12,6 @@ type SlideshowGenerationSectionProps = {
   refetchSlideshowStatus: () => void;
   onRegenerateSlideshow: () => void;
   selectedImages: string[];
-  selectedMusic: string | undefined;
   toggleImageSelection?: (imageUrl: string) => void;
   availableImages?: string[];
 };
@@ -29,139 +24,101 @@ export const SlideshowGenerationSection = ({
   generateSlideshow,
   refetchSlideshowStatus,
   onRegenerateSlideshow,
-  selectedImages,
-  selectedMusic,
+  selectedImages
 }: SlideshowGenerationSectionProps) => {
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [isManualChecking, setIsManualChecking] = React.useState(false);
   
-  const handleGenerateClick = async () => {
-    console.log("Générer le diaporama avec la musique:", selectedMusic || "aucune musique");
-    await generateSlideshow();
-  };
-
-  const handleStatusCheck = () => {
-    setIsCheckingStatus(true);
-    console.log("Vérification manuelle du statut du diaporama");
-    
-    // Call the refetch function
+  const handleCheckStatus = () => {
+    setIsManualChecking(true);
     refetchSlideshowStatus();
-    
-    // Reset the checking state after a short delay
-    setTimeout(() => {
-      setIsCheckingStatus(false);
-    }, 2000);
+    setTimeout(() => setIsManualChecking(false), 2000);
   };
-
-  // Vérifier si nous avons suffisamment d'images
-  const hasEnoughImages = selectedImages && selectedImages.length > 0;
-  const noImagesWarning = !hasEnoughImages && "Veuillez sélectionner au moins une image";
 
   return (
     <div className="space-y-4">
-      <h4 className="text-md font-medium">Diaporama</h4>
+      <h4 className="text-md font-medium">Génération du diaporama</h4>
       
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-6">
-            {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
-              <div className="space-y-4">
-                {!hasEnoughImages && (
-                  <Alert variant="default" className="bg-amber-50 text-amber-800 border-amber-300">
-                    <AlertDescription>
-                      Veuillez sélectionner au moins une image pour générer un diaporama.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                <Button 
-                  onClick={handleGenerateClick}
-                  disabled={!hasEnoughImages}
-                  className="w-full"
-                >
-                  Générer le diaporama
-                </Button>
-                
-                {selectedMusic && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    Musique sélectionnée: {selectedMusic}
-                  </p>
-                )}
-              </div>
+      {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
+        <div className="flex flex-col items-center justify-center py-4">
+          <Button 
+            onClick={generateSlideshow}
+            disabled={selectedImages.length === 0}
+            className="w-full"
+          >
+            Générer le diaporama
+          </Button>
+        </div>
+      )}
+
+      {isGeneratingSlideshow && (
+        <div className="w-full flex flex-col items-center justify-center p-4 text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p>Génération du diaporama en cours...</p>
+          <p className="text-xs text-muted-foreground">Cela peut prendre quelques minutes.</p>
+        </div>
+      )}
+
+      {slideshowRenderId && !slideshowUrl && !isGeneratingSlideshow && (
+        <div className="w-full flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm">Traitement en cours...</p>
+          <p className="text-xs text-muted-foreground">Cela peut prendre 3 à 5 minutes</p>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleCheckStatus}
+            disabled={isManualChecking}
+            className="flex items-center gap-2"
+          >
+            {isManualChecking ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Vérification en cours...
+              </>
+            ) : (
+              <>
+                Vérifier le statut
+              </>
             )}
-            
-            {isGeneratingSlideshow && (
-              <div className="w-full flex flex-col items-center justify-center p-4 text-center space-y-4">
-                <Loader className="h-8 w-8 animate-spin text-primary" />
-                <p>Génération du diaporama en cours...</p>
-                <p className="text-xs text-muted-foreground">Cela peut prendre quelques minutes.</p>
-                {selectedMusic && (
-                  <p className="text-xs text-muted-foreground">
-                    Avec musique: {selectedMusic}
-                  </p>
-                )}
-              </div>
-            )}
-            
-            {slideshowRenderId && !slideshowUrl && !isGeneratingSlideshow && (
-              <div className="w-full flex flex-col items-center space-y-4">
-                <Loader className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm">
-                  Traitement en cours...
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Cela peut prendre 3 à 5 minutes
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleStatusCheck}
-                    disabled={isCheckingStatus}
-                    className="flex items-center gap-2"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isCheckingStatus ? 'animate-spin' : ''}`} />
-                    {isCheckingStatus ? 'Vérification...' : 'Vérifier le statut'}
-                  </Button>
-                </div>
-                
-                {selectedMusic && (
-                  <p className="text-xs text-muted-foreground">
-                    Le diaporama sera créé avec la musique: {selectedMusic}
-                  </p>
-                )}
-              </div>
-            )}
+          </Button>
+        </div>
+      )}
+
+      {slideshowUrl && (
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-green-500 flex items-center gap-1">
+              <Video className="w-4 h-4" /> Diaporama généré avec succès
+            </span>
+            <Button 
+              variant="outline" 
+              onClick={onRegenerateSlideshow}
+            >
+              Régénérer
+            </Button>
           </div>
-        </CardContent>
-        <CardFooter>
-          {slideshowUrl && (
-            <div className="w-full flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={onRegenerateSlideshow}
-              >
-                Régénérer
-              </Button>
-              
+          
+          <div className="border rounded-md p-2 bg-muted/20">
+            <div className="flex justify-center">
               <Button 
                 variant="secondary"
+                size="sm"
                 onClick={() => window.open(slideshowUrl, '_blank')}
                 className="flex items-center gap-2"
               >
-                <Video className="h-4 w-4" />
+                <Play className="h-4 w-4" />
                 Prévisualiser le diaporama
               </Button>
             </div>
-          )}
-        </CardFooter>
-      </Card>
+          </div>
+        </div>
+      )}
       
       {slideshowError && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {slideshowError}. Veuillez réessayer.
-          </AlertDescription>
-        </Alert>
+        <div className="text-sm text-red-500 mt-2">
+          {slideshowError}
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
+import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { PublicationType } from "../types";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -39,7 +39,11 @@ type MediaGenerationStepProps = {
   onRegenerateBanner: () => void;
   selectedMusic: string | undefined;
   toggleImageSelection: (imageUrl: string) => void;
+  handleMusicChange: (music: string) => void;
+  previewMusic: string | null;
+  currentlyPlaying: string | null;
   listing: Tables<"listings">;
+  musicList: string[];
 };
 
 export const MediaGenerationStep = ({
@@ -76,7 +80,11 @@ export const MediaGenerationStep = ({
   onRegenerateBanner,
   selectedMusic,
   toggleImageSelection,
-  listing
+  handleMusicChange,
+  previewMusic,
+  currentlyPlaying,
+  listing,
+  musicList
 }: MediaGenerationStepProps) => {
   
   const showSlideshow = selectedPublicationTypes.includes("slideshow");
@@ -90,19 +98,29 @@ export const MediaGenerationStep = ({
       <ScrollArea className="h-[650px] pr-4">
         <div className="space-y-6">
           {showSlideshow && (
-            <SlideshowGenerationSection
-              isGeneratingSlideshow={isGeneratingSlideshow}
-              slideshowUrl={slideshowUrl}
-              slideshowError={slideshowError}
-              slideshowRenderId={slideshowRenderId}
-              generateSlideshow={generateSlideshow}
-              refetchSlideshowStatus={refetchSlideshowStatus}
-              onRegenerateSlideshow={onRegenerateSlideshow}
-              selectedImages={selectedImages}
-              selectedMusic={selectedMusic}
-              toggleImageSelection={toggleImageSelection}
-              availableImages={availableImages}
-            />
+            <>
+              <SlideshowConfig
+                images={availableImages}
+                selectedImages={selectedImages}
+                musicList={musicList}
+                selectedMusic={selectedMusic}
+                currentlyPlaying={currentlyPlaying}
+                toggleImageSelection={toggleImageSelection}
+                handleMusicChange={handleMusicChange}
+                previewMusic={previewMusic}
+              />
+              
+              <SlideshowGenerationSection
+                isGeneratingSlideshow={isGeneratingSlideshow}
+                slideshowUrl={slideshowUrl}
+                slideshowError={slideshowError}
+                slideshowRenderId={slideshowRenderId}
+                generateSlideshow={generateSlideshow}
+                refetchSlideshowStatus={refetchSlideshowStatus}
+                onRegenerateSlideshow={onRegenerateSlideshow}
+                selectedImages={selectedImages}
+              />
+            </>
           )}
           
           {showBanner && (
