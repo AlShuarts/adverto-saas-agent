@@ -1,45 +1,43 @@
 
-import { useAudioControls } from '@/hooks/useAudioControls';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useAudioPlayer = () => {
   const [musicList, setMusicList] = useState<string[]>([]);
-  const [selectedMusic, setSelectedMusic] = useState<string | undefined>(undefined);
-  const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
-
-  const fetchMusic = useCallback(async () => {
-    try {
-      console.log("Fetching music list...");
-      const { data, error } = await supabase.storage.from('background-music').list();
-      
-      if (error) {
-        console.error("Error fetching music list:", error);
-        return;
-      }
-      
-      if (data) {
-        const musicFiles = data
-          .filter(file => !file.name.startsWith('.'))
-          .map(file => file.name);
-        
-        console.log("Music files fetched:", musicFiles);
-        setMusicList(musicFiles);
-        
-        // Only set default if no music is selected AND musicFiles contains items
-        if (musicFiles.length > 0 && !selectedMusic) {
-          console.log("Default music set to:", musicFiles[0]);
-          setSelectedMusic(musicFiles[0]);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching music:", error);
-    }
-  }, [selectedMusic]);
+  const [selectedMusic, setSelectedMusic] = useState<string>("");
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    const fetchMusic = async () => {
+      console.log("Fetching music list...");
+      try {
+        const { data, error } = await supabase.storage.from('background-music').list();
+        
+        if (error) {
+          console.error("Error fetching music list:", error);
+          return;
+        }
+        
+        if (data) {
+          const musicFiles = data
+            .filter(file => !file.name.startsWith('.'))
+            .map(file => file.name);
+          
+          console.log("Music files fetched:", musicFiles);
+          setMusicList(musicFiles);
+          
+          if (musicFiles.length > 0 && !selectedMusic) {
+            setSelectedMusic(musicFiles[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Error in fetchMusic:", error);
+      }
+    };
+
     fetchMusic();
-  }, [fetchMusic]);
+  }, []);
 
   const handleMusicChange = (value: string) => {
     console.log("Music selection changed to:", value);
@@ -48,37 +46,42 @@ export const useAudioPlayer = () => {
   };
 
   const previewMusic = (musicName: string) => {
-    console.log("Attempting to preview music:", musicName);
+    console.log("Preview music request:", musicName);
+    
     if (currentlyPlaying === musicName) {
-      console.log("Stopping current music preview");
       stopAudio();
       return;
     }
 
     try {
       const publicUrl = supabase.storage.from('background-music').getPublicUrl(musicName).data.publicUrl;
-      console.log("Playing music preview from URL:", publicUrl);
-      playAudio(musicName, publicUrl, 0.5);
+      console.log("Playing music from URL:", publicUrl);
+      
+      stopAudio();
+      const audio = new Audio(publicUrl);
+      audio.volume = 0.5;
+      audio.play();
+      setAudioElement(audio);
+      setCurrentlyPlaying(musicName);
     } catch (error) {
       console.error("Error setting up audio playback:", error);
     }
   };
 
-  // Add debug logging for state changes
-  useEffect(() => {
-    console.log("Music state updated:", {
-      selectedMusic,
-      currentlyPlaying,
-      musicList
-    });
-  }, [selectedMusic, currentlyPlaying, musicList]);
+  const stopAudio = () => {
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      setAudioElement(null);
+      setCurrentlyPlaying(null);
+    }
+  };
 
   return {
     currentlyPlaying,
     musicList,
     selectedMusic,
     setSelectedMusic,
-    fetchMusic,
     stopAudio,
     handleMusicChange,
     previewMusic

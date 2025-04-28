@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMediaSelection } from './useMediaSelection';
 import { useMediaGeneration } from './useMediaGeneration';
@@ -38,19 +37,27 @@ export const useMediaState = (listingId: string) => {
     generateBanner
   } = useMediaGeneration(listingId);
 
-  // Utilisation du hook useAudioPlayer pour la gestion de la musique
   const { 
     currentlyPlaying, 
     musicList, 
     selectedMusic, 
     setSelectedMusic,
     stopAudio,
-    handleMusicChange,
+    handleMusicChange: handleMusicChangeAudio,
     previewMusic 
   } = useAudioPlayer();
 
+  const handleMusicChange = (value: string) => {
+    console.log("Music selection changed in MediaState:", value);
+    handleMusicChangeAudio(value);
+  };
+
   const handleGenerateSlideshow = async () => {
-    console.log("Generating slideshow with selected images and music:", selectedMusic);
+    console.log("Generating slideshow with selected images and music:", {
+      imageCount: selectedImages.length,
+      selectedMusic
+    });
+    
     if (selectedImages.length === 0) {
       return null;
     }
@@ -61,7 +68,7 @@ export const useMediaState = (listingId: string) => {
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
     selectedImages,
-    selectedMusic, // Passer selectedMusic ici
+    selectedMusic,
     slideshowRenderId,
     setSlideshowUrl,
     setIsGeneratingSlideshow,

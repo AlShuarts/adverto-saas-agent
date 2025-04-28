@@ -1,47 +1,65 @@
 
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { BackgroundMusic } from "./backgroundMusic";
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Play, Pause } from "lucide-react";
 
 type MusicSelectorProps = {
-  musics: BackgroundMusic[] | string[];
+  musics: string[];
   selectedMusic: string | null | undefined;
+  currentlyPlaying: string | null;
   onMusicChange: (value: string) => void;
+  onPreviewMusic: (music: string) => void;
 };
 
-export const MusicSelector = ({ musics, selectedMusic, onMusicChange }: MusicSelectorProps) => {
-  // Debug logs
-  useEffect(() => {
-    console.log("MusicSelector - Props received:", { 
-      musicsCount: musics.length,
-      selectedMusic,
-    });
-  }, [musics, selectedMusic]);
-  
+export const MusicSelector = ({ 
+  musics, 
+  selectedMusic, 
+  currentlyPlaying,
+  onMusicChange, 
+  onPreviewMusic 
+}: MusicSelectorProps) => {
+  console.log("MusicSelector rendering with:", {
+    selectedMusic,
+    currentlyPlaying,
+    musicCount: musics.length
+  });
+
   return (
     <div className="space-y-2">
       <Label>Musique de fond</Label>
-      <RadioGroup
-        value={selectedMusic || undefined}
-        onValueChange={onMusicChange}
-        className="space-y-2"
-      >
-        {musics.map((music) => {
-          const id = typeof music === 'string' ? music : music.id;
-          const name = typeof music === 'string' ? music.replace(/\.[^/.]+$/, "") : music.name;
-          const value = typeof music === 'string' ? music : music.url;
-          
-          console.log(`Rendering music option: ${name}, value: ${value}, isSelected: ${selectedMusic === value}`);
-          
-          return (
-            <div key={id} className="flex items-center space-x-2">
-              <RadioGroupItem value={value} id={id} />
-              <Label htmlFor={id}>{name}</Label>
-            </div>
-          );
-        })}
-      </RadioGroup>
+      <div className="flex items-center gap-2">
+        <Select 
+          value={selectedMusic || ""} 
+          onValueChange={onMusicChange}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sélectionner une musique" />
+          </SelectTrigger>
+          <SelectContent>
+            {musics.map((music) => (
+              <SelectItem key={music} value={music}>
+                {music.replace(/\.[^/.]+$/, "")}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {selectedMusic && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => onPreviewMusic(selectedMusic)}
+          >
+            {currentlyPlaying === selectedMusic ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
