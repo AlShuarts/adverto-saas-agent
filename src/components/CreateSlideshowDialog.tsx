@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { SlideshowImageSelector } from "./slideshow/SlideshowImageSelector";
-import { SlideshowMusicSelector } from "./slideshow/SlideshowMusicSelector";
 import { useSlideshowConfig } from "@/hooks/useSlideshowConfig";
 import { useAudioControls } from "@/hooks/useAudioControls";
 import { useSlideshowSubmit } from "@/hooks/useSlideshowSubmit";
 import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Music, Play, Pause } from "lucide-react";
 
 type CreateSlideshowDialogProps = {
   listing: Tables<"listings">;
@@ -69,13 +71,56 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
             onImageSelect={toggleImageSelection}
           />
 
-          <SlideshowMusicSelector
-            musicList={musicList}
-            selectedMusic={config.selectedMusic}
-            currentlyPlaying={currentlyPlaying}
-            onMusicChange={handleMusicChange}
-            onPreviewMusic={handlePreviewMusic}
-          />
+          {/* Inline music selector to replace SlideshowMusicSelector */}
+          <div className="space-y-2">
+            <Label>Musique de fond</Label>
+            <div className="flex items-center gap-2">
+              <Select 
+                value={config.selectedMusic || ""} 
+                onValueChange={handleMusicChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner une musique" />
+                </SelectTrigger>
+                <SelectContent>
+                  {musicList.map(music => (
+                    <SelectItem key={music} value={music}>
+                      {music.replace(/\.[^/.]+$/, "")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {config.selectedMusic && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => handlePreviewMusic(config.selectedMusic!)}
+                  className="flex-shrink-0"
+                  aria-label={currentlyPlaying === config.selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
+                  title={currentlyPlaying === config.selectedMusic ? "Arrêter la musique" : "Écouter la musique"}
+                >
+                  {currentlyPlaying === config.selectedMusic ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </div>
+            
+            {config.selectedMusic ? (
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <Music className="h-3 w-3" /> 
+                Musique sélectionnée: {config.selectedMusic.replace(/\.[^/.]+$/, "")}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1">
+                Aucune musique sélectionnée
+              </p>
+            )}
+          </div>
 
           <DialogFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
