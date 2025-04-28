@@ -9,6 +9,7 @@ import { useInitialization } from '../hooks/useInitialization';
 import { usePublicationTypeHandler } from '../hooks/usePublicationTypeHandler';
 import { useMediaState } from '../hooks/useMediaState';
 import { useTemplateState } from '../hooks/useTemplateState';
+import { validateBrokerInfo } from '../hooks/generation/utils/bannerValidation';
 
 export const useActionSelectionState = (listing: Tables<"listings">) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -42,7 +43,7 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     formErrors,
     setFormErrors,
     resetBrokerInfo,
-    validateBrokerInfo
+    validateBrokerInfo: validateBrokerInfoFromHook
   } = useBrokerInfo();
 
   const {
