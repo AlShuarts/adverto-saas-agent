@@ -19,7 +19,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
   
   // Use existing hooks
   const {
-    audioPlaying,
     currentlyPlaying,
     musicList,
     selectedMusic,
@@ -83,7 +82,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     ...templateState,
     
     // From audio player
-    audioPlaying,
     currentlyPlaying,
     musicList,
     selectedMusic,

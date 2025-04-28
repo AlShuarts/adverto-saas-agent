@@ -114,7 +114,6 @@ export const ActionSelectionProvider = ({
       selectBannerImage: state.selectBannerImage,
       
       // Audio
-      audioPlaying: state.audioPlaying,
       currentlyPlaying: state.currentlyPlaying,
       musicList: state.musicList,
       selectedMusic: state.selectedMusic,

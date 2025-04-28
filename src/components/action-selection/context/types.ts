@@ -94,7 +94,6 @@ export interface ActionSelectionContextType extends ActionSelectionState {
   selectBannerImage: (imageUrl: string) => void;
   
   // Audio
-  audioPlaying: boolean;
   currentlyPlaying: string | null;
   musicList: string[];
   handleMusicChange: (value: string) => void;
