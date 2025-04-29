@@ -61,14 +61,14 @@ export const ImageUploader = ({ type, imageUrl, setImageUrl }: ImageUploaderProp
   const icon = type === "broker" ? <User className="h-4 w-4 mr-2" /> : <Building className="h-4 w-4 mr-2" />;
   
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 mb-4 w-full">
       <Label htmlFor={inputId} className="flex items-center text-white">
         {icon}
         {label}
       </Label>
       
       {!imageUrl ? (
-        <div className="flex items-center gap-2 w-full">
+        <div className="w-full">
           <Button
             variant="outline"
             onClick={() => document.getElementById(inputId)?.click()}
