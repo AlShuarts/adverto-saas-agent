@@ -1,3 +1,4 @@
+
 import { Tables } from "@/integrations/supabase/types";
 import { BrokerInfo } from "./generation/services/bannerService";
 

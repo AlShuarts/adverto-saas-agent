@@ -35,7 +35,7 @@ export const useSlideshowGeneration = (listingId: string) => {
         duration: 3000
       });
       
-      // Préparation du payload en s'assurant que selectedMusic est bien inclus
+      // Make sure selectedMusic is explicitly included in the payload
       const payload = {
         listingId: listingId,
         config: {
@@ -44,12 +44,11 @@ export const useSlideshowGeneration = (listingId: string) => {
           showPrice: true,
           showAddress: true,
           selectedImages: selectedImages,
-          // S'assurer que selectedMusic est explicitement inclus, même s'il est undefined
-          selectedMusic: selectedMusic
+          selectedMusic: selectedMusic  // Ensure this is explicitly passed
         }
       };
       
-      console.log("Payload envoyé à la fonction:", JSON.stringify(payload, null, 2));
+      console.log("Payload complet envoyé à la fonction:", JSON.stringify(payload, null, 2));
       
       const { data, error } = await supabase.functions.invoke("create-slideshow", {
         body: payload

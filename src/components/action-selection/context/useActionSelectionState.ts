@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tables } from "@/integrations/supabase/types";
 import { PublicationType } from './types';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
@@ -57,6 +57,14 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setSelectedPublicationTypes, 
     handlePublicationTypeChange 
   } = usePublicationTypeHandler();
+  
+  // Make sure to update the mediaState's selectedMusic when it changes in useAudioPlayer
+  // This is key to fixing the issue
+  useEffect(() => {
+    if (selectedMusic !== mediaState.selectedMusic) {
+      mediaState.setSelectedMusic(selectedMusic);
+    }
+  }, [selectedMusic, mediaState]);
   
   // Initialize and reset
   const resetState = () => {
