@@ -105,7 +105,7 @@ export const ActionSelectionDialogContent = () => {
   };
 
   return (
-    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800">
+    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[90vh]">
       <DialogHeader>
         <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
         <DialogDescription className="text-gray-400">
@@ -113,8 +113,8 @@ export const ActionSelectionDialogContent = () => {
         </DialogDescription>
       </DialogHeader>
       
-      <ScrollArea className="max-h-[calc(85vh-10rem)]">
-        <div className="my-4 pr-4 pb-4">
+      <ScrollArea className="flex-1 overflow-auto pr-2">
+        <div className="my-4 px-2 pb-4">
           {renderStepContent({
             currentStep,
             selectedPublicationTypes,
@@ -177,7 +177,7 @@ export const ActionSelectionDialogContent = () => {
         </div>
       </ScrollArea>
       
-      <DialogFooter className="border-t border-gray-800 pt-4">
+      <DialogFooter className="border-t border-gray-800 pt-4 mt-2">
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}
