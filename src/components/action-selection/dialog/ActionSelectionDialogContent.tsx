@@ -105,7 +105,7 @@ export const ActionSelectionDialogContent = () => {
   };
 
   return (
-    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[90vh]">
+    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[95vh]">
       <DialogHeader>
         <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
         <DialogDescription className="text-gray-400">
@@ -113,7 +113,7 @@ export const ActionSelectionDialogContent = () => {
         </DialogDescription>
       </DialogHeader>
       
-      <ScrollArea className="flex-1 overflow-auto pr-2">
+      <ScrollArea className="flex-1 overflow-auto pr-4">
         <div className="my-4 px-2 pb-4">
           {renderStepContent({
             currentStep,

@@ -41,7 +41,7 @@ const ScrollBar = React.forwardRef<
   >
     <ScrollAreaPrimitive.ScrollAreaThumb 
       className="relative flex-1 rounded-full bg-border"
-      style={{ opacity: 0.85 }} // Augmenter légèrement l'opacité pour une meilleure visibilité
+      style={{ opacity: 0.9 }} // Augmenté l'opacité pour une meilleure visibilité
     />
   </ScrollAreaPrimitive.ScrollAreaScrollbar>
 ))
