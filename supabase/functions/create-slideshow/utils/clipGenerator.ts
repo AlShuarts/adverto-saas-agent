@@ -10,45 +10,7 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
   const imageDuration = config.imageDuration || 3;
   const totalDuration = selectedImages.length * imageDuration;
   
-  // Piste des images
-  const imageTrack = {
-    clips: selectedImages.map((imageUrl, index) => {
-      const start = index * imageDuration;
-      
-      const effects = ["slideLeftSlow", "slideRightSlow", "slideUpSlow", "slideDownSlow", "zoomInSlow", "zoomOutSlow"];
-      const randomEffect = effects[Math.floor(Math.random() * effects.length)];
-
-      const scaleOptions = [1, 1.1, 1.2, 1.413];
-      const randomScale = scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
-      
-      const offsetOptions = [
-        {x: 0, y: 0}, 
-        {x: 0.041, y: 0}, 
-        {x: -0.016, y: 0},
-        {x: 0, y: 0.016},
-        {x: 0, y: -0.016}
-      ];
-      const randomOffset = offsetOptions[Math.floor(Math.random() * offsetOptions.length)];
-
-      return {
-        asset: {
-          type: "image",
-          src: imageUrl
-        },
-        start,
-        length: imageDuration,
-        effect: randomEffect,
-        fit: "cover",
-        scale: randomScale,
-        position: "center",
-        opacity: 1,
-        offset: randomOffset
-      };
-    })
-  };
-  tracks.push(imageTrack);
-
-  // Piste du texte
+  // Piste du texte - DÉPLACÉ AVANT les images
   if (textElements && textElements.length > 0) {
     const textClips = [];
     
@@ -132,6 +94,44 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
       });
     }
   }
+
+  // Piste des images - DÉPLACÉ APRÈS le texte
+  const imageTrack = {
+    clips: selectedImages.map((imageUrl, index) => {
+      const start = index * imageDuration;
+      
+      const effects = ["slideLeftSlow", "slideRightSlow", "slideUpSlow", "slideDownSlow", "zoomInSlow", "zoomOutSlow"];
+      const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+
+      const scaleOptions = [1, 1.1, 1.2, 1.413];
+      const randomScale = scaleOptions[Math.floor(Math.random() * scaleOptions.length)];
+      
+      const offsetOptions = [
+        {x: 0, y: 0}, 
+        {x: 0.041, y: 0}, 
+        {x: -0.016, y: 0},
+        {x: 0, y: 0.016},
+        {x: 0, y: -0.016}
+      ];
+      const randomOffset = offsetOptions[Math.floor(Math.random() * offsetOptions.length)];
+
+      return {
+        asset: {
+          type: "image",
+          src: imageUrl
+        },
+        start,
+        length: imageDuration,
+        effect: randomEffect,
+        fit: "cover",
+        scale: randomScale,
+        position: "center",
+        opacity: 1,
+        offset: randomOffset
+      };
+    })
+  };
+  tracks.push(imageTrack);
 
   // Piste audio - CORRECTION: Ne pas utiliser la propriété "volume" qui n'est pas supportée
   if (config.musicUrl) {
