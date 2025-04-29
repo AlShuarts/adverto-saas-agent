@@ -44,23 +44,25 @@ export const SlideshowGenerationSection = ({
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
 
   return (
-    <div className="space-y-4 pb-10 border border-gray-800 rounded-md p-4 bg-gray-900/40">
+    <div className="space-y-4 pb-4 border border-gray-800 rounded-md p-4 bg-gray-900/40">
       <h4 className="text-md font-medium">Génération du diaporama</h4>
       
       {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
-        <div className="flex flex-col items-center justify-center py-4">
+        <div className="flex flex-col items-center justify-center py-6">
           <Button 
             onClick={generateSlideshow}
             disabled={selectedImages.length === 0}
-            className="w-full py-6 text-lg"
+            className="w-full py-8 text-lg"
+            size="lg"
           >
+            <Video className="w-6 h-6 mr-3" />
             Générer le diaporama{selectedMusic ? ` avec musique: ${musicName}` : ""}
           </Button>
         </div>
       )}
 
       {isGeneratingSlideshow && (
-        <div className="w-full flex flex-col items-center justify-center p-4 text-center space-y-4">
+        <div className="w-full flex flex-col items-center justify-center p-6 text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p>Génération du diaporama en cours...</p>
           <p className="text-xs text-muted-foreground">Cela peut prendre quelques minutes.</p>
