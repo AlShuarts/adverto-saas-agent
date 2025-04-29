@@ -4,8 +4,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { renderStepContent } from "./steps/stepsRenderer";
 import { StepNavigation } from "./steps/StepNavigation";
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const ActionSelectionDialogContent = () => {
+  const isMobile = useIsMobile();
   const { 
     currentStep,
     onClose,
@@ -105,7 +107,7 @@ export const ActionSelectionDialogContent = () => {
   };
 
   return (
-    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800">
+    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[90vh] w-[95vw] md:w-auto">
       <DialogHeader>
         <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
         <DialogDescription className="text-gray-400">
@@ -113,71 +115,73 @@ export const ActionSelectionDialogContent = () => {
         </DialogDescription>
       </DialogHeader>
       
-      <ScrollArea className="max-h-[calc(85vh-10rem)]">
-        <div className="my-4 pr-4 pb-4">
-          {renderStepContent({
-            currentStep,
-            selectedPublicationTypes,
-            handlePublicationTypeChange,
-            facebookTemplates,
-            instagramTemplates,
-            selectedFacebookTemplateId,
-            selectedInstagramTemplateId,
-            setSelectedFacebookTemplateId,
-            setSelectedInstagramTemplateId,
-            generatedText,
-            setGeneratedText,
-            isGeneratingText,
-            handleGenerateText,
-            listing,
-            selectedImages,
-            setSelectedImages,
-            bannerImage,
-            bannerType,
-            musicList,
-            selectedMusic,
-            currentlyPlaying,
-            toggleImageSelection,
-            onDragEnd,
-            selectBannerImage,
-            handleMusicChange,
-            previewMusic,
-            setBannerType,
-            brokerImageUrl,
-            setBrokerImageUrl,
-            agencyLogoUrl,
-            setAgencyLogoUrl,
-            brokerName,
-            setBrokerName,
-            brokerEmail,
-            setBrokerEmail,
-            brokerPhone,
-            setBrokerPhone,
-            formErrors,
-            setFormErrors,
-            isGeneratingSlideshow,
-            isGeneratingBanner,
-            slideshowUrl,
-            bannerUrl,
-            slideshowError,
-            bannerError,
-            slideshowRenderId,
-            bannerRenderId,
-            generateSlideshowWrapper,
-            generateBannerWrapper,
-            refetchSlideshowStatus,
-            handleRegenerateSlideshow,
-            handleRegenerateBanner,
-            selectedNetworks,
-            setSelectedNetworks,
-            handleNetworkChange,
-            isPublishing,
-            handlePublishWrapper
-          })}
-        </div>
-      </ScrollArea>
+      <div className="flex-1 overflow-hidden min-h-0">
+        <ScrollArea className={isMobile ? "h-[65vh]" : "h-[50vh] md:h-[60vh]"}>
+          <div className="p-1 md:px-2 pb-6">
+            {renderStepContent({
+              currentStep,
+              selectedPublicationTypes,
+              handlePublicationTypeChange,
+              facebookTemplates,
+              instagramTemplates,
+              selectedFacebookTemplateId,
+              selectedInstagramTemplateId,
+              setSelectedFacebookTemplateId,
+              setSelectedInstagramTemplateId,
+              generatedText,
+              setGeneratedText,
+              isGeneratingText,
+              handleGenerateText,
+              listing,
+              selectedImages,
+              setSelectedImages,
+              bannerImage,
+              bannerType,
+              musicList,
+              selectedMusic,
+              currentlyPlaying,
+              toggleImageSelection,
+              onDragEnd,
+              selectBannerImage,
+              handleMusicChange,
+              previewMusic,
+              setBannerType,
+              brokerImageUrl,
+              setBrokerImageUrl,
+              agencyLogoUrl,
+              setAgencyLogoUrl,
+              brokerName,
+              setBrokerName,
+              brokerEmail,
+              setBrokerEmail,
+              brokerPhone,
+              setBrokerPhone,
+              formErrors,
+              setFormErrors,
+              isGeneratingSlideshow,
+              isGeneratingBanner,
+              slideshowUrl,
+              bannerUrl,
+              slideshowError,
+              bannerError,
+              slideshowRenderId,
+              bannerRenderId,
+              generateSlideshowWrapper,
+              generateBannerWrapper,
+              refetchSlideshowStatus,
+              handleRegenerateSlideshow,
+              handleRegenerateBanner,
+              selectedNetworks,
+              setSelectedNetworks,
+              handleNetworkChange,
+              isPublishing,
+              handlePublishWrapper
+            })}
+          </div>
+        </ScrollArea>
+      </div>
       
-      <DialogFooter className="border-t border-gray-800 pt-4">
+      <DialogFooter className="border-t border-gray-800 pt-4 mt-auto">
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}
@@ -186,7 +190,7 @@ export const ActionSelectionDialogContent = () => {
           onNext={nextStep}
           onPublish={handlePublishWrapper}
           onCancel={onClose}
-          isLastStep={currentStep === 4}
+          isLastStep={currentStep === 5}
         />
       </DialogFooter>
     </DialogContent>

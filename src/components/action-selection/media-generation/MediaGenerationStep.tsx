@@ -1,10 +1,10 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
 import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { PublicationType } from "../types";
 import { Tables } from "@/integrations/supabase/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type MediaGenerationStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -90,16 +90,17 @@ export const MediaGenerationStep = ({
   onDragEnd
 }: MediaGenerationStepProps) => {
   
+  const isMobile = useIsMobile();
   const showSlideshow = selectedPublicationTypes.includes("slideshow");
   const showBanner = selectedPublicationTypes.includes("banner");
   const availableImages = listing?.images || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h3 className="text-lg font-medium">Génération du contenu</h3>
       
-      <ScrollArea className="h-[650px] pr-4">
-        <div className="space-y-6">
+      <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
+        <div className="space-y-4 pr-2 pb-4">
           {showSlideshow && (
             <>
               <SlideshowConfig

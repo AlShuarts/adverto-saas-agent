@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play, Pause } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -29,6 +29,7 @@ export const SlideshowGenerationSection = ({
   selectedMusic
 }: SlideshowGenerationSectionProps) => {
   const [isManualChecking, setIsManualChecking] = React.useState(false);
+  const isMobile = useIsMobile();
   
   const handleCheckStatus = () => {
     setIsManualChecking(true);
@@ -105,19 +106,20 @@ export const SlideshowGenerationSection = ({
             <Button 
               variant="outline" 
               onClick={onRegenerateSlideshow}
+              size={isMobile ? "sm" : "default"}
             >
               Régénérer
             </Button>
           </div>
           
-          <div className="border rounded-md p-6 bg-muted/20 flex justify-center">
+          <div className="border rounded-md p-4 bg-muted/20 flex justify-center">
             <Button 
               variant="secondary"
               size="lg"
               onClick={() => window.open(slideshowUrl, '_blank')}
-              className="flex items-center gap-2 py-8 text-lg w-full max-w-md"
+              className="flex items-center gap-2 py-6 text-base w-full max-w-md"
             >
-              <Play className="h-6 w-6" />
+              <Play className="h-5 w-5" />
               Prévisualiser le diaporama
             </Button>
           </div>

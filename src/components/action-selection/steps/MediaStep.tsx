@@ -1,10 +1,10 @@
-
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
 import { PublicationType } from "../types";
 import { Tables } from "@/integrations/supabase/types";
 import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type MediaStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -91,19 +91,20 @@ export const MediaStep = ({
   handleRegenerateSlideshow,
   handleRegenerateBanner
 }: MediaStepProps) => {
+  const isMobile = useIsMobile();
   const availableImages = listing?.images || images;
   
   const showSlideshow = selectedPublicationTypes.includes("slideshow");
   const showBanner = selectedPublicationTypes.includes("banner");
   
   return (
-    <div className="space-y-6 pb-2">
+    <div className="space-y-4">
       <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
       
-      <ScrollArea className="h-[calc(100vh-240px)] pr-4">
-        <div className="space-y-6 pb-6 pr-2">
+      <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
+        <div className="space-y-4 pr-2 pb-6">
           {showSlideshow && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <SlideshowConfig
                 images={availableImages}
                 selectedImages={selectedImages}
