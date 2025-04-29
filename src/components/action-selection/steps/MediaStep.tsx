@@ -100,7 +100,7 @@ export const MediaStep = ({
       <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
       
       {showSlideshow && (
-        <div className="space-y-6">
+        <div className="space-y-6 mb-6">
           <SlideshowConfig
             images={availableImages}
             selectedImages={selectedImages}
@@ -128,31 +128,33 @@ export const MediaStep = ({
       )}
       
       {showBanner && (
-        <BannerGenerationSection
-          isGeneratingBanner={isGeneratingBanner}
-          bannerUrl={bannerUrl}
-          bannerError={bannerError}
-          bannerRenderId={bannerRenderId}
-          generateBanner={generateBanner}
-          bannerImage={bannerImage}
-          bannerType={bannerType}
-          setBannerType={setBannerType}
-          selectBannerImage={selectBannerImage}
-          brokerName={brokerName}
-          setBrokerName={setBrokerName}
-          brokerEmail={brokerEmail}
-          setBrokerEmail={setBrokerEmail}
-          brokerPhone={brokerPhone}
-          setBrokerPhone={setBrokerPhone}
-          brokerImageUrl={brokerImageUrl}
-          setBrokerImageUrl={setBrokerImageUrl}
-          agencyLogoUrl={agencyLogoUrl}
-          setAgencyLogoUrl={setAgencyLogoUrl}
-          formErrors={formErrors}
-          setFormErrors={setFormErrors}
-          selectedImages={selectedImages}
-          onRegenerateBanner={handleRegenerateBanner}
-        />
+        <div className="mb-8">
+          <BannerGenerationSection
+            isGeneratingBanner={isGeneratingBanner}
+            bannerUrl={bannerUrl}
+            bannerError={bannerError}
+            bannerRenderId={bannerRenderId}
+            generateBanner={generateBanner}
+            bannerImage={bannerImage}
+            bannerType={bannerType}
+            setBannerType={setBannerType}
+            selectBannerImage={selectBannerImage}
+            brokerName={brokerName}
+            setBrokerName={setBrokerName}
+            brokerEmail={brokerEmail}
+            setBrokerEmail={setBrokerEmail}
+            brokerPhone={brokerPhone}
+            setBrokerPhone={setBrokerPhone}
+            brokerImageUrl={brokerImageUrl}
+            setBrokerImageUrl={setBrokerImageUrl}
+            agencyLogoUrl={agencyLogoUrl}
+            setAgencyLogoUrl={setAgencyLogoUrl}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+            selectedImages={selectedImages}
+            onRegenerateBanner={handleRegenerateBanner}
+          />
+        </div>
       )}
     </div>
   );

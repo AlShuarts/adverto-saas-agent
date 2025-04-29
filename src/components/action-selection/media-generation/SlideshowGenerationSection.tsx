@@ -44,7 +44,7 @@ export const SlideshowGenerationSection = ({
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
 
   return (
-    <div className="space-y-4 pb-10">
+    <div className="space-y-4 pb-10 border border-gray-800 rounded-md p-4 bg-gray-900/40">
       <h4 className="text-md font-medium">Génération du diaporama</h4>
       
       {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
@@ -68,9 +68,9 @@ export const SlideshowGenerationSection = ({
       )}
 
       {slideshowRenderId && !slideshowUrl && !isGeneratingSlideshow && (
-        <div className="w-full flex flex-col items-center space-y-4">
+        <div className="w-full flex flex-col items-center space-y-4 p-6">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm">Traitement en cours...</p>
+          <p className="text-sm text-muted-foreground">Traitement en cours...</p>
           <p className="text-xs text-muted-foreground">Cela peut prendre 3 à 5 minutes</p>
           
           <Button 
@@ -78,7 +78,7 @@ export const SlideshowGenerationSection = ({
             size="sm"
             onClick={handleCheckStatus}
             disabled={isManualChecking}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 mt-2"
           >
             {isManualChecking ? (
               <>
@@ -108,24 +108,22 @@ export const SlideshowGenerationSection = ({
             </Button>
           </div>
           
-          <div className="border rounded-md p-4 bg-muted/20">
-            <div className="flex justify-center">
-              <Button 
-                variant="secondary"
-                size="lg"
-                onClick={() => window.open(slideshowUrl, '_blank')}
-                className="flex items-center gap-2 py-6 text-lg w-full"
-              >
-                <Play className="h-5 w-5" />
-                Prévisualiser le diaporama
-              </Button>
-            </div>
+          <div className="border rounded-md p-6 bg-muted/20 flex justify-center">
+            <Button 
+              variant="secondary"
+              size="lg"
+              onClick={() => window.open(slideshowUrl, '_blank')}
+              className="flex items-center gap-2 py-8 text-lg w-full max-w-md"
+            >
+              <Play className="h-6 w-6" />
+              Prévisualiser le diaporama
+            </Button>
           </div>
         </div>
       )}
       
       {slideshowError && (
-        <div className="text-sm text-red-500 mt-2 mb-6">
+        <div className="text-sm text-red-500 mt-2 mb-6 p-3 bg-red-500/10 rounded-md">
           {slideshowError}
         </div>
       )}
