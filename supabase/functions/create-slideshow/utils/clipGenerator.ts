@@ -133,7 +133,7 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
     }
   }
 
-  // Piste audio
+  // Piste audio - CORRECTION: Ne pas utiliser la propriété "volume" qui n'est pas supportée
   if (config.musicUrl) {
     console.log("🎵 Ajout de la piste audio avec la musique:", config.musicUrl);
     tracks.push({
@@ -145,8 +145,8 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
             effect: "fadeOut"
           },
           start: 0,
-          length: totalDuration,
-          volume: 0.8
+          length: totalDuration
+          // La propriété "volume" a été supprimée car elle n'est pas supportée par l'API Shotstack
         }
       ]
     });
