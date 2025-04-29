@@ -44,7 +44,7 @@ export const SlideshowGenerationSection = ({
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-10">
       <h4 className="text-md font-medium">Génération du diaporama</h4>
       
       {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && (
@@ -52,7 +52,7 @@ export const SlideshowGenerationSection = ({
           <Button 
             onClick={generateSlideshow}
             disabled={selectedImages.length === 0}
-            className="w-full"
+            className="w-full py-6 text-lg"
           >
             Générer le diaporama{selectedMusic ? ` avec musique: ${musicName}` : ""}
           </Button>
@@ -108,15 +108,15 @@ export const SlideshowGenerationSection = ({
             </Button>
           </div>
           
-          <div className="border rounded-md p-2 bg-muted/20">
+          <div className="border rounded-md p-4 bg-muted/20">
             <div className="flex justify-center">
               <Button 
                 variant="secondary"
-                size="sm"
+                size="lg"
                 onClick={() => window.open(slideshowUrl, '_blank')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 py-6 text-lg w-full"
               >
-                <Play className="h-4 w-4" />
+                <Play className="h-5 w-5" />
                 Prévisualiser le diaporama
               </Button>
             </div>
@@ -125,7 +125,7 @@ export const SlideshowGenerationSection = ({
       )}
       
       {slideshowError && (
-        <div className="text-sm text-red-500 mt-2">
+        <div className="text-sm text-red-500 mt-2 mb-6">
           {slideshowError}
         </div>
       )}

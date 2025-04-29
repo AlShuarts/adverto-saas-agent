@@ -1,5 +1,4 @@
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
 import { PublicationType } from "../types";
@@ -97,66 +96,64 @@ export const MediaStep = ({
   const showBanner = selectedPublicationTypes.includes("banner");
   
   return (
-    <ScrollArea className="h-[calc(100vh-12rem)] pr-4">
-      <div className="space-y-6">
-        <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
-        
-        {showSlideshow && (
-          <div className="space-y-6">
-            <SlideshowConfig
-              images={availableImages}
-              selectedImages={selectedImages}
-              musicList={musicList}
-              selectedMusic={selectedMusic}
-              currentlyPlaying={currentlyPlaying}
-              toggleImageSelection={toggleImageSelection}
-              onDragEnd={onDragEnd}
-              handleMusicChange={handleMusicChange}
-              previewMusic={previewMusic}
-            />
-            
-            <SlideshowGenerationSection
-              isGeneratingSlideshow={isGeneratingSlideshow}
-              slideshowUrl={slideshowUrl}
-              slideshowError={slideshowError}
-              slideshowRenderId={slideshowRenderId}
-              generateSlideshow={generateSlideshow}
-              refetchSlideshowStatus={refetchSlideshowStatus}
-              onRegenerateSlideshow={handleRegenerateSlideshow}
-              selectedImages={selectedImages}
-              selectedMusic={selectedMusic}
-            />
-          </div>
-        )}
-        
-        {showBanner && (
-          <BannerGenerationSection
-            isGeneratingBanner={isGeneratingBanner}
-            bannerUrl={bannerUrl}
-            bannerError={bannerError}
-            bannerRenderId={bannerRenderId}
-            generateBanner={generateBanner}
-            bannerImage={bannerImage}
-            bannerType={bannerType}
-            setBannerType={setBannerType}
-            selectBannerImage={selectBannerImage}
-            brokerName={brokerName}
-            setBrokerName={setBrokerName}
-            brokerEmail={brokerEmail}
-            setBrokerEmail={setBrokerEmail}
-            brokerPhone={brokerPhone}
-            setBrokerPhone={setBrokerPhone}
-            brokerImageUrl={brokerImageUrl}
-            setBrokerImageUrl={setBrokerImageUrl}
-            agencyLogoUrl={agencyLogoUrl}
-            setAgencyLogoUrl={setAgencyLogoUrl}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
+      
+      {showSlideshow && (
+        <div className="space-y-6">
+          <SlideshowConfig
+            images={availableImages}
             selectedImages={selectedImages}
-            onRegenerateBanner={handleRegenerateBanner}
+            musicList={musicList}
+            selectedMusic={selectedMusic}
+            currentlyPlaying={currentlyPlaying}
+            toggleImageSelection={toggleImageSelection}
+            onDragEnd={onDragEnd}
+            handleMusicChange={handleMusicChange}
+            previewMusic={previewMusic}
           />
-        )}
-      </div>
-    </ScrollArea>
+          
+          <SlideshowGenerationSection
+            isGeneratingSlideshow={isGeneratingSlideshow}
+            slideshowUrl={slideshowUrl}
+            slideshowError={slideshowError}
+            slideshowRenderId={slideshowRenderId}
+            generateSlideshow={generateSlideshow}
+            refetchSlideshowStatus={refetchSlideshowStatus}
+            onRegenerateSlideshow={handleRegenerateSlideshow}
+            selectedImages={selectedImages}
+            selectedMusic={selectedMusic}
+          />
+        </div>
+      )}
+      
+      {showBanner && (
+        <BannerGenerationSection
+          isGeneratingBanner={isGeneratingBanner}
+          bannerUrl={bannerUrl}
+          bannerError={bannerError}
+          bannerRenderId={bannerRenderId}
+          generateBanner={generateBanner}
+          bannerImage={bannerImage}
+          bannerType={bannerType}
+          setBannerType={setBannerType}
+          selectBannerImage={selectBannerImage}
+          brokerName={brokerName}
+          setBrokerName={setBrokerName}
+          brokerEmail={brokerEmail}
+          setBrokerEmail={setBrokerEmail}
+          brokerPhone={brokerPhone}
+          setBrokerPhone={setBrokerPhone}
+          brokerImageUrl={brokerImageUrl}
+          setBrokerImageUrl={setBrokerImageUrl}
+          agencyLogoUrl={agencyLogoUrl}
+          setAgencyLogoUrl={setAgencyLogoUrl}
+          formErrors={formErrors}
+          setFormErrors={setFormErrors}
+          selectedImages={selectedImages}
+          onRegenerateBanner={handleRegenerateBanner}
+        />
+      )}
+    </div>
   );
 };
