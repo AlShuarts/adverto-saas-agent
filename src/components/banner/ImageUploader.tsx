@@ -62,19 +62,19 @@ export const ImageUploader = ({ type, imageUrl, setImageUrl }: ImageUploaderProp
   
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={inputId} className="flex items-center">
+      <Label htmlFor={inputId} className="flex items-center text-white">
         {icon}
         {label}
       </Label>
       
       {!imageUrl ? (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full">
           <Button
             variant="outline"
             onClick={() => document.getElementById(inputId)?.click()}
             disabled={isUploading}
             type="button"
-            className="w-full flex items-center justify-center"
+            className="w-full flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
           >
             {isUploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -97,8 +97,8 @@ export const ImageUploader = ({ type, imageUrl, setImageUrl }: ImageUploaderProp
         <div className="relative">
           <div className={
             type === "broker" 
-              ? "w-24 h-24 rounded-full overflow-hidden border border-muted" 
-              : "w-32 h-16 overflow-hidden border border-muted rounded-md"
+              ? "w-24 h-24 rounded-full overflow-hidden border border-gray-600" 
+              : "w-32 h-16 overflow-hidden border border-gray-600 rounded-md"
           }>
             <img
               src={imageUrl}
