@@ -1,57 +1,37 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, Images } from "lucide-react";
-
 export type ImageSelectionProps = {
   selectedImages: string[];
   toggleImageSelection: (imageUrl: string) => void;
   availableImages?: string[]; // Allow for passing available images
 };
-
-export const ImageSelection = ({ 
+export const ImageSelection = ({
   selectedImages,
   toggleImageSelection,
   availableImages
 }: ImageSelectionProps) => {
   // If availableImages is not provided, we'll just show the selected images
   const imagesToDisplay = availableImages || selectedImages;
-  
   if (!imagesToDisplay || imagesToDisplay.length === 0) {
-    return (
-      <div className="space-y-4">
+    return <div className="space-y-4">
         <h5 className="text-sm font-medium">Sélection des photos</h5>
         <div className="flex flex-col items-center justify-center h-[220px] border rounded p-8 text-center">
           <Images className="h-10 w-10 text-muted-foreground mb-4" />
           <p className="text-muted-foreground">Aucune image disponible</p>
           <p className="text-sm text-muted-foreground mt-2">Veuillez ajouter des images à cette propriété</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-  
-  return (
-    <div className="space-y-4">
-      <h5 className="text-sm font-medium">Sélection des photos</h5>
+  return <div className="space-y-4">
+      <h5 className="font-medium text-lg">Sélection des photos</h5>
       <ScrollArea className="h-[220px] border rounded p-2">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {imagesToDisplay.map((image, index) => (
-            <div 
-              key={index}
-              className="relative cursor-pointer rounded-md overflow-hidden group"
-              onClick={() => toggleImageSelection(image)}
-            >
-              <img 
-                src={image} 
-                alt={`Image ${index + 1}`} 
-                className="w-full h-24 object-cover"
-              />
+          {imagesToDisplay.map((image, index) => <div key={index} className="relative cursor-pointer rounded-md overflow-hidden group" onClick={() => toggleImageSelection(image)}>
+              <img src={image} alt={`Image ${index + 1}`} className="w-full h-24 object-cover" />
               <div className={`absolute inset-0 flex items-center justify-center bg-black/50 ${selectedImages.includes(image) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
-                {selectedImages.includes(image) && (
-                  <Check className="text-white h-6 w-6" />
-                )}
+                {selectedImages.includes(image) && <Check className="text-white h-6 w-6" />}
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
       </ScrollArea>
       
@@ -60,6 +40,5 @@ export const ImageSelection = ({
           {selectedImages.length} images sélectionnées
         </p>
       </div>
-    </div>
-  );
+    </div>;
 };

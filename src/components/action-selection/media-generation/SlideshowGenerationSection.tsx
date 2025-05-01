@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ImageSelection } from "./components/ImageSelection";
-
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
   slideshowUrl: string | null;
@@ -18,7 +16,6 @@ type SlideshowGenerationSectionProps = {
   toggleImageSelection?: (imageUrl: string) => void;
   availableImages?: string[]; // Allow for passing available images
 };
-
 export const SlideshowGenerationSection = ({
   isGeneratingSlideshow,
   slideshowUrl,
@@ -34,35 +31,21 @@ export const SlideshowGenerationSection = ({
 }: SlideshowGenerationSectionProps) => {
   const [isManualChecking, setIsManualChecking] = React.useState(false);
   const isMobile = useIsMobile();
-  
   const handleCheckStatus = () => {
     setIsManualChecking(true);
     refetchSlideshowStatus();
     setTimeout(() => setIsManualChecking(false), 2000);
   };
-  
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
-  
   return <div className="space-y-3 pb-3 border border-gray-800 rounded-md p-3 bg-gray-900/40">
-      <h4 className="text-md font-medium">Génération du diaporama</h4>
+      
       
       {/* Image Selection section - Always show this */}
-      {toggleImageSelection && availableImages && (
-        <div className="mb-4">
-          <ImageSelection
-            selectedImages={selectedImages}
-            toggleImageSelection={toggleImageSelection}
-            availableImages={availableImages}
-          />
-        </div>
-      )}
-      
-      {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId && <div className="flex flex-col items-center justify-center py-4">
-          <Button onClick={generateSlideshow} disabled={selectedImages.length === 0} size={isMobile ? "default" : "lg"} className="w-full py-6 md:py-8 text-base md:text-lg font-thin mx-0 px-[27px]">
-            <Video className="w-5 h-5 mr-2 md:w-6 md:h-6 md:mr-3" />
-            {isMobile ? <>Générer{selectedMusic ? <span className="hidden sm:inline"> avec musique</span> : ""}</> : <>Générer le diaporama{selectedMusic ? ` avec musique: ${musicName}` : ""}</>}
-          </Button>
+      {toggleImageSelection && availableImages && <div className="mb-4">
+          <ImageSelection selectedImages={selectedImages} toggleImageSelection={toggleImageSelection} availableImages={availableImages} />
         </div>}
+      
+      {!slideshowUrl && !isGeneratingSlideshow && !slideshowRenderId}
 
       {isGeneratingSlideshow && <div className="w-full flex flex-col items-center justify-center p-4 md:p-6 text-center space-y-3">
           <Loader2 className="h-6 w-6 md:h-8 md:w-8 animate-spin text-primary" />
