@@ -4,8 +4,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { renderStepContent } from "../steps/stepsRenderer";
 import { StepNavigation } from "../steps/StepNavigation";
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const ActionSelectionDialogContent = () => {
+  const isMobile = useIsMobile();
   const { 
     currentStep,
     onClose,
@@ -105,17 +107,17 @@ export const ActionSelectionDialogContent = () => {
   };
 
   return (
-    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col">
-      <DialogHeader>
+    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[90vh] h-[90vh] w-[95vw] md:w-auto">
+      <DialogHeader className="pb-1">
         <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
         <DialogDescription className="text-gray-400">
           Créez une publication pour diffuser votre bien immobilier sur les réseaux sociaux.
         </DialogDescription>
       </DialogHeader>
       
-      <div className="flex-1 overflow-auto min-h-0">
-        <ScrollArea className="h-[60vh]">
-          <div className="px-2 pb-6">
+      <div className="flex-1 overflow-hidden min-h-0">
+        <ScrollArea className={isMobile ? "h-[60vh]" : "h-[55vh]"}>
+          <div className="p-1 md:px-2 pb-6 pr-4">
             {renderStepContent({
               currentStep,
               selectedPublicationTypes,
@@ -179,7 +181,7 @@ export const ActionSelectionDialogContent = () => {
         </ScrollArea>
       </div>
       
-      <DialogFooter className="border-t border-gray-800 pt-4 mt-auto">
+      <DialogFooter className="border-t border-gray-800 pt-2 mt-auto shrink-0">
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}

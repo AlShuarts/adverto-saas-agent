@@ -15,7 +15,7 @@ type SlideshowGenerationSectionProps = {
   selectedImages: string[];
   selectedMusic?: string;
   toggleImageSelection?: (imageUrl: string) => void;
-  availableImages?: string[];
+  availableImages?: string[]; // Allow for passing available images
 };
 
 export const SlideshowGenerationSection = ({
@@ -53,7 +53,10 @@ export const SlideshowGenerationSection = ({
             size={isMobile ? "default" : "lg"}
           >
             <Video className="w-5 h-5 mr-2 md:w-6 md:h-6 md:mr-3" />
-            Générer le diaporama{selectedMusic ? ` avec musique: ${musicName}` : ""}
+            {isMobile ? 
+              <>Générer{selectedMusic ? <span className="hidden sm:inline"> avec musique</span> : ""}</> :
+              <>Générer le diaporama{selectedMusic ? ` avec musique: ${musicName}` : ""}</>
+            }
           </Button>
         </div>
       )}

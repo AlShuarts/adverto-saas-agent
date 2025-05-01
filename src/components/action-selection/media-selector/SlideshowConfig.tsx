@@ -118,12 +118,12 @@ export const SlideshowConfig = ({
       
       <div className="space-y-2">
         <Label>Musique de fond</Label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Select 
             value={selectedMusic || ""} 
             onValueChange={handleMusicChange}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full max-w-[calc(100%-60px)]">
               <SelectValue placeholder="Sélectionner une musique" />
             </SelectTrigger>
             <SelectContent>

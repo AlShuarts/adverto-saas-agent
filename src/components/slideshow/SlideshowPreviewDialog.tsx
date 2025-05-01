@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Import our new components
 import { FacebookPreviewTab } from "./previews/FacebookPreviewTab";
@@ -36,6 +37,7 @@ export const SlideshowPreviewDialog = ({
   const [editedText, setEditedText] = useState("");
   const [isPublishingToInstagram, setIsPublishingToInstagram] = useState(false);
   const [activeTab, setActiveTab] = useState("edit");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (generatedText) {
@@ -89,7 +91,7 @@ export const SlideshowPreviewDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[85vw] w-[85vw] max-h-[85vh] overflow-hidden">
+      <DialogContent className="max-w-[90vw] w-[90vw] max-h-[90vh] overflow-hidden">
         <DialogTitle className="text-xl mb-2">Prévisualisation du diaporama</DialogTitle>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -99,8 +101,8 @@ export const SlideshowPreviewDialog = ({
             <TabsTrigger value="instagram">Aperçu Instagram</TabsTrigger>
           </TabsList>
           
-          <ScrollArea className="h-[calc(85vh-12rem)]">
-            <TabsContent value="edit" className="h-full">
+          <ScrollArea className={isMobile ? "h-[calc(80vh-12rem)]" : "h-[calc(85vh-12rem)]"}>
+            <TabsContent value="edit" className="h-full pr-4">
               <EditContentTab
                 listing={listing}
                 musicUrl={musicUrl}
