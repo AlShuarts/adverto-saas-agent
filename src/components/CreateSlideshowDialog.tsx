@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Music, Play, Pause } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type CreateSlideshowDialogProps = {
   listing: Tables<"listings">;
@@ -23,6 +24,7 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
   const { config, setConfig, musicList } = useSlideshowConfig(listing);
   const { currentlyPlaying, playAudio, stopAudio } = useAudioControls();
   const { isLoading, handleSubmit } = useSlideshowSubmit(listing, onClose);
+  const isMobile = useIsMobile();
 
   const handleMusicChange = (value: string) => {
     console.log("Music changed to:", value);
@@ -62,12 +64,12 @@ export const CreateSlideshowDialog = ({ listing, isOpen, onClose }: CreateSlides
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Créer un diaporama</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-6 py-4">
+        <form onSubmit={onSubmit} className="space-y-6 py-4 overflow-y-auto flex-1">
           <SlideshowImageSelector
             images={listing.images || []}
             selectedImages={config.selectedImages}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2, Video, Play, Pause } from "lucide-react";
+import { Loader2, Video, Play } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type SlideshowGenerationSectionProps = {
@@ -37,11 +37,6 @@ export const SlideshowGenerationSection = ({
     refetchSlideshowStatus();
     setTimeout(() => setIsManualChecking(false), 2000);
   };
-
-  // Add debug logging for the selected music
-  React.useEffect(() => {
-    console.log("SlideshowGenerationSection - selectedMusic:", selectedMusic);
-  }, [selectedMusic]);
 
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
 
