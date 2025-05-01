@@ -1,3 +1,4 @@
+
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
 import { PublicationType } from "../types";
@@ -96,6 +97,8 @@ export const MediaStep = ({
   
   const showSlideshow = selectedPublicationTypes.includes("slideshow");
   const showBanner = selectedPublicationTypes.includes("banner");
+  // Make sure we show the image selection for photo publications as well
+  const showPhotoSelection = selectedPublicationTypes.includes("photo");
   
   return (
     <div className="space-y-4">
@@ -103,6 +106,23 @@ export const MediaStep = ({
       
       <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
         <div className="space-y-4 pr-2 pb-6">
+          {showPhotoSelection && (
+            <div className="space-y-4">
+              <SlideshowGenerationSection 
+                isGeneratingSlideshow={false}
+                slideshowUrl={null}
+                slideshowError={null}
+                slideshowRenderId={null}
+                generateSlideshow={() => Promise.resolve(null)}
+                refetchSlideshowStatus={() => {}}
+                onRegenerateSlideshow={() => {}}
+                selectedImages={selectedImages}
+                toggleImageSelection={toggleImageSelection}
+                availableImages={availableImages}
+              />
+            </div>
+          )}
+          
           {showSlideshow && (
             <div className="space-y-4">
               <SlideshowConfig
@@ -127,6 +147,8 @@ export const MediaStep = ({
                 onRegenerateSlideshow={handleRegenerateSlideshow}
                 selectedImages={selectedImages}
                 selectedMusic={selectedMusic}
+                toggleImageSelection={toggleImageSelection}
+                availableImages={availableImages}
               />
             </div>
           )}
