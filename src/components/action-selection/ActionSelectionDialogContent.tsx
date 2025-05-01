@@ -107,8 +107,8 @@ export const ActionSelectionDialogContent = () => {
   };
 
   return (
-    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[90vh] w-[95vw] md:w-auto">
-      <DialogHeader>
+    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[85vh] h-[85vh] w-[92vw] md:w-auto">
+      <DialogHeader className="pb-1">
         <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
         <DialogDescription className="text-gray-400">
           Créez une publication pour diffuser votre bien immobilier sur les réseaux sociaux.
@@ -116,7 +116,7 @@ export const ActionSelectionDialogContent = () => {
       </DialogHeader>
       
       <div className="flex-1 overflow-hidden min-h-0">
-        <ScrollArea className={isMobile ? "h-[65vh]" : "h-[50vh] md:h-[60vh]"}>
+        <ScrollArea className={isMobile ? "h-[60vh]" : "h-[55vh]"}>
           <div className="p-1 md:px-2 pb-6">
             {renderStepContent({
               currentStep,
@@ -181,7 +181,7 @@ export const ActionSelectionDialogContent = () => {
         </ScrollArea>
       </div>
       
-      <DialogFooter className="border-t border-gray-800 pt-4 mt-auto">
+      <DialogFooter className="border-t border-gray-800 pt-2 mt-auto shrink-0">
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}
