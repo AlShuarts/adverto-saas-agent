@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+// Remove the ensureAndIncrementStatistic import as we'll handle this in the backend function
+// import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
 
 export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +29,8 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
         console.log("Aucune musique n'est sélectionnée");
       }
       
-      await ensureAndIncrementStatistic('slideshow');
+      // Remove this line to avoid double increment
+      // await ensureAndIncrementStatistic('slideshow');
       
       const payload = {
         listingId: listing.id,

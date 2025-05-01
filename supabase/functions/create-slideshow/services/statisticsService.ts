@@ -2,6 +2,11 @@
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 export const updateUsageStatistics = async (supabase: SupabaseClient, userId: string) => {
+  // Comment out this entire function to prevent the backend increment
+  // This ensures only the frontend increment from useSlideshowGeneration.ts is used
+  return;
+  
+  /*
   try {
     const { data: existingStat, error: fetchError } = await supabase
       .from('usage_statistics')
@@ -46,4 +51,5 @@ export const updateUsageStatistics = async (supabase: SupabaseClient, userId: st
   } catch (statErr) {
     console.error("⚠️ Exception lors de la mise à jour des statistiques:", statErr);
   }
+  */
 };

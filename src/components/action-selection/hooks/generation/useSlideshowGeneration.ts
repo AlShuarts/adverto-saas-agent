@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
@@ -63,6 +62,7 @@ export const useSlideshowGeneration = (listingId: string) => {
       
       if (data.renderId) {
         setSlideshowRenderId(data.renderId);
+        // Keep this line as we want to increment the stat only here
         await ensureAndIncrementStatistic('slideshow');
         
         toast.success("Diaporama en cours de génération", {
