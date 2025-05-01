@@ -87,6 +87,7 @@ export const MediaStep = ({
   slideshowRenderId,
   bannerRenderId,
   generateSlideshow,
+  generateBanner,
   refetchSlideshowStatus,
   handleRegenerateSlideshow,
   handleRegenerateBanner
