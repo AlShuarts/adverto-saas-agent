@@ -27,7 +27,7 @@ export const generateSoldBannerClip = (params: SoldBannerConfig) => {
         {
           asset: {
             type: "text",
-            text: `${params.brokerName}, ${params.brokerEmail} \n\n${params.brokerPhone}`,
+            text: `${params.brokerName} \n${params.brokerEmail} \n${params.brokerPhone}`,
             alignment: {
               horizontal: "left",
               vertical: "top"
