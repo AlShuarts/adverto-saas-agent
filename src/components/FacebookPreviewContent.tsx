@@ -1,3 +1,4 @@
+
 import { Loader2, Save, Copy, Images } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -116,23 +117,21 @@ export const FacebookPreviewContent = ({
   const renderMediaContent = () => {
     if (showSlideshow && slideshowUrl) {
       return (
-        <div className="relative">
-          <div className="aspect-video bg-black rounded-md overflow-hidden">
-            <video 
-              src={slideshowUrl} 
-              className="w-full h-full object-cover"
-              controls
-              autoPlay
-              muted
-              loop
-            />
-          </div>
+        <div className="aspect-video bg-black rounded-md overflow-hidden">
+          <video 
+            src={slideshowUrl} 
+            className="w-full h-full object-cover"
+            controls
+            autoPlay
+            muted
+            loop
+          />
         </div>
       );
     } else if (selectedImages.length > 0) {
       return (
         <div className="relative">
-          <div className="aspect-video bg-muted rounded-md overflow-hidden">
+          <div className="aspect-square bg-muted rounded-md overflow-hidden mb-3">
             <img
               src={selectedImages[0]}
               alt="Preview"
@@ -152,7 +151,7 @@ export const FacebookPreviewContent = ({
   };
 
   return (
-    <div className="glass border border-border/40 rounded-lg p-4">
+    <div className="glass border border-border/40 rounded-lg p-4 w-full max-w-full">
       <div className="flex items-center space-x-2 mb-3">
         <div className="w-10 h-10 bg-blue-600 rounded-full" />
         <div>
@@ -180,7 +179,7 @@ export const FacebookPreviewContent = ({
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 mb-2">
+            <div className="flex flex-wrap justify-end gap-2 mb-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -230,7 +229,7 @@ export const FacebookPreviewContent = ({
                         <img
                           src={image}
                           alt={`Image ${index + 1}`}
-                          className="w-full h-48 object-cover rounded"
+                          className="w-full aspect-square object-cover rounded"
                         />
                         <div className="absolute top-2 left-2 bg-black/50 p-1.5 rounded">
                           <Checkbox

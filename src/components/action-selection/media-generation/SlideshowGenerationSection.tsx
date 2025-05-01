@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play } from "lucide-react";
@@ -37,11 +38,11 @@ export const SlideshowGenerationSection = ({
     setTimeout(() => setIsManualChecking(false), 2000);
   };
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
-  return <div className="space-y-3 pb-3 border border-gray-800 rounded-md p-3 bg-gray-900/40">
+  return <div className="space-y-3 pb-3 border border-gray-800 rounded-md p-3 bg-gray-900/40 w-full">
       
       
       {/* Image Selection section - Always show this */}
-      {toggleImageSelection && availableImages && <div className="mb-4">
+      {toggleImageSelection && availableImages && <div className="mb-4 w-full">
           <ImageSelection selectedImages={selectedImages} toggleImageSelection={toggleImageSelection} availableImages={availableImages} />
         </div>}
       
@@ -69,7 +70,7 @@ export const SlideshowGenerationSection = ({
         </div>}
 
       {slideshowUrl && <div className="flex flex-col space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-green-500 flex items-center gap-1">
               <Video className="w-4 h-4" /> Diaporama généré avec succès
             </span>

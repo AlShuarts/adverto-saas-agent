@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, Images } from "lucide-react";
 export type ImageSelectionProps = {
@@ -22,10 +23,10 @@ export const ImageSelection = ({
         </div>
       </div>;
   }
-  return <div className="space-y-4">
+  return <div className="space-y-4 w-full">
       <h5 className="font-medium text-lg">Sélection des photos</h5>
-      <ScrollArea className="h-[220px] border rounded p-2">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <ScrollArea className="h-[220px] border rounded p-2 w-full">
+        <div className="grid grid-cols-2 gap-2">
           {imagesToDisplay.map((image, index) => <div key={index} className="relative cursor-pointer rounded-md overflow-hidden group" onClick={() => toggleImageSelection(image)}>
               <img src={image} alt={`Image ${index + 1}`} className="w-full h-24 object-cover" />
               <div className={`absolute inset-0 flex items-center justify-center bg-black/50 ${selectedImages.includes(image) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
