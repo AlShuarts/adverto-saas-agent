@@ -1,5 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play, RefreshCw } from "lucide-react";
+
 type SlideshowStepProps = {
   isGeneratingSlideshow: boolean;
   slideshowUrl: string | null;
@@ -11,6 +13,7 @@ type SlideshowStepProps = {
   onCheckStatus: () => void;
   isManualChecking?: boolean;
 };
+
 export const SlideshowStep = ({
   isGeneratingSlideshow,
   slideshowUrl,
@@ -22,5 +25,100 @@ export const SlideshowStep = ({
   onCheckStatus,
   isManualChecking = false
 }: SlideshowStepProps) => {
-  return;
+  if (selectedImages.length === 0) {
+    return (
+      <div className="mt-4">
+        <Button
+          disabled={true}
+          className="w-full"
+          variant="secondary"
+        >
+          <Video className="mr-2 h-4 w-4" />
+          Sélectionnez au moins une image pour générer un diaporama
+        </Button>
+      </div>
+    );
+  }
+
+  if (isGeneratingSlideshow) {
+    return (
+      <div className="mt-4">
+        <Button
+          disabled={true}
+          className="w-full"
+          variant="secondary"
+        >
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Génération du diaporama en cours...
+        </Button>
+      </div>
+    );
+  }
+
+  if (slideshowUrl) {
+    return (
+      <div className="mt-4">
+        <Button
+          variant="secondary"
+          className="w-full"
+          onClick={onRegenerateSlideshow}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Régénérer le diaporama
+        </Button>
+      </div>
+    );
+  }
+
+  if (slideshowRenderId && !slideshowUrl) {
+    return (
+      <div className="mt-4">
+        <Button
+          variant="secondary"
+          className="w-full"
+          onClick={onCheckStatus}
+          disabled={isManualChecking}
+        >
+          {isManualChecking ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 h-4 w-4" />
+          )}
+          Vérifier l'état du diaporama
+        </Button>
+      </div>
+    );
+  }
+
+  if (slideshowError) {
+    return (
+      <div className="mt-4 space-y-2">
+        <p className="text-sm text-red-500">{slideshowError}</p>
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={onGenerateSlideshow}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Réessayer la génération
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4">
+      <Button
+        onClick={onGenerateSlideshow}
+        className="w-full"
+        variant="default"
+        disabled={selectedImages.length === 0}
+      >
+        <Play className="mr-2 h-4 w-4" />
+        {selectedImages.length > 0
+          ? "Générer le diaporama"
+          : "Sélectionnez au moins une image"}
+      </Button>
+    </div>
+  );
 };

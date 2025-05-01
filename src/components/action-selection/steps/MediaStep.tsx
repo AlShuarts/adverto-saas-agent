@@ -6,6 +6,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ImageSelection } from "../media-generation/components/ImageSelection";
 
 type MediaStepProps = {
   selectedPublicationTypes: PublicationType[];
@@ -106,23 +107,18 @@ export const MediaStep = ({
       
       <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
         <div className="space-y-4 pr-2 pb-6">
+          {/* For photo publication type only (without slideshow) */}
           {showPhotoSelection && !showSlideshow && (
             <div className="space-y-4">
-              <SlideshowGenerationSection 
-                isGeneratingSlideshow={false}
-                slideshowUrl={null}
-                slideshowError={null}
-                slideshowRenderId={null}
-                generateSlideshow={() => Promise.resolve(null)}
-                refetchSlideshowStatus={() => {}}
-                onRegenerateSlideshow={() => {}}
-                selectedImages={selectedImages}
-                toggleImageSelection={toggleImageSelection}
+              <ImageSelection 
+                selectedImages={selectedImages} 
+                toggleImageSelection={toggleImageSelection} 
                 availableImages={availableImages}
               />
             </div>
           )}
           
+          {/* For slideshow publication type */}
           {showSlideshow && (
             <div className="space-y-4">
               <SlideshowConfig
@@ -151,6 +147,7 @@ export const MediaStep = ({
             </div>
           )}
           
+          {/* For banner publication type */}
           {showBanner && (
             <div className="mb-4">
               <BannerGenerationSection

@@ -46,12 +46,14 @@ export const SlideshowGenerationSection = ({
   
   return (
     <div className="space-y-4">
+      {/* Always show the ImageSelection component */}
       <ImageSelection 
         selectedImages={selectedImages} 
         toggleImageSelection={toggleImageSelection!} 
         availableImages={availableImages}
       />
       
+      {/* Show the SlideshowStep component (which has the generate button) */}
       <SlideshowStep
         isGeneratingSlideshow={isGeneratingSlideshow}
         slideshowUrl={slideshowUrl}
