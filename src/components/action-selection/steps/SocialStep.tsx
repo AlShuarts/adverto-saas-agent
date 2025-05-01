@@ -48,7 +48,7 @@ export const SocialStep = ({
   // Make sure we have images available
   const availableImages = listing?.images || images;
   return <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 4 : Publier sur les réseaux sociaux</h3>
+      <h3 className="text-lg font-medium">Étape 4: Publier sur les réseaux sociaux</h3>
       
       <div className="space-y-4 border rounded-md p-4">
         <h4 className="font-medium">Sélection des réseaux</h4>
