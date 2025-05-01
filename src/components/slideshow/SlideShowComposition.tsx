@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { SlideShowImage } from "./SlideShowImage";
 
 export const SLIDE_DURATION = 3000; // 3 secondes en millisecondes
@@ -21,6 +21,8 @@ export const SlideShowComposition = ({
   currentIndex,
   onIndexChange,
 }: SlideShowCompositionProps) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
 
@@ -39,6 +41,25 @@ export const SlideShowComposition = ({
     };
   }, [isPlaying, images.length, currentIndex, onIndexChange]);
 
+  // Handle volume and mute changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.muted = volume === 0;
+    }
+  }, [volume]);
+
+  // Handle play/pause state
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
       {images.map((image, index) => (
@@ -54,12 +75,10 @@ export const SlideShowComposition = ({
       {/* Audio element for music playback */}
       {musicUrl && (
         <audio
-          autoPlay={isPlaying}
+          ref={audioRef}
           loop
           src={musicUrl}
           className="hidden"
-          volume={volume}
-          muted={volume === 0}
         />
       )}
     </div>
