@@ -87,7 +87,6 @@ export const MediaStep = ({
   slideshowRenderId,
   bannerRenderId,
   generateSlideshow,
-  generateBanner,
   refetchSlideshowStatus,
   handleRegenerateSlideshow,
   handleRegenerateBanner
@@ -106,7 +105,7 @@ export const MediaStep = ({
       
       <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
         <div className="space-y-4 pr-2 pb-6">
-          {showPhotoSelection && (
+          {showPhotoSelection && !showSlideshow && (
             <div className="space-y-4">
               <SlideshowGenerationSection 
                 isGeneratingSlideshow={false}
@@ -147,8 +146,6 @@ export const MediaStep = ({
                 onRegenerateSlideshow={handleRegenerateSlideshow}
                 selectedImages={selectedImages}
                 selectedMusic={selectedMusic}
-                toggleImageSelection={toggleImageSelection}
-                availableImages={availableImages}
               />
             </div>
           )}
