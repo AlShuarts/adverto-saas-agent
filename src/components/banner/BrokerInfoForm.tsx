@@ -75,7 +75,7 @@ export const BrokerInfoForm = ({
               }
             }}
             placeholder="Exemple: Jean Dupont"
-            className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300" : ""} bg-white`}
+            className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300" : ""} bg-white text-gray-900`}
           />
           {!brokerName && !formErrors.brokerName && (
             <div className="flex items-center text-xs text-amber-600 mt-1">
@@ -103,7 +103,7 @@ export const BrokerInfoForm = ({
               }
             }}
             placeholder="jean.dupont@immobilier.com"
-            className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300" : ""} bg-white`}
+            className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300" : ""} bg-white text-gray-900`}
           />
           {!brokerEmail && !formErrors.brokerEmail && (
             <div className="flex items-center text-xs text-amber-600 mt-1">
@@ -131,7 +131,7 @@ export const BrokerInfoForm = ({
               }
             }}
             placeholder="(514) 555-1234"
-            className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300" : ""} bg-white`}
+            className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300" : ""} bg-white text-gray-900`}
           />
           {!brokerPhone && !formErrors.brokerPhone && (
             <div className="flex items-center text-xs text-amber-600 mt-1">

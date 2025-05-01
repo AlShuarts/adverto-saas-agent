@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play } from "lucide-react";
@@ -37,5 +38,13 @@ export const SlideshowGenerationSection = ({
     setTimeout(() => setIsManualChecking(false), 2000);
   };
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
-  return;
+  return (
+    <div className="space-y-4">
+      <ImageSelection 
+        selectedImages={selectedImages} 
+        toggleImageSelection={toggleImageSelection!} 
+        availableImages={availableImages}
+      />
+    </div>
+  );
 };
