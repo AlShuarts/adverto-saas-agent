@@ -5,6 +5,7 @@ import { Loader2, Video, Play } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ImageSelection } from "./components/ImageSelection";
 import { SlideshowStep } from "../steps/SlideshowStep";
+import { SlideshowPlayer } from "@/components/slideshow/SlideshowPlayer";
 
 type SlideshowGenerationSectionProps = {
   isGeneratingSlideshow: boolean;
@@ -34,6 +35,7 @@ export const SlideshowGenerationSection = ({
   availableImages
 }: SlideshowGenerationSectionProps) => {
   const [isManualChecking, setIsManualChecking] = React.useState(false);
+  const [showPreview, setShowPreview] = React.useState(false);
   const isMobile = useIsMobile();
   
   const handleCheckStatus = () => {
@@ -78,6 +80,27 @@ export const SlideshowGenerationSection = ({
         </div>
       )}
 
+      {/* Show slideshow preview if available and requested */}
+      {slideshowUrl && showPreview && (
+        <div className="mb-4 bg-card p-4 rounded-lg border">
+          <h3 className="text-lg font-medium mb-2">Aperçu du diaporama</h3>
+          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+            <SlideshowPlayer 
+              images={selectedImages}
+              musicUrl={selectedMusic ? `https://msmuyhmxlrkcjthugcxd.supabase.co/storage/v1/object/public/background-music/${selectedMusic}` : null}
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPreview(false)}
+            className="mt-2"
+          >
+            Masquer l'aperçu
+          </Button>
+        </div>
+      )}
+
       {/* Always show the ImageSelection component */}
       <ImageSelection 
         selectedImages={selectedImages} 
@@ -97,6 +120,17 @@ export const SlideshowGenerationSection = ({
         onCheckStatus={handleCheckStatus}
         isManualChecking={isManualChecking}
       />
+      
+      {/* Show preview button if slideshow is ready but preview is not showing */}
+      {slideshowUrl && !showPreview && (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setShowPreview(true)}
+        >
+          Afficher l'aperçu du diaporama
+        </Button>
+      )}
       
       {slideshowRenderId && !slideshowUrl && !isGeneratingSlideshow && (
         <div className="text-xs text-center text-muted-foreground mt-2">

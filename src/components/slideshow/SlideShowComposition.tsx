@@ -50,6 +50,18 @@ export const SlideShowComposition = ({
           isPlaying={isPlaying}
         />
       ))}
+      
+      {/* Audio element for music playback */}
+      {musicUrl && (
+        <audio
+          autoPlay={isPlaying}
+          loop
+          src={musicUrl}
+          className="hidden"
+          volume={volume}
+          muted={volume === 0}
+        />
+      )}
     </div>
   );
 };

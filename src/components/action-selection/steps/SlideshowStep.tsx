@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Loader2, Video, Play, RefreshCw } from "lucide-react";
+import { Loader2, Video, Play, RefreshCw, ExternalLink } from "lucide-react";
 
 type SlideshowStepProps = {
   isGeneratingSlideshow: boolean;
@@ -63,7 +63,15 @@ export const SlideshowStep = ({
 
   if (slideshowUrl) {
     return (
-      <div className="mt-4">
+      <div className="mt-4 space-y-2">
+        <Button
+          variant="default"
+          className="w-full"
+          onClick={() => window.open(slideshowUrl, "_blank")}
+        >
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Voir le diaporama
+        </Button>
         <Button
           variant="secondary"
           className="w-full"

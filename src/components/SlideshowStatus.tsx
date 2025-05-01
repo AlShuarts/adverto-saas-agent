@@ -2,7 +2,7 @@
 import { Tables } from "@/integrations/supabase/types";
 import { useSlideshowStatus } from "@/hooks/useSlideshowStatus";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, ExternalLink, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ export const SlideshowStatus = ({
   
   const hasNotified = useRef(false);
   const [isForceChecking, setIsForceChecking] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   
   // Force check with the API if we're showing 'processing' or 'rendering' for too long
   useEffect(() => {
@@ -148,13 +149,36 @@ export const SlideshowStatus = ({
 
   // Accepter les deux statuts "completed" ou "done"
   if ((render.status === "completed" || render.status === "done") && render.video_url) {
-    return <div className="mt-2">
-        <Button variant="outline" size="sm" className="w-full" onClick={() => {
-        window.open(render.video_url, "_blank");
-      }}>
-          Voir le diaporama
-        </Button>
-      </div>;
+    return (
+      <div className="mt-2 space-y-2">
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => {
+            window.open(render.video_url, "_blank");
+          }}>
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Voir en plein écran
+          </Button>
+          
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowPreview(!showPreview)}>
+            <Play className="mr-2 h-4 w-4" />
+            {showPreview ? "Masquer l'aperçu" : "Aperçu rapide"}
+          </Button>
+        </div>
+        
+        {showPreview && render.video_url && listing.images && (
+          <div className="p-2 bg-card border rounded-lg mt-2">
+            <video 
+              src={render.video_url}
+              className="w-full rounded"
+              controls
+              autoPlay
+              muted
+              playsInline
+            />
+          </div>
+        )}
+      </div>
+    );
   }
   
   if (render.status === "pending" || render.status === "processing" || render.status === "rendering") {

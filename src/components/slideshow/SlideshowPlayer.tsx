@@ -4,15 +4,16 @@ import { SlideShowComposition } from "./SlideShowComposition";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
-import { Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { Volume2, VolumeX, Play, Pause, ExternalLink } from "lucide-react";
 import { useSlideshow } from "@/hooks/useSlideshow";
 
 type SlideshowPlayerProps = {
   images: string[];
   musicUrl: string | null | undefined;
+  externalUrl?: string | null;
 };
 
-export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
+export const SlideshowPlayer = ({ images, musicUrl, externalUrl }: SlideshowPlayerProps) => {
   const {
     isPlaying,
     volume,
@@ -69,41 +70,54 @@ export const SlideshowPlayer = ({ images, musicUrl }: SlideshowPlayerProps) => {
         <Progress value={progress} className="h-full" />
       </div>
 
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={togglePlay}
-          className="h-10 w-10"
-        >
-          {isPlaying ? (
-            <Pause className="h-5 w-5" />
-          ) : (
-            <Play className="h-5 w-5" />
-          )}
-        </Button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={togglePlay}
+            className="h-10 w-10"
+          >
+            {isPlaying ? (
+              <Pause className="h-5 w-5" />
+            ) : (
+              <Play className="h-5 w-5" />
+            )}
+          </Button>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleMute}
-          className="h-10 w-10"
-        >
-          {volume === 0 ? (
-            <VolumeX className="h-5 w-5" />
-          ) : (
-            <Volume2 className="h-5 w-5" />
-          )}
-        </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleMute}
+            className="h-10 w-10"
+          >
+            {volume === 0 ? (
+              <VolumeX className="h-5 w-5" />
+            ) : (
+              <Volume2 className="h-5 w-5" />
+            )}
+          </Button>
 
-        <div className="w-32">
-          <Slider
-            value={[volume]}
-            max={1}
-            step={0.1}
-            onValueChange={handleVolumeChange}
-          />
+          <div className="w-32">
+            <Slider
+              value={[volume]}
+              max={1}
+              step={0.1}
+              onValueChange={handleVolumeChange}
+            />
+          </div>
         </div>
+        
+        {externalUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(externalUrl, "_blank")}
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Ouvrir en plein écran
+          </Button>
+        )}
       </div>
     </div>
   );
