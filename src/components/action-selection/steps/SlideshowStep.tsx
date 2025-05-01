@@ -42,7 +42,7 @@ export const SlideshowStep = ({
 
   if (isGeneratingSlideshow) {
     return (
-      <div className="mt-4">
+      <div className="mt-4 space-y-2">
         <Button
           disabled={true}
           className="w-full"
@@ -51,6 +51,12 @@ export const SlideshowStep = ({
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Génération du diaporama en cours...
         </Button>
+        <div className="text-center text-sm text-muted-foreground">
+          Cette opération peut prendre quelques minutes.
+        </div>
+        <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
+          <div className="bg-primary h-full rounded-full animate-pulse" style={{ width: "100%" }}></div>
+        </div>
       </div>
     );
   }
@@ -72,7 +78,13 @@ export const SlideshowStep = ({
 
   if (slideshowRenderId && !slideshowUrl) {
     return (
-      <div className="mt-4">
+      <div className="mt-4 space-y-2">
+        <div className="text-center text-sm text-muted-foreground">
+          Le traitement du diaporama est en cours...
+        </div>
+        <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
+          <div className="bg-primary h-full rounded-full animate-pulse" style={{ width: "80%" }}></div>
+        </div>
         <Button
           variant="secondary"
           className="w-full"

@@ -45,7 +45,39 @@ export const SlideshowGenerationSection = ({
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {(isGeneratingSlideshow || slideshowRenderId) && !slideshowUrl && (
+        <div className="absolute top-0 left-0 w-full h-full bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+          <div className="text-center p-6 bg-card rounded-lg shadow-lg border w-full max-w-md">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-medium mb-2">Traitement du diaporama</h3>
+            <p className="mb-4 text-muted-foreground">
+              {slideshowRenderId ? 
+                "Votre diaporama est en cours de traitement..." : 
+                "Le diaporama est en cours de génération..."}
+            </p>
+            <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden mb-4">
+              <div className="bg-primary h-full rounded-full animate-pulse" style={{ width: slideshowRenderId ? "80%" : "40%" }}></div>
+            </div>
+            {slideshowRenderId && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleCheckStatus}
+                disabled={isManualChecking}
+                className="w-full"
+              >
+                {isManualChecking ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  "Vérifier le statut"
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Always show the ImageSelection component */}
       <ImageSelection 
         selectedImages={selectedImages} 
@@ -65,6 +97,12 @@ export const SlideshowGenerationSection = ({
         onCheckStatus={handleCheckStatus}
         isManualChecking={isManualChecking}
       />
+      
+      {slideshowRenderId && !slideshowUrl && !isGeneratingSlideshow && (
+        <div className="text-xs text-center text-muted-foreground mt-2">
+          ID de traitement: {slideshowRenderId}
+        </div>
+      )}
     </div>
   );
 };
