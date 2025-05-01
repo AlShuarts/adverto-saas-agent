@@ -1,10 +1,8 @@
-
 import { SocialNetworkSelector } from "../SocialNetworkSelector";
 import { PublicationType, SocialNetworks } from "../types";
 import { Button } from "@/components/ui/button";
 import { PublicationPreview } from "../PublicationPreview";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 type SocialStepProps = {
   selectedPublicationTypes: PublicationType[];
   selectedNetworks: SocialNetworks;
@@ -22,9 +20,8 @@ type SocialStepProps = {
   selectedMusic: string | undefined;
   listing?: any; // Add listing prop
 };
-
-export const SocialStep = ({ 
-  selectedPublicationTypes, 
+export const SocialStep = ({
+  selectedPublicationTypes,
   selectedNetworks,
   setSelectedNetworks,
   isSubmitting,
@@ -50,10 +47,8 @@ export const SocialStep = ({
 
   // Make sure we have images available
   const availableImages = listing?.images || images;
-
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 5: Publier sur les réseaux sociaux</h3>
+  return <div className="space-y-6">
+      <h3 className="text-lg font-medium">Étape 4 : Publier sur les réseaux sociaux</h3>
       
       <div className="space-y-4 border rounded-md p-4">
         <h4 className="font-medium">Sélection des réseaux</h4>
@@ -61,21 +56,9 @@ export const SocialStep = ({
           Choisissez les réseaux sociaux sur lesquels vous souhaitez publier votre contenu.
         </p>
         
-        <SocialNetworkSelector 
-          selectedNetworks={selectedNetworks}
-          onNetworkChange={handleNetworkChange}
-        />
+        <SocialNetworkSelector selectedNetworks={selectedNetworks} onNetworkChange={handleNetworkChange} />
         
-        <Button 
-          type="button" 
-          onClick={onSubmit}
-          disabled={
-            isSubmitting || 
-            !hasRequiredInfo || 
-            (!selectedNetworks.facebook && !selectedNetworks.instagram)
-          }
-          className="w-full sm:w-auto mt-4"
-        >
+        <Button type="button" onClick={onSubmit} disabled={isSubmitting || !hasRequiredInfo || !selectedNetworks.facebook && !selectedNetworks.instagram} className="w-full sm:w-auto mt-4">
           {isSubmitting ? "Publication en cours..." : "Publier maintenant"}
         </Button>
       </div>
@@ -88,20 +71,8 @@ export const SocialStep = ({
         </p>
         
         <ScrollArea className="h-[500px] w-full pr-4">
-          <PublicationPreview 
-            selectedNetworks={selectedNetworks}
-            generatedText={generatedText}
-            setGeneratedText={setGeneratedText}
-            images={availableImages}
-            selectedImages={selectedImages}
-            setSelectedImages={setSelectedImages}
-            slideshowUrl={slideshowUrl}
-            bannerUrl={bannerUrl}
-            selectedMusic={selectedMusic}
-            selectedPublicationTypes={selectedPublicationTypes}
-          />
+          <PublicationPreview selectedNetworks={selectedNetworks} generatedText={generatedText} setGeneratedText={setGeneratedText} images={availableImages} selectedImages={selectedImages} setSelectedImages={setSelectedImages} slideshowUrl={slideshowUrl} bannerUrl={bannerUrl} selectedMusic={selectedMusic} selectedPublicationTypes={selectedPublicationTypes} />
         </ScrollArea>
       </div>
-    </div>
-  );
+    </div>;
 };
