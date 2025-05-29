@@ -45,16 +45,18 @@ export const ImageSelection = ({
   }
 
   return <div className="space-y-4 w-full">
-      <h5 className="font-medium text-lg">Sélection des photos</h5>
-      
-      {availableImages && onSelectAll && onDeselectAll && (
-        <SelectAllButton
-          availableImages={availableImages}
-          selectedImages={selectedImages}
-          onSelectAll={handleSelectAll}
-          onDeselectAll={handleDeselectAll}
-        />
-      )}
+      <div className="flex justify-between items-center">
+        <h5 className="font-medium text-lg">Sélection des photos</h5>
+        
+        {availableImages && onSelectAll && onDeselectAll && (
+          <SelectAllButton
+            availableImages={availableImages}
+            selectedImages={selectedImages}
+            onSelectAll={handleSelectAll}
+            onDeselectAll={handleDeselectAll}
+          />
+        )}
+      </div>
       
       <ScrollArea className="h-[220px] border rounded p-2 w-full">
         <div className="grid grid-cols-2 gap-2">
