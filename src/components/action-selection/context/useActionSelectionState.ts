@@ -124,7 +124,6 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     handleGenerateText: () => templateState.generateText(templateState.selectedFacebookTemplateId, templateState.facebookTemplates),
     handleGenerateSlideshow: () => mediaState.handleGenerateSlideshow(),
     handleGenerateBanner: (bannerImage: string | null, bannerType: "VENDU" | "A_VENDRE", brokerInfo: any) => 
-      mediaState.handleGenerateBanner(bannerImage, bannerType, brokerInfo, validateBrokerInfo, setFormErrors),
-    onDragEnd: mediaState.onDragEnd
+      mediaState.handleGenerateBanner(bannerImage, bannerType, brokerInfo, validateBrokerInfo, setFormErrors)
   };
 };
