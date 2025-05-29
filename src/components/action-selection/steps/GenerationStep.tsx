@@ -1,10 +1,11 @@
 
 import { MediaGenerationStep } from "../media-generation/MediaGenerationStep";
-import { PublicationType } from "../types";
+import { PublicationType, PhotoType } from "../types";
 import { Tables } from "@/integrations/supabase/types";
 
 type GenerationStepProps = {
-  selectedPublicationTypes: PublicationType[];
+  selectedPublicationType: PublicationType | null;
+  selectedPhotoType?: PhotoType | null;
   selectedImages: string[];
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
@@ -46,7 +47,8 @@ type GenerationStepProps = {
 };
 
 export const GenerationStep = ({
-  selectedPublicationTypes,
+  selectedPublicationType,
+  selectedPhotoType,
   selectedImages,
   bannerImage,
   bannerType,
@@ -88,7 +90,8 @@ export const GenerationStep = ({
 }: GenerationStepProps) => {
   return (
     <MediaGenerationStep
-      selectedPublicationTypes={selectedPublicationTypes}
+      selectedPublicationType={selectedPublicationType}
+      selectedPhotoType={selectedPhotoType}
       isGeneratingSlideshow={isGeneratingSlideshow}
       isGeneratingBanner={isGeneratingBanner}
       slideshowUrl={slideshowUrl}

@@ -1,5 +1,6 @@
 
 import { PublicationStep } from "../steps/PublicationStep";
+import { PhotoTypeStep } from "../steps/PhotoTypeStep";
 import { TemplateStep } from "../steps/TemplateStep";
 import { MediaStep } from "../steps/MediaStep";
 import { SocialStep } from "../steps/SocialStep";
@@ -8,8 +9,10 @@ import { DialogContentProps } from "./types";
 
 export const ActionSelectionSteps = ({
   currentStep,
-  selectedPublicationTypes,
+  selectedPublicationType,
+  selectedPhotoType,
   handlePublicationTypeChange,
+  handlePhotoTypeChange,
   facebookTemplates,
   instagramTemplates,
   selectedFacebookTemplateId,
@@ -71,11 +74,18 @@ export const ActionSelectionSteps = ({
       case 1:
         return (
           <PublicationStep
-            selectedPublicationTypes={selectedPublicationTypes}
+            selectedPublicationType={selectedPublicationType}
             onPublicationTypeChange={handlePublicationTypeChange}
           />
         );
       case 2:
+        return (
+          <PhotoTypeStep
+            selectedPhotoType={selectedPhotoType}
+            onPhotoTypeChange={handlePhotoTypeChange}
+          />
+        );
+      case 3:
         return (
           <TemplateStep
             facebookTemplates={facebookTemplates}
@@ -90,10 +100,11 @@ export const ActionSelectionSteps = ({
             onGenerateText={handleGenerateText}
           />
         );
-      case 3:
+      case 4:
         return (
           <MediaStep
-            selectedPublicationTypes={selectedPublicationTypes}
+            selectedPublicationType={selectedPublicationType}
+            selectedPhotoType={selectedPhotoType}
             images={listing?.images || []}
             selectedImages={selectedImages}
             bannerImage={bannerImage}
@@ -140,7 +151,8 @@ export const ActionSelectionSteps = ({
       case 5:
         return (
           <SocialStep
-            selectedPublicationTypes={selectedPublicationTypes}
+            selectedPublicationType={selectedPublicationType}
+            selectedPhotoType={selectedPhotoType}
             selectedNetworks={selectedNetworks}
             setSelectedNetworks={setSelectedNetworks}
             isSubmitting={isPublishing}
@@ -154,6 +166,7 @@ export const ActionSelectionSteps = ({
             slideshowUrl={slideshowUrl}
             bannerUrl={bannerUrl}
             selectedMusic={selectedMusic}
+            listing={listing}
           />
         );
       default:

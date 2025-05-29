@@ -54,12 +54,16 @@ export const SocialStep = ({
       
       <SocialNetworkSelector
         selectedNetworks={selectedNetworks}
-        onSelectionChange={setSelectedNetworks}
+        onNetworkChange={(network, checked) => {
+          setSelectedNetworks({
+            ...selectedNetworks,
+            [network]: checked
+          });
+        }}
       />
       
       <PublicationPreview
-        selectedPublicationType={selectedPublicationType}
-        selectedPhotoType={selectedPhotoType}
+        selectedPublicationTypes={selectedPublicationType ? [selectedPublicationType] : []}
         generatedText={generatedText}
         setGeneratedText={setGeneratedText}
         images={images}
@@ -69,6 +73,7 @@ export const SocialStep = ({
         bannerUrl={bannerUrl}
         selectedMusic={selectedMusic}
         listing={listing}
+        selectedNetworks={selectedNetworks}
       />
       
       <div className="flex justify-end">
