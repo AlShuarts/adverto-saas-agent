@@ -122,8 +122,9 @@ INSTRUCTIONS IMPORTANTES:
       4. Utiliser des sauts de ligne pour aérer le texte
       5. Séparer clairement les différentes sections
       6. Inclure des émojis pertinents au début de chaque section
-      7. Mentionner le courtier à la fin
-      8. Terminer avec "Plus de détails sur ${listing.centris_url}"`;
+      7. Ne pas écrire en caractère gras et ne pas utiliser de * 
+      8. Mentionner le courtier à la fin
+      9. Terminer avec "Plus de détails sur ${listing.centris_url}"`;
     }
 
     console.log("Sending prompt to OpenAI:", prompt);
