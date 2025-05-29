@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { MoveVertical, Play, Pause, Music } from "lucide-react";
+import { Play, Pause, Music } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ImageSelection } from "../media-generation/components/ImageSelection";
 
 type SlideshowConfigProps = {
   images: string[];
@@ -27,95 +27,41 @@ export const SlideshowConfig = ({
   selectedMusic,
   currentlyPlaying,
   toggleImageSelection,
-  onDragEnd,
   handleMusicChange,
   previewMusic
 }: SlideshowConfigProps) => {
   const isMobile = useIsMobile();
-  const scrollHeight = isMobile ? "h-[180px]" : "h-[260px]";
+
+  const selectAllImages = () => {
+    images.forEach(image => {
+      if (!selectedImages.includes(image)) {
+        toggleImageSelection(image);
+      }
+    });
+  };
+
+  const deselectAllImages = () => {
+    selectedImages.forEach(image => {
+      toggleImageSelection(image);
+    });
+  };
 
   return (
     <div className="space-y-4 border rounded-md p-3 md:p-4">
       <h4 className="font-medium">Configuration du diaporama</h4>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Sélection des photos pour le diaporama</Label>
-          <ScrollArea className={`${scrollHeight} border rounded-lg p-1`}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-1">
-              {images?.map(imageUrl => (
-                <div 
-                  key={imageUrl} 
-                  className="relative group cursor-pointer" 
-                  onClick={() => toggleImageSelection(imageUrl)}
-                >
-                  <img src={imageUrl} alt="Property" className="w-full h-24 object-cover rounded" />
-                  <div className={`absolute inset-0 flex items-center justify-center bg-black/50 ${selectedImages.includes(imageUrl) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                    <Checkbox 
-                      checked={selectedImages.includes(imageUrl)} 
-                      onCheckedChange={() => toggleImageSelection(imageUrl)}
-                      className="scale-125"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
-        
-        <div className="space-y-2">
-          <Label>Ordre des photos</Label>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="selected-images">
-              {provided => (
-                <div 
-                  {...provided.droppableProps} 
-                  ref={provided.innerRef} 
-                  className={`border rounded-lg p-1 ${scrollHeight} overflow-y-auto`}
-                >
-                  {selectedImages.length > 0 ? (
-                    selectedImages.map((imageUrl, index) => (
-                      <Draggable key={imageUrl} draggableId={imageUrl} index={index}>
-                        {provided => (
-                          <div 
-                            ref={provided.innerRef} 
-                            {...provided.draggableProps} 
-                            {...provided.dragHandleProps} 
-                            className="flex items-center gap-2 mb-2 p-2 bg-secondary rounded"
-                          >
-                            <MoveVertical className="w-4 h-4 flex-shrink-0" />
-                            <img src={imageUrl} alt="Selected" className="w-16 h-12 object-cover rounded flex-shrink-0" />
-                            <div className="flex-1 min-w-0 overflow-hidden">
-                              <p className="text-xs truncate">{imageUrl.split('/').pop()}</p>
-                            </div>
-                            <Button 
-                              type="button" 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleImageSelection(imageUrl);
-                              }}
-                              className="flex-shrink-0"
-                            >
-                              Retirer
-                            </Button>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      Aucune image sélectionnée
-                    </div>
-                  )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </div>
+      
+      {/* Image Selection */}
+      <div className="space-y-2">
+        <ImageSelection 
+          selectedImages={selectedImages} 
+          toggleImageSelection={toggleImageSelection} 
+          availableImages={images}
+          onSelectAll={selectAllImages}
+          onDeselectAll={deselectAllImages}
+        />
       </div>
       
+      {/* Music Selection */}
       <div className="space-y-2">
         <Label>Musique de fond</Label>
         <div className="flex items-center gap-2 flex-wrap">
