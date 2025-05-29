@@ -18,8 +18,10 @@ export const ActionSelectionDialogContent = () => {
     handlePublish,
     
     // Props for different steps
-    selectedPublicationTypes,
+    selectedPublicationType,
+    selectedPhotoType,
     handlePublicationTypeChange,
+    handlePhotoTypeChange,
     
     facebookTemplates,
     instagramTemplates,
@@ -57,6 +59,8 @@ export const ActionSelectionDialogContent = () => {
     setBrokerPhone,
     formErrors,
     setFormErrors,
+    selectAllImages,
+    deselectAllImages,
     
     isGeneratingSlideshow,
     isGeneratingBanner,
@@ -120,8 +124,10 @@ export const ActionSelectionDialogContent = () => {
           <div className="p-1 md:px-2 pb-6">
             {renderStepContent({
               currentStep,
-              selectedPublicationTypes,
+              selectedPublicationType,
+              selectedPhotoType,
               handlePublicationTypeChange,
+              handlePhotoTypeChange,
               facebookTemplates,
               instagramTemplates,
               selectedFacebookTemplateId,
@@ -158,6 +164,8 @@ export const ActionSelectionDialogContent = () => {
               setBrokerPhone,
               formErrors,
               setFormErrors,
+              selectAllImages,
+              deselectAllImages,
               isGeneratingSlideshow,
               isGeneratingBanner,
               slideshowUrl,

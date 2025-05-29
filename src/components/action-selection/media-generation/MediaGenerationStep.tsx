@@ -1,13 +1,15 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SlideshowGenerationSection } from "./SlideshowGenerationSection";
 import { BannerGenerationSection } from "./BannerGenerationSection";
 import { SlideshowConfig } from "../media-selector/SlideshowConfig";
-import { PublicationType } from "../types";
+import { PublicationType, PhotoType } from "../types";
 import { Tables } from "@/integrations/supabase/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type MediaGenerationStepProps = {
-  selectedPublicationTypes: PublicationType[];
+  selectedPublicationType: PublicationType | null;
+  selectedPhotoType?: PhotoType | null;
   selectedImages: string[];
   isGeneratingSlideshow: boolean;
   isGeneratingBanner: boolean;
@@ -49,7 +51,8 @@ type MediaGenerationStepProps = {
 };
 
 export const MediaGenerationStep = ({
-  selectedPublicationTypes,
+  selectedPublicationType,
+  selectedPhotoType,
   selectedImages,
   isGeneratingSlideshow,
   isGeneratingBanner,
@@ -91,8 +94,8 @@ export const MediaGenerationStep = ({
 }: MediaGenerationStepProps) => {
   
   const isMobile = useIsMobile();
-  const showSlideshow = selectedPublicationTypes.includes("slideshow");
-  const showBanner = selectedPublicationTypes.includes("banner");
+  const showSlideshow = selectedPublicationType === "slideshow";
+  const showBanner = selectedPhotoType === "banner";
   const availableImages = listing?.images || [];
 
   return (
