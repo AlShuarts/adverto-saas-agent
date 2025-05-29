@@ -107,7 +107,7 @@ export const ActionSelectionProvider = ({
       toggleImageSelection: state.toggleImageSelection,
       selectAllImages: state.selectAllImages,
       deselectAllImages: state.deselectAllImages,
-      onDragEnd: state.onDragEnd,
+      onDragEnd: () => {}, // Empty function since drag and drop is removed
       
       // Banner
       bannerType: state.bannerType,

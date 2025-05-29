@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ImageSelection } from "./components/ImageSelection";
 import { SlideshowStep } from "../steps/SlideshowStep";
 import { SlideshowPlayer } from "@/components/slideshow/SlideshowPlayer";
 
@@ -17,8 +16,6 @@ type SlideshowGenerationSectionProps = {
   onRegenerateSlideshow: () => void;
   selectedImages: string[];
   selectedMusic?: string;
-  toggleImageSelection?: (imageUrl: string) => void;
-  availableImages?: string[];
 };
 
 export const SlideshowGenerationSection = ({
@@ -30,9 +27,7 @@ export const SlideshowGenerationSection = ({
   refetchSlideshowStatus,
   onRegenerateSlideshow,
   selectedImages,
-  selectedMusic,
-  toggleImageSelection,
-  availableImages
+  selectedMusic
 }: SlideshowGenerationSectionProps) => {
   const [isManualChecking, setIsManualChecking] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
@@ -99,31 +94,6 @@ export const SlideshowGenerationSection = ({
             Masquer l'aperçu
           </Button>
         </div>
-      )}
-
-      {/* Always show the ImageSelection component with select all functionality */}
-      {availableImages && toggleImageSelection && (
-        <ImageSelection 
-          selectedImages={selectedImages} 
-          toggleImageSelection={toggleImageSelection} 
-          availableImages={availableImages}
-          onSelectAll={() => {
-            // Select all available images
-            availableImages.forEach(image => {
-              if (!selectedImages.includes(image)) {
-                toggleImageSelection(image);
-              }
-            });
-          }}
-          onDeselectAll={() => {
-            // Deselect all currently selected images
-            selectedImages.forEach(image => {
-              if (selectedImages.includes(image)) {
-                toggleImageSelection(image);
-              }
-            });
-          }}
-        />
       )}
       
       {/* Show the SlideshowStep component (which has the generate button) */}
