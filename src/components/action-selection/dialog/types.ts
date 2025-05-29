@@ -24,6 +24,8 @@ export interface DialogContentProps {
   selectedMusic: string | undefined;
   currentlyPlaying: string | null;
   toggleImageSelection: (imageUrl: string) => void;
+  selectAllImages: (images: string[]) => void;
+  deselectAllImages: () => void;
   onDragEnd: (result: any) => void;
   selectBannerImage: (imageUrl: string) => void;
   handleMusicChange: (value: string) => void;

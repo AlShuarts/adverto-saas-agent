@@ -87,6 +87,8 @@ export interface ActionSelectionContextType extends ActionSelectionState {
   // Media selection
   setSelectedImages: (images: string[]) => void;
   toggleImageSelection: (imageUrl: string) => void;
+  selectAllImages: (images: string[]) => void;
+  deselectAllImages: () => void;
   onDragEnd: (result: any) => void;
   
   // Banner

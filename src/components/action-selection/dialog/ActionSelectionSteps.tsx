@@ -61,7 +61,9 @@ export const ActionSelectionSteps = ({
   selectedNetworks,
   setSelectedNetworks,
   isPublishing,
-  handlePublish
+  handlePublish,
+  selectAllImages,
+  deselectAllImages
 }: DialogContentProps) => {
 
   const renderContent = () => {
@@ -100,6 +102,8 @@ export const ActionSelectionSteps = ({
             selectedMusic={selectedMusic}
             currentlyPlaying={currentlyPlaying}
             toggleImageSelection={toggleImageSelection}
+            selectAllImages={selectAllImages}
+            deselectAllImages={deselectAllImages}
             onDragEnd={onDragEnd}
             selectBannerImage={selectBannerImage}
             handleMusicChange={handleMusicChange}

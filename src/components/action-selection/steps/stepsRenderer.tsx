@@ -42,6 +42,8 @@ export const renderStepContent = (props: any) => {
           selectedMusic={props.selectedMusic}
           currentlyPlaying={props.currentlyPlaying}
           toggleImageSelection={props.toggleImageSelection}
+          selectAllImages={props.selectAllImages}
+          deselectAllImages={props.deselectAllImages}
           onDragEnd={props.onDragEnd}
           selectBannerImage={props.selectBannerImage}
           handleMusicChange={props.handleMusicChange}
