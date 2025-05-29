@@ -1,10 +1,11 @@
 
-import { PublicationType, SocialNetworks } from './types';
+import { PublicationType, PhotoType, SocialNetworks } from './types';
 
 export const useNavigationUtils = (
   currentStep: number,
   setCurrentStep: (step: number) => void,
-  selectedPublicationTypes: PublicationType[],
+  selectedPublicationType: PublicationType | null,
+  selectedPhotoType: PhotoType | null,
   selectedImages: string[],
   bannerImage: string | null,
   selectedNetworks: SocialNetworks,
@@ -15,27 +16,24 @@ export const useNavigationUtils = (
   const canGoToNextStep = (): boolean => {
     switch (currentStep) {
       case 1: 
-        return selectedPublicationTypes.length > 0;
+        return selectedPublicationType !== null;
       case 2: 
-        return true;
+        // Only required if publication type is "photo"
+        return selectedPublicationType !== "photo" || selectedPhotoType !== null;
       case 3: 
-        // Only check for image selection in step 3
-        // We'll handle content generation directly in this step
+        return true; // Template step, always can proceed
+      case 4: 
+        // Media step validation
         const hasImages = selectedImages.length > 0;
-        const hasBannerImage = selectedPublicationTypes.includes("banner") && !!bannerImage;
+        const hasBannerImage = selectedPhotoType === "banner" && !!bannerImage;
         
-        if (selectedPublicationTypes.includes("slideshow") || selectedPublicationTypes.includes("banner")) {
-          // For slideshow/banner, check if we've already generated the content
-          const needsSlideshow = selectedPublicationTypes.includes("slideshow");
-          const needsBanner = selectedPublicationTypes.includes("banner");
-          
-          const slideshowReady = !needsSlideshow || !!slideshowUrl;
-          const bannerReady = !needsBanner || !!bannerUrl;
-          
-          return (hasImages || hasBannerImage) && slideshowReady && bannerReady;
+        if (selectedPublicationType === "slideshow") {
+          return hasImages && !!slideshowUrl;
+        } else if (selectedPhotoType === "banner") {
+          return hasBannerImage && !!bannerUrl;
         } else {
-          // For text and photos only, just need images
-          return hasImages || true;
+          // listing_photos
+          return hasImages;
         }
       case 5:
         return selectedNetworks.facebook || selectedNetworks.instagram;
@@ -45,20 +43,25 @@ export const useNavigationUtils = (
   };
   
   const nextStep = () => {
-    if (currentStep === 2) {
+    if (currentStep === 1) {
+      // If slideshow is selected, skip photo type step
+      if (selectedPublicationType === "slideshow") {
+        setCurrentStep(3);
+      } else {
+        setCurrentStep(2);
+      }
+    } else if (currentStep === 2) {
       setCurrentStep(3);
-    } else if (currentStep === 3) {
-      // Skip step 4 entirely and go straight to social networks step
-      setCurrentStep(5);
-    } else {
+    } else if (currentStep < 5) {
       setCurrentStep(currentStep + 1);
     }
   };
   
   const prevStep = () => {
-    if (currentStep === 5) {
-      setCurrentStep(3);
-    } else {
+    if (currentStep === 3 && selectedPublicationType === "slideshow") {
+      // Skip photo type step when going back from slideshow
+      setCurrentStep(1);
+    } else if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };

@@ -1,6 +1,7 @@
+
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
-import { PublicationType } from "../types";
+import { PublicationType, PhotoType } from "../types";
 import { Tables } from "@/integrations/supabase/types";
 import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,7 +9,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ImageSelection } from "../media-generation/components/ImageSelection";
 
 type MediaStepProps = {
-  selectedPublicationTypes: PublicationType[];
+  selectedPublicationType: PublicationType | null;
+  selectedPhotoType?: PhotoType | null;
   images: string[];
   selectedImages: string[];
   bannerImage: string | null;
@@ -53,7 +55,8 @@ type MediaStepProps = {
 };
 
 export const MediaStep = ({
-  selectedPublicationTypes,
+  selectedPublicationType,
+  selectedPhotoType,
   images,
   selectedImages,
   bannerImage,
@@ -99,19 +102,18 @@ export const MediaStep = ({
   const isMobile = useIsMobile();
   const availableImages = listing?.images || images;
   
-  const showSlideshow = selectedPublicationTypes.includes("slideshow");
-  const showBanner = selectedPublicationTypes.includes("banner");
-  // Make sure we show the image selection for photo publications as well
-  const showPhotoSelection = selectedPublicationTypes.includes("photo");
+  const showSlideshow = selectedPublicationType === "slideshow";
+  const showBanner = selectedPhotoType === "banner";
+  const showListingPhotos = selectedPhotoType === "listing_photos";
   
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Étape 3: Sélectionner les médias</h3>
+      <h3 className="text-lg font-medium">Étape 4: Configuration des médias</h3>
       
       <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
         <div className="space-y-4 pr-2 pb-6">
-          {/* For photo publication type only (without slideshow) */}
-          {showPhotoSelection && !showSlideshow && (
+          {/* For listing photos only */}
+          {showListingPhotos && (
             <div className="space-y-4">
               <ImageSelection 
                 selectedImages={selectedImages} 

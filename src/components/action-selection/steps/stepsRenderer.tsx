@@ -1,5 +1,6 @@
 
 import { PublicationStep } from "./PublicationStep";
+import { PhotoTypeStep } from "./PhotoTypeStep";
 import { TemplateStep } from "./TemplateStep";
 import { MediaStep } from "./MediaStep";
 import { SocialStep } from "./SocialStep";
@@ -11,11 +12,18 @@ export const renderStepContent = (props: any) => {
     case 1:
       return (
         <PublicationStep
-          selectedPublicationTypes={props.selectedPublicationTypes}
+          selectedPublicationType={props.selectedPublicationType}
           onPublicationTypeChange={props.handlePublicationTypeChange}
         />
       );
     case 2:
+      return (
+        <PhotoTypeStep
+          selectedPhotoType={props.selectedPhotoType}
+          onPhotoTypeChange={props.handlePhotoTypeChange}
+        />
+      );
+    case 3:
       return (
         <TemplateStep
           facebookTemplates={props.facebookTemplates}
@@ -30,10 +38,11 @@ export const renderStepContent = (props: any) => {
           onGenerateText={props.handleGenerateText}
         />
       );
-    case 3:
+    case 4:
       return (
         <MediaStep
-          selectedPublicationTypes={props.selectedPublicationTypes}
+          selectedPublicationType={props.selectedPublicationType}
+          selectedPhotoType={props.selectedPhotoType}
           images={listing?.images || []}
           selectedImages={props.selectedImages}
           bannerImage={props.bannerImage}
@@ -62,7 +71,6 @@ export const renderStepContent = (props: any) => {
           formErrors={props.formErrors}
           setFormErrors={props.setFormErrors}
           listing={listing}
-          // Add slideshow generation props
           isGeneratingSlideshow={props.isGeneratingSlideshow}
           isGeneratingBanner={props.isGeneratingBanner}
           slideshowUrl={props.slideshowUrl}
@@ -81,7 +89,8 @@ export const renderStepContent = (props: any) => {
     case 5:
       return (
         <SocialStep
-          selectedPublicationTypes={props.selectedPublicationTypes}
+          selectedPublicationType={props.selectedPublicationType}
+          selectedPhotoType={props.selectedPhotoType}
           selectedNetworks={props.selectedNetworks}
           setSelectedNetworks={props.setSelectedNetworks}
           isSubmitting={props.isPublishing}

@@ -2,7 +2,8 @@
 import { Tables } from "@/integrations/supabase/types";
 
 // Publication types
-export type PublicationType = "photo" | "slideshow" | "banner";
+export type PublicationType = "photo" | "slideshow";
+export type PhotoType = "banner" | "listing_photos";
 
 // Social networks
 export interface SocialNetworks {
@@ -25,7 +26,8 @@ export interface ActionSelectionState {
   currentStep: number;
   
   // Publication types
-  selectedPublicationTypes: PublicationType[];
+  selectedPublicationType: PublicationType | null;
+  selectedPhotoType: PhotoType | null;
   
   // Templates
   selectedFacebookTemplateId: string;
@@ -71,7 +73,8 @@ export interface ActionSelectionContextType extends ActionSelectionState {
   canGoToNextStep: () => boolean;
   
   // Publication types
-  handlePublicationTypeChange: (type: PublicationType, checked: boolean) => void;
+  handlePublicationTypeChange: (type: PublicationType) => void;
+  handlePhotoTypeChange: (type: PhotoType) => void;
   
   // Templates
   facebookTemplates: { id: string; name: string; content?: string }[];

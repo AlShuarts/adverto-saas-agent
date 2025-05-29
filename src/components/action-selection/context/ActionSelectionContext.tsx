@@ -35,7 +35,8 @@ export const ActionSelectionProvider = ({
   const navigation = useNavigationUtils(
     state.currentStep,
     state.setCurrentStep,
-    state.selectedPublicationTypes,
+    state.selectedPublicationType,
+    state.selectedPhotoType,
     state.selectedImages,
     state.bannerImage,
     state.selectedNetworks,
@@ -47,7 +48,7 @@ export const ActionSelectionProvider = ({
   // Import slideshow monitor
   const slideshowMonitor = useSlideshowMonitor(
     listing.id,
-    state.selectedPublicationTypes,
+    state.selectedPublicationType === "slideshow" ? ["slideshow"] : [],
     state.slideshowRenderId,
     state.setSlideshowUrl,
     state.setIsGeneratingSlideshow
@@ -55,9 +56,19 @@ export const ActionSelectionProvider = ({
   
   // Publishing handler
   const handlePublish = async (): Promise<{ success?: boolean; error?: string }> => {
+    // Convert to legacy format for publishing
+    const legacyPublicationTypes = [];
+    if (state.selectedPublicationType === "slideshow") {
+      legacyPublicationTypes.push("slideshow");
+    } else if (state.selectedPhotoType === "banner") {
+      legacyPublicationTypes.push("banner");
+    } else if (state.selectedPhotoType === "listing_photos") {
+      legacyPublicationTypes.push("photo");
+    }
+    
     const result = await publish(
       state.selectedNetworks,
-      state.selectedPublicationTypes,
+      legacyPublicationTypes,
       state.generatedText,
       state.selectedImages,
       state.bannerUrl,
@@ -84,8 +95,10 @@ export const ActionSelectionProvider = ({
       canGoToNextStep: navigation.canGoToNextStep,
       
       // Publication types
-      selectedPublicationTypes: state.selectedPublicationTypes,
+      selectedPublicationType: state.selectedPublicationType,
+      selectedPhotoType: state.selectedPhotoType,
       handlePublicationTypeChange: state.handlePublicationTypeChange,
+      handlePhotoTypeChange: state.handlePhotoTypeChange,
       
       // Templates
       facebookTemplates: state.facebookTemplates,
@@ -148,7 +161,6 @@ export const ActionSelectionProvider = ({
       bannerRenderId: state.bannerRenderId,
       handleGenerateSlideshow: state.handleGenerateSlideshow,
       handleGenerateBanner: () => {
-        // Create a wrapper function that accesses the state values directly
         const brokerInfo = {
           brokerImageUrl: state.brokerImageUrl,
           agencyLogoUrl: state.agencyLogoUrl,

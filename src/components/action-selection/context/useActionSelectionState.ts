@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Tables } from "@/integrations/supabase/types";
-import { PublicationType } from './types';
+import { PublicationType, PhotoType } from './types';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useBrokerInfo } from '../hooks/useBrokerInfo';
 import { useSocialNetworkSelection } from '../hooks/useSocialNetworkSelection';
@@ -53,13 +53,15 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
   } = useSocialNetworkSelection();
 
   const { 
-    selectedPublicationTypes, 
-    setSelectedPublicationTypes, 
-    handlePublicationTypeChange 
+    selectedPublicationType,
+    selectedPhotoType,
+    setSelectedPublicationType,
+    setSelectedPhotoType,
+    handlePublicationTypeChange,
+    handlePhotoTypeChange
   } = usePublicationTypeHandler();
   
   // Make sure to update the mediaState's selectedMusic when it changes in useAudioPlayer
-  // This is key to fixing the issue
   useEffect(() => {
     if (selectedMusic !== mediaState.selectedMusic) {
       mediaState.setSelectedMusic(selectedMusic);
@@ -69,7 +71,8 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
   // Initialize and reset
   const resetState = () => {
     setCurrentStep(1);
-    setSelectedPublicationTypes([]);
+    setSelectedPublicationType(null);
+    setSelectedPhotoType(null);
     templateState.resetTemplates();
     mediaState.resetMediaSelection(listing.images?.[0] || null);
     resetNetworks();
@@ -84,7 +87,8 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
   return {
     currentStep,
     setCurrentStep,
-    selectedPublicationTypes,
+    selectedPublicationType,
+    selectedPhotoType,
     
     // From template state
     ...templateState,
@@ -121,6 +125,7 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     
     // Action handlers
     handlePublicationTypeChange,
+    handlePhotoTypeChange,
     handleGenerateText: () => templateState.generateText(templateState.selectedFacebookTemplateId, templateState.facebookTemplates),
     handleGenerateSlideshow: () => mediaState.handleGenerateSlideshow(),
     handleGenerateBanner: (bannerImage: string | null, bannerType: "VENDU" | "A_VENDRE", brokerInfo: any) => 
