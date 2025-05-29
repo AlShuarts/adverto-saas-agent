@@ -1,4 +1,3 @@
-
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
 import { PublicationType } from "../types";
@@ -149,8 +148,6 @@ export const MediaStep = ({
                 onRegenerateSlideshow={handleRegenerateSlideshow}
                 selectedImages={selectedImages}
                 selectedMusic={selectedMusic}
-                toggleImageSelection={toggleImageSelection}
-                availableImages={availableImages}
               />
             </div>
           )}
