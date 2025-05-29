@@ -14,6 +14,8 @@ type MediaSelectorProps = {
   selectedMusic?: string;
   currentlyPlaying: string | null;
   toggleImageSelection: (imageUrl: string) => void;
+  selectAllImages: (images: string[]) => void;
+  deselectAllImages: () => void;
   onDragEnd: (result: any) => void;
   selectBannerImage: (imageUrl: string) => void;
   handleMusicChange: (value: string) => void;
@@ -44,6 +46,8 @@ export const MediaSelector = ({
   selectedMusic,
   currentlyPlaying,
   toggleImageSelection,
+  selectAllImages,
+  deselectAllImages,
   onDragEnd,
   selectBannerImage,
   handleMusicChange,
@@ -69,6 +73,8 @@ export const MediaSelector = ({
           images={images}
           selectedImages={selectedImages}
           toggleImageSelection={toggleImageSelection}
+          onSelectAll={() => selectAllImages(images)}
+          onDeselectAll={deselectAllImages}
         />
       )}
       

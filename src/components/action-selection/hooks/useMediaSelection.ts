@@ -19,6 +19,14 @@ export const useMediaSelection = (initialImages: string[] = []) => {
         : [...prev, imageUrl]
     );
   };
+
+  const selectAllImages = (availableImages: string[]) => {
+    setSelectedImages(availableImages);
+  };
+
+  const deselectAllImages = () => {
+    setSelectedImages([]);
+  };
   
   const onDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -41,6 +49,8 @@ export const useMediaSelection = (initialImages: string[] = []) => {
     setBannerImage,
     resetMediaSelection,
     toggleImageSelection,
+    selectAllImages,
+    deselectAllImages,
     onDragEnd,
     selectBannerImage
   };

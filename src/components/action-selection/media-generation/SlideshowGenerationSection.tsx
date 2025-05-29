@@ -18,7 +18,7 @@ type SlideshowGenerationSectionProps = {
   selectedImages: string[];
   selectedMusic?: string;
   toggleImageSelection?: (imageUrl: string) => void;
-  availableImages?: string[]; // Allow for passing available images
+  availableImages?: string[];
 };
 
 export const SlideshowGenerationSection = ({
@@ -101,12 +101,30 @@ export const SlideshowGenerationSection = ({
         </div>
       )}
 
-      {/* Always show the ImageSelection component */}
-      <ImageSelection 
-        selectedImages={selectedImages} 
-        toggleImageSelection={toggleImageSelection!} 
-        availableImages={availableImages}
-      />
+      {/* Always show the ImageSelection component with select all functionality */}
+      {availableImages && toggleImageSelection && (
+        <ImageSelection 
+          selectedImages={selectedImages} 
+          toggleImageSelection={toggleImageSelection} 
+          availableImages={availableImages}
+          onSelectAll={() => {
+            // Select all available images
+            availableImages.forEach(image => {
+              if (!selectedImages.includes(image)) {
+                toggleImageSelection(image);
+              }
+            });
+          }}
+          onDeselectAll={() => {
+            // Deselect all currently selected images
+            selectedImages.forEach(image => {
+              if (selectedImages.includes(image)) {
+                toggleImageSelection(image);
+              }
+            });
+          }}
+        />
+      )}
       
       {/* Show the SlideshowStep component (which has the generate button) */}
       <SlideshowStep

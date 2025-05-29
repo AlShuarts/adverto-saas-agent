@@ -16,6 +16,8 @@ export const useMediaState = (listingId: string) => {
     setBannerImage,
     resetMediaSelection,
     toggleImageSelection,
+    selectAllImages,
+    deselectAllImages,
     onDragEnd,
     selectBannerImage
   } = useMediaSelection();
@@ -75,6 +77,8 @@ export const useMediaState = (listingId: string) => {
     setBannerImage,
     resetMediaSelection,
     toggleImageSelection,
+    selectAllImages,
+    deselectAllImages,
     onDragEnd,
     selectBannerImage,
     isGeneratingSlideshow,

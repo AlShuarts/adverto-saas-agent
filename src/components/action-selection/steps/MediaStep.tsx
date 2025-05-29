@@ -18,6 +18,8 @@ type MediaStepProps = {
   selectedMusic: string | undefined;
   currentlyPlaying: string | null;
   toggleImageSelection: (imageUrl: string) => void;
+  selectAllImages: (images: string[]) => void;
+  deselectAllImages: () => void;
   onDragEnd: (result: any) => void;
   selectBannerImage: (imageUrl: string) => void;
   handleMusicChange: (value: string) => void;
@@ -61,6 +63,8 @@ export const MediaStep = ({
   selectedMusic,
   currentlyPlaying,
   toggleImageSelection,
+  selectAllImages,
+  deselectAllImages,
   onDragEnd,
   selectBannerImage,
   handleMusicChange,
@@ -114,6 +118,8 @@ export const MediaStep = ({
                 selectedImages={selectedImages} 
                 toggleImageSelection={toggleImageSelection} 
                 availableImages={availableImages}
+                onSelectAll={() => selectAllImages(availableImages)}
+                onDeselectAll={deselectAllImages}
               />
             </div>
           )}
@@ -143,6 +149,8 @@ export const MediaStep = ({
                 onRegenerateSlideshow={handleRegenerateSlideshow}
                 selectedImages={selectedImages}
                 selectedMusic={selectedMusic}
+                toggleImageSelection={toggleImageSelection}
+                availableImages={availableImages}
               />
             </div>
           )}

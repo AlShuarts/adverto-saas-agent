@@ -105,6 +105,8 @@ export const ActionSelectionProvider = ({
       selectedImages: state.selectedImages,
       setSelectedImages: state.setSelectedImages,
       toggleImageSelection: state.toggleImageSelection,
+      selectAllImages: state.selectAllImages,
+      deselectAllImages: state.deselectAllImages,
       onDragEnd: state.onDragEnd,
       
       // Banner

@@ -2,17 +2,22 @@
 import { Check, Images } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SelectAllButton } from "../media-generation/components/SelectAllButton";
 
 type PhotoSelectionSectionProps = {
   images: string[];
   selectedImages: string[];
   toggleImageSelection: (imageUrl: string) => void;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
 };
 
 export const PhotoSelectionSection = ({
   images,
   selectedImages,
-  toggleImageSelection
+  toggleImageSelection,
+  onSelectAll,
+  onDeselectAll
 }: PhotoSelectionSectionProps) => {
   if (!images || images.length === 0) {
     return (
@@ -34,6 +39,15 @@ export const PhotoSelectionSection = ({
         <p className="text-sm text-muted-foreground">
           Sélectionnez les photos à utiliser pour votre publication.
         </p>
+        
+        {onSelectAll && onDeselectAll && (
+          <SelectAllButton
+            availableImages={images}
+            selectedImages={selectedImages}
+            onSelectAll={onSelectAll}
+            onDeselectAll={onDeselectAll}
+          />
+        )}
         
         <ScrollArea className="h-[300px]">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-1">
