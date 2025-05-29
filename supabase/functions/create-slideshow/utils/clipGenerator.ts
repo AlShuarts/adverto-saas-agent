@@ -99,8 +99,9 @@ export const generateSlideshowTimeline = (selectedImages: string[], textElements
   const imageTrack = {
     clips: selectedImages.map((imageUrl, index) => {
       const start = index * imageDuration;
-      
-      const effects = ["slideLeftSlow", "slideRightSlow", "slideUpSlow", "slideDownSlow", "zoomInSlow", "zoomOutSlow"];
+
+      //const effects = ["slideLeftSlow", "slideRightSlow", "slideUpSlow", "slideDownSlow", "zoomInSlow", "zoomOutSlow"];
+      const effects = ["slideLeftSlow", "slideRightSlow"];
       const randomEffect = effects[Math.floor(Math.random() * effects.length)];
 
       const scaleOptions = [1, 1.1, 1.2, 1.413];
