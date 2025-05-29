@@ -48,6 +48,14 @@ export const SocialStep = ({
     await onSubmit();
   };
 
+  // Convert single publication type to array for backward compatibility with PublicationPreview
+  const selectedPublicationTypes = selectedPublicationType ? [selectedPublicationType] : [];
+  
+  // Add banner to publication types if photo type is banner
+  if (selectedPhotoType === "banner") {
+    selectedPublicationTypes.push("banner" as any); // Temporary cast for compatibility
+  }
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">Étape 5: Choisir les réseaux sociaux</h3>
@@ -63,7 +71,7 @@ export const SocialStep = ({
       />
       
       <PublicationPreview
-        selectedPublicationTypes={selectedPublicationType ? [selectedPublicationType] : []}
+        selectedPublicationTypes={selectedPublicationTypes}
         generatedText={generatedText}
         setGeneratedText={setGeneratedText}
         images={images}

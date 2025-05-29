@@ -4,6 +4,7 @@ import { FacebookPreviewContent } from "@/components/FacebookPreviewContent";
 import { InstagramPreviewContent } from "@/components/InstagramPreviewContent";
 import { Facebook, Instagram } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
 type PublicationType = "photo" | "slideshow" | "banner";
 
@@ -21,6 +22,7 @@ type PublicationPreviewProps = {
   bannerUrl: string | null;
   selectedMusic: string | undefined;
   selectedPublicationTypes: PublicationType[];
+  listing: Tables<"listings">;
 };
 
 export const PublicationPreview = ({
@@ -33,7 +35,8 @@ export const PublicationPreview = ({
   slideshowUrl,
   bannerUrl,
   selectedMusic,
-  selectedPublicationTypes
+  selectedPublicationTypes,
+  listing
 }: PublicationPreviewProps) => {
   const musicUrl = selectedMusic
     ? `${supabase.storage.from('background-music').getPublicUrl(selectedMusic).data.publicUrl}`

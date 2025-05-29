@@ -2,10 +2,11 @@
 import { PhotoSelectionSection } from "./PhotoSelectionSection";
 import { SlideshowConfig } from "./SlideshowConfig";
 import { BannerImageSelector } from "./BannerImageSelector";
-import { PublicationType } from "../types";
+import { PublicationType, PhotoType } from "../types";
 
 type MediaSelectorProps = {
-  selectedPublicationTypes: PublicationType[];
+  selectedPublicationType: PublicationType | null;
+  selectedPhotoType?: PhotoType | null;
   images: string[];
   selectedImages: string[];
   bannerImage: string | null;
@@ -37,7 +38,8 @@ type MediaSelectorProps = {
 };
 
 export const MediaSelector = ({
-  selectedPublicationTypes,
+  selectedPublicationType,
+  selectedPhotoType,
   images,
   selectedImages,
   bannerImage,
@@ -68,7 +70,7 @@ export const MediaSelector = ({
 }: MediaSelectorProps) => {
   return (
     <div className="space-y-6">
-      {selectedPublicationTypes.includes("photo") && (
+      {selectedPublicationType === "photo" && selectedPhotoType === "listing_photos" && (
         <PhotoSelectionSection 
           images={images}
           selectedImages={selectedImages}
@@ -78,7 +80,7 @@ export const MediaSelector = ({
         />
       )}
       
-      {selectedPublicationTypes.includes("slideshow") && (
+      {selectedPublicationType === "slideshow" && (
         <SlideshowConfig
           images={images}
           selectedImages={selectedImages}
@@ -92,7 +94,7 @@ export const MediaSelector = ({
         />
       )}
       
-      {selectedPublicationTypes.includes("banner") && (
+      {selectedPhotoType === "banner" && (
         <div className="space-y-4">
           <h4 className="font-medium">Configuration de la bannière</h4>
           
