@@ -18,7 +18,6 @@ export const useMediaState = (listingId: string) => {
     toggleImageSelection,
     selectAllImages,
     deselectAllImages,
-    onDragEnd,
     selectBannerImage
   } = useMediaSelection();
 
@@ -79,7 +78,6 @@ export const useMediaState = (listingId: string) => {
     toggleImageSelection,
     selectAllImages,
     deselectAllImages,
-    onDragEnd,
     selectBannerImage,
     isGeneratingSlideshow,
     isGeneratingBanner,
