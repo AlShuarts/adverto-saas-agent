@@ -1,14 +1,12 @@
-
 import { useActionSelection } from "./context/ActionSelectionContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { renderStepContent } from "./steps/stepsRenderer";
 import { StepNavigation } from "./steps/StepNavigation";
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 export const ActionSelectionDialogContent = () => {
   const isMobile = useIsMobile();
-  const { 
+  const {
     currentStep,
     onClose,
     nextStep,
@@ -16,13 +14,11 @@ export const ActionSelectionDialogContent = () => {
     canGoToNextStep,
     isPublishing,
     handlePublish,
-    
     // Props for different steps
     selectedPublicationType,
     selectedPhotoType,
     handlePublicationTypeChange,
     handlePhotoTypeChange,
-    
     facebookTemplates,
     instagramTemplates,
     selectedFacebookTemplateId,
@@ -33,7 +29,6 @@ export const ActionSelectionDialogContent = () => {
     generatedText,
     setGeneratedText,
     handleGenerateText,
-    
     selectedImages,
     setSelectedImages,
     bannerImage,
@@ -61,7 +56,6 @@ export const ActionSelectionDialogContent = () => {
     setFormErrors,
     selectAllImages,
     deselectAllImages,
-    
     isGeneratingSlideshow,
     isGeneratingBanner,
     slideshowUrl,
@@ -73,11 +67,9 @@ export const ActionSelectionDialogContent = () => {
     handleGenerateSlideshow,
     handleGenerateBanner,
     refetchSlideshowStatus,
-    
     selectedNetworks,
     setSelectedNetworks,
     handleNetworkChange,
-    
     listing
   } = useActionSelection();
 
@@ -85,7 +77,6 @@ export const ActionSelectionDialogContent = () => {
   const generateSlideshowWrapper = async () => {
     return handleGenerateSlideshow();
   };
-
   const generateBannerWrapper = async () => {
     const result = await handleGenerateBanner();
     if (result?.errors) {
@@ -104,103 +95,85 @@ export const ActionSelectionDialogContent = () => {
     // Reset slideshow state here
     // No-op for now
   };
-
   const handleRegenerateBanner = () => {
     // Reset banner state here
     // No-op for now
   };
-
-  return (
-    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[85vh] h-[85vh] w-[92vw] md:w-auto">
-      <DialogHeader className="pb-1">
-        <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
-        <DialogDescription className="text-gray-400">
-          Créez une publication pour diffuser votre bien immobilier sur les réseaux sociaux.
-        </DialogDescription>
-      </DialogHeader>
+  return <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[85vh] h-[85vh] w-[92vw] md:w-auto">
+      
       
       <div className="flex-1 overflow-hidden min-h-0">
         <ScrollArea className={isMobile ? "h-[60vh]" : "h-[55vh]"}>
           <div className="p-1 md:px-2 pb-6">
             {renderStepContent({
-              currentStep,
-              selectedPublicationType,
-              selectedPhotoType,
-              handlePublicationTypeChange,
-              handlePhotoTypeChange,
-              facebookTemplates,
-              instagramTemplates,
-              selectedFacebookTemplateId,
-              selectedInstagramTemplateId,
-              setSelectedFacebookTemplateId,
-              setSelectedInstagramTemplateId,
-              generatedText,
-              setGeneratedText,
-              isGeneratingText,
-              handleGenerateText,
-              listing,
-              selectedImages,
-              setSelectedImages,
-              bannerImage,
-              bannerType,
-              musicList,
-              selectedMusic,
-              currentlyPlaying,
-              toggleImageSelection,
-              onDragEnd,
-              selectBannerImage,
-              handleMusicChange,
-              previewMusic,
-              setBannerType,
-              brokerImageUrl,
-              setBrokerImageUrl,
-              agencyLogoUrl,
-              setAgencyLogoUrl,
-              brokerName,
-              setBrokerName,
-              brokerEmail,
-              setBrokerEmail,
-              brokerPhone,
-              setBrokerPhone,
-              formErrors,
-              setFormErrors,
-              selectAllImages,
-              deselectAllImages,
-              isGeneratingSlideshow,
-              isGeneratingBanner,
-              slideshowUrl,
-              bannerUrl,
-              slideshowError,
-              bannerError,
-              slideshowRenderId,
-              bannerRenderId,
-              generateSlideshowWrapper,
-              generateBannerWrapper,
-              refetchSlideshowStatus,
-              handleRegenerateSlideshow,
-              handleRegenerateBanner,
-              selectedNetworks,
-              setSelectedNetworks,
-              handleNetworkChange,
-              isPublishing,
-              handlePublishWrapper
-            })}
+            currentStep,
+            selectedPublicationType,
+            selectedPhotoType,
+            handlePublicationTypeChange,
+            handlePhotoTypeChange,
+            facebookTemplates,
+            instagramTemplates,
+            selectedFacebookTemplateId,
+            selectedInstagramTemplateId,
+            setSelectedFacebookTemplateId,
+            setSelectedInstagramTemplateId,
+            generatedText,
+            setGeneratedText,
+            isGeneratingText,
+            handleGenerateText,
+            listing,
+            selectedImages,
+            setSelectedImages,
+            bannerImage,
+            bannerType,
+            musicList,
+            selectedMusic,
+            currentlyPlaying,
+            toggleImageSelection,
+            onDragEnd,
+            selectBannerImage,
+            handleMusicChange,
+            previewMusic,
+            setBannerType,
+            brokerImageUrl,
+            setBrokerImageUrl,
+            agencyLogoUrl,
+            setAgencyLogoUrl,
+            brokerName,
+            setBrokerName,
+            brokerEmail,
+            setBrokerEmail,
+            brokerPhone,
+            setBrokerPhone,
+            formErrors,
+            setFormErrors,
+            selectAllImages,
+            deselectAllImages,
+            isGeneratingSlideshow,
+            isGeneratingBanner,
+            slideshowUrl,
+            bannerUrl,
+            slideshowError,
+            bannerError,
+            slideshowRenderId,
+            bannerRenderId,
+            generateSlideshowWrapper,
+            generateBannerWrapper,
+            refetchSlideshowStatus,
+            handleRegenerateSlideshow,
+            handleRegenerateBanner,
+            selectedNetworks,
+            setSelectedNetworks,
+            handleNetworkChange,
+            isPublishing,
+            handlePublishWrapper
+          })}
           </div>
         </ScrollArea>
       </div>
       
       <DialogFooter className="border-t border-gray-800 pt-2 mt-auto shrink-0">
-        <StepNavigation 
-          currentStep={currentStep}
-          isPublishing={isPublishing}
-          canGoToNextStep={canGoToNextStep()}
-          onPrevious={prevStep}
-          onNext={nextStep}
-          onPublish={handlePublishWrapper}
-          onCancel={onClose}
-          isLastStep={currentStep === 5}
-        />
+        <StepNavigation currentStep={currentStep} isPublishing={isPublishing} canGoToNextStep={canGoToNextStep()} onPrevious={prevStep} onNext={nextStep} onPublish={handlePublishWrapper} onCancel={onClose} isLastStep={currentStep === 5} />
       </DialogFooter>
-    </DialogContent>
-  );
+    </DialogContent>;
 };
