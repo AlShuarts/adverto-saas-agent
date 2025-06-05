@@ -13,13 +13,19 @@ export const PublicationTypeSelector = ({
   selectedPublicationType,
   onPublicationTypeChange
 }: PublicationTypeSelectorProps) => {
-  const { nextStep } = useActionSelection();
+  const { setCurrentStep } = useActionSelection();
 
   const handlePublicationTypeSelection = (type: PublicationType) => {
     onPublicationTypeChange(type);
-    // Automatically advance to next step after a short delay
+    // Navigate based on publication type choice
     setTimeout(() => {
-      nextStep();
+      if (type === "slideshow") {
+        // Skip photo type step for slideshow, go directly to templates (step 3)
+        setCurrentStep(3);
+      } else {
+        // Go to photo type step (step 2) for photo publications
+        setCurrentStep(2);
+      }
     }, 300);
   };
 

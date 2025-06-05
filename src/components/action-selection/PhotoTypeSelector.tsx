@@ -13,13 +13,13 @@ export const PhotoTypeSelector = ({
   selectedPhotoType,
   onPhotoTypeChange
 }: PhotoTypeSelectorProps) => {
-  const { nextStep } = useActionSelection();
+  const { setCurrentStep } = useActionSelection();
 
   const handlePhotoTypeSelection = (type: PhotoType) => {
     onPhotoTypeChange(type);
-    // Automatically advance to next step after a short delay
+    // Automatically advance to template step (step 3) after photo type selection
     setTimeout(() => {
-      nextStep();
+      setCurrentStep(3);
     }, 300);
   };
 
