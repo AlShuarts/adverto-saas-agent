@@ -151,8 +151,9 @@ export const BannerGenerationSection = ({
             </div>
           )}
           
+          {/* Property image selection */}
           <div className="space-y-2 border rounded-md p-4 bg-muted/30">
-            <h3 className="text-base font-medium">Image de propriété</h3>
+            <h3 className="text-base font-medium">Sélection de l'image pour la bannière</h3>
             {selectedImages && selectedImages.length > 0 ? (
               <PropertyImageSelector 
                 images={selectedImages} 
