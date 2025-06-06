@@ -1,9 +1,14 @@
-
 import { TemplateSelector } from "../TemplateSelector";
-
 type TemplateStepProps = {
-  facebookTemplates: { id: string; name: string; content?: string }[];
-  instagramTemplates: { id: string; name: string }[];
+  facebookTemplates: {
+    id: string;
+    name: string;
+    content?: string;
+  }[];
+  instagramTemplates: {
+    id: string;
+    name: string;
+  }[];
   selectedFacebookTemplateId: string;
   selectedInstagramTemplateId: string;
   setSelectedFacebookTemplateId: (id: string) => void;
@@ -13,7 +18,6 @@ type TemplateStepProps = {
   isGeneratingText: boolean;
   onGenerateText: () => Promise<void>;
 };
-
 export const TemplateStep = ({
   facebookTemplates,
   instagramTemplates,
@@ -26,28 +30,13 @@ export const TemplateStep = ({
   isGeneratingText,
   onGenerateText
 }: TemplateStepProps) => {
-  
   // Convert the function to return a Promise for compatibility with the prop type
   const handleGenerateText = async () => {
     await onGenerateText();
   };
-  
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 2: Choisir un template et générer le texte</h3>
+  return <div className="space-y-6">
       
-      <TemplateSelector 
-        facebookTemplates={facebookTemplates}
-        instagramTemplates={instagramTemplates}
-        selectedFacebookTemplateId={selectedFacebookTemplateId}
-        selectedInstagramTemplateId={selectedInstagramTemplateId}
-        setSelectedFacebookTemplateId={setSelectedFacebookTemplateId}
-        setSelectedInstagramTemplateId={setSelectedInstagramTemplateId}
-        generatedText={generatedText}
-        setGeneratedText={setGeneratedText}
-        isGeneratingText={isGeneratingText}
-        onGenerateText={handleGenerateText}
-      />
-    </div>
-  );
+      
+      <TemplateSelector facebookTemplates={facebookTemplates} instagramTemplates={instagramTemplates} selectedFacebookTemplateId={selectedFacebookTemplateId} selectedInstagramTemplateId={selectedInstagramTemplateId} setSelectedFacebookTemplateId={setSelectedFacebookTemplateId} setSelectedInstagramTemplateId={setSelectedInstagramTemplateId} generatedText={generatedText} setGeneratedText={setGeneratedText} isGeneratingText={isGeneratingText} onGenerateText={handleGenerateText} />
+    </div>;
 };
