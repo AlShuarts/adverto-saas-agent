@@ -1,4 +1,6 @@
+
 import { TemplateSelector } from "../TemplateSelector";
+
 type TemplateStepProps = {
   facebookTemplates: {
     id: string;
@@ -18,6 +20,7 @@ type TemplateStepProps = {
   isGeneratingText: boolean;
   onGenerateText: () => Promise<void>;
 };
+
 export const TemplateStep = ({
   facebookTemplates,
   instagramTemplates,
@@ -30,9 +33,18 @@ export const TemplateStep = ({
   isGeneratingText,
   onGenerateText
 }: TemplateStepProps) => {
-  // Convert the function to return a Promise for compatibility with the prop type
-  const handleGenerateText = async () => {
-    await onGenerateText();
-  };
-  return;
+  return (
+    <TemplateSelector
+      facebookTemplates={facebookTemplates}
+      instagramTemplates={instagramTemplates}
+      selectedFacebookTemplateId={selectedFacebookTemplateId}
+      selectedInstagramTemplateId={selectedInstagramTemplateId}
+      setSelectedFacebookTemplateId={setSelectedFacebookTemplateId}
+      setSelectedInstagramTemplateId={setSelectedInstagramTemplateId}
+      generatedText={generatedText}
+      setGeneratedText={setGeneratedText}
+      isGeneratingText={isGeneratingText}
+      onGenerateText={onGenerateText}
+    />
+  );
 };
