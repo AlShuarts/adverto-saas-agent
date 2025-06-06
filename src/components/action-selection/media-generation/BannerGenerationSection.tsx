@@ -1,19 +1,12 @@
 
-import { ImageIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { PropertyImageSelector } from "@/components/banner/PropertyImageSelector";
 import { BannerTypeSelector } from "@/components/banner/BannerTypeSelector";
-import { GeneratingBanner } from "./components/GeneratingBanner";
-import { BannerGenerationButton } from "./components/BannerGenerationButton";
-import { BannerFormAlerts } from "./components/BannerFormAlerts";
-import { BannerPreview } from "./components/BannerPreview";
 import { useState, useEffect } from "react";
-import { checkBannerStatusViaFunction } from "../hooks/generation/services/bannerService";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useBannerConfig } from "@/hooks/useBannerConfig";
+import { BannerConfigurationHeader } from "./components/BannerConfigurationHeader";
+import { SavedBrokerInfo } from "./components/SavedBrokerInfo";
+import { PropertyImageSelection } from "./components/PropertyImageSelection";
+import { BannerGenerationContent } from "./components/BannerGenerationContent";
 
 type BannerGenerationSectionProps = {
   isGeneratingBanner: boolean;
@@ -70,7 +63,6 @@ export const BannerGenerationSection = ({
   selectedImages,
   onRegenerateBanner
 }: BannerGenerationSectionProps) => {
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const { config } = useBannerConfig();
 
   // Auto-load saved configuration
@@ -95,37 +87,9 @@ export const BannerGenerationSection = ({
   };
   const missingFields = getMissingFields();
 
-  const checkStatus = async () => {
-    if (!bannerRenderId) return;
-    try {
-      setIsCheckingStatus(true);
-      const statusData = await checkBannerStatusViaFunction(bannerRenderId);
-      if (statusData.status === "done" && statusData.url) {
-        toast.success("Bannière prête !", {
-          description: "La bannière a été générée avec succès."
-        });
-        window.location.reload();
-      } else {
-        toast.info("Génération en cours", {
-          description: `Statut actuel: ${statusData.status || "En attente"}`
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de la vérification du statut:", error);
-      toast.error("Erreur de vérification", {
-        description: "Impossible de vérifier le statut de la bannière"
-      });
-    } finally {
-      setIsCheckingStatus(false);
-    }
-  };
-
   return (
     <div className="space-y-4 border rounded-md p-4 bg-card">
-      <h4 className="font-medium flex items-center space-x-2">
-        <ImageIcon size={18} className="text-primary" />
-        <span>Configuration de la bannière</span>
-      </h4>
+      <BannerConfigurationHeader />
       
       <ScrollArea className="max-h-[500px] pr-4">
         <div className="space-y-6">
@@ -137,85 +101,32 @@ export const BannerGenerationSection = ({
             />
           </div>
           
-          {/* Show saved broker info if available */}
-          {config && (
-            <div className="space-y-2 border rounded-md p-4 bg-muted/30">
-              <h3 className="text-base font-medium">Informations du courtier (sauvegardées)</h3>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p><strong>Nom:</strong> {config.brokerName}</p>
-                <p><strong>Email:</strong> {config.brokerEmail}</p>
-                <p><strong>Téléphone:</strong> {config.brokerPhone}</p>
-                {config.brokerImageUrl && <p><strong>Photo du courtier:</strong> Configurée</p>}
-                {config.agencyLogoUrl && <p><strong>Logo de l'agence:</strong> Configuré</p>}
-              </div>
-            </div>
-          )}
+          <SavedBrokerInfo config={config} />
           
-          {/* Property image selection */}
-          <div className="space-y-2 border rounded-md p-4 bg-muted/30">
-            <h3 className="text-base font-medium">Sélection de l'image pour la bannière</h3>
-            {selectedImages && selectedImages.length > 0 ? (
-              <PropertyImageSelector 
-                images={selectedImages} 
-                selectedImage={bannerImage || ""} 
-                setSelectedImage={selectBannerImage} 
-                formErrors={formErrors} 
-                setFormErrors={setFormErrors} 
-              />
-            ) : (
-              <div className="text-center p-4 bg-card/50 rounded-md border border-dashed">
-                <p className="text-muted-foreground">
-                  Aucune image disponible. Veuillez sélectionner des images à l'étape précédente.
-                </p>
-              </div>
-            )}
-          </div>
+          <PropertyImageSelection
+            selectedImages={selectedImages}
+            bannerImage={bannerImage}
+            selectBannerImage={selectBannerImage}
+            formErrors={formErrors}
+            setFormErrors={setFormErrors}
+          />
         </div>
       </ScrollArea>
       
       <div className="border-t pt-4 mt-6">
-        {!bannerUrl ? (
-          <div className="flex flex-col items-center justify-center py-4">
-            {isGeneratingBanner ? (
-              <GeneratingBanner />
-            ) : bannerRenderId ? (
-              <div className="flex flex-col items-center space-y-4">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-                  <p className="text-amber-500 font-medium">Bannière en cours de génération</p>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  La création de votre bannière est en cours de traitement. Cela peut prendre quelques minutes.
-                </p>
-                <Button variant="outline" onClick={checkStatus} disabled={isCheckingStatus} className="mt-2">
-                  {isCheckingStatus ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Vérification...
-                    </>
-                  ) : "Vérifier le statut"}
-                </Button>
-              </div>
-            ) : (
-              <>
-                <BannerGenerationButton 
-                  isGenerating={isGeneratingBanner} 
-                  hasRequiredInfo={hasRequiredInfo} 
-                  onClick={generateBanner} 
-                />
-                
-                <BannerFormAlerts 
-                  hasRequiredInfo={hasRequiredInfo} 
-                  missingFields={missingFields} 
-                  formErrors={formErrors} 
-                  bannerError={bannerError} 
-                />
-              </>
-            )}
-          </div>
-        ) : (
-          <BannerPreview bannerUrl={bannerUrl} onRegenerate={onRegenerateBanner} />
-        )}
+        <div className="flex flex-col items-center justify-center py-4">
+          <BannerGenerationContent
+            isGeneratingBanner={isGeneratingBanner}
+            bannerUrl={bannerUrl}
+            bannerRenderId={bannerRenderId}
+            generateBanner={generateBanner}
+            hasRequiredInfo={hasRequiredInfo}
+            missingFields={missingFields}
+            formErrors={formErrors}
+            bannerError={bannerError}
+            onRegenerateBanner={onRegenerateBanner}
+          />
+        </div>
       </div>
     </div>
   );
