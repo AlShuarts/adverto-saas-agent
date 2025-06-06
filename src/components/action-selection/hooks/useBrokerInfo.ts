@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useBannerConfig } from '@/hooks/useBannerConfig';
 
 export type BrokerInfoState = {
   brokerName: string;
@@ -11,12 +12,24 @@ export type BrokerInfoState = {
 };
 
 export const useBrokerInfo = () => {
+  const { config } = useBannerConfig();
   const [brokerImageUrl, setBrokerImageUrl] = useState<string | null>(null);
   const [agencyLogoUrl, setAgencyLogoUrl] = useState<string | null>(null);
   const [brokerName, setBrokerName] = useState<string>("");
   const [brokerEmail, setBrokerEmail] = useState<string>("");
   const [brokerPhone, setBrokerPhone] = useState<string>("");
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+
+  // Auto-populate with saved config when available
+  useEffect(() => {
+    if (config) {
+      setBrokerName(config.brokerName || "");
+      setBrokerEmail(config.brokerEmail || "");
+      setBrokerPhone(config.brokerPhone || "");
+      setBrokerImageUrl(config.brokerImageUrl);
+      setAgencyLogoUrl(config.agencyLogoUrl);
+    }
+  }, [config]);
 
   const resetBrokerInfo = () => {
     setBrokerImageUrl(null);
