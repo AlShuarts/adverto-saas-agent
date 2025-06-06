@@ -34,9 +34,5 @@ export const TemplateStep = ({
   const handleGenerateText = async () => {
     await onGenerateText();
   };
-  return <div className="space-y-6">
-      
-      
-      <TemplateSelector facebookTemplates={facebookTemplates} instagramTemplates={instagramTemplates} selectedFacebookTemplateId={selectedFacebookTemplateId} selectedInstagramTemplateId={selectedInstagramTemplateId} setSelectedFacebookTemplateId={setSelectedFacebookTemplateId} setSelectedInstagramTemplateId={setSelectedInstagramTemplateId} generatedText={generatedText} setGeneratedText={setGeneratedText} isGeneratingText={isGeneratingText} onGenerateText={handleGenerateText} />
-    </div>;
+  return;
 };
