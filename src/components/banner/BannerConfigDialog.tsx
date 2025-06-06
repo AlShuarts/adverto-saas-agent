@@ -108,8 +108,8 @@ export const BannerConfigDialog = () => {
         <div className="grid gap-4 py-4">
           <div className="space-y-6">
             {/* Informations du courtier */}
-            <div className="space-y-2 border rounded-md p-4 bg-white">
-              <h3 className="text-base font-medium text-primary font-bold border-b pb-2 mb-3">
+            <div className="space-y-2 border rounded-md p-4 bg-card">
+              <h3 className="text-base font-medium text-primary font-bold border-b border-border pb-2 mb-3">
                 Informations du courtier
               </h3>
               <BrokerInfoForm 
@@ -125,7 +125,7 @@ export const BannerConfigDialog = () => {
             </div>
             
             {/* Images du courtier et de l'agence */}
-            <div className="space-y-2 border rounded-md p-4 bg-white">
+            <div className="space-y-2 border border-border rounded-md p-4 bg-card">
               <h3 className="text-base font-medium">Images du courtier et de l'agence</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <ImageUploader 
