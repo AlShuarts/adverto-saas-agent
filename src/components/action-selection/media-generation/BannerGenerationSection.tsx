@@ -162,7 +162,7 @@ export const BannerGenerationSection = ({
                 setFormErrors={setFormErrors} 
               />
             ) : (
-              <div className="text-center p-4 bg-muted/50 rounded-md">
+              <div className="text-center p-4 bg-card/50 rounded-md border border-dashed">
                 <p className="text-muted-foreground">
                   Aucune image disponible. Veuillez sélectionner des images à l'étape précédente.
                 </p>
