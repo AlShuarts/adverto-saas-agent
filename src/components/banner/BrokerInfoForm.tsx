@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { FormError } from "./FormError";
 import { Mail, Phone, User, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
 type BrokerInfoFormProps = {
   brokerName: string;
   setBrokerName: (name: string) => void;
@@ -14,26 +12,30 @@ type BrokerInfoFormProps = {
   setBrokerEmail: (email: string) => void;
   brokerPhone: string;
   setBrokerPhone: (phone: string) => void;
-  formErrors: {[key: string]: string};
-  setFormErrors: (errors: {[key: string]: string}) => void;
+  formErrors: {
+    [key: string]: string;
+  };
+  setFormErrors: (errors: {
+    [key: string]: string;
+  }) => void;
 };
-
-export const BrokerInfoForm = ({ 
-  brokerName, 
-  setBrokerName, 
-  brokerEmail, 
-  setBrokerEmail, 
-  brokerPhone, 
+export const BrokerInfoForm = ({
+  brokerName,
+  setBrokerName,
+  brokerEmail,
+  setBrokerEmail,
+  brokerPhone,
   setBrokerPhone,
   formErrors,
-  setFormErrors 
+  setFormErrors
 }: BrokerInfoFormProps) => {
-  
   // Fetch email from Supabase Auth when component mounts
   useEffect(() => {
     const fetchEmail = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        const {
+          data
+        } = await supabase.auth.getSession();
         if (data.session?.user?.email && brokerEmail === "") {
           setBrokerEmail(data.session.user.email);
         }
@@ -41,22 +43,11 @@ export const BrokerInfoForm = ({
         console.error("Error fetching user email:", error);
       }
     };
-    
     fetchEmail();
   }, [setBrokerEmail, brokerEmail]);
-
   const hasAllRequiredFields = brokerName && brokerEmail && brokerPhone;
-
-  return (
-    <div className="space-y-4">
-      {!hasAllRequiredFields && (
-        <Alert variant="default" className="bg-amber-50 mb-4">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="text-amber-700">
-            Les trois champs ci-dessous sont obligatoires pour générer la bannière
-          </AlertDescription>
-        </Alert>
-      )}
+  return <div className="space-y-4">
+      {!hasAllRequiredFields}
       
       <div className="grid gap-4">
         <div className="space-y-2">
@@ -64,25 +55,20 @@ export const BrokerInfoForm = ({
             <User className="h-4 w-4 mr-2 text-muted-foreground" />
             Nom du courtier *
           </Label>
-          <Input
-            id="brokerName"
-            value={brokerName}
-            onChange={(e) => {
-              setBrokerName(e.target.value);
-              if (formErrors.brokerName) {
-                const { brokerName, ...rest } = formErrors;
-                setFormErrors(rest);
-              }
-            }}
-            placeholder="Exemple: Jean Dupont"
-            className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300" : ""} bg-white text-gray-900`}
-          />
-          {!brokerName && !formErrors.brokerName && (
-            <div className="flex items-center text-xs text-amber-600 mt-1">
+          <Input id="brokerName" value={brokerName} onChange={e => {
+          setBrokerName(e.target.value);
+          if (formErrors.brokerName) {
+            const {
+              brokerName,
+              ...rest
+            } = formErrors;
+            setFormErrors(rest);
+          }
+        }} placeholder="Exemple: Jean Dupont" className={`${formErrors.brokerName ? "border-destructive" : ""} ${!brokerName ? "border-amber-300" : ""} bg-white text-gray-900`} />
+          {!brokerName && !formErrors.brokerName && <div className="flex items-center text-xs text-amber-600 mt-1">
               <AlertCircle className="h-3 w-3 mr-1" />
               Ce champ est obligatoire
-            </div>
-          )}
+            </div>}
           <FormError error={formErrors.brokerName} />
         </div>
         
@@ -91,26 +77,20 @@ export const BrokerInfoForm = ({
             <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
             Email du courtier *
           </Label>
-          <Input
-            id="brokerEmail"
-            type="email"
-            value={brokerEmail}
-            onChange={(e) => {
-              setBrokerEmail(e.target.value);
-              if (formErrors.brokerEmail) {
-                const { brokerEmail, ...rest } = formErrors;
-                setFormErrors(rest);
-              }
-            }}
-            placeholder="jean.dupont@immobilier.com"
-            className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300" : ""} bg-white text-gray-900`}
-          />
-          {!brokerEmail && !formErrors.brokerEmail && (
-            <div className="flex items-center text-xs text-amber-600 mt-1">
+          <Input id="brokerEmail" type="email" value={brokerEmail} onChange={e => {
+          setBrokerEmail(e.target.value);
+          if (formErrors.brokerEmail) {
+            const {
+              brokerEmail,
+              ...rest
+            } = formErrors;
+            setFormErrors(rest);
+          }
+        }} placeholder="jean.dupont@immobilier.com" className={`${formErrors.brokerEmail ? "border-destructive" : ""} ${!brokerEmail ? "border-amber-300" : ""} bg-white text-gray-900`} />
+          {!brokerEmail && !formErrors.brokerEmail && <div className="flex items-center text-xs text-amber-600 mt-1">
               <AlertCircle className="h-3 w-3 mr-1" />
               Ce champ est obligatoire
-            </div>
-          )}
+            </div>}
           <FormError error={formErrors.brokerEmail} />
         </div>
         
@@ -119,29 +99,22 @@ export const BrokerInfoForm = ({
             <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
             Téléphone du courtier *
           </Label>
-          <Input
-            id="brokerPhone"
-            type="tel"
-            value={brokerPhone}
-            onChange={(e) => {
-              setBrokerPhone(e.target.value);
-              if (formErrors.brokerPhone) {
-                const { brokerPhone, ...rest } = formErrors;
-                setFormErrors(rest);
-              }
-            }}
-            placeholder="(514) 555-1234"
-            className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300" : ""} bg-white text-gray-900`}
-          />
-          {!brokerPhone && !formErrors.brokerPhone && (
-            <div className="flex items-center text-xs text-amber-600 mt-1">
+          <Input id="brokerPhone" type="tel" value={brokerPhone} onChange={e => {
+          setBrokerPhone(e.target.value);
+          if (formErrors.brokerPhone) {
+            const {
+              brokerPhone,
+              ...rest
+            } = formErrors;
+            setFormErrors(rest);
+          }
+        }} placeholder="(514) 555-1234" className={`${formErrors.brokerPhone ? "border-destructive" : ""} ${!brokerPhone ? "border-amber-300" : ""} bg-white text-gray-900`} />
+          {!brokerPhone && !formErrors.brokerPhone && <div className="flex items-center text-xs text-amber-600 mt-1">
               <AlertCircle className="h-3 w-3 mr-1" />
               Ce champ est obligatoire
-            </div>
-          )}
+            </div>}
           <FormError error={formErrors.brokerPhone} />
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };

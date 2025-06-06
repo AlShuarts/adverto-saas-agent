@@ -1,4 +1,3 @@
-
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
 import { PublicationType, PhotoType } from "../types";
@@ -7,7 +6,6 @@ import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ImageSelection } from "../media-generation/components/ImageSelection";
-
 type MediaStepProps = {
   selectedPublicationType: PublicationType | null;
   selectedPhotoType?: PhotoType | null;
@@ -36,8 +34,12 @@ type MediaStepProps = {
   setBrokerEmail: (email: string) => void;
   brokerPhone: string;
   setBrokerPhone: (phone: string) => void;
-  formErrors: {[key: string]: string};
-  setFormErrors: (errors: {[key: string]: string}) => void;
+  formErrors: {
+    [key: string]: string;
+  };
+  setFormErrors: (errors: {
+    [key: string]: string;
+  }) => void;
   listing: Tables<"listings">;
   isGeneratingSlideshow: boolean;
   isGeneratingBanner: boolean;
@@ -53,7 +55,6 @@ type MediaStepProps = {
   handleRegenerateSlideshow: () => void;
   handleRegenerateBanner: () => void;
 };
-
 export const MediaStep = ({
   selectedPublicationType,
   selectedPhotoType,
@@ -101,91 +102,31 @@ export const MediaStep = ({
 }: MediaStepProps) => {
   const isMobile = useIsMobile();
   const availableImages = listing?.images || images;
-  
   const showSlideshow = selectedPublicationType === "slideshow";
   const showBanner = selectedPhotoType === "banner";
   const showListingPhotos = selectedPhotoType === "listing_photos";
-  
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Étape 4: Configuration des médias</h3>
+  return <div className="space-y-4">
+      
       
       <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
         <div className="space-y-4 pr-2 pb-6">
           {/* For listing photos only */}
-          {showListingPhotos && (
-            <div className="space-y-4">
-              <ImageSelection 
-                selectedImages={selectedImages} 
-                toggleImageSelection={toggleImageSelection} 
-                availableImages={availableImages}
-                onSelectAll={() => selectAllImages(availableImages)}
-                onDeselectAll={deselectAllImages}
-              />
-            </div>
-          )}
+          {showListingPhotos && <div className="space-y-4">
+              <ImageSelection selectedImages={selectedImages} toggleImageSelection={toggleImageSelection} availableImages={availableImages} onSelectAll={() => selectAllImages(availableImages)} onDeselectAll={deselectAllImages} />
+            </div>}
           
           {/* For slideshow publication type */}
-          {showSlideshow && (
-            <div className="space-y-4">
-              <SlideshowConfig
-                images={availableImages}
-                selectedImages={selectedImages}
-                musicList={musicList}
-                selectedMusic={selectedMusic}
-                currentlyPlaying={currentlyPlaying}
-                toggleImageSelection={toggleImageSelection}
-                onDragEnd={onDragEnd}
-                handleMusicChange={handleMusicChange}
-                previewMusic={previewMusic}
-              />
+          {showSlideshow && <div className="space-y-4">
+              <SlideshowConfig images={availableImages} selectedImages={selectedImages} musicList={musicList} selectedMusic={selectedMusic} currentlyPlaying={currentlyPlaying} toggleImageSelection={toggleImageSelection} onDragEnd={onDragEnd} handleMusicChange={handleMusicChange} previewMusic={previewMusic} />
               
-              <SlideshowGenerationSection
-                isGeneratingSlideshow={isGeneratingSlideshow}
-                slideshowUrl={slideshowUrl}
-                slideshowError={slideshowError}
-                slideshowRenderId={slideshowRenderId}
-                generateSlideshow={generateSlideshow}
-                refetchSlideshowStatus={refetchSlideshowStatus}
-                onRegenerateSlideshow={handleRegenerateSlideshow}
-                selectedImages={selectedImages}
-                selectedMusic={selectedMusic}
-              />
-            </div>
-          )}
+              <SlideshowGenerationSection isGeneratingSlideshow={isGeneratingSlideshow} slideshowUrl={slideshowUrl} slideshowError={slideshowError} slideshowRenderId={slideshowRenderId} generateSlideshow={generateSlideshow} refetchSlideshowStatus={refetchSlideshowStatus} onRegenerateSlideshow={handleRegenerateSlideshow} selectedImages={selectedImages} selectedMusic={selectedMusic} />
+            </div>}
           
           {/* For banner publication type */}
-          {showBanner && (
-            <div className="mb-4">
-              <BannerGenerationSection
-                isGeneratingBanner={isGeneratingBanner}
-                bannerUrl={bannerUrl}
-                bannerError={bannerError}
-                bannerRenderId={bannerRenderId}
-                generateBanner={generateBanner}
-                bannerImage={bannerImage}
-                bannerType={bannerType}
-                setBannerType={setBannerType}
-                selectBannerImage={selectBannerImage}
-                brokerName={brokerName}
-                setBrokerName={setBrokerName}
-                brokerEmail={brokerEmail}
-                setBrokerEmail={setBrokerEmail}
-                brokerPhone={brokerPhone}
-                setBrokerPhone={setBrokerPhone}
-                brokerImageUrl={brokerImageUrl}
-                setBrokerImageUrl={setBrokerImageUrl}
-                agencyLogoUrl={agencyLogoUrl}
-                setAgencyLogoUrl={setAgencyLogoUrl}
-                formErrors={formErrors}
-                setFormErrors={setFormErrors}
-                selectedImages={selectedImages}
-                onRegenerateBanner={handleRegenerateBanner}
-              />
-            </div>
-          )}
+          {showBanner && <div className="mb-4">
+              <BannerGenerationSection isGeneratingBanner={isGeneratingBanner} bannerUrl={bannerUrl} bannerError={bannerError} bannerRenderId={bannerRenderId} generateBanner={generateBanner} bannerImage={bannerImage} bannerType={bannerType} setBannerType={setBannerType} selectBannerImage={selectBannerImage} brokerName={brokerName} setBrokerName={setBrokerName} brokerEmail={brokerEmail} setBrokerEmail={setBrokerEmail} brokerPhone={brokerPhone} setBrokerPhone={setBrokerPhone} brokerImageUrl={brokerImageUrl} setBrokerImageUrl={setBrokerImageUrl} agencyLogoUrl={agencyLogoUrl} setAgencyLogoUrl={setAgencyLogoUrl} formErrors={formErrors} setFormErrors={setFormErrors} selectedImages={selectedImages} onRegenerateBanner={handleRegenerateBanner} />
+            </div>}
         </div>
       </ScrollArea>
-    </div>
-  );
+    </div>;
 };
