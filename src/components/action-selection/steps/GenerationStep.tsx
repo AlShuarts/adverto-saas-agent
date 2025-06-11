@@ -46,90 +46,10 @@ type GenerationStepProps = {
   onDragEnd: (result: any) => void;
 };
 
-export const GenerationStep = ({
-  selectedPublicationType,
-  selectedPhotoType,
-  selectedImages,
-  bannerImage,
-  bannerType,
-  setBannerType,
-  selectBannerImage,
-  selectedMusic,
-  brokerImageUrl,
-  setBrokerImageUrl,
-  agencyLogoUrl,
-  setAgencyLogoUrl,
-  brokerName,
-  setBrokerName,
-  brokerEmail,
-  setBrokerEmail,
-  brokerPhone,
-  setBrokerPhone,
-  formErrors,
-  setFormErrors,
-  generateSlideshow,
-  generateBanner,
-  isGeneratingSlideshow,
-  isGeneratingBanner,
-  slideshowRenderId,
-  bannerRenderId,
-  slideshowError,
-  bannerError,
-  slideshowUrl,
-  bannerUrl,
-  refetchSlideshowStatus,
-  onRegenerateSlideshow,
-  onRegenerateBanner,
-  toggleImageSelection,
-  listing,
-  handleMusicChange,
-  previewMusic,
-  currentlyPlaying,
-  musicList,
-  onDragEnd
-}: GenerationStepProps) => {
+export const GenerationStep = (props: GenerationStepProps) => {
   return (
     <MediaGenerationStep
-      selectedPublicationType={selectedPublicationType}
-      selectedPhotoType={selectedPhotoType}
-      isGeneratingSlideshow={isGeneratingSlideshow}
-      isGeneratingBanner={isGeneratingBanner}
-      slideshowUrl={slideshowUrl}
-      bannerUrl={bannerUrl}
-      slideshowError={slideshowError}
-      bannerError={bannerError}
-      slideshowRenderId={slideshowRenderId}
-      bannerRenderId={bannerRenderId}
-      formErrors={formErrors}
-      generateSlideshow={generateSlideshow}
-      generateBanner={generateBanner}
-      refetchSlideshowStatus={refetchSlideshowStatus}
-      bannerImage={bannerImage}
-      bannerType={bannerType}
-      setBannerType={setBannerType}
-      selectBannerImage={selectBannerImage}
-      brokerImageUrl={brokerImageUrl}
-      setBrokerImageUrl={setBrokerImageUrl}
-      agencyLogoUrl={agencyLogoUrl}
-      setAgencyLogoUrl={setAgencyLogoUrl}
-      brokerName={brokerName}
-      setBrokerName={setBrokerName}
-      brokerEmail={brokerEmail}
-      setBrokerEmail={setBrokerEmail}
-      brokerPhone={brokerPhone}
-      setBrokerPhone={setBrokerPhone}
-      setFormErrors={setFormErrors}
-      listing={listing}
-      onRegenerateBanner={onRegenerateBanner}
-      onRegenerateSlideshow={onRegenerateSlideshow}
-      selectedImages={selectedImages}
-      toggleImageSelection={toggleImageSelection}
-      selectedMusic={selectedMusic}
-      handleMusicChange={handleMusicChange}
-      previewMusic={previewMusic}
-      currentlyPlaying={currentlyPlaying}
-      musicList={musicList}
-      onDragEnd={onDragEnd}
+      {...props}
     />
   );
 };

@@ -7,6 +7,7 @@ import { BannerConfigurationHeader } from "./components/BannerConfigurationHeade
 import { SavedBrokerInfo } from "./components/SavedBrokerInfo";
 import { PropertyImageSelection } from "./components/PropertyImageSelection";
 import { BannerGenerationContent } from "./components/BannerGenerationContent";
+import { Tables } from "@/integrations/supabase/types";
 
 type BannerGenerationSectionProps = {
   isGeneratingBanner: boolean;
@@ -36,6 +37,7 @@ type BannerGenerationSectionProps = {
   }) => void;
   selectedImages: string[];
   onRegenerateBanner: () => void;
+  listing: Tables<"listings">;
 };
 
 export const BannerGenerationSection = ({
@@ -61,7 +63,8 @@ export const BannerGenerationSection = ({
   formErrors,
   setFormErrors,
   selectedImages,
-  onRegenerateBanner
+  onRegenerateBanner,
+  listing
 }: BannerGenerationSectionProps) => {
   const { config } = useBannerConfig();
 
@@ -109,6 +112,7 @@ export const BannerGenerationSection = ({
             selectBannerImage={selectBannerImage}
             formErrors={formErrors}
             setFormErrors={setFormErrors}
+            listingImages={listing.images || []}
           />
         </div>
       </ScrollArea>
