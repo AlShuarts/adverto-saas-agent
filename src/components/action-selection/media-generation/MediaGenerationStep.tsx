@@ -82,12 +82,7 @@ export const MediaGenerationStep = ({
   onRegenerateSlideshow,
   selectedImages,
   toggleImageSelection,
-  selectedMusic,
-  handleMusicChange,
-  previewMusic,
-  currentlyPlaying,
-  musicList,
-  onDragEnd
+  selectedMusic
 }: MediaGenerationStepProps) => {
   if (selectedPublicationType === "slideshow") {
     return (
@@ -102,12 +97,6 @@ export const MediaGenerationStep = ({
         selectedImages={selectedImages}
         toggleImageSelection={toggleImageSelection}
         selectedMusic={selectedMusic}
-        handleMusicChange={handleMusicChange}
-        previewMusic={previewMusic}
-        currentlyPlaying={currentlyPlaying}
-        musicList={musicList}
-        onDragEnd={onDragEnd}
-        listing={listing}
       />
     );
   }
