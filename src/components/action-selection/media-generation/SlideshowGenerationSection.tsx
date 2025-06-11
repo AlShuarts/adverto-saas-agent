@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Video, Play } from "lucide-react";
@@ -16,6 +15,7 @@ type SlideshowGenerationSectionProps = {
   onRegenerateSlideshow: () => void;
   selectedImages: string[];
   selectedMusic?: string;
+  toggleImageSelection: (imageUrl: string) => void;
 };
 
 export const SlideshowGenerationSection = ({
@@ -27,7 +27,8 @@ export const SlideshowGenerationSection = ({
   refetchSlideshowStatus,
   onRegenerateSlideshow,
   selectedImages,
-  selectedMusic
+  selectedMusic,
+  toggleImageSelection
 }: SlideshowGenerationSectionProps) => {
   const [isManualChecking, setIsManualChecking] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);

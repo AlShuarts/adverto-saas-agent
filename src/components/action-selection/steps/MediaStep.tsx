@@ -6,6 +6,7 @@ import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ImageSelection } from "../media-generation/components/ImageSelection";
+
 type MediaStepProps = {
   selectedPublicationType: PublicationType | null;
   selectedPhotoType?: PhotoType | null;
@@ -55,6 +56,7 @@ type MediaStepProps = {
   handleRegenerateSlideshow: () => void;
   handleRegenerateBanner: () => void;
 };
+
 export const MediaStep = ({
   selectedPublicationType,
   selectedPhotoType,
@@ -105,28 +107,87 @@ export const MediaStep = ({
   const showSlideshow = selectedPublicationType === "slideshow";
   const showBanner = selectedPhotoType === "banner";
   const showListingPhotos = selectedPhotoType === "listing_photos";
-  return <div className="space-y-4">
-      
-      
+
+  return (
+    <div className="space-y-4">
       <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
         <div className="space-y-4 pr-2 pb-6">
           {/* For listing photos only */}
-          {showListingPhotos && <div className="space-y-4">
-              <ImageSelection selectedImages={selectedImages} toggleImageSelection={toggleImageSelection} availableImages={availableImages} onSelectAll={() => selectAllImages(availableImages)} onDeselectAll={deselectAllImages} />
-            </div>}
+          {showListingPhotos && (
+            <div className="space-y-4">
+              <ImageSelection 
+                selectedImages={selectedImages} 
+                toggleImageSelection={toggleImageSelection} 
+                availableImages={availableImages} 
+                onSelectAll={() => selectAllImages(availableImages)} 
+                onDeselectAll={deselectAllImages} 
+              />
+            </div>
+          )}
           
           {/* For slideshow publication type */}
-          {showSlideshow && <div className="space-y-4">
-              <SlideshowConfig images={availableImages} selectedImages={selectedImages} musicList={musicList} selectedMusic={selectedMusic} currentlyPlaying={currentlyPlaying} toggleImageSelection={toggleImageSelection} onDragEnd={onDragEnd} handleMusicChange={handleMusicChange} previewMusic={previewMusic} />
+          {showSlideshow && (
+            <div className="space-y-4">
+              <SlideshowConfig 
+                images={availableImages} 
+                selectedImages={selectedImages} 
+                musicList={musicList} 
+                selectedMusic={selectedMusic} 
+                currentlyPlaying={currentlyPlaying} 
+                toggleImageSelection={toggleImageSelection} 
+                onDragEnd={onDragEnd} 
+                handleMusicChange={handleMusicChange} 
+                previewMusic={previewMusic} 
+              />
               
-              <SlideshowGenerationSection isGeneratingSlideshow={isGeneratingSlideshow} slideshowUrl={slideshowUrl} slideshowError={slideshowError} slideshowRenderId={slideshowRenderId} generateSlideshow={generateSlideshow} refetchSlideshowStatus={refetchSlideshowStatus} onRegenerateSlideshow={handleRegenerateSlideshow} selectedImages={selectedImages} selectedMusic={selectedMusic} />
-            </div>}
+              <SlideshowGenerationSection 
+                isGeneratingSlideshow={isGeneratingSlideshow} 
+                slideshowUrl={slideshowUrl} 
+                slideshowError={slideshowError} 
+                slideshowRenderId={slideshowRenderId} 
+                generateSlideshow={generateSlideshow} 
+                refetchSlideshowStatus={refetchSlideshowStatus} 
+                onRegenerateSlideshow={handleRegenerateSlideshow} 
+                selectedImages={selectedImages} 
+                selectedMusic={selectedMusic}
+                toggleImageSelection={toggleImageSelection}
+              />
+            </div>
+          )}
           
           {/* For banner publication type */}
-          {showBanner && <div className="mb-4">
-              <BannerGenerationSection isGeneratingBanner={isGeneratingBanner} bannerUrl={bannerUrl} bannerError={bannerError} bannerRenderId={bannerRenderId} generateBanner={generateBanner} bannerImage={bannerImage} bannerType={bannerType} setBannerType={setBannerType} selectBannerImage={selectBannerImage} brokerName={brokerName} setBrokerName={setBrokerName} brokerEmail={brokerEmail} setBrokerEmail={setBrokerEmail} brokerPhone={brokerPhone} setBrokerPhone={setBrokerPhone} brokerImageUrl={brokerImageUrl} setBrokerImageUrl={setBrokerImageUrl} agencyLogoUrl={agencyLogoUrl} setAgencyLogoUrl={setAgencyLogoUrl} formErrors={formErrors} setFormErrors={setFormErrors} selectedImages={selectedImages} onRegenerateBanner={handleRegenerateBanner} />
-            </div>}
+          {showBanner && (
+            <div className="mb-4">
+              <BannerGenerationSection 
+                isGeneratingBanner={isGeneratingBanner} 
+                bannerUrl={bannerUrl} 
+                bannerError={bannerError} 
+                bannerRenderId={bannerRenderId} 
+                generateBanner={generateBanner} 
+                bannerImage={bannerImage} 
+                bannerType={bannerType} 
+                setBannerType={setBannerType} 
+                selectBannerImage={selectBannerImage} 
+                brokerName={brokerName} 
+                setBrokerName={setBrokerName} 
+                brokerEmail={brokerEmail} 
+                setBrokerEmail={setBrokerEmail} 
+                brokerPhone={brokerPhone} 
+                setBrokerPhone={setBrokerPhone} 
+                brokerImageUrl={brokerImageUrl} 
+                setBrokerImageUrl={setBrokerImageUrl} 
+                agencyLogoUrl={agencyLogoUrl} 
+                setAgencyLogoUrl={setAgencyLogoUrl} 
+                formErrors={formErrors} 
+                setFormErrors={setFormErrors} 
+                selectedImages={selectedImages} 
+                onRegenerateBanner={handleRegenerateBanner} 
+                listing={listing}
+              />
+            </div>
+          )}
         </div>
       </ScrollArea>
-    </div>;
+    </div>
+  );
 };
