@@ -111,17 +111,23 @@ export const ActionSelectionDialogContent = () => {
   };
 
   return (
-    <DialogContent className="max-w-4xl bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col max-h-[90vh] h-[90vh] w-[95vw] md:w-auto">
-      <DialogHeader className="pb-1">
-        <DialogTitle className="text-white">Publication sur les réseaux sociaux</DialogTitle>
-        <DialogDescription className="text-gray-400">
+    <DialogContent className={`${
+      isMobile 
+        ? "max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh] p-4" 
+        : "max-w-5xl w-[90vw] max-h-[90vh] h-[90vh] p-6"
+    } bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col`}>
+      <DialogHeader className={`${isMobile ? "pb-2" : "pb-4"} border-b border-gray-800`}>
+        <DialogTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white`}>
+          Publication sur les réseaux sociaux
+        </DialogTitle>
+        <DialogDescription className={`${isMobile ? "text-sm" : "text-base"} text-gray-400`}>
           Créez une publication pour diffuser votre bien immobilier sur les réseaux sociaux.
         </DialogDescription>
       </DialogHeader>
       
       <div className="flex-1 overflow-hidden min-h-0">
-        <ScrollArea className={isMobile ? "h-[60vh]" : "h-[55vh]"}>
-          <div className="p-1 md:px-2 pb-6 pr-4">
+        <ScrollArea className={isMobile ? "h-[calc(95vh-12rem)]" : "h-[calc(90vh-12rem)]"}>
+          <div className={`${isMobile ? "p-2" : "p-4"} pb-6`}>
             {renderStepContent({
               currentStep,
               selectedPublicationType,
@@ -189,7 +195,7 @@ export const ActionSelectionDialogContent = () => {
         </ScrollArea>
       </div>
       
-      <DialogFooter className="border-t border-gray-800 pt-2 mt-auto shrink-0">
+      <DialogFooter className={`border-t border-gray-800 ${isMobile ? "pt-2" : "pt-4"} mt-auto shrink-0`}>
         <StepNavigation 
           currentStep={currentStep}
           isPublishing={isPublishing}

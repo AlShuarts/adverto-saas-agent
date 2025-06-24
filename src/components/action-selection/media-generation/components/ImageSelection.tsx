@@ -1,14 +1,16 @@
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, Images } from "lucide-react";
-import { SelectAllButton } from "./SelectAllButton";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Check, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-export type ImageSelectionProps = {
+type ImageSelectionProps = {
   selectedImages: string[];
   toggleImageSelection: (imageUrl: string) => void;
-  availableImages?: string[];
-  onSelectAll?: () => void;
-  onDeselectAll?: () => void;
+  availableImages: string[];
+  onSelectAll: () => void;
+  onDeselectAll: () => void;
 };
 
 export const ImageSelection = ({
@@ -18,61 +20,91 @@ export const ImageSelection = ({
   onSelectAll,
   onDeselectAll
 }: ImageSelectionProps) => {
-  // If availableImages is not provided, we'll just show the selected images
-  const imagesToDisplay = availableImages || selectedImages;
-  
-  const handleSelectAll = () => {
-    if (onSelectAll && availableImages) {
-      onSelectAll();
-    }
+  const isMobile = useIsMobile();
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  const handleImageError = (imageUrl: string) => {
+    setImageErrors(prev => new Set(prev).add(imageUrl));
   };
 
-  const handleDeselectAll = () => {
-    if (onDeselectAll) {
-      onDeselectAll();
-    }
-  };
+  const validImages = availableImages.filter(img => !imageErrors.has(img));
+  const allSelected = validImages.length > 0 && selectedImages.length === validImages.length;
 
-  if (!imagesToDisplay || imagesToDisplay.length === 0) {
-    return <div className="space-y-4">
-        <h5 className="text-sm font-medium">Sélection des photos</h5>
-        <div className="flex flex-col items-center justify-center h-[220px] border rounded p-8 text-center">
-          <Images className="h-10 w-10 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Aucune image disponible</p>
-          <p className="text-sm text-muted-foreground mt-2">Veuillez ajouter des images à cette propriété</p>
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 justify-between items-center">
+        <div className="flex gap-2">
+          <Button
+            variant={allSelected ? "secondary" : "outline"}
+            size="sm"
+            onClick={allSelected ? onDeselectAll : onSelectAll}
+            className={isMobile ? "text-xs px-3 py-1" : "text-sm"}
+          >
+            {allSelected ? "Tout désélectionner" : "Tout sélectionner"}
+          </Button>
         </div>
-      </div>;
-  }
+        <span className={`${isMobile ? "text-xs" : "text-sm"} text-gray-400`}>
+          {selectedImages.length} / {validImages.length} sélectionnées
+        </span>
+      </div>
 
-  return <div className="space-y-4 w-full">
-      <div className="flex justify-between items-center">
-        <h5 className="font-medium text-lg">Sélection des photos</h5>
-        
-        {availableImages && onSelectAll && onDeselectAll && (
-          <SelectAllButton
-            availableImages={availableImages}
-            selectedImages={selectedImages}
-            onSelectAll={handleSelectAll}
-            onDeselectAll={handleDeselectAll}
-          />
-        )}
-      </div>
-      
-      <ScrollArea className="h-[220px] border rounded p-2 w-full">
-        <div className="grid grid-cols-2 gap-2">
-          {imagesToDisplay.map((image, index) => <div key={index} className="relative cursor-pointer rounded-md overflow-hidden group" onClick={() => toggleImageSelection(image)}>
-              <img src={image} alt={`Image ${index + 1}`} className="w-full h-24 object-cover" />
-              <div className={`absolute inset-0 flex items-center justify-center bg-black/50 ${selectedImages.includes(image) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
-                {selectedImages.includes(image) && <Check className="text-white h-6 w-6" />}
-              </div>
-            </div>)}
+      {validImages.length === 0 ? (
+        <Card className="bg-gray-800/50 border-gray-700 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Plus className="w-12 h-12 text-gray-500 mb-2" />
+            <p className="text-gray-400 text-center">
+              Aucune image disponible
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className={`grid ${
+          isMobile 
+            ? "grid-cols-2 gap-3" 
+            : "grid-cols-3 lg:grid-cols-4 gap-4"
+        }`}>
+          {validImages.map((imageUrl, index) => {
+            const isSelected = selectedImages.includes(imageUrl);
+            
+            return (
+              <Card
+                key={index}
+                className={`cursor-pointer transition-all duration-200 border-2 hover:scale-105 ${
+                  isSelected
+                    ? "border-primary bg-primary/10 shadow-lg"
+                    : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
+                }`}
+                onClick={() => toggleImageSelection(imageUrl)}
+              >
+                <CardContent className="p-2">
+                  <div className="relative aspect-square overflow-hidden rounded-md">
+                    <img
+                      src={imageUrl}
+                      alt={`Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={() => handleImageError(imageUrl)}
+                    />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <div className="bg-primary rounded-full p-1">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    )}
+                    <div className={`absolute top-2 right-2 ${
+                      isSelected ? "bg-primary" : "bg-gray-800/80"
+                    } rounded-full p-1`}>
+                      <span className={`${isMobile ? "text-xs" : "text-sm"} text-white font-medium`}>
+                        {index + 1}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-      </ScrollArea>
-      
-      <div className="mt-2">
-        <p className="text-sm text-muted-foreground">
-          {selectedImages.length} images sélectionnées
-        </p>
-      </div>
-    </div>;
+      )}
+    </div>
+  );
 };

@@ -8,6 +8,8 @@ import { SavedBrokerInfo } from "./components/SavedBrokerInfo";
 import { PropertyImageSelection } from "./components/PropertyImageSelection";
 import { BannerGenerationContent } from "./components/BannerGenerationContent";
 import { Tables } from "@/integrations/supabase/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type BannerGenerationSectionProps = {
   isGeneratingBanner: boolean;
@@ -67,6 +69,7 @@ export const BannerGenerationSection = ({
   listing
 }: BannerGenerationSectionProps) => {
   const { config } = useBannerConfig();
+  const isMobile = useIsMobile();
 
   // Auto-load saved configuration
   useEffect(() => {
@@ -91,47 +94,59 @@ export const BannerGenerationSection = ({
   const missingFields = getMissingFields();
 
   return (
-    <div className="space-y-4 border rounded-md p-4 bg-card">
-      <BannerConfigurationHeader />
-      
-      <ScrollArea className="max-h-[500px] pr-4">
-        <div className="space-y-6">
-          <div className="space-y-4 border rounded-md p-4 bg-muted/30">
-            <BannerTypeSelector 
-              bannerType={bannerType} 
-              setBannerType={setBannerType} 
-              error={formErrors.bannerType} 
+    <div className="space-y-6">
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardHeader>
+          <BannerConfigurationHeader />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <Card className="bg-gray-900/50 border-gray-600">
+              <CardHeader>
+                <CardTitle className={`${isMobile ? "text-base" : "text-lg"} text-white`}>
+                  Type de bannière
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BannerTypeSelector 
+                  bannerType={bannerType} 
+                  setBannerType={setBannerType} 
+                  error={formErrors.bannerType} 
+                />
+              </CardContent>
+            </Card>
+            
+            <SavedBrokerInfo config={config} />
+            
+            <PropertyImageSelection
+              selectedImages={selectedImages}
+              bannerImage={bannerImage}
+              selectBannerImage={selectBannerImage}
+              formErrors={formErrors}
+              setFormErrors={setFormErrors}
+              listingImages={listing.images || []}
             />
           </div>
-          
-          <SavedBrokerInfo config={config} />
-          
-          <PropertyImageSelection
-            selectedImages={selectedImages}
-            bannerImage={bannerImage}
-            selectBannerImage={selectBannerImage}
-            formErrors={formErrors}
-            setFormErrors={setFormErrors}
-            listingImages={listing.images || []}
-          />
-        </div>
-      </ScrollArea>
+        </CardContent>
+      </Card>
       
-      <div className="border-t pt-4 mt-6">
-        <div className="flex flex-col items-center justify-center py-4">
-          <BannerGenerationContent
-            isGeneratingBanner={isGeneratingBanner}
-            bannerUrl={bannerUrl}
-            bannerRenderId={bannerRenderId}
-            generateBanner={generateBanner}
-            hasRequiredInfo={hasRequiredInfo}
-            missingFields={missingFields}
-            formErrors={formErrors}
-            bannerError={bannerError}
-            onRegenerateBanner={onRegenerateBanner}
-          />
-        </div>
-      </div>
+      <Card className="bg-gray-800/50 border-gray-700">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center">
+            <BannerGenerationContent
+              isGeneratingBanner={isGeneratingBanner}
+              bannerUrl={bannerUrl}
+              bannerRenderId={bannerRenderId}
+              generateBanner={generateBanner}
+              hasRequiredInfo={hasRequiredInfo}
+              missingFields={missingFields}
+              formErrors={formErrors}
+              bannerError={bannerError}
+              onRegenerateBanner={onRegenerateBanner}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import { SlideshowGenerationSection } from "../media-generation/SlideshowGenerationSection";
 import { BannerGenerationSection } from "../media-generation/BannerGenerationSection";
 import { PublicationType, PhotoType } from "../types";
@@ -6,6 +7,7 @@ import { SlideshowConfig } from "../media-selector/SlideshowConfig";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ImageSelection } from "../media-generation/components/ImageSelection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type MediaStepProps = {
   selectedPublicationType: PublicationType | null;
@@ -109,25 +111,46 @@ export const MediaStep = ({
   const showListingPhotos = selectedPhotoType === "listing_photos";
 
   return (
-    <div className="space-y-4">
-      <ScrollArea className={isMobile ? "h-[50vh]" : "h-[55vh]"}>
-        <div className="space-y-4 pr-2 pb-6">
-          {/* For listing photos only */}
-          {showListingPhotos && (
-            <div className="space-y-4">
-              <ImageSelection 
-                selectedImages={selectedImages} 
-                toggleImageSelection={toggleImageSelection} 
-                availableImages={availableImages} 
-                onSelectAll={() => selectAllImages(availableImages)} 
-                onDeselectAll={deselectAllImages} 
-              />
-            </div>
-          )}
-          
-          {/* For slideshow publication type */}
-          {showSlideshow && (
-            <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className={`${isMobile ? "text-xl" : "text-2xl"} font-bold text-white`}>
+          Configuration du média
+        </h2>
+        <p className={`${isMobile ? "text-sm" : "text-base"} text-gray-400`}>
+          Personnalisez votre contenu avant la génération
+        </p>
+      </div>
+
+      {/* For listing photos only */}
+      {showListingPhotos && (
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white`}>
+              Sélection des photos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ImageSelection 
+              selectedImages={selectedImages} 
+              toggleImageSelection={toggleImageSelection} 
+              availableImages={availableImages} 
+              onSelectAll={() => selectAllImages(availableImages)} 
+              onDeselectAll={deselectAllImages} 
+            />
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* For slideshow publication type */}
+      {showSlideshow && (
+        <div className="space-y-6">
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader>
+              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white`}>
+                Configuration du diaporama
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <SlideshowConfig 
                 images={availableImages} 
                 selectedImages={selectedImages} 
@@ -139,55 +162,53 @@ export const MediaStep = ({
                 handleMusicChange={handleMusicChange} 
                 previewMusic={previewMusic} 
               />
-              
-              <SlideshowGenerationSection 
-                isGeneratingSlideshow={isGeneratingSlideshow} 
-                slideshowUrl={slideshowUrl} 
-                slideshowError={slideshowError} 
-                slideshowRenderId={slideshowRenderId} 
-                generateSlideshow={generateSlideshow} 
-                refetchSlideshowStatus={refetchSlideshowStatus} 
-                onRegenerateSlideshow={handleRegenerateSlideshow} 
-                selectedImages={selectedImages} 
-                selectedMusic={selectedMusic}
-                toggleImageSelection={toggleImageSelection}
-              />
-            </div>
-          )}
+            </CardContent>
+          </Card>
           
-          {/* For banner publication type */}
-          {showBanner && (
-            <div className="mb-4">
-              <BannerGenerationSection 
-                isGeneratingBanner={isGeneratingBanner} 
-                bannerUrl={bannerUrl} 
-                bannerError={bannerError} 
-                bannerRenderId={bannerRenderId} 
-                generateBanner={generateBanner} 
-                bannerImage={bannerImage} 
-                bannerType={bannerType} 
-                setBannerType={setBannerType} 
-                selectBannerImage={selectBannerImage} 
-                brokerName={brokerName} 
-                setBrokerName={setBrokerName} 
-                brokerEmail={brokerEmail} 
-                setBrokerEmail={setBrokerEmail} 
-                brokerPhone={brokerPhone} 
-                setBrokerPhone={setBrokerPhone} 
-                brokerImageUrl={brokerImageUrl} 
-                setBrokerImageUrl={setBrokerImageUrl} 
-                agencyLogoUrl={agencyLogoUrl} 
-                setAgencyLogoUrl={setAgencyLogoUrl} 
-                formErrors={formErrors} 
-                setFormErrors={setFormErrors} 
-                selectedImages={selectedImages} 
-                onRegenerateBanner={handleRegenerateBanner} 
-                listing={listing}
-              />
-            </div>
-          )}
+          <SlideshowGenerationSection 
+            isGeneratingSlideshow={isGeneratingSlideshow} 
+            slideshowUrl={slideshowUrl} 
+            slideshowError={slideshowError} 
+            slideshowRenderId={slideshowRenderId} 
+            generateSlideshow={generateSlideshow} 
+            refetchSlideshowStatus={refetchSlideshowStatus} 
+            onRegenerateSlideshow={handleRegenerateSlideshow} 
+            selectedImages={selectedImages} 
+            selectedMusic={selectedMusic}
+            toggleImageSelection={toggleImageSelection}
+          />
         </div>
-      </ScrollArea>
+      )}
+      
+      {/* For banner publication type */}
+      {showBanner && (
+        <BannerGenerationSection 
+          isGeneratingBanner={isGeneratingBanner} 
+          bannerUrl={bannerUrl} 
+          bannerError={bannerError} 
+          bannerRenderId={bannerRenderId} 
+          generateBanner={generateBanner} 
+          bannerImage={bannerImage} 
+          bannerType={bannerType} 
+          setBannerType={setBannerType} 
+          selectBannerImage={selectBannerImage} 
+          brokerName={brokerName} 
+          setBrokerName={setBrokerName} 
+          brokerEmail={brokerEmail} 
+          setBrokerEmail={setBrokerEmail} 
+          brokerPhone={brokerPhone} 
+          setBrokerPhone={setBrokerPhone} 
+          brokerImageUrl={brokerImageUrl} 
+          setBrokerImageUrl={setBrokerImageUrl} 
+          agencyLogoUrl={agencyLogoUrl} 
+          setAgencyLogoUrl={setAgencyLogoUrl} 
+          formErrors={formErrors} 
+          setFormErrors={setFormErrors} 
+          selectedImages={selectedImages} 
+          onRegenerateBanner={handleRegenerateBanner} 
+          listing={listing}
+        />
+      )}
     </div>
   );
 };
