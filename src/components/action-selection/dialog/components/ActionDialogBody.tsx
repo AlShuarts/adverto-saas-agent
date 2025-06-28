@@ -66,6 +66,7 @@ type ActionDialogBodyProps = Pick<DialogContentProps,
   | "handleNetworkChange"
   | "isPublishing"
   | "handlePublish"
+  | "nextStep"
 >;
 
 export const ActionDialogBody = (props: ActionDialogBodyProps) => {
@@ -73,9 +74,9 @@ export const ActionDialogBody = (props: ActionDialogBodyProps) => {
   
   return (
     <div className="flex-1 overflow-hidden min-h-0">
-      <ScrollArea className={isMobile ? "h-[calc(95vh-12rem)]" : "h-[calc(90vh-12rem)]"}>
-        <div className={`${isMobile ? "p-2" : "p-4"} pb-6`}>
-          {renderStepContent(props)}
+      <ScrollArea className={isMobile ? "h-[calc(95vh-10rem)]" : "h-[calc(90vh-10rem)]"}>
+        <div className={`${isMobile ? "px-2 py-1" : "px-3 py-2"}`}>
+          {renderStepContent({...props, nextStep: props.nextStep})}
         </div>
       </ScrollArea>
     </div>

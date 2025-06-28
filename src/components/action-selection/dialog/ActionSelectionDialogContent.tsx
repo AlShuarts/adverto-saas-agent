@@ -1,4 +1,3 @@
-
 import { useActionSelection } from "../context/ActionSelectionContext";
 import { DialogContent } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -113,8 +112,8 @@ export const ActionSelectionDialogContent = () => {
   return (
     <DialogContent className={`${
       isMobile 
-        ? "max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh] p-4" 
-        : "max-w-5xl w-[90vw] max-h-[90vh] h-[90vh] p-6"
+        ? "max-w-[98vw] w-[98vw] max-h-[98vh] h-[98vh] p-2" 
+        : "max-w-4xl w-[85vw] max-h-[95vh] h-[95vh] p-3"
     } bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col`}>
       
       <ActionDialogHeader />
@@ -181,6 +180,7 @@ export const ActionSelectionDialogContent = () => {
         handleNetworkChange={handleNetworkChange}
         isPublishing={isPublishing}
         handlePublish={handlePublishWrapper}
+        nextStep={nextStep}
       />
       
       <ActionDialogFooter

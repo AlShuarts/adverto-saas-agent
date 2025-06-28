@@ -25,7 +25,7 @@ export const ActionDialogFooter = ({
   const isMobile = useIsMobile();
   
   return (
-    <DialogFooter className={`border-t border-gray-800 ${isMobile ? "pt-2" : "pt-4"} mt-auto shrink-0`}>
+    <DialogFooter className={`border-t border-gray-800 ${isMobile ? "pt-1" : "pt-2"} mt-auto shrink-0`}>
       <StepNavigation 
         currentStep={currentStep}
         isPublishing={isPublishing}

@@ -14,6 +14,7 @@ export const renderStepContent = (props: any) => {
         <PublicationStep
           selectedPublicationType={props.selectedPublicationType}
           onPublicationTypeChange={props.handlePublicationTypeChange}
+          onAutoNext={props.nextStep}
         />
       );
     case 2:
@@ -21,6 +22,7 @@ export const renderStepContent = (props: any) => {
         <PhotoTypeStep
           selectedPhotoType={props.selectedPhotoType}
           onPhotoTypeChange={props.handlePhotoTypeChange}
+          onAutoNext={props.nextStep}
         />
       );
     case 3:
