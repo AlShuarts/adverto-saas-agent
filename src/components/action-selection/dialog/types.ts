@@ -63,4 +63,5 @@ export interface DialogContentProps {
   handleNetworkChange: (network: "facebook" | "instagram", checked: boolean) => void;
   isPublishing: boolean;
   handlePublish: () => Promise<void>;
+  nextStep: () => void;
 }
