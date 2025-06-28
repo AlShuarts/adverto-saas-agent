@@ -1,4 +1,3 @@
-
 import { PublicationStep } from "./PublicationStep";
 import { PhotoTypeStep } from "./PhotoTypeStep";
 import { TemplateStep } from "./TemplateStep";

@@ -2,7 +2,7 @@
 import { PhotoType } from "../types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Image, Tag, Camera } from "lucide-react";
+import { FileImage, Images } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect } from "react";
 
@@ -24,7 +24,7 @@ export const PhotoTypeStep = ({
     if (selectedPhotoType && onAutoNext) {
       const timer = setTimeout(() => {
         onAutoNext();
-      }, 800);
+      }, 800); // Small delay for visual feedback
       return () => clearTimeout(timer);
     }
   }, [selectedPhotoType, onAutoNext]);
@@ -33,16 +33,16 @@ export const PhotoTypeStep = ({
     {
       id: "listing_photos" as PhotoType,
       title: "Photos du bien",
-      description: "Utilisez les photos existantes de la propriété",
-      icon: Camera,
-      features: ["Photos haute qualité", "Sélection multiple", "Ordre personnalisable"]
+      description: "Utilisez les photos de votre propriété",
+      icon: Images,
+      features: ["Photos haute résolution", "Mise en valeur du bien", "Publication rapide"]
     },
     {
       id: "banner" as PhotoType,
       title: "Bannière personnalisée",
       description: "Créez une bannière avec vos informations",
-      icon: Tag,
-      features: ["Design professionnel", "Informations du courtier", "Logo de l'agence"]
+      icon: FileImage,
+      features: ["Design professionnel", "Informations du courtier", "Format optimisé"]
     }
   ];
 
@@ -50,10 +50,10 @@ export const PhotoTypeStep = ({
     <div className="space-y-4">
       <div className="text-center space-y-1">
         <h2 className={`${isMobile ? "text-lg" : "text-xl"} font-bold text-white`}>
-          Choisissez le type de contenu visuel
+          Choisissez le type de photo
         </h2>
         <p className={`${isMobile ? "text-xs" : "text-sm"} text-gray-400`}>
-          Sélectionnez comment vous souhaitez présenter votre propriété
+          Sélectionnez le format qui convient le mieux à votre publication
         </p>
       </div>
 
