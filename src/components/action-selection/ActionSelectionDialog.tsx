@@ -2,7 +2,7 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Tables } from "@/integrations/supabase/types";
 import { ActionSelectionProvider } from "./context/ActionSelectionContext";
-import { ActionSelectionDialogContent } from "./ActionSelectionDialogContent";
+import { ActionSelectionDialogContent } from "./dialog/ActionSelectionDialogContent";
 
 type ActionSelectionDialogProps = {
   listing: Tables<"listings">;

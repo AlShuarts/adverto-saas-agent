@@ -1,5 +1,6 @@
+
 import { useActionSelection } from "../context/ActionSelectionContext";
-import { DialogContent } from "@/components/ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ActionDialogHeader } from "./components/ActionDialogHeader";
 import { ActionDialogBody } from "./components/ActionDialogBody";
@@ -115,6 +116,11 @@ export const ActionSelectionDialogContent = () => {
         ? "max-w-[98vw] w-[98vw] max-h-[98vh] h-[98vh] p-2" 
         : "max-w-4xl w-[85vw] max-h-[95vh] h-[95vh] p-3"
     } bg-gray-950 text-white border-gray-800 overflow-hidden flex flex-col`}>
+      
+      <DialogHeader className="sr-only">
+        <DialogTitle>Action Selection</DialogTitle>
+        <DialogDescription>Configure your listing publication settings</DialogDescription>
+      </DialogHeader>
       
       <ActionDialogHeader />
       
