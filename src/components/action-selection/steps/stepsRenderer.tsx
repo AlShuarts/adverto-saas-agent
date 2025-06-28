@@ -1,3 +1,4 @@
+
 import { PublicationStep } from "./PublicationStep";
 import { PhotoTypeStep } from "./PhotoTypeStep";
 import { TemplateStep } from "./TemplateStep";
@@ -5,7 +6,7 @@ import { MediaStep } from "./MediaStep";
 import { SocialStep } from "./SocialStep";
 
 export const renderStepContent = (props: any) => {
-  const { currentStep, listing } = props;
+  const { currentStep, listing, nextStep } = props;
   
   switch (currentStep) {
     case 1:
@@ -13,7 +14,7 @@ export const renderStepContent = (props: any) => {
         <PublicationStep
           selectedPublicationType={props.selectedPublicationType}
           onPublicationTypeChange={props.handlePublicationTypeChange}
-          onAutoNext={props.nextStep}
+          onAutoNext={nextStep}
         />
       );
     case 2:
@@ -21,7 +22,7 @@ export const renderStepContent = (props: any) => {
         <PhotoTypeStep
           selectedPhotoType={props.selectedPhotoType}
           onPhotoTypeChange={props.handlePhotoTypeChange}
-          onAutoNext={props.nextStep}
+          onAutoNext={nextStep}
         />
       );
     case 3:
