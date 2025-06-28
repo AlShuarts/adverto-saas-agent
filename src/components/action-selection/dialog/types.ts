@@ -1,4 +1,3 @@
-
 import { PublicationType, PhotoType, SocialNetworks } from "../types";
 
 export interface DialogContentProps {
@@ -7,6 +6,7 @@ export interface DialogContentProps {
   selectedPhotoType: PhotoType | null;
   handlePublicationTypeChange: (type: PublicationType) => void;
   handlePhotoTypeChange: (type: PhotoType) => void;
+  nextStep: () => void;
   facebookTemplates: any[];
   instagramTemplates: any[];
   selectedFacebookTemplateId: string | null;
@@ -63,5 +63,4 @@ export interface DialogContentProps {
   handleNetworkChange: (network: "facebook" | "instagram", checked: boolean) => void;
   isPublishing: boolean;
   handlePublish: () => Promise<void>;
-  nextStep: () => void;
 }

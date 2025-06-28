@@ -1,4 +1,3 @@
-
 import { PublicationStep } from "../steps/PublicationStep";
 import { PhotoTypeStep } from "../steps/PhotoTypeStep";
 import { TemplateStep } from "../steps/TemplateStep";
@@ -13,6 +12,7 @@ export const ActionSelectionSteps = ({
   selectedPhotoType,
   handlePublicationTypeChange,
   handlePhotoTypeChange,
+  nextStep,
   facebookTemplates,
   instagramTemplates,
   selectedFacebookTemplateId,
@@ -76,6 +76,7 @@ export const ActionSelectionSteps = ({
           <PublicationStep
             selectedPublicationType={selectedPublicationType}
             onPublicationTypeChange={handlePublicationTypeChange}
+            onAutoNext={nextStep}
           />
         );
       case 2:
@@ -83,6 +84,7 @@ export const ActionSelectionSteps = ({
           <PhotoTypeStep
             selectedPhotoType={selectedPhotoType}
             onPhotoTypeChange={handlePhotoTypeChange}
+            onAutoNext={nextStep}
           />
         );
       case 3:
