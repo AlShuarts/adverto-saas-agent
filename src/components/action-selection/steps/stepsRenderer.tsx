@@ -138,11 +138,25 @@ export const renderStepContent = (props: DialogContentProps) => {
     case 6:
       return (
         <SocialStep
+          selectedPublicationType={props.selectedPublicationType}
+          selectedPhotoType={props.selectedPhotoType}
           selectedNetworks={props.selectedNetworks}
           setSelectedNetworks={props.setSelectedNetworks}
-          handleNetworkChange={props.handleNetworkChange}
-          isPublishing={props.isPublishing}
-          handlePublish={props.handlePublish}
+          isSubmitting={props.isPublishing}
+          onSubmit={props.handlePublish}
+          hasRequiredInfo={
+            (props.selectedNetworks.facebook || props.selectedNetworks.instagram) &&
+            (props.slideshowUrl || props.bannerUrl || props.selectedImages.length > 0)
+          }
+          generatedText={props.generatedText}
+          setGeneratedText={props.setGeneratedText}
+          images={props.listing?.images || []}
+          selectedImages={props.selectedImages}
+          setSelectedImages={props.setSelectedImages}
+          slideshowUrl={props.slideshowUrl}
+          bannerUrl={props.bannerUrl}
+          selectedMusic={props.selectedMusic}
+          listing={props.listing}
         />
       );
     default:
