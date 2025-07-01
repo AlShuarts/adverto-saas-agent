@@ -30,7 +30,6 @@ export const renderStepContent = (props: DialogContentProps) => {
     case 3:
       return (
         <TemplateStep
-          selectedPublicationType={props.selectedPublicationType}
           facebookTemplates={props.facebookTemplates}
           instagramTemplates={props.instagramTemplates}
           selectedFacebookTemplateId={props.selectedFacebookTemplateId}
@@ -40,22 +39,24 @@ export const renderStepContent = (props: DialogContentProps) => {
           generatedText={props.generatedText}
           setGeneratedText={props.setGeneratedText}
           isGeneratingText={props.isGeneratingText}
-          handleGenerateText={props.handleGenerateText}
-          listing={props.listing}
+          onGenerateText={props.handleGenerateText}
         />
       );
     case 4:
       return (
         <MediaStep
+          selectedPublicationType={props.selectedPublicationType}
           selectedPhotoType={props.selectedPhotoType}
+          images={props.listing?.images || []}
           selectedImages={props.selectedImages}
-          setSelectedImages={props.setSelectedImages}
           bannerImage={props.bannerImage}
           bannerType={props.bannerType}
           musicList={props.musicList}
           selectedMusic={props.selectedMusic}
           currentlyPlaying={props.currentlyPlaying}
           toggleImageSelection={props.toggleImageSelection}
+          selectAllImages={props.selectAllImages}
+          deselectAllImages={props.deselectAllImages}
           onDragEnd={props.onDragEnd}
           selectBannerImage={props.selectBannerImage}
           handleMusicChange={props.handleMusicChange}
@@ -73,15 +74,7 @@ export const renderStepContent = (props: DialogContentProps) => {
           setBrokerPhone={props.setBrokerPhone}
           formErrors={props.formErrors}
           setFormErrors={props.setFormErrors}
-          selectAllImages={props.selectAllImages}
-          deselectAllImages={props.deselectAllImages}
           listing={props.listing}
-        />
-      );
-    case 5:
-      return (
-        <GenerationStep
-          selectedPhotoType={props.selectedPhotoType}
           isGeneratingSlideshow={props.isGeneratingSlideshow}
           isGeneratingBanner={props.isGeneratingBanner}
           slideshowUrl={props.slideshowUrl}
@@ -95,6 +88,51 @@ export const renderStepContent = (props: DialogContentProps) => {
           refetchSlideshowStatus={props.refetchSlideshowStatus}
           handleRegenerateSlideshow={props.handleRegenerateSlideshow}
           handleRegenerateBanner={props.handleRegenerateBanner}
+        />
+      );
+    case 5:
+      return (
+        <GenerationStep
+          selectedPublicationType={props.selectedPublicationType}
+          selectedPhotoType={props.selectedPhotoType}
+          selectedImages={props.selectedImages}
+          bannerImage={props.bannerImage}
+          bannerType={props.bannerType}
+          setBannerType={props.setBannerType}
+          selectBannerImage={props.selectBannerImage}
+          selectedMusic={props.selectedMusic}
+          generateSlideshow={props.generateSlideshow}
+          generateBanner={props.generateBanner}
+          isGeneratingSlideshow={props.isGeneratingSlideshow}
+          isGeneratingBanner={props.isGeneratingBanner}
+          slideshowRenderId={props.slideshowRenderId}
+          bannerRenderId={props.bannerRenderId}
+          slideshowError={props.slideshowError}
+          bannerError={props.bannerError}
+          brokerImageUrl={props.brokerImageUrl}
+          setBrokerImageUrl={props.setBrokerImageUrl}
+          agencyLogoUrl={props.agencyLogoUrl}
+          setAgencyLogoUrl={props.setAgencyLogoUrl}
+          brokerName={props.brokerName}
+          setBrokerName={props.setBrokerName}
+          brokerEmail={props.brokerEmail}
+          setBrokerEmail={props.setBrokerEmail}
+          brokerPhone={props.brokerPhone}
+          setBrokerPhone={props.setBrokerPhone}
+          formErrors={props.formErrors}
+          setFormErrors={props.setFormErrors}
+          onRegenerateSlideshow={props.handleRegenerateSlideshow}
+          onRegenerateBanner={props.handleRegenerateBanner}
+          slideshowUrl={props.slideshowUrl}
+          bannerUrl={props.bannerUrl}
+          refetchSlideshowStatus={props.refetchSlideshowStatus}
+          toggleImageSelection={props.toggleImageSelection}
+          listing={props.listing}
+          handleMusicChange={props.handleMusicChange}
+          previewMusic={props.previewMusic}
+          currentlyPlaying={props.currentlyPlaying}
+          musicList={props.musicList}
+          onDragEnd={props.onDragEnd}
         />
       );
     case 6:
