@@ -146,7 +146,7 @@ export const renderStepContent = (props: DialogContentProps) => {
           onSubmit={props.handlePublish}
           hasRequiredInfo={
             (props.selectedNetworks.facebook || props.selectedNetworks.instagram) &&
-            (props.slideshowUrl || props.bannerUrl || props.selectedImages.length > 0)
+            (!!props.slideshowUrl || !!props.bannerUrl || props.selectedImages.length > 0)
           }
           generatedText={props.generatedText}
           setGeneratedText={props.setGeneratedText}
