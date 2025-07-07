@@ -100,55 +100,57 @@ export const BannerConfigDialog = () => {
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Configuration des informations de bannière</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="space-y-6">
-            {/* Informations du courtier */}
-            <div className="space-y-2 border rounded-md p-4 bg-card">
-              <h3 className="text-base font-medium text-primary font-bold border-b border-border pb-2 mb-3">
-                Informations du courtier
-              </h3>
-              <BrokerInfoForm 
-                brokerName={config.brokerName}
-                setBrokerName={(name) => setConfig(prev => ({ ...prev, brokerName: name }))}
-                brokerEmail={config.brokerEmail}
-                setBrokerEmail={(email) => setConfig(prev => ({ ...prev, brokerEmail: email }))}
-                brokerPhone={config.brokerPhone}
-                setBrokerPhone={(phone) => setConfig(prev => ({ ...prev, brokerPhone: phone }))}
-                formErrors={formErrors}
-                setFormErrors={setFormErrors}
-              />
-            </div>
-            
-            {/* Images du courtier et de l'agence */}
-            <div className="space-y-2 border border-border rounded-md p-4 bg-card">
-              <h3 className="text-base font-medium">Images du courtier et de l'agence</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <ImageUploader 
-                  type="broker" 
-                  imageUrl={config.brokerImageUrl} 
-                  setImageUrl={(url) => setConfig(prev => ({ ...prev, brokerImageUrl: url }))} 
-                />
-                
-                <ImageUploader 
-                  type="agency" 
-                  imageUrl={config.agencyLogoUrl} 
-                  setImageUrl={(url) => setConfig(prev => ({ ...prev, agencyLogoUrl: url }))} 
+        <div className="flex-1 overflow-y-auto min-h-0 px-1">
+          <div className="grid gap-4 py-4">
+            <div className="space-y-6">
+              {/* Informations du courtier */}
+              <div className="space-y-2 border rounded-md p-4 bg-card">
+                <h3 className="text-base font-medium text-primary font-bold border-b border-border pb-2 mb-3">
+                  Informations du courtier
+                </h3>
+                <BrokerInfoForm 
+                  brokerName={config.brokerName}
+                  setBrokerName={(name) => setConfig(prev => ({ ...prev, brokerName: name }))}
+                  brokerEmail={config.brokerEmail}
+                  setBrokerEmail={(email) => setConfig(prev => ({ ...prev, brokerEmail: email }))}
+                  brokerPhone={config.brokerPhone}
+                  setBrokerPhone={(phone) => setConfig(prev => ({ ...prev, brokerPhone: phone }))}
+                  formErrors={formErrors}
+                  setFormErrors={setFormErrors}
                 />
               </div>
+              
+              {/* Images du courtier et de l'agence */}
+              <div className="space-y-2 border border-border rounded-md p-4 bg-card">
+                <h3 className="text-base font-medium">Images du courtier et de l'agence</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <ImageUploader 
+                    type="broker" 
+                    imageUrl={config.brokerImageUrl} 
+                    setImageUrl={(url) => setConfig(prev => ({ ...prev, brokerImageUrl: url }))} 
+                  />
+                  
+                  <ImageUploader 
+                    type="agency" 
+                    imageUrl={config.agencyLogoUrl} 
+                    setImageUrl={(url) => setConfig(prev => ({ ...prev, agencyLogoUrl: url }))} 
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="text-sm text-muted-foreground mt-2">
-            * Ces informations seront utilisées automatiquement lors de la création de bannières
+            
+            <div className="text-sm text-muted-foreground mt-2">
+              * Ces informations seront utilisées automatiquement lors de la création de bannières
+            </div>
           </div>
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0 border-t pt-4 mt-4">
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Annuler
           </Button>
