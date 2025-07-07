@@ -36,7 +36,13 @@ export const useNavigationUtils = (
           return hasImages;
         }
       case 5:
-        return selectedNetworks.facebook || selectedNetworks.instagram;
+        // Generation step - check if content is ready
+        const hasContent = selectedPublicationType === "slideshow" 
+          ? !!slideshowUrl 
+          : selectedPhotoType === "banner" 
+            ? !!bannerUrl 
+            : selectedImages.length > 0;
+        return hasContent;
       default:
         return true;
     }
@@ -52,7 +58,7 @@ export const useNavigationUtils = (
       }
     } else if (currentStep === 2) {
       setCurrentStep(3);
-    } else if (currentStep < 5) {
+    } else if (currentStep < 6) {
       setCurrentStep(currentStep + 1);
     }
   };
