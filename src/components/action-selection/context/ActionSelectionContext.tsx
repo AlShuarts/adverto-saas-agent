@@ -42,7 +42,9 @@ export const ActionSelectionProvider = ({
     state.selectedNetworks,
     state.generatedText,
     state.slideshowUrl,
-    state.bannerUrl
+    state.bannerUrl,
+    state.setSelectedPublicationType,
+    state.setSelectedPhotoType
   );
   
   // Import slideshow monitor

@@ -89,6 +89,8 @@ export const useActionSelectionState = (listing: Tables<"listings">) => {
     setCurrentStep,
     selectedPublicationType,
     selectedPhotoType,
+    setSelectedPublicationType,
+    setSelectedPhotoType,
     
     // From template state
     ...templateState,

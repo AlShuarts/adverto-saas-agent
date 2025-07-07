@@ -11,7 +11,9 @@ export const useNavigationUtils = (
   selectedNetworks: SocialNetworks,
   generatedText: string,
   slideshowUrl: string | null,
-  bannerUrl: string | null
+  bannerUrl: string | null,
+  setSelectedPublicationType: (type: PublicationType | null) => void,
+  setSelectedPhotoType: (type: PhotoType | null) => void
 ) => {
   const canGoToNextStep = (): boolean => {
     switch (currentStep) {
@@ -60,13 +62,22 @@ export const useNavigationUtils = (
   
   const prevStep = () => {
     if (currentStep === 3 && selectedPublicationType === "slideshow") {
-      // Skip photo type step when going back from slideshow
+      // Skip photo type step when going back from slideshow and reset selections
+      setSelectedPublicationType(null);
+      setSelectedPhotoType(null);
       setCurrentStep(1);
     } else if (currentStep === 6) {
       // Go back to media step
       setCurrentStep(4);
     } else if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      
+      // Reset selections when going back to step 1
+      if (newStep === 1) {
+        setSelectedPublicationType(null);
+        setSelectedPhotoType(null);
+      }
     }
   };
 
