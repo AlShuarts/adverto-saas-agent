@@ -23,14 +23,14 @@ export const useNavigationUtils = (
       case 3: 
         return true; // Template step, always can proceed
       case 4: 
-        // Media step validation
+        // Media step validation - just need images selected
         const hasImages = selectedImages.length > 0;
         const hasBannerImage = selectedPhotoType === "banner" && !!bannerImage;
         
         if (selectedPublicationType === "slideshow") {
-          return hasImages && !!slideshowUrl;
+          return hasImages; // Don't require slideshowUrl to be generated yet
         } else if (selectedPhotoType === "banner") {
-          return hasBannerImage && !!bannerUrl;
+          return hasBannerImage; // Don't require bannerUrl to be generated yet
         } else {
           // listing_photos
           return hasImages;
@@ -58,6 +58,19 @@ export const useNavigationUtils = (
       }
     } else if (currentStep === 2) {
       setCurrentStep(3);
+    } else if (currentStep === 4) {
+      // Skip generation step if content is already generated at media step
+      const contentAlreadyGenerated = selectedPublicationType === "slideshow" 
+        ? !!slideshowUrl 
+        : selectedPhotoType === "banner" 
+          ? !!bannerUrl 
+          : false;
+      
+      if (contentAlreadyGenerated) {
+        setCurrentStep(6); // Skip to social step
+      } else {
+        setCurrentStep(5); // Go to generation step
+      }
     } else if (currentStep < 6) {
       setCurrentStep(currentStep + 1);
     }
@@ -67,6 +80,19 @@ export const useNavigationUtils = (
     if (currentStep === 3 && selectedPublicationType === "slideshow") {
       // Skip photo type step when going back from slideshow
       setCurrentStep(1);
+    } else if (currentStep === 6) {
+      // Check if we skipped generation step when going to social step
+      const contentWasGenerated = selectedPublicationType === "slideshow" 
+        ? !!slideshowUrl 
+        : selectedPhotoType === "banner" 
+          ? !!bannerUrl 
+          : false;
+      
+      if (contentWasGenerated) {
+        setCurrentStep(4); // Go back to media step
+      } else {
+        setCurrentStep(5); // Go back to generation step
+      }
     } else if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
