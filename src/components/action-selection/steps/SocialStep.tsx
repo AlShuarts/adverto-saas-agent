@@ -6,6 +6,9 @@ import { Loader2 } from "lucide-react";
 import { PublicationType, PhotoType, SocialNetworks } from "../types";
 import { Tables } from "@/integrations/supabase/types";
 
+// Local type for compatibility with PublicationPreview
+type LocalPublicationType = "photo" | "slideshow" | "banner";
+
 type SocialStepProps = {
   selectedPublicationType: PublicationType | null;
   selectedPhotoType?: PhotoType | null;
@@ -49,16 +52,19 @@ export const SocialStep = ({
   };
 
   // Convert single publication type to array for backward compatibility with PublicationPreview
-  const selectedPublicationTypes = selectedPublicationType ? [selectedPublicationType] : [];
+  const selectedPublicationTypes: LocalPublicationType[] = [];
   
-  // Add banner to publication types if photo type is banner
-  if (selectedPhotoType === "banner") {
-    selectedPublicationTypes.push("banner" as any); // Temporary cast for compatibility
+  if (selectedPublicationType === "slideshow") {
+    selectedPublicationTypes.push("slideshow");
+  } else if (selectedPhotoType === "banner") {
+    selectedPublicationTypes.push("banner");
+  } else if (selectedPhotoType === "listing_photos") {
+    selectedPublicationTypes.push("photo");
   }
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 5: Choisir les réseaux sociaux</h3>
+      <h3 className="text-lg font-medium">Étape 6: Publication sur les réseaux sociaux</h3>
       
       <SocialNetworkSelector
         selectedNetworks={selectedNetworks}
