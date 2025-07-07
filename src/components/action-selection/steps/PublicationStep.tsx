@@ -23,7 +23,7 @@ export const PublicationStep = ({
     if (selectedPublicationType && onAutoNext) {
       const timer = setTimeout(() => {
         onAutoNext();
-      }, 800); // Small delay for visual feedback
+      }, 400); // Reduced delay for faster navigation
       return () => clearTimeout(timer);
     }
   }, [selectedPublicationType, onAutoNext]);
