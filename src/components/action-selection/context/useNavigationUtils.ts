@@ -73,9 +73,11 @@ export const useNavigationUtils = (
       const newStep = currentStep - 1;
       setCurrentStep(newStep);
       
-      // Reset selections when going back to step 1
+      // Reset selections when going back to specific steps
       if (newStep === 1) {
         setSelectedPublicationType(null);
+        setSelectedPhotoType(null);
+      } else if (newStep === 2) {
         setSelectedPhotoType(null);
       }
     }
