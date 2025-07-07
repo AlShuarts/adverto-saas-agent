@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
-import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+
 import { DialogFormContent } from "./DialogFormContent";
 
 type CreateSoldBannerDialogProps = {
@@ -79,7 +79,6 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       }
       
       setIsCreating(true);
-      await ensureAndIncrementStatistic('banner');
       
       const config = {
         mainImage: selectedImage,

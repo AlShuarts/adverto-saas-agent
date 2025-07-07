@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
+
 import { createBanner, checkBannerStatus, checkBannerStatusViaFunction, type BrokerInfo } from "./services/bannerService";
 import { validateBrokerInfo } from "./utils/bannerValidation";
 
@@ -76,7 +76,6 @@ export const useBannerGeneration = (listingId: string) => {
             toast.success("Bannière créée", {
               description: "La bannière a été générée avec succès.",
             });
-            await ensureAndIncrementStatistic('banner');
             break;
           }
           
@@ -96,7 +95,6 @@ export const useBannerGeneration = (listingId: string) => {
                 toast.success("Bannière créée", {
                   description: "La bannière a été générée avec succès.",
                 });
-                await ensureAndIncrementStatistic('banner');
                 break;
               }
             }
