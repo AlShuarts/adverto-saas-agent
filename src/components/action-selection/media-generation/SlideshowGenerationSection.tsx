@@ -45,11 +45,11 @@ export const SlideshowGenerationSection = ({
   return (
     <div className="space-y-4 relative">
       {(isGeneratingSlideshow || slideshowRenderId) && !slideshowUrl && (
-        <div className="absolute top-0 left-0 w-full h-full bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-          <div className="text-center p-6 bg-card rounded-lg shadow-lg border w-full max-w-md">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center p-6 bg-card rounded-lg shadow-lg border w-full max-w-md mx-4">
             <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
-            <h3 className="text-lg font-medium mb-2">Traitement du diaporama</h3>
-            <p className="mb-4 text-muted-foreground">
+            <h3 className={`${isMobile ? "text-base" : "text-lg"} font-medium mb-2`}>Traitement du diaporama</h3>
+            <p className={`mb-4 text-muted-foreground ${isMobile ? "text-sm" : ""}`}>
               {slideshowRenderId ? 
                 "Votre diaporama est en cours de traitement..." : 
                 "Le diaporama est en cours de génération..."}
@@ -60,7 +60,7 @@ export const SlideshowGenerationSection = ({
             {slideshowRenderId && (
               <Button 
                 variant="outline" 
-                size="sm"
+                size={isMobile ? "sm" : "default"}
                 onClick={handleCheckStatus}
                 disabled={isManualChecking}
                 className="w-full"
