@@ -43,39 +43,7 @@ export const SlideshowGenerationSection = ({
   const musicName = selectedMusic ? selectedMusic.replace(/\.[^/.]+$/, "") : "";
   
   return (
-    <div className="space-y-4 relative">
-      {(isGeneratingSlideshow || slideshowRenderId) && !slideshowUrl && (
-        <div className="absolute top-0 left-0 w-full h-full bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
-          <div className="text-center p-4 bg-card rounded-lg shadow-lg border w-full max-w-sm mx-2">
-            <Loader2 className={`${isMobile ? "w-8 h-8" : "w-12 h-12"} animate-spin mx-auto mb-3 text-primary`} />
-            <h3 className={`${isMobile ? "text-sm" : "text-lg"} font-medium mb-2`}>Traitement du diaporama</h3>
-            <p className={`mb-3 text-muted-foreground ${isMobile ? "text-xs" : "text-sm"}`}>
-              {slideshowRenderId ? 
-                "Votre diaporama est en cours de traitement..." : 
-                "Le diaporama est en cours de génération..."}
-            </p>
-            <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden mb-3">
-              <div className="bg-primary h-full rounded-full animate-pulse" style={{ width: slideshowRenderId ? "80%" : "40%" }}></div>
-            </div>
-            {slideshowRenderId && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleCheckStatus}
-                disabled={isManualChecking}
-                className={`w-full ${isMobile ? "text-xs py-1" : ""}`}
-              >
-                {isManualChecking ? (
-                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                ) : (
-                  "Vérifier le statut"
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
+    <div className="space-y-4">
       {/* Show slideshow preview if available and requested */}
       {slideshowUrl && showPreview && (
         <div className="mb-4 bg-card p-4 rounded-lg border">
@@ -97,7 +65,22 @@ export const SlideshowGenerationSection = ({
         </div>
       )}
       
-      {/* Show the SlideshowStep component (which has the generate button) */}
+      {/* Generation status message */}
+      {(isGeneratingSlideshow || slideshowRenderId) && !slideshowUrl && (
+        <div className="text-center p-4 bg-card rounded-lg border">
+          <Loader2 className={`${isMobile ? "w-6 h-6" : "w-8 h-8"} animate-spin mx-auto mb-2 text-primary`} />
+          <p className={`mb-2 text-muted-foreground ${isMobile ? "text-sm" : ""}`}>
+            {slideshowRenderId ? 
+              "Traitement en cours..." : 
+              "Génération en cours..."}
+          </p>
+          <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-primary h-full rounded-full animate-pulse" style={{ width: slideshowRenderId ? "80%" : "40%" }}></div>
+          </div>
+        </div>
+      )}
+      
+      {/* Always show the SlideshowStep component (which has the generate button) */}
       <SlideshowStep
         isGeneratingSlideshow={isGeneratingSlideshow}
         slideshowUrl={slideshowUrl}
