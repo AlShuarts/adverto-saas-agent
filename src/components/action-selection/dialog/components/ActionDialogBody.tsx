@@ -74,8 +74,8 @@ export const ActionDialogBody = (props: ActionDialogBodyProps) => {
   
   return (
     <div className="flex-1 overflow-hidden min-h-0">
-      <ScrollArea className={isMobile ? "h-[calc(100vh-8rem)]" : "h-[calc(90vh-10rem)]"}>
-        <div className={`${isMobile ? "px-2 py-1 pb-4" : "px-3 py-2"}`}>
+      <ScrollArea className={isMobile ? "h-[calc(100vh-12rem)]" : "h-[calc(90vh-10rem)]"}>
+        <div className={`${isMobile ? "px-2 py-1 pb-8" : "px-3 py-2"}`}>
           {renderStepContent({...props, nextStep: props.nextStep})}
         </div>
       </ScrollArea>
