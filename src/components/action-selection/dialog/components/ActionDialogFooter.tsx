@@ -34,7 +34,7 @@ export const ActionDialogFooter = ({
         onNext={onNext}
         onPublish={onPublish}
         onCancel={onCancel}
-        isLastStep={currentStep === 5}
+        isLastStep={currentStep === 6}
       />
     </DialogFooter>
   );
