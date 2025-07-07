@@ -64,7 +64,7 @@ export const SocialStep = ({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Étape 6: Publication sur les réseaux sociaux</h3>
+      <h3 className="text-lg font-medium">Étape 5: Publication sur les réseaux sociaux</h3>
       
       <SocialNetworkSelector
         selectedNetworks={selectedNetworks}

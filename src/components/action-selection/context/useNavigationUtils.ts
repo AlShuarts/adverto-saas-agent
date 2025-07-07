@@ -23,26 +23,18 @@ export const useNavigationUtils = (
       case 3: 
         return true; // Template step, always can proceed
       case 4: 
-        // Media step validation - just need images selected
+        // Media step validation - require content to be generated
         const hasImages = selectedImages.length > 0;
         const hasBannerImage = selectedPhotoType === "banner" && !!bannerImage;
         
         if (selectedPublicationType === "slideshow") {
-          return hasImages; // Don't require slideshowUrl to be generated yet
+          return hasImages && !!slideshowUrl; // Require slideshow to be generated
         } else if (selectedPhotoType === "banner") {
-          return hasBannerImage; // Don't require bannerUrl to be generated yet
+          return hasBannerImage && !!bannerUrl; // Require banner to be generated
         } else {
           // listing_photos
           return hasImages;
         }
-      case 5:
-        // Generation step - check if content is ready
-        const hasContent = selectedPublicationType === "slideshow" 
-          ? !!slideshowUrl 
-          : selectedPhotoType === "banner" 
-            ? !!bannerUrl 
-            : selectedImages.length > 0;
-        return hasContent;
       default:
         return true;
     }
@@ -59,18 +51,8 @@ export const useNavigationUtils = (
     } else if (currentStep === 2) {
       setCurrentStep(3);
     } else if (currentStep === 4) {
-      // Skip generation step if content is already generated at media step
-      const contentAlreadyGenerated = selectedPublicationType === "slideshow" 
-        ? !!slideshowUrl 
-        : selectedPhotoType === "banner" 
-          ? !!bannerUrl 
-          : false;
-      
-      if (contentAlreadyGenerated) {
-        setCurrentStep(6); // Skip to social step
-      } else {
-        setCurrentStep(5); // Go to generation step
-      }
+      // Skip directly to social step since generation is done at media step
+      setCurrentStep(6);
     } else if (currentStep < 6) {
       setCurrentStep(currentStep + 1);
     }
@@ -81,18 +63,8 @@ export const useNavigationUtils = (
       // Skip photo type step when going back from slideshow
       setCurrentStep(1);
     } else if (currentStep === 6) {
-      // Check if we skipped generation step when going to social step
-      const contentWasGenerated = selectedPublicationType === "slideshow" 
-        ? !!slideshowUrl 
-        : selectedPhotoType === "banner" 
-          ? !!bannerUrl 
-          : false;
-      
-      if (contentWasGenerated) {
-        setCurrentStep(4); // Go back to media step
-      } else {
-        setCurrentStep(5); // Go back to generation step
-      }
+      // Go back to media step
+      setCurrentStep(4);
     } else if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
