@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import AllListings from "./pages/AllListings";
 import PublishedListings from "./pages/PublishedListings";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { useProfile } from "@/hooks/useProfile";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from "@/components/ui/toaster"
@@ -47,6 +48,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/" element={
             <PrivateRoute>
               <Index />
