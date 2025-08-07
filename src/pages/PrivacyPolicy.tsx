@@ -1,10 +1,8 @@
 import React from 'react';
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 const PrivacyPolicy = () => {
-  return (
-    <div className="min-h-screen bg-secondary">
+  return <div className="min-h-screen bg-secondary">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -126,8 +124,8 @@ const PrivacyPolicy = () => {
                 Pour toute question concernant cette politique de confidentialité ou pour exercer vos droits, vous pouvez nous contacter à :
               </p>
               <div className="bg-muted p-4 rounded-lg">
-                <p className="text-foreground font-medium">Email : privacy@votre-domaine.com</p>
-                <p className="text-foreground">Adresse : [Votre adresse]</p>
+                <p className="text-foreground font-medium">Email : charles@visionaimarketing.com</p>
+                
               </div>
             </CardContent>
           </Card>
@@ -144,8 +142,6 @@ const PrivacyPolicy = () => {
           </Card>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default PrivacyPolicy;
