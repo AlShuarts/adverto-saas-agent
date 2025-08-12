@@ -25,8 +25,8 @@ export const useFacebookSDK = () => {
               clearInterval(checkFB);
               try {
                 window.FB.init({
-                  appId: '3819439438267773',
-                  version: 'v18.0',
+                  appId: '745419718185837',
+                  version: 'v23.0',
                   cookie: true,
                   xfbml: true
                 });
