@@ -141,11 +141,20 @@ export const useProfile = () => {
         if (pages.data && pages.data.length > 0) {
           const page = pages.data[0];
           
+          // Obtenir un token de page avec une durée de vie plus longue
+          const longLivedToken = await new Promise<any>((resolve) => {
+            window.FB.api(`/${page.id}?fields=access_token&access_token=${page.access_token}`, (response) => {
+              resolve(response);
+            });
+          });
+          
+          const tokenToStore = longLivedToken.access_token || page.access_token;
+          
           const { error: updateError } = await supabase
             .from('profiles')
             .update({
               facebook_page_id: page.id,
-              facebook_access_token: page.access_token
+              facebook_access_token: tokenToStore
             })
             .eq('id', profile.id);
 
