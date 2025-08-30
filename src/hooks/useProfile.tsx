@@ -245,7 +245,15 @@ export const useProfile = () => {
   };
 
   const connectInstagram = async () => {
+    console.log("🔄 Début de la connexion Instagram...");
+    console.log("📋 Profile actuel:", { 
+      facebook_page_id: profile?.facebook_page_id, 
+      has_facebook_token: !!profile?.facebook_access_token,
+      instagram_user_id: profile?.instagram_user_id 
+    });
+    
     if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
+      console.error("❌ Prérequis manquants pour Instagram");
       toast({
         title: "Erreur",
         description: "Vous devez d'abord connecter votre page Facebook",
