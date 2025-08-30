@@ -6,6 +6,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Initialize Supabase client
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+);
+
 serve(async (req) => {
   console.log("Fonction Facebook-publish appelée");
   
@@ -32,23 +38,44 @@ serve(async (req) => {
 
     // Vérifier d'abord la validité du token de la page
     console.log("Vérification du token de la page Facebook...");
-    const pageTokenCheckResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${pageId}?fields=id,name&access_token=${accessToken}`
-    );
     
-    if (!pageTokenCheckResponse.ok) {
-      const errorText = await pageTokenCheckResponse.text();
-      console.error("Erreur lors de la vérification du token de la page:", errorText);
-      throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
-    }
+    // Nettoyer le token au cas où il aurait des caractères indésirables
+    const cleanToken = accessToken.trim();
+    
+    try {
+      const pageTokenCheckResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${pageId}?fields=id,name&access_token=${encodeURIComponent(cleanToken)}`
+      );
+      
+      if (!pageTokenCheckResponse.ok) {
+        const errorText = await pageTokenCheckResponse.text();
+        console.error("Erreur lors de la vérification du token de la page:", errorText);
+        
+        // Si c'est une erreur de token invalide, suggérer de reconnecter
+        if (errorText.includes("Invalid OAuth") || errorText.includes("code\":190")) {
+          throw new Error("Votre token Facebook a expiré. Veuillez vous reconnecter à votre page Facebook dans votre profil.");
+        }
+        throw new Error("Erreur de connexion à Facebook. Veuillez réessayer.");
+      }
 
-    const pageData = await pageTokenCheckResponse.json();
-    if (pageData.error) {
-      console.error("Erreur dans les données de la page:", pageData.error);
-      throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
+      const pageData = await pageTokenCheckResponse.json();
+      if (pageData.error) {
+        console.error("Erreur dans les données de la page:", pageData.error);
+        
+        if (pageData.error.code === 190) {
+          throw new Error("Votre token Facebook a expiré. Veuillez vous reconnecter à votre page Facebook dans votre profil.");
+        }
+        throw new Error("Erreur d'accès à votre page Facebook. Veuillez vérifier vos permissions.");
+      }
+      
+      console.log("Token valide pour la page:", pageData.name);
+    } catch (networkError) {
+      console.error("Erreur réseau lors de la vérification du token:", networkError);
+      if (networkError.message.includes("token")) {
+        throw networkError; // Rethrow token errors as is
+      }
+      throw new Error("Erreur de connexion à Facebook. Veuillez vérifier votre connexion internet.");
     }
-
-    console.log("Token valide pour la page:", pageData.name);
 
     let postData;
     let endpoint;
@@ -60,7 +87,7 @@ serve(async (req) => {
       postData = {
         description: message,
         file_url: video,
-        access_token: accessToken,
+        access_token: cleanToken,
       };
     } else if (images && images.length > 0) {
       // Publication d'images
@@ -77,7 +104,7 @@ serve(async (req) => {
           body: JSON.stringify({
             url: imageUrl,
             published: false,
-            access_token: accessToken,
+            access_token: cleanToken,
           }),
         });
 
@@ -100,14 +127,14 @@ serve(async (req) => {
       endpoint = `https://graph.facebook.com/v18.0/${pageId}/feed`;
       postData = {
         message,
-        access_token: accessToken,
+        access_token: cleanToken,
         attached_media: imageIds,
       };
     } else {
       endpoint = `https://graph.facebook.com/v18.0/${pageId}/feed`;
       postData = {
         message,
-        access_token: accessToken,
+        access_token: cleanToken,
       };
     }
 

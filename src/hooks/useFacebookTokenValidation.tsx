@@ -7,9 +7,23 @@ export const useFacebookTokenValidation = () => {
     try {
       console.log("Validation du token Facebook...");
       
+      // Nettoyer le token avant utilisation
+      const cleanToken = token.trim();
+      
+      // Vérifier que le token a un format valide
+      if (!cleanToken || cleanToken.length < 10 || cleanToken === 'null' || cleanToken === 'undefined') {
+        console.error("Token invalide détecté:", { tokenLength: cleanToken.length, tokenValue: cleanToken.substring(0, 10) });
+        toast({
+          title: "Token invalide",
+          description: "Votre token Facebook n'est pas valide. Veuillez vous reconnecter à votre page Facebook.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
       // Vérifier que le token fonctionne
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${pageId}?access_token=${token}`
+        `https://graph.facebook.com/v18.0/${pageId}?access_token=${encodeURIComponent(cleanToken)}`
       );
 
       if (!response.ok) {
