@@ -108,18 +108,21 @@ export const useProfile = () => {
 
     setLoading(true);
     try {
-      if (profile?.facebook_page_id) {
-        const { error: resetError } = await supabase
-          .from('profiles')
-          .update({
-            facebook_page_id: null,
-            facebook_access_token: null,
-            instagram_user_id: null,
-            instagram_access_token: null
-          })
-          .eq('id', profile.id);
+      // Toujours nettoyer les anciens tokens avant de se reconnecter
+      console.log("Nettoyage des anciens tokens Facebook...");
+      const { error: resetError } = await supabase
+        .from('profiles')
+        .update({
+          facebook_page_id: null,
+          facebook_access_token: null,
+          instagram_user_id: null,
+          instagram_access_token: null
+        })
+        .eq('id', profile.id);
 
-        if (resetError) throw resetError;
+      if (resetError) {
+        console.error("Erreur lors du nettoyage:", resetError);
+        throw resetError;
       }
 
       const response = await new Promise<fb.AuthResponse>((resolve) => {
