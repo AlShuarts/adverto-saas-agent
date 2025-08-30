@@ -33,13 +33,22 @@ serve(async (req) => {
     // Vérifier d'abord la validité du token de la page
     console.log("Vérification du token de la page Facebook...");
     const pageTokenCheckResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${pageId}?fields=access_token&access_token=${accessToken}`
+      `https://graph.facebook.com/v18.0/${pageId}?fields=id,name&access_token=${accessToken}`
     );
     
     if (!pageTokenCheckResponse.ok) {
-      console.error("Erreur lors de la vérification du token de la page:", await pageTokenCheckResponse.text());
+      const errorText = await pageTokenCheckResponse.text();
+      console.error("Erreur lors de la vérification du token de la page:", errorText);
       throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
     }
+
+    const pageData = await pageTokenCheckResponse.json();
+    if (pageData.error) {
+      console.error("Erreur dans les données de la page:", pageData.error);
+      throw new Error("Token Facebook invalide ou expiré. Veuillez reconnecter votre page Facebook.");
+    }
+
+    console.log("Token valide pour la page:", pageData.name);
 
     let postData;
     let endpoint;
