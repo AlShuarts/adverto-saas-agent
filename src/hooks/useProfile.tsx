@@ -127,9 +127,20 @@ export const useProfile = () => {
 
       // Étape 1: Connexion utilisateur Facebook
       console.log("Connexion à Facebook...");
-      const authResponse = await new Promise<fb.AuthResponse>((resolve) => {
+      console.log("SDK Facebook disponible:", !!window.FB);
+      
+      const authResponse = await new Promise<fb.AuthResponse>((resolve, reject) => {
         window.FB.login((response) => {
-          console.log("Réponse de connexion Facebook:", response);
+          console.log("Réponse complète de connexion Facebook:", JSON.stringify(response, null, 2));
+          console.log("Status:", response.status);
+          console.log("AuthResponse:", response.authResponse);
+          
+          if (response.status === 'connected') {
+            console.log("✅ Connexion Facebook réussie");
+          } else {
+            console.error("❌ Échec de la connexion Facebook:", response.status);
+          }
+          
           resolve(response);
         }, {
           scope: 'pages_manage_posts,pages_read_engagement,pages_show_list,instagram_basic,instagram_content_publish',
