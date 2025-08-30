@@ -39,6 +39,21 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
         return false;
       }
 
+      // Vérifier si le token est valide avant d'essayer de publier
+      const tokenCheckResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${profile.facebook_page_id}?fields=id,name&access_token=${profile.facebook_access_token}`
+      );
+      
+      if (!tokenCheckResponse.ok) {
+        console.error("Token Facebook invalide, reconnexion nécessaire");
+        toast({
+          title: "Token Facebook expiré",
+          description: "Votre token Facebook a expiré. Veuillez reconnecter votre page Facebook dans votre profil.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       console.log("Tentative de publication de la vidéo sur Facebook");
       const { data: responseData, error: functionError } = await supabase.functions.invoke("facebook-publish", {
         body: {
