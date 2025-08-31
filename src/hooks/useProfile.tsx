@@ -163,20 +163,43 @@ export const useProfile = () => {
 
       // Étape 3: Obtenir les pages avec le token utilisateur
       console.log("Récupération des pages Facebook...");
+      console.log("Token utilisateur utilisé:", finalUserToken?.substring(0, 20) + "...");
+      
       const pages = await new Promise<any>((resolve, reject) => {
         window.FB.api(`/me/accounts?access_token=${finalUserToken}`, (response) => {
+          console.log("🔍 Réponse complète de l'API Facebook pour les pages:", JSON.stringify(response, null, 2));
+          
           if (response.error) {
-            console.error("Erreur lors de la récupération des pages:", response.error);
-            reject(new Error(response.error.message));
+            console.error("❌ Erreur API Facebook:", response.error);
+            reject(new Error(`Erreur Facebook: ${response.error.message} (Code: ${response.error.code})`));
           } else {
-            console.log("Pages récupérées:", response);
+            console.log("✅ Pages récupérées avec succès");
+            console.log("📊 Nombre de pages trouvées:", response.data?.length || 0);
+            if (response.data && response.data.length > 0) {
+              response.data.forEach((page: any, index: number) => {
+                console.log(`📄 Page ${index + 1}:`, {
+                  id: page.id,
+                  name: page.name,
+                  category: page.category,
+                  tasks: page.tasks
+                });
+              });
+            }
             resolve(response);
           }
         });
       });
 
       if (!pages.data || pages.data.length === 0) {
-        throw new Error("Aucune page Facebook trouvée");
+        console.error("❌ Aucune page Facebook trouvée pour ce compte");
+        console.log("💡 Solutions possibles:");
+        console.log("1. Créez une page Facebook Business");
+        console.log("2. Assurez-vous d'être administrateur de la page");
+        console.log("3. Vérifiez les permissions accordées à l'application");
+        
+        throw new Error(
+          "Aucune page Facebook trouvée. Vous devez créer une page Facebook Business et être administrateur de cette page pour pouvoir la connecter."
+        );
       }
 
       const page = pages.data[0];
