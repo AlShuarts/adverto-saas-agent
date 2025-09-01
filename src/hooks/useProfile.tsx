@@ -143,7 +143,7 @@ export const useProfile = () => {
           
           resolve(response);
         }, {
-          scope: 'pages_manage_posts,pages_read_engagement,pages_show_list,instagram_basic,instagram_content_publish',
+          scope: 'pages_manage_posts,pages_read_engagement,pages_show_list,pages_manage_metadata,instagram_basic,instagram_content_publish',
           auth_type: 'reauthorize'
         });
       });
