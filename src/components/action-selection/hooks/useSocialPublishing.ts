@@ -56,7 +56,7 @@ export const useSocialPublishing = (
                 message: generatedText,
                 pageId: profile?.facebook_page_id || 'test-page-id',
                 accessToken: profile?.facebook_access_token || 'test-access-token',
-                image: imageToUse,
+                images: [imageToUse],
                 templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
               }
             }).then(async () => {
