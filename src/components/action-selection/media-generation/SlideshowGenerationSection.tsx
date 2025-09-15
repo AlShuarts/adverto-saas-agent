@@ -77,6 +77,19 @@ export const SlideshowGenerationSection = ({
           <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
             <div className="bg-primary h-full rounded-full animate-pulse" style={{ width: slideshowRenderId ? "80%" : "40%" }}></div>
           </div>
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Cela peut prendre quelques minutes...
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRegenerateSlideshow}
+              className="text-xs"
+            >
+              Annuler et recommencer
+            </Button>
+          </div>
         </div>
       )}
       

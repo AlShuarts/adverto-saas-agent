@@ -14,6 +14,9 @@ export const useSlideshowMonitor = (
   const [lastCheckedTime, setLastCheckedTime] = useState<number>(0);
   const [isManualChecking, setIsManualChecking] = useState(false);
   
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 10;
+  
   const fetchSlideshowStatus = useCallback(async () => {
     if (!slideshowRenderId) return null;
 
@@ -27,8 +30,24 @@ export const useSlideshowMonitor = (
       
       if (error) {
         console.error("Erreur lors de la vérification du statut:", error);
+        
+        // Si on a atteint le nombre max de tentatives
+        if (retryCount >= MAX_RETRIES) {
+          console.error("Nombre maximum de tentatives atteint");
+          setIsGeneratingSlideshow(false);
+          toast.error("Délai d'attente dépassé", {
+            description: "Le diaporama prend plus de temps que prévu. Veuillez réessayer plus tard.",
+            duration: 10000
+          });
+          return null;
+        }
+        
+        setRetryCount(prev => prev + 1);
         throw error;
       }
+      
+      // Reset retry count on successful response
+      setRetryCount(0);
       
       console.log("Réponse de la vérification du statut:", data);
       
@@ -56,11 +75,22 @@ export const useSlideshowMonitor = (
       return data;
     } catch (err) {
       console.error("Erreur lors de la vérification du statut du diaporama:", err);
-      // Si erreur lors de la vérification, ne pas montrer d'erreur à l'utilisateur
-      // mais continuer à attendre
+      
+      // Si on a atteint le nombre max de tentatives
+      if (retryCount >= MAX_RETRIES) {
+        console.error("Nombre maximum de tentatives atteint");
+        setIsGeneratingSlideshow(false);
+        toast.error("Délai d'attente dépassé", {
+          description: "Le diaporama prend plus de temps que prévu. Veuillez réessayer plus tard.",
+          duration: 10000
+        });
+        return null;
+      }
+      
+      setRetryCount(prev => prev + 1);
       return null;
     }
-  }, [slideshowRenderId, setSlideshowUrl, setIsGeneratingSlideshow]);
+  }, [slideshowRenderId, setSlideshowUrl, setIsGeneratingSlideshow, retryCount]);
 
   // Auto-polling query
   const { refetch } = useQuery({

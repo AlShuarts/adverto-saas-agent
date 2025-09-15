@@ -99,20 +99,33 @@ export const useSlideshowGeneration = (listingId: string) => {
         
         if (error) {
           console.error("Erreur lors de la vérification du statut:", error);
+          
+          // Si l'erreur persiste, nettoyer et permettre de recommencer
+          console.log("🧹 Nettoyage du rendu bloqué...");
+          setSlideshowRenderId(null);
+          setIsGeneratingSlideshow(false);
+          setSlideshowError("Erreur de connexion. Veuillez réessayer.");
           return;
         }
         
         console.log("Réponse de la vérification du statut:", data);
         
-        if (data.status === 'done' && data.url) {
-          setSlideshowUrl(data.url);
+        if (data.status === 'done' && (data.url || data.videoUrl)) {
+          const finalUrl = data.videoUrl || data.url;
+          setSlideshowUrl(finalUrl);
+          setIsGeneratingSlideshow(false);
           toast.success("Votre diaporama est prêt !");
-        } else if (data.status === 'failed') {
+        } else if (data.status === 'failed' || data.status === 'error') {
           setSlideshowError("La génération du diaporama a échoué");
+          setIsGeneratingSlideshow(false);
           toast.error("La génération du diaporama a échoué");
         }
       } catch (err) {
         console.error("Erreur lors de la vérification du statut:", err);
+        // En cas d'erreur répétée, réinitialiser l'état
+        setSlideshowRenderId(null);
+        setIsGeneratingSlideshow(false);
+        setSlideshowError("Connexion interrompue. Veuillez réessayer.");
       }
     }
   }, [slideshowRenderId]);
