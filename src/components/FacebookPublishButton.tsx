@@ -70,6 +70,8 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       }
 
       // Vérifier s'il y a un diaporama disponible pour ce listing (sans filtrer par statut)
+      let finalVideoUrl: string | null = listing.video_url || null; // 1) Priorité à la vidéo stockée sur la fiche
+
       const { data: slideshowRows, error: slideshowError } = await supabase
         .from("slideshow_renders")
         .select("render_id, video_url, status")
@@ -85,10 +87,13 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         ? (slideshowRows as any[])[0]
         : null;
 
-      let finalVideoUrl = slideshowData?.video_url || null;
+      // 2) Si pas de vidéo sur la fiche mais présente sur le rendu, l'utiliser
+      if (!finalVideoUrl && slideshowData?.video_url) {
+        finalVideoUrl = slideshowData.video_url;
+      }
 
-      // Si un rendu existe mais sans URL vidéo, forcer une vérification fraîche du statut
-      if (slideshowData?.render_id && !finalVideoUrl) {
+      // 3) Si un rendu existe mais sans URL vidéo, forcer une vérification fraîche du statut
+      if (!finalVideoUrl && slideshowData?.render_id && !slideshowData?.video_url) {
         console.log("Aucun video_url en base, vérification immédiate via check-render-status…", slideshowData);
         const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
           body: { renderId: slideshowData.render_id },

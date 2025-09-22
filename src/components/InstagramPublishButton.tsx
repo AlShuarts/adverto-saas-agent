@@ -50,38 +50,87 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
         return;
       }
 
-      // Vérifier s'il y a un diaporama disponible pour ce listing
-      const { data: slideshowData, error: slideshowError } = await supabase
-        .from("slideshow_renders")
-        .select("video_url")
-        .eq("listing_id", listing.id)
-        .eq("status", "completed")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Vérifier et prioriser l'URL vidéo du diaporama
+      let finalVideoUrl: string | null = listing.video_url || null; // 1) Priorité à la vidéo enregistrée sur le listing
 
-      console.log("Diaporama trouvé:", {
-        hasSlideshow: !!slideshowData?.video_url,
-        videoUrl: slideshowData?.video_url
+      const { data: slideshowRows, error: slideshowError } = await supabase
+        .from("slideshow_renders")
+        .select("render_id, video_url, status")
+        .eq("listing_id", listing.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (slideshowError) {
+        console.warn("Erreur slideshow_renders:", slideshowError);
+      }
+
+      const slideshowData = (slideshowRows && (slideshowRows as any[]).length > 0)
+        ? (slideshowRows as any[])[0]
+        : null;
+
+      if (!finalVideoUrl && slideshowData?.video_url) {
+        finalVideoUrl = slideshowData.video_url;
+      }
+
+      if (!finalVideoUrl && slideshowData?.render_id && !slideshowData?.video_url) {
+        console.log("Aucun video_url en base, vérification immédiate via check-render-status…", slideshowData);
+        const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
+          body: { renderId: slideshowData.render_id },
+        });
+        if (statusError) {
+          console.warn("Erreur check-render-status:", statusError);
+        } else if (statusData?.videoUrl) {
+          finalVideoUrl = statusData.videoUrl;
+          console.log("URL vidéo récupérée via check-render-status:", finalVideoUrl);
+        }
+      }
+
+      console.log("Diaporama (après vérification):", {
+        hasRender: !!slideshowData,
+        status: slideshowData?.status,
+        videoUrl: finalVideoUrl,
       });
 
       // Appeler la fonction Edge pour publier sur Instagram
-      const { data, error } = await supabase.functions.invoke('instagram-publish', {
-        body: {
-          message,
-          video: slideshowData?.video_url, // Priorité au diaporama vidéo
-          images: slideshowData?.video_url ? undefined : selectedImages, // Images seulement si pas de vidéo
-          listingId: listing.id,
-          templateId
-        },
-      });
-
-      if (error) throw error;
+      let publishResponse;
+      if (finalVideoUrl) {
+        // 1) Vidéo prête -> publier en vidéo
+        const { data, error } = await supabase.functions.invoke('instagram-publish', {
+          body: {
+            message,
+            video: finalVideoUrl,
+            listingId: listing.id,
+            templateId,
+          },
+        });
+        if (error) throw error;
+        publishResponse = data;
+      } else if (!slideshowData) {
+        // 2) Aucun rendu détecté -> publier des images
+        const { data, error } = await supabase.functions.invoke('instagram-publish', {
+          body: {
+            message,
+            images: selectedImages,
+            listingId: listing.id,
+            templateId,
+          },
+        });
+        if (error) throw error;
+        publishResponse = data;
+      } else {
+        // 3) Un rendu existe mais pas encore prêt -> ne pas fallback en images
+        toast({
+          title: "Diaporama en préparation",
+          description: "Le diaporama est en cours de finalisation. Réessayez dans quelques secondes pour publier la vidéo.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Incrémenter les statistiques d'utilisation pour Instagram
       await ensureAndIncrementStatistic('instagram');
 
-      const contentType = slideshowData?.video_url ? "diaporama" : "images";
+      const contentType = finalVideoUrl ? "diaporama" : "images";
       toast({
         title: "Publication réussie",
         description: `Votre ${contentType} a été publié sur Instagram`,

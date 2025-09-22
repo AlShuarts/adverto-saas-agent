@@ -57,6 +57,20 @@ serve(async (req) => {
       } else {
         console.log("✅ Statut du diaporama mis à jour avec succès");
       }
+
+      // Si le rendu est terminé avec une URL, mettre aussi à jour la fiche du listing
+      if (status === "done" && body.url && slideshowData?.listing_id) {
+        console.log(`📝 Mise à jour du listing ${slideshowData.listing_id} avec la vidéo`);
+        const { error: listingUpdateError } = await supabase
+          .from("listings")
+          .update({ video_url: body.url, updated_at: new Date() })
+          .eq("id", slideshowData.listing_id);
+        if (listingUpdateError) {
+          console.error("❌ Erreur lors de la mise à jour du listing.video_url:", listingUpdateError);
+        } else {
+          console.log("✅ Listing.video_url mis à jour avec succès");
+        }
+      }
       
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
