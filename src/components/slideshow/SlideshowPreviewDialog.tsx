@@ -69,7 +69,7 @@ export const SlideshowPreviewDialog = ({
       const { error } = await supabase.functions.invoke('instagram-publish', {
         body: {
           message: editedText,
-          images: [videoUrl],
+          video: videoUrl,
           listingId: listing.id
         },
       });

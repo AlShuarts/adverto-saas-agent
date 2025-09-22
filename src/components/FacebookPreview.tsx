@@ -63,7 +63,7 @@ export const FacebookPreview = ({
             <button
               onClick={() => onPublish(editedText)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              disabled={isLoading || selectedImages.length === 0}
+              disabled={isLoading}
             >
               Publier
             </button>

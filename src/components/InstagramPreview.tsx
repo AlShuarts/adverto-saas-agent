@@ -124,7 +124,7 @@ export const InstagramPreview = ({
             <button
               onClick={handlePublish}
               className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 disabled:opacity-50 flex items-center gap-2"
-              disabled={isLoading || selectedImages.length === 0 || isPublishing}
+              disabled={isLoading || isPublishing}
             >
               {isPublishing && <Loader2 className="w-4 h-4 animate-spin" />}
               Publier

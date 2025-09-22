@@ -102,20 +102,56 @@ Deno.serve(async (req) => {
     if (video) {
       // Publication d'une vidéo (diaporama)
       console.log('Publishing video to Instagram:', video)
+      const createParams = new URLSearchParams({
+        media_type: 'VIDEO',
+        video_url: video,
+        caption: finalMessage,
+        access_token: profile.instagram_access_token,
+      })
       const containerResponse = await fetch(
         `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
         {
           method: 'POST',
-          body: new URLSearchParams({
-            media_type: 'VIDEO',
-            video_url: video,
-            caption: finalMessage,
-            access_token: profile.instagram_access_token,
-          }),
+          body: createParams,
         }
       )
 
+      if (!containerResponse.ok) {
+        const errorText = await containerResponse.text()
+        console.error('Video container creation failed:', errorText)
+        throw new Error('Failed to create video container')
+      }
+
       containerData = await containerResponse.json()
+
+      if (!containerData.id) {
+        console.error('Invalid container response:', containerData)
+        throw new Error(containerData.error?.message || 'Failed to create video container')
+      }
+
+      // Attendre que le traitement de la vidéo soit terminé avant de publier
+      let attempts = 0
+      const maxAttempts = 10
+      const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+      while (attempts < maxAttempts) {
+        const statusRes = await fetch(
+          `https://graph.facebook.com/v18.0/${containerData.id}?fields=status_code,status,video_status&access_token=${encodeURIComponent(profile.instagram_access_token)}`
+        )
+        const statusData = await statusRes.json()
+        console.log('Video status check:', statusData)
+        const statusCode = statusData.status_code || statusData.status || statusData.video_status
+        if (statusCode === 'FINISHED' || statusCode === 'finished' || statusCode === 'READY' || statusCode === 'ready') {
+          break
+        }
+        if (statusCode === 'ERROR' || statusCode === 'error' || statusData.error) {
+          throw new Error(statusData.error?.message || 'Video processing failed')
+        }
+        attempts++
+        await delay(2000)
+      }
+      if (attempts === maxAttempts) {
+        throw new Error('Video processing not finished, please try again later')
+      }
     } else if (images && images.length === 1) {
       // Publication d'une seule image
       const containerResponse = await fetch(
