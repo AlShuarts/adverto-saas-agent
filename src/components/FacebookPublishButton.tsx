@@ -70,13 +70,20 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       }
 
       // Vérifier s'il y a un diaporama disponible pour ce listing (sans filtrer par statut)
-      const { data: slideshowData } = await supabase
+      const { data: slideshowRows, error: slideshowError } = await supabase
         .from("slideshow_renders")
         .select("render_id, video_url, status")
         .eq("listing_id", listing.id)
         .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(1);
+
+      if (slideshowError) {
+        console.warn("Erreur slideshow_renders:", slideshowError);
+      }
+
+      const slideshowData = (slideshowRows && (slideshowRows as any[]).length > 0)
+        ? (slideshowRows as any[])[0]
+        : null;
 
       let finalVideoUrl = slideshowData?.video_url || null;
 
