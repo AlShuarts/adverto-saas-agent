@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
         access_token: profile.instagram_access_token,
       })
       const containerResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
+        `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
         {
           method: 'POST',
           body: createParams,
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
       const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
       while (attempts < maxAttempts) {
         const statusRes = await fetch(
-          `https://graph.facebook.com/v18.0/${containerData.id}?fields=status_code,status,video_status&access_token=${encodeURIComponent(profile.instagram_access_token)}`
+          `https://graph.facebook.com/v21.0/${containerData.id}?fields=status_code,status,video_status&access_token=${encodeURIComponent(profile.instagram_access_token)}`
         )
         const statusData = await statusRes.json()
         console.log('Video status check:', statusData)
@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
     } else if (images && images.length === 1) {
       // Publication d'une seule image
       const containerResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
+        `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
         {
           method: 'POST',
           body: new URLSearchParams({
@@ -172,17 +172,17 @@ Deno.serve(async (req) => {
       // 1. Créer les conteneurs média pour chaque image
       const mediaResponses = await Promise.all(
         images.map(async (imageUrl) => {
-          const response = await fetch(
-            `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
-            {
-              method: 'POST',
-              body: new URLSearchParams({
-                image_url: imageUrl,
-                is_carousel_item: 'true',
-                access_token: profile.instagram_access_token,
-              }),
-            }
-          )
+            const response = await fetch(
+              `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
+              {
+                method: 'POST',
+                body: new URLSearchParams({
+                  image_url: imageUrl,
+                  is_carousel_item: 'true',
+                  access_token: profile.instagram_access_token,
+                }),
+              }
+            )
           return response.json()
         })
       )
@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
 
       // 2. Créer le carousel avec tous les médias
       const carouselResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
+        `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
         {
           method: 'POST',
           body: new URLSearchParams({
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
 
     // 3. Publier le conteneur
     const publishResponse = await fetch(
-      `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media_publish`,
+      `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media_publish`,
       {
         method: 'POST',
         body: new URLSearchParams({

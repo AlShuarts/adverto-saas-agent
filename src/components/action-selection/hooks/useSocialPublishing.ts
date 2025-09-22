@@ -115,32 +115,92 @@ export const useSocialPublishing = (
       }
       
       if (selectedNetworks.instagram) {
-        // Si l'utilisateur a sélectionné "slideshow" et qu'une vidéo est disponible, publier en vidéo
-        if (selectedPublicationTypes.includes("slideshow") && slideshowUrl) {
-          tasks.push(
-            supabase.functions.invoke("instagram-publish", {
-              body: {
-                message: generatedText,
-                video: slideshowUrl,
-                listingId: listing.id,
-                templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId
+        // Préparer une URL vidéo robuste comme pour Facebook
+        let finalVideoUrl: string | null = slideshowUrl || listing.video_url || null;
+        let slideshowData: { render_id?: string | null; video_url?: string | null; status?: string | null } | null = null;
+
+        if (!finalVideoUrl) {
+          const { data: rows, error: rowsErr } = await supabase
+            .from("slideshow_renders")
+            .select("render_id, video_url, status, created_at")
+            .eq("listing_id", listing.id)
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (!rowsErr && rows && rows.length > 0) {
+            slideshowData = rows[0] as any;
+            if (rows[0].video_url) {
+              finalVideoUrl = rows[0].video_url as string;
+            } else if (rows[0].render_id) {
+              // Tentative immédiate de récupération via check-render-status
+              const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
+                body: { renderId: rows[0].render_id },
+              });
+              if (!statusError && statusData?.videoUrl) {
+                finalVideoUrl = statusData.videoUrl as string;
               }
-            }).then(async () => {
-              await ensureAndIncrementStatistic('instagram');
-            }).catch(error => {
-              console.error("Test mode - Instagram publish error:", error);
-              toast.success("Instagram test publication completed (test mode)");
-            })
-          );
+            }
+          }
+        }
+
+        if (selectedPublicationTypes.includes("slideshow")) {
+          if (finalVideoUrl) {
+            tasks.push(
+              supabase.functions.invoke("instagram-publish", {
+                body: {
+                  message: generatedText,
+                  video: finalVideoUrl,
+                  listingId: listing.id,
+                  templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
+                },
+              }).then(async () => {
+                await ensureAndIncrementStatistic('instagram');
+              }).catch(error => {
+                console.error("Test mode - Instagram publish error:", error);
+                toast.success("Instagram test publication completed (test mode)");
+              })
+            );
+          } else if (slideshowData) {
+            // Un rendu existe mais pas encore prêt -> ne pas fallback en images
+            toast.error("Diaporama en préparation", {
+              description: "Le diaporama est en cours de finalisation. Réessayez dans quelques secondes pour publier la vidéo sur Instagram.",
+            });
+          } else {
+            // Aucun rendu détecté -> fallback images/bannière si disponibles
+            let imagesToUse: string[] = [];
+            if (selectedPublicationTypes.includes("banner") && bannerUrl) {
+              imagesToUse = [bannerUrl];
+            } else if (selectedImages.length > 0) {
+              imagesToUse = selectedImages.slice(0, 10);
+            }
+
+            if (imagesToUse.length > 0) {
+              tasks.push(
+                supabase.functions.invoke("instagram-publish", {
+                  body: {
+                    message: generatedText,
+                    images: imagesToUse,
+                    listingId: listing.id,
+                    templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
+                  },
+                }).then(async () => {
+                  await ensureAndIncrementStatistic('instagram');
+                }).catch(error => {
+                  console.error("Test mode - Instagram publish error:", error);
+                  toast.success("Instagram test publication completed (test mode)");
+                })
+              );
+            }
+          }
         } else {
-          // Sinon utiliser bannière ou images
-          let imagesToUse = [];
+          // Pas un slideshow -> publier bannière ou images
+          let imagesToUse: string[] = [];
           if (selectedPublicationTypes.includes("banner") && bannerUrl) {
             imagesToUse = [bannerUrl];
           } else if (selectedImages.length > 0) {
             imagesToUse = selectedImages.slice(0, 10);
           }
-          
+
           if (imagesToUse.length > 0) {
             tasks.push(
               supabase.functions.invoke("instagram-publish", {
@@ -148,8 +208,8 @@ export const useSocialPublishing = (
                   message: generatedText,
                   images: imagesToUse,
                   listingId: listing.id,
-                  templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId
-                }
+                  templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
+                },
               }).then(async () => {
                 await ensureAndIncrementStatistic('instagram');
               }).catch(error => {
