@@ -41,22 +41,32 @@ export const useSocialPublishing = (
       }
       
       if (selectedNetworks.facebook) {
-        let imageToUse = null;
-        
-        if (selectedPublicationTypes.includes("banner") && bannerUrl) {
-          imageToUse = bannerUrl;
-        } else if (selectedImages.length > 0) {
-          imageToUse = selectedImages[0];
+        // Préparer une URL vidéo robuste si un diaporama est attendu
+        let finalVideoUrl: string | null = slideshowUrl || listing.video_url || null;
+
+        if (!finalVideoUrl) {
+          // Essayer de récupérer le dernier rendu COMPLÉTÉ avec URL pour ce listing
+          const { data: completedRows, error: completedErr } = await supabase
+            .from("slideshow_renders")
+            .select("video_url, status, created_at")
+            .eq("listing_id", listing.id)
+            .not("video_url", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1);
+          if (!completedErr && completedRows && completedRows.length > 0) {
+            finalVideoUrl = completedRows[0].video_url as string | null;
+          }
         }
         
-        if (imageToUse) {
+        // Si l'utilisateur a sélectionné "slideshow" et qu'une vidéo est dispo, publier en vidéo
+        if (selectedPublicationTypes.includes("slideshow") && finalVideoUrl) {
           tasks.push(
             supabase.functions.invoke("facebook-publish", {
               body: {
                 message: generatedText,
                 pageId: profile?.facebook_page_id || 'test-page-id',
                 accessToken: profile?.facebook_access_token || 'test-access-token',
-                images: [imageToUse],
+                video: finalVideoUrl,
                 templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
               }
             }).then(async () => {
@@ -64,13 +74,43 @@ export const useSocialPublishing = (
                 .from("listings")
                 .update({ published_to_facebook: true })
                 .eq("id", listing.id);
-              
               await ensureAndIncrementStatistic('facebook');
             }).catch(error => {
               console.error("Test mode - Facebook publish error:", error);
               toast.success("Facebook test publication completed (test mode)");
             })
           );
+        } else {
+          // Sinon utiliser bannière ou images
+          let imageToUse = null as string | null;
+          if (selectedPublicationTypes.includes("banner") && bannerUrl) {
+            imageToUse = bannerUrl;
+          } else if (selectedImages.length > 0) {
+            imageToUse = selectedImages[0];
+          }
+          
+          if (imageToUse) {
+            tasks.push(
+              supabase.functions.invoke("facebook-publish", {
+                body: {
+                  message: generatedText,
+                  pageId: profile?.facebook_page_id || 'test-page-id',
+                  accessToken: profile?.facebook_access_token || 'test-access-token',
+                  images: [imageToUse],
+                  templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+                }
+              }).then(async () => {
+                await supabase
+                  .from("listings")
+                  .update({ published_to_facebook: true })
+                  .eq("id", listing.id);
+                await ensureAndIncrementStatistic('facebook');
+              }).catch(error => {
+                console.error("Test mode - Facebook publish error:", error);
+                toast.success("Facebook test publication completed (test mode)");
+              })
+            );
+          }
         }
       }
       

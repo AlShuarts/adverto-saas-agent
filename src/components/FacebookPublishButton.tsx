@@ -69,40 +69,61 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         return;
       }
 
-      // Vérifier s'il y a un diaporama disponible pour ce listing (sans filtrer par statut)
+      // Vérifier s'il y a un diaporama disponible pour ce listing (priorité: rendu complété avec URL)
       let finalVideoUrl: string | null = listing.video_url || null; // 1) Priorité à la vidéo stockée sur la fiche
 
-      const { data: slideshowRows, error: slideshowError } = await supabase
+      // 1bis) Si aucune vidéo sur la fiche, tenter de trouver le dernier rendu COMPLÉTÉ avec URL
+      const { data: completedRows, error: completedErr } = await supabase
         .from("slideshow_renders")
-        .select("render_id, video_url, status")
+        .select("render_id, video_url, status, created_at")
         .eq("listing_id", listing.id)
+        .not("video_url", "is", null)
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (slideshowError) {
-        console.warn("Erreur slideshow_renders:", slideshowError);
+      if (completedErr) {
+        console.warn("Erreur slideshow_renders (completedRows):", completedErr);
       }
 
-      const slideshowData = (slideshowRows && (slideshowRows as any[]).length > 0)
-        ? (slideshowRows as any[])[0]
-        : null;
+      let slideshowData: any = null;
 
-      // 2) Si pas de vidéo sur la fiche mais présente sur le rendu, l'utiliser
-      if (!finalVideoUrl && slideshowData?.video_url) {
-        finalVideoUrl = slideshowData.video_url;
-      }
+      if (completedRows && (completedRows as any[]).length > 0) {
+        slideshowData = (completedRows as any[])[0];
+        finalVideoUrl = finalVideoUrl || slideshowData.video_url;
+      } else {
+        // 2) Sinon regarder le dernier rendu (qui pourrait être en pending)
+        const { data: latestRows, error: latestErr } = await supabase
+          .from("slideshow_renders")
+          .select("render_id, video_url, status, created_at")
+          .eq("listing_id", listing.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
 
-      // 3) Si un rendu existe mais sans URL vidéo, forcer une vérification fraîche du statut
-      if (!finalVideoUrl && slideshowData?.render_id && !slideshowData?.video_url) {
-        console.log("Aucun video_url en base, vérification immédiate via check-render-status…", slideshowData);
-        const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
-          body: { renderId: slideshowData.render_id },
-        });
-        if (statusError) {
-          console.warn("Erreur check-render-status:", statusError);
-        } else if (statusData?.videoUrl) {
-          finalVideoUrl = statusData.videoUrl;
-          console.log("URL vidéo récupérée via check-render-status:", finalVideoUrl);
+        if (latestErr) {
+          console.warn("Erreur slideshow_renders (latestRows):", latestErr);
+        }
+
+        slideshowData = (latestRows && (latestRows as any[]).length > 0)
+          ? (latestRows as any[])[0]
+          : null;
+
+        // 3) Si pas de vidéo sur la fiche mais présente sur le rendu, l'utiliser
+        if (!finalVideoUrl && slideshowData?.video_url) {
+          finalVideoUrl = slideshowData.video_url;
+        }
+
+        // 4) Si un rendu existe mais sans URL vidéo, forcer une vérification fraîche du statut
+        if (!finalVideoUrl && slideshowData?.render_id && !slideshowData?.video_url) {
+          console.log("Aucun video_url en base, vérification immédiate via check-render-status…", slideshowData);
+          const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
+            body: { renderId: slideshowData.render_id },
+          });
+          if (statusError) {
+            console.warn("Erreur check-render-status:", statusError);
+          } else if (statusData?.videoUrl) {
+            finalVideoUrl = statusData.videoUrl;
+            console.log("URL vidéo récupérée via check-render-status:", finalVideoUrl);
+          }
         }
       }
 
