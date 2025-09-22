@@ -100,10 +100,10 @@ Deno.serve(async (req) => {
     let containerData;
     
     if (video) {
-      // Publication d'une vidéo (diaporama)
+      // Publication d'une vidéo (diaporama) - Utiliser REELS au lieu de VIDEO
       console.log('Publishing video to Instagram:', video)
       const createParams = new URLSearchParams({
-        media_type: 'VIDEO',
+        media_type: 'REELS',
         video_url: video,
         caption: finalMessage,
         access_token: profile.instagram_access_token,
