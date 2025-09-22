@@ -50,11 +50,27 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
         return;
       }
 
+      // Vérifier s'il y a un diaporama disponible pour ce listing
+      const { data: slideshowData, error: slideshowError } = await supabase
+        .from("slideshow_renders")
+        .select("video_url")
+        .eq("listing_id", listing.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      console.log("Diaporama trouvé:", {
+        hasSlideshow: !!slideshowData?.video_url,
+        videoUrl: slideshowData?.video_url
+      });
+
       // Appeler la fonction Edge pour publier sur Instagram
       const { data, error } = await supabase.functions.invoke('instagram-publish', {
         body: {
           message,
-          images: selectedImages,
+          video: slideshowData?.video_url, // Priorité au diaporama vidéo
+          images: slideshowData?.video_url ? undefined : selectedImages, // Images seulement si pas de vidéo
           listingId: listing.id,
           templateId
         },
@@ -65,9 +81,10 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
       // Incrémenter les statistiques d'utilisation pour Instagram
       await ensureAndIncrementStatistic('instagram');
 
+      const contentType = slideshowData?.video_url ? "diaporama" : "images";
       toast({
         title: "Publication réussie",
-        description: "Votre annonce a été publiée sur Instagram",
+        description: `Votre ${contentType} a été publié sur Instagram`,
       });
       
       // Rafraîchir les données

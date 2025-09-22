@@ -69,11 +69,27 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         return;
       }
 
+      // Vérifier s'il y a un diaporama disponible pour ce listing
+      const { data: slideshowData, error: slideshowError } = await supabase
+        .from("slideshow_renders")
+        .select("video_url")
+        .eq("listing_id", listing.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      console.log("Diaporama trouvé:", {
+        hasSlideshow: !!slideshowData?.video_url,
+        videoUrl: slideshowData?.video_url
+      });
+
       console.log("Tentative d'appel de la fonction facebook-publish");
       const { data: responseData, error: functionError } = await supabase.functions.invoke("facebook-publish", {
         body: {
           message,
-          images: listing.images?.slice(0, 2), // Limit to 2 images
+          video: slideshowData?.video_url, // Priorité au diaporama vidéo
+          images: slideshowData?.video_url ? undefined : listing.images?.slice(0, 2), // Images seulement si pas de vidéo
           pageId: profile.facebook_page_id,
           accessToken: profile.facebook_access_token,
         },
@@ -108,12 +124,13 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       // Rafraîchir les données
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
+      const contentType = slideshowData?.video_url ? "diaporama" : "annonce";
       // Afficher la confirmation avec le lien vers la publication
       toast({
         title: "Publication réussie ! 🎉",
         description: (
           <div className="flex flex-col gap-2">
-            <p>Votre annonce a été publiée sur Facebook avec succès.</p>
+            <p>Votre {contentType} a été publié sur Facebook avec succès.</p>
             <a
               href={`https://facebook.com/${responseData.id}`}
               target="_blank"

@@ -4,7 +4,8 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 interface RequestBody {
   message: string;
-  images: string[];
+  images?: string[];
+  video?: string;
   listingId: string;
   templateId?: string;
 }
@@ -20,8 +21,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { message, images, listingId, templateId } = await req.json() as RequestBody
-    console.log('Publishing to Instagram:', { message, images: images.length, listingId, hasTemplate: !!templateId })
+    const { message, images, video, listingId, templateId } = await req.json() as RequestBody
+    console.log('Publishing to Instagram:', { message, images: images?.length || 0, hasVideo: !!video, listingId, hasTemplate: !!templateId })
 
     // Récupérer les informations du profil de l'utilisateur qui fait la requête
     const authHeader = req.headers.get('Authorization')
@@ -92,13 +93,30 @@ Deno.serve(async (req) => {
     }
 
     // Publier sur Instagram
-    if (!images.length) {
-      throw new Error('No images provided')
+    if (!video && (!images || !images.length)) {
+      throw new Error('No video or images provided')
     }
 
     let containerData;
     
-    if (images.length === 1) {
+    if (video) {
+      // Publication d'une vidéo (diaporama)
+      console.log('Publishing video to Instagram:', video)
+      const containerResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
+        {
+          method: 'POST',
+          body: new URLSearchParams({
+            media_type: 'VIDEO',
+            video_url: video,
+            caption: finalMessage,
+            access_token: profile.instagram_access_token,
+          }),
+        }
+      )
+
+      containerData = await containerResponse.json()
+    } else if (images && images.length === 1) {
       // Publication d'une seule image
       const containerResponse = await fetch(
         `https://graph.facebook.com/v18.0/${profile.instagram_user_id}/media`,
@@ -113,7 +131,7 @@ Deno.serve(async (req) => {
       )
 
       containerData = await containerResponse.json()
-    } else {
+    } else if (images && images.length > 1) {
       // Publication de plusieurs images (carousel)
       // 1. Créer les conteneurs média pour chaque image
       const mediaResponses = await Promise.all(
