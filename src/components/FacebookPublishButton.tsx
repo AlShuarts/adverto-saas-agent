@@ -69,48 +69,100 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         return;
       }
 
-      // Vérifier s'il y a un diaporama disponible pour ce listing
-      const { data: slideshowData, error: slideshowError } = await supabase
+      // Vérifier s'il y a un diaporama disponible pour ce listing (sans filtrer par statut)
+      const { data: slideshowData } = await supabase
         .from("slideshow_renders")
-        .select("video_url")
+        .select("render_id, video_url, status")
         .eq("listing_id", listing.id)
-        .eq("status", "completed")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      console.log("Diaporama trouvé:", {
-        hasSlideshow: !!slideshowData?.video_url,
-        videoUrl: slideshowData?.video_url
-      });
+      let finalVideoUrl = slideshowData?.video_url || null;
 
-      console.log("Tentative d'appel de la fonction facebook-publish");
-      const { data: responseData, error: functionError } = await supabase.functions.invoke("facebook-publish", {
-        body: {
-          message,
-          video: slideshowData?.video_url, // Priorité au diaporama vidéo
-          images: slideshowData?.video_url ? undefined : listing.images?.slice(0, 2), // Images seulement si pas de vidéo
-          pageId: profile.facebook_page_id,
-          accessToken: profile.facebook_access_token,
-        },
-      });
-
-      if (functionError) {
-        console.error("Erreur lors de l'appel de la fonction:", functionError);
-        throw new Error(functionError.message || "Erreur lors de la publication sur Facebook");
+      // Si un rendu existe mais sans URL vidéo, forcer une vérification fraîche du statut
+      if (slideshowData?.render_id && !finalVideoUrl) {
+        console.log("Aucun video_url en base, vérification immédiate via check-render-status…", slideshowData);
+        const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
+          body: { renderId: slideshowData.render_id },
+        });
+        if (statusError) {
+          console.warn("Erreur check-render-status:", statusError);
+        } else if (statusData?.videoUrl) {
+          finalVideoUrl = statusData.videoUrl;
+          console.log("URL vidéo récupérée via check-render-status:", finalVideoUrl);
+        }
       }
 
-      console.log("Réponse de la fonction:", responseData);
+      console.log("Diaporama (après vérification):", {
+        hasRender: !!slideshowData,
+        status: slideshowData?.status,
+        videoUrl: finalVideoUrl,
+      });
 
-      if (!responseData?.id) {
-        throw new Error("Aucun ID de publication reçu");
+      // Décision de publication
+      // 1) Si vidéo dispo -> publier en vidéo (diaporama)
+      if (finalVideoUrl) {
+        console.log("Tentative d'appel facebook-publish avec VIDEO");
+        const { data: responseData, error: functionError } = await supabase.functions.invoke("facebook-publish", {
+          body: {
+            message,
+            video: finalVideoUrl,
+            pageId: profile.facebook_page_id,
+            accessToken: profile.facebook_access_token,
+          },
+        });
+
+        if (functionError) {
+          console.error("Erreur lors de l'appel de la fonction:", functionError);
+          throw new Error(functionError.message || "Erreur lors de la publication sur Facebook");
+        }
+
+        console.log("Réponse de la fonction:", responseData);
+        
+        if (!responseData?.id) {
+          throw new Error("Aucun ID de publication reçu");
+        }
+
+        // Mise à jour et toasts sont gérés plus bas
+        var publishResponseData: any = responseData;
+      } else if (!slideshowData) {
+        // 2) Aucune trace de rendu -> fallback aux images
+        console.log("Aucun rendu détecté, fallback IMAGES");
+        const { data: responseData, error: functionError } = await supabase.functions.invoke("facebook-publish", {
+          body: {
+            message,
+            images: listing.images?.slice(0, 2),
+            pageId: profile.facebook_page_id,
+            accessToken: profile.facebook_access_token,
+          },
+        });
+
+        if (functionError) {
+          console.error("Erreur lors de l'appel de la fonction:", functionError);
+          throw new Error(functionError.message || "Erreur lors de la publication sur Facebook");
+        }
+
+        if (!responseData?.id) {
+          throw new Error("Aucun ID de publication reçu");
+        }
+
+        var publishResponseData: any = responseData;
+      } else {
+        // 3) Un rendu existe mais pas encore prêt -> éviter de publier une photo par erreur
+        toast({
+          title: "Diaporama en préparation",
+          description: "Le diaporama est en cours de finalisation. Réessayez dans quelques secondes pour publier la vidéo.",
+          variant: "destructive",
+        });
+        return;
       }
 
       const { error: updateError } = await supabase
         .from("listings")
         .update({
           published_to_facebook: true,
-          facebook_post_id: responseData.id,
+          facebook_post_id: publishResponseData.id,
         })
         .eq("id", listing.id);
 
@@ -124,7 +176,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       // Rafraîchir les données
       queryClient.invalidateQueries({ queryKey: ["listings"] });
 
-      const contentType = slideshowData?.video_url ? "diaporama" : "annonce";
+      const contentType = finalVideoUrl ? "diaporama" : "annonce";
       // Afficher la confirmation avec le lien vers la publication
       toast({
         title: "Publication réussie ! 🎉",
@@ -132,7 +184,7 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
           <div className="flex flex-col gap-2">
             <p>Votre {contentType} a été publié sur Facebook avec succès.</p>
             <a
-              href={`https://facebook.com/${responseData.id}`}
+              href={`https://facebook.com/${publishResponseData.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-primary hover:underline"
