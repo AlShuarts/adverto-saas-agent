@@ -38,6 +38,21 @@ serve(async (req) => {
       console.log("Données du slideshow trouvées:", slideshowData);
       
       if (slideshowData.status === "completed" && slideshowData.video_url) {
+        // S'assurer que la table listings possède aussi l'URL vidéo
+        if (slideshowData.listing_id) {
+          const { error: listingUpdateError } = await supabase
+            .from("listings")
+            .update({ 
+              video_url: slideshowData.video_url,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", slideshowData.listing_id);
+          if (listingUpdateError) {
+            console.error("Erreur lors de la mise à jour du listing.video_url:", listingUpdateError);
+          } else {
+            console.log("Listing.video_url mis à jour depuis check-render-status (déjà complété en DB)");
+          }
+        }
         return new Response(
           JSON.stringify({
             status: "done",
@@ -164,6 +179,21 @@ serve(async (req) => {
               console.error("Erreur lors de la mise à jour du statut du slideshow:", updateError);
             } else {
               console.log(`Statut du slideshow mis à jour avec succès pour le renderId: ${renderId}`);
+              // Mettre à jour également la table listings avec l'URL vidéo
+              if (slideshowData.listing_id) {
+                const { error: listingUpdateError } = await supabase
+                  .from("listings")
+                  .update({ 
+                    video_url: url,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq("id", slideshowData.listing_id);
+                if (listingUpdateError) {
+                  console.error("Erreur lors de la mise à jour du listing.video_url:", listingUpdateError);
+                } else {
+                  console.log("Listing.video_url mis à jour depuis check-render-status (statut=done)");
+                }
+              }
             }
           } else if (status === "failed") {
             // Mettre à jour le statut dans la base de données
