@@ -115,22 +115,13 @@ export const useSocialPublishing = (
       }
       
       if (selectedNetworks.instagram) {
-        let imagesToUse = [];
-        
+        // Si l'utilisateur a sélectionné "slideshow" et qu'une vidéo est disponible, publier en vidéo
         if (selectedPublicationTypes.includes("slideshow") && slideshowUrl) {
-          imagesToUse = [slideshowUrl];
-        } else if (selectedPublicationTypes.includes("banner") && bannerUrl) {
-          imagesToUse = [bannerUrl];
-        } else if (selectedImages.length > 0) {
-          imagesToUse = selectedImages.slice(0, 10);
-        }
-        
-        if (imagesToUse.length > 0) {
           tasks.push(
             supabase.functions.invoke("instagram-publish", {
               body: {
                 message: generatedText,
-                images: imagesToUse,
+                video: slideshowUrl,
                 listingId: listing.id,
                 templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId
               }
@@ -141,6 +132,32 @@ export const useSocialPublishing = (
               toast.success("Instagram test publication completed (test mode)");
             })
           );
+        } else {
+          // Sinon utiliser bannière ou images
+          let imagesToUse = [];
+          if (selectedPublicationTypes.includes("banner") && bannerUrl) {
+            imagesToUse = [bannerUrl];
+          } else if (selectedImages.length > 0) {
+            imagesToUse = selectedImages.slice(0, 10);
+          }
+          
+          if (imagesToUse.length > 0) {
+            tasks.push(
+              supabase.functions.invoke("instagram-publish", {
+                body: {
+                  message: generatedText,
+                  images: imagesToUse,
+                  listingId: listing.id,
+                  templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId
+                }
+              }).then(async () => {
+                await ensureAndIncrementStatistic('instagram');
+              }).catch(error => {
+                console.error("Test mode - Instagram publish error:", error);
+                toast.success("Instagram test publication completed (test mode)");
+              })
+            );
+          }
         }
       }
       
