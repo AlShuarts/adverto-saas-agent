@@ -93,6 +93,10 @@ Deno.serve(async (req) => {
     }
 
     // Publier sur Instagram
+    const caption = (finalMessage || '').slice(0, 2200);
+    if (finalMessage && finalMessage.length > 2200) {
+      console.warn(`Caption truncated to 2200 chars (was ${finalMessage.length})`);
+    }
     if (!video && (!images || !images.length)) {
       throw new Error('No video or images provided')
     }
@@ -105,7 +109,7 @@ Deno.serve(async (req) => {
       const createParams = new URLSearchParams({
         media_type: 'REELS',
         video_url: video,
-        caption: finalMessage,
+        caption: caption,
         access_token: profile.instagram_access_token,
       })
       const containerResponse = await fetch(
@@ -131,15 +135,15 @@ Deno.serve(async (req) => {
 
       // Attendre que le traitement de la vidéo soit terminé avant de publier
       let attempts = 0
-      const maxAttempts = 10
+      const maxAttempts = 15
       const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
       while (attempts < maxAttempts) {
         const statusRes = await fetch(
-          `https://graph.facebook.com/v21.0/${containerData.id}?fields=status_code,status,video_status&access_token=${encodeURIComponent(profile.instagram_access_token)}`
+          `https://graph.facebook.com/v21.0/${containerData.id}?fields=status_code,status&access_token=${encodeURIComponent(profile.instagram_access_token)}`
         )
         const statusData = await statusRes.json()
-        console.log('Video status check:', statusData)
-        const statusCode = statusData.status_code || statusData.status || statusData.video_status
+        console.log(`Video status check [attempt ${attempts + 1}/${maxAttempts}]:`, statusData)
+        const statusCode = statusData.status_code || statusData.status
         if (statusCode === 'FINISHED' || statusCode === 'finished' || statusCode === 'READY' || statusCode === 'ready') {
           break
         }
@@ -160,7 +164,7 @@ Deno.serve(async (req) => {
           method: 'POST',
           body: new URLSearchParams({
             image_url: images[0],
-            caption: finalMessage,
+            caption: caption,
             access_token: profile.instagram_access_token,
           }),
         }
@@ -203,7 +207,7 @@ Deno.serve(async (req) => {
           method: 'POST',
           body: new URLSearchParams({
             media_type: 'CAROUSEL',
-            caption: finalMessage,
+            caption: caption,
             children: mediaIds.join(','),
             access_token: profile.instagram_access_token,
           }),
