@@ -125,8 +125,8 @@ export const useProfile = () => {
         throw resetError;
       }
 
-      // Étape 1: Connexion utilisateur Facebook
-      console.log("Connexion à Facebook...");
+      // Étape 1: Connexion utilisateur Facebook avec permissions étendues
+      console.log("Connexion à Facebook avec permissions étendues...");
       console.log("SDK Facebook disponible:", !!window.FB);
       
       const authResponse = await new Promise<fb.AuthResponse>((resolve, reject) => {
@@ -143,13 +143,14 @@ export const useProfile = () => {
           
           resolve(response);
         }, {
-          scope: 'pages_manage_posts,pages_show_list,instagram_basic,instagram_content_publish',
-          auth_type: 'reauthorize'
+          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish',
+          auth_type: 'rerequest',
+          return_scopes: true
         });
       });
 
       if (authResponse.status !== 'connected') {
-        throw new Error("Connexion Facebook échouée");
+        throw new Error("Connexion Facebook échouée ou annulée");
       }
 
       const userAccessToken = authResponse.authResponse?.accessToken;
@@ -157,16 +158,50 @@ export const useProfile = () => {
         throw new Error("Token utilisateur Facebook non trouvé");
       }
 
-      // Étape 2: Utiliser directement le token utilisateur (pas besoin d'échange pour les tokens de page)
-      console.log("Utilisation du token utilisateur pour obtenir les pages...");
-      let finalUserToken = userAccessToken;
+      // Étape 2: Vérifier les permissions accordées
+      console.log("Vérification des permissions accordées...");
+      const permissionsResponse = await new Promise<any>((resolve, reject) => {
+        window.FB.api('/me/permissions', (response) => {
+          console.log("📋 Permissions:", JSON.stringify(response, null, 2));
+          if (response.error) {
+            reject(new Error(`Erreur permissions: ${response.error.message}`));
+          } else {
+            resolve(response);
+          }
+        });
+      });
+
+      const grantedPermissions = permissionsResponse.data
+        ?.filter((p: any) => p.status === 'granted')
+        ?.map((p: any) => p.permission) || [];
+      
+      const declinedPermissions = permissionsResponse.data
+        ?.filter((p: any) => p.status === 'declined')
+        ?.map((p: any) => p.permission) || [];
+
+      console.log("✅ Permissions accordées:", grantedPermissions);
+      console.log("❌ Permissions refusées:", declinedPermissions);
+
+      // Vérifier les permissions critiques
+      const requiredPermissions = ['pages_show_list', 'pages_manage_posts'];
+      const missingPermissions = requiredPermissions.filter(
+        perm => !grantedPermissions.includes(perm)
+      );
+
+      if (missingPermissions.length > 0) {
+        console.error("❌ Permissions manquantes:", missingPermissions);
+        throw new Error(
+          `Permissions manquantes: ${missingPermissions.join(', ')}. ` +
+          `Veuillez réessayer et autoriser toutes les permissions demandées.`
+        );
+      }
 
       // Étape 3: Obtenir les pages avec le token utilisateur
       console.log("Récupération des pages Facebook...");
-      console.log("Token utilisateur utilisé:", finalUserToken?.substring(0, 20) + "...");
+      console.log("Token utilisateur utilisé:", userAccessToken?.substring(0, 20) + "...");
       
       const pages = await new Promise<any>((resolve, reject) => {
-        window.FB.api(`/me/accounts?access_token=${finalUserToken}`, (response) => {
+        window.FB.api(`/me/accounts?fields=id,name,category,tasks,access_token&access_token=${userAccessToken}`, (response) => {
           console.log("🔍 Réponse complète de l'API Facebook pour les pages:", JSON.stringify(response, null, 2));
           
           if (response.error) {
@@ -181,7 +216,8 @@ export const useProfile = () => {
                   id: page.id,
                   name: page.name,
                   category: page.category,
-                  tasks: page.tasks
+                  tasks: page.tasks,
+                  has_token: !!page.access_token
                 });
               });
             }
@@ -192,28 +228,55 @@ export const useProfile = () => {
 
       if (!pages.data || pages.data.length === 0) {
         console.error("❌ Aucune page Facebook trouvée pour ce compte");
-        console.log("💡 Solutions possibles:");
-        console.log("1. Créez une page Facebook Business");
-        console.log("2. Assurez-vous d'être administrateur de la page");
-        console.log("3. Vérifiez les permissions accordées à l'application");
+        console.log("💡 Causes possibles:");
+        console.log("1. L'application est en mode Développement et vous n'êtes pas Testeur/Développeur");
+        console.log("2. Vous n'avez pas coché vos pages lors de l'autorisation");
+        console.log("3. Vous n'avez pas 'Facebook access – Full control' sur vos pages");
+        console.log("4. Les permissions de l'app ne sont pas approuvées en production");
+        console.log("5. Votre compte nécessite l'authentification à deux facteurs (2FA)");
         
         throw new Error(
-          "Aucune page Facebook trouvée. Vous devez créer une page Facebook Business et être administrateur de cette page pour pouvoir la connecter."
+          "Aucune page Facebook trouvée.\n\n" +
+          "Causes possibles:\n" +
+          "• Vous n'avez pas coché vos pages lors de l'autorisation (cliquez sur 'Modifier l'accès')\n" +
+          "• Vous n'avez pas l'accès 'Full control' sur vos pages\n" +
+          "• L'app est en mode Développement (contactez l'administrateur)\n" +
+          "• Votre compte nécessite l'authentification à deux facteurs (2FA)\n\n" +
+          "Réessayez en cochant explicitement vos pages lors de l'autorisation."
         );
       }
 
+      // Si plusieurs pages, on prend la première pour l'instant
+      // TODO: Implémenter un sélecteur de page
       const page = pages.data[0];
-      console.log("Page sélectionnée:", page);
+      console.log("📌 Page sélectionnée:", {
+        id: page.id,
+        name: page.name,
+        category: page.category,
+        tasks: page.tasks
+      });
+
+      // Vérifier que la page a les bonnes permissions
+      if (page.tasks && !page.tasks.includes('MANAGE') && !page.tasks.includes('CREATE_CONTENT')) {
+        console.warn("⚠️ La page n'a peut-être pas les permissions suffisantes");
+        toast({
+          title: "Attention",
+          description: "Cette page pourrait ne pas avoir toutes les permissions nécessaires. Si la publication échoue, vérifiez vos droits d'accès.",
+          variant: "default",
+        });
+      }
 
       // Étape 4: Obtenir un token de page longue durée
       console.log("Obtention du token de page longue durée...");
       const longLivedPageTokenResponse = await fetch(
         `https://graph.facebook.com/v18.0/${page.id}?` +
         `fields=access_token&` +
-        `access_token=${finalUserToken}`
+        `access_token=${userAccessToken}`
       );
 
       if (!longLivedPageTokenResponse.ok) {
+        const errorData = await longLivedPageTokenResponse.json();
+        console.error("❌ Erreur obtention token de page:", errorData);
         throw new Error("Impossible d'obtenir le token de page");
       }
 
@@ -231,11 +294,13 @@ export const useProfile = () => {
       );
 
       if (!tokenValidationResponse.ok) {
+        const errorData = await tokenValidationResponse.json();
+        console.error("❌ Token de page invalide:", errorData);
         throw new Error("Le token de page n'est pas valide");
       }
 
       const tokenInfo = await tokenValidationResponse.json();
-      console.log("Token validé pour:", tokenInfo);
+      console.log("✅ Token validé pour:", tokenInfo);
 
       // Étape 6: Sauvegarder le token
       console.log("Sauvegarde du token de page...");
@@ -247,18 +312,21 @@ export const useProfile = () => {
         })
         .eq('id', profile.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("❌ Erreur sauvegarde:", updateError);
+        throw updateError;
+      }
 
       toast({
         title: "Succès",
-        description: "Votre page Facebook a été connectée avec un token longue durée",
+        description: `Page "${page.name}" connectée avec succès`,
       });
 
       getProfile();
     } catch (error) {
-      console.error('Erreur de connexion Facebook:', error);
+      console.error('❌ Erreur de connexion Facebook:', error);
       toast({
-        title: "Erreur",
+        title: "Erreur de connexion Facebook",
         description: error instanceof Error ? error.message : "Impossible de connecter votre page Facebook",
         variant: "destructive",
       });

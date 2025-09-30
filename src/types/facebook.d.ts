@@ -11,6 +11,7 @@ interface Window {
       params: { 
         scope: string;
         auth_type?: string;
+        return_scopes?: boolean;
       }
     ) => void;
     api: (
