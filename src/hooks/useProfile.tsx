@@ -235,13 +235,8 @@ export const useProfile = () => {
         console.log("5. Votre compte nécessite l'authentification à deux facteurs (2FA)");
         
         throw new Error(
-          "Aucune page Facebook trouvée.\n\n" +
-          "Causes possibles:\n" +
-          "• Vous n'avez pas coché vos pages lors de l'autorisation (cliquez sur 'Modifier l'accès')\n" +
-          "• Vous n'avez pas l'accès 'Full control' sur vos pages\n" +
-          "• L'app est en mode Développement (contactez l'administrateur)\n" +
-          "• Votre compte nécessite l'authentification à deux facteurs (2FA)\n\n" +
-          "Réessayez en cochant explicitement vos pages lors de l'autorisation."
+          "Nous n'avons pas pu accéder à vos pages Facebook.\n\n" +
+          "Réessayez et assurez-vous de bien cocher toutes les pages que vous souhaitez connecter lors de l'autorisation Facebook."
         );
       }
 
