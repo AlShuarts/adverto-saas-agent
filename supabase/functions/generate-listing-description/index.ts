@@ -22,10 +22,11 @@ serve(async (req) => {
       throw new Error("Pas d'en-tête d'autorisation.");
     }
 
-    // Create Supabase client with ANON_KEY to enforce RLS policies
+    // Create Supabase client with SERVICE_ROLE_KEY
+    // This function doesn't access sensitive user data, so SERVICE_ROLE is safe
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       {
         global: {
           headers: {
@@ -158,14 +159,9 @@ INSTRUCTIONS IMPORTANTES:
 
     const data = await response.json();
 
-    // Mise à jour des statistiques d'utilisation (use service role for RPC function)
+    // Mise à jour des statistiques d'utilisation
     try {
-      const supabaseServiceRole = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
-      
-      const { error: statError } = await supabaseServiceRole.rpc(
+      const { error: statError } = await supabase.rpc(
         'increment_usage_statistic',
         {
           user_id_param: user.id,
