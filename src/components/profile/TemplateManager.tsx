@@ -109,7 +109,7 @@ export const TemplateManager = ({
   };
   return <div>
       <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as 'facebook' | 'instagram')}>
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6 px-px">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6 px-3 sm:px-4">
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="facebook" className="flex items-center gap-2 flex-1 sm:flex-initial">
               <Facebook className="w-4 h-4" />
