@@ -20,13 +20,20 @@ serve(async (req) => {
       throw new Error("❌ Pas d'en-tête d'autorisation.");
     }
 
+    // Create Supabase client with ANON_KEY to enforce RLS policies when accessing user data
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
     );
 
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
       throw new Error("❌ Jeton utilisateur invalide.");
@@ -61,11 +68,18 @@ serve(async (req) => {
     console.log("📜 CONFIGURATION REÇUE:", JSON.stringify(config, null, 2));
     console.log("🖼️ Image principale:", config.mainImage);
     
+    // Create service role client only for listing and render operations (not user data)
+    const supabaseServiceRole = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     // Récupérer les données du listing
-    const { data: listing, error: listingError } = await supabase
+    const { data: listing, error: listingError } = await supabaseServiceRole
       .from("listings")
       .select("*")
       .eq("id", listingId)
+      .eq("user_id", user.id)
       .single();
 
     if (listingError) {
@@ -137,8 +151,8 @@ serve(async (req) => {
     // Faire le rendu avec Shotstack
     const renderId = await renderWithShotstack(renderPayload);
     
-    // Enregistrer les informations du rendu dans la base de données
-    const { data: insertData, error: insertError } = await supabase
+    // Enregistrer les informations du rendu dans la base de données (use service role for system operation)
+    const { data: insertData, error: insertError } = await supabaseServiceRole
       .from("sold_banner_renders")
       .insert({
         listing_id: listingId,
@@ -155,49 +169,16 @@ serve(async (req) => {
 
     console.log("✅ Rendu créé et enregistré avec succès, ID:", renderId);
 
-    // Mise à jour des statistiques
+    // Mise à jour des statistiques (use service role for system operation)
     try {
-      // Vérifier si une entrée existe déjà
-      const { data: existingStat, error: fetchError } = await supabase
-        .from('usage_statistics')
-        .select('id, banner_generations')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error("⚠️ Erreur lors de la vérification des statistiques:", fetchError);
-      } else if (!existingStat) {
-        // Créer une nouvelle entrée avec les valeurs par défaut
-        const { error: insertError } = await supabase
-          .from('usage_statistics')
-          .insert([{ 
-            user_id: user.id, 
-            description_generations: 0, 
-            slideshow_generations: 0, 
-            banner_generations: 1, 
-            facebook_generations: 0, 
-            instagram_generations: 0 
-          }]);
-        
-        if (insertError) {
-          console.error("⚠️ Erreur lors de la création des statistiques:", insertError);
-        } else {
-          console.log("✅ Nouvelle entrée statistique créée avec succès");
+      await supabaseServiceRole.rpc(
+        'increment_usage_statistic',
+        {
+          user_id_param: user.id,
+          statistic_type: 'banner'
         }
-      } else {
-        // Incrémenter le compteur existant
-        const currentValue = existingStat.banner_generations || 0;
-        const { error: updateError } = await supabase
-          .from('usage_statistics')
-          .update({ banner_generations: currentValue + 1 })
-          .eq('user_id', user.id);
-        
-        if (updateError) {
-          console.error("⚠️ Erreur lors de la mise à jour des statistiques:", updateError);
-        } else {
-          console.log(`✅ Compteur banner incrémenté de ${currentValue} à ${currentValue + 1}`);
-        }
-      }
+      );
+      console.log("✅ Statistiques mises à jour avec succès");
     } catch (statErr) {
       console.error("⚠️ Exception lors de la mise à jour des statistiques:", statErr);
     }

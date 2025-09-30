@@ -16,19 +16,30 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Get user's JWT token from authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Missing authorization header')
+    }
+
+    // Create Supabase client with ANON_KEY to enforce RLS policies
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
     )
 
     const { message, images, video, listingId, templateId } = await req.json() as RequestBody
     console.log('Publishing to Instagram:', { message, images: images?.length || 0, hasVideo: !!video, listingId, hasTemplate: !!templateId })
 
-    // Récupérer les informations du profil de l'utilisateur qui fait la requête
-    const authHeader = req.headers.get('Authorization')
-    const token = authHeader?.replace('Bearer ', '') ?? '';
-    
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    // Get authenticated user - this validates the JWT
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
     if (authError || !user) {
       console.error('Auth error:', authError)

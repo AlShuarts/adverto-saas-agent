@@ -6,17 +6,30 @@ export const validateUser = async (authHeader: string | null) => {
     throw new Error("❌ Pas d'en-tête d'autorisation.");
   }
 
+  // Use ANON_KEY with user's JWT to enforce RLS policies
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    }
   );
 
-  const jwt = authHeader.replace("Bearer ", "");
-  const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
   if (userError || !user) {
     throw new Error("❌ Jeton utilisateur invalide.");
   }
 
-  return { user, supabase };
+  // Create service role client for system operations (not user data access)
+  const supabaseServiceRole = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
+  return { user, supabase, supabaseServiceRole };
 };

@@ -22,14 +22,20 @@ serve(async (req) => {
       throw new Error("Pas d'en-tête d'autorisation.");
     }
 
+    // Create Supabase client with ANON_KEY to enforce RLS policies
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
     );
 
-    // Récupération de l'ID utilisateur à partir du token
-    const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
       throw new Error("Jeton utilisateur invalide.");
@@ -152,9 +158,14 @@ INSTRUCTIONS IMPORTANTES:
 
     const data = await response.json();
 
-    // Mise à jour des statistiques d'utilisation
+    // Mise à jour des statistiques d'utilisation (use service role for RPC function)
     try {
-      const { error: statError } = await supabase.rpc(
+      const supabaseServiceRole = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+      
+      const { error: statError } = await supabaseServiceRole.rpc(
         'increment_usage_statistic',
         {
           user_id_param: user.id,

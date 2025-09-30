@@ -22,7 +22,7 @@ serve(async (req) => {
     console.log("🔹 Démarrage de la fonction create-slideshow");
 
     // Authentification
-    const { user, supabase } = await validateUser(req.headers.get("authorization"));
+    const { user, supabase, supabaseServiceRole } = await validateUser(req.headers.get("authorization"));
 
     // Récupération et validation des données
     const requestData = await req.json();
@@ -43,7 +43,7 @@ serve(async (req) => {
     console.log("🖼️ Images sélectionnées:", config.selectedImages.length, "images");
     console.log("🎵 URL de musique après traitement:", config.musicUrl || "aucune");
 
-    // Récupération des données de l'annonce
+    // Récupération des données de l'annonce (use user's client to enforce RLS)
     const listing = await getListingById(supabase, listingId);
     console.log("📋 Données du listing récupérées avec succès");
 
@@ -63,15 +63,15 @@ serve(async (req) => {
     const renderId = await renderWithShotstack(timeline, webhookUrl);
     console.log("🎬 Rendu initialisé, ID:", renderId);
     
-    // Enregistrement du rendu dans la base de données
-    await saveRenderRecord(supabase, {
+    // Enregistrement du rendu dans la base de données (use service role for system operation)
+    await saveRenderRecord(supabaseServiceRole, {
       listingId,
       renderId,
       userId: user.id
     });
 
-    // Mise à jour des statistiques
-    await updateUsageStatistics(supabase, user.id);
+    // Mise à jour des statistiques (use service role for system operation)
+    await updateUsageStatistics(supabaseServiceRole, user.id);
 
     return new Response(
       JSON.stringify({ success: true, renderId, message: "Vidéo en cours de génération." }),
