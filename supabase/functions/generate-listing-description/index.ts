@@ -16,10 +16,33 @@ serve(async (req) => {
   }
 
   try {
+    // Vérification de la clé OpenAI
+    if (!openAIApiKey) {
+      console.error("❌ OPENAI_API_KEY n'est pas configurée.");
+      return new Response(JSON.stringify({ error: "Configuration serveur manquante." }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Vérification de l'authentification
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      throw new Error("Pas d'en-tête d'autorisation.");
+      console.error("❌ Pas d'en-tête Authorization.");
+      return new Response(JSON.stringify({ error: "Pas d'en-tête d'autorisation." }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Extraire le JWT du header Authorization
+    const jwt = authHeader.replace("Bearer ", "").trim();
+    if (!jwt) {
+      console.error("❌ JWT vide dans Authorization header.");
+      return new Response(JSON.stringify({ error: "Jeton d'autorisation invalide." }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Create Supabase client for user-scoped reads (RLS enforced)
@@ -41,11 +64,12 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    // Passer explicitement le JWT à getUser()
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser(jwt);
 
     if (userError || !user) {
       console.error("❌ Invalid or expired user token:", userError);
-      return new Response(JSON.stringify({ error: "Jeton utilisateur invalide." }), {
+      return new Response(JSON.stringify({ error: "Jeton utilisateur invalide ou expiré." }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
