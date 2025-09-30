@@ -29,3 +29,6 @@ verify_jwt = true
 verify_jwt = false
 memory = 512
 timeout_ms = 15000
+
+[functions.generate-listing-description]
+verify_jwt = true

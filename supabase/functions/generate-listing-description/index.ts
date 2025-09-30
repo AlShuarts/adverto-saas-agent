@@ -22,11 +22,10 @@ serve(async (req) => {
       throw new Error("Pas d'en-tête d'autorisation.");
     }
 
-    // Create Supabase client with SERVICE_ROLE_KEY
-    // This function doesn't access sensitive user data, so SERVICE_ROLE is safe
-    const supabase = createClient(
+    // Create Supabase client for user-scoped reads (RLS enforced)
+    const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
           headers: {
@@ -36,11 +35,23 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Create Supabase client with SERVICE_ROLE_KEY for privileged operations (e.g., RPC stats)
+    const supabaseService = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
 
     if (userError || !user) {
-      throw new Error("Jeton utilisateur invalide.");
+      console.error("❌ Invalid or expired user token:", userError);
+      return new Response(JSON.stringify({ error: "Jeton utilisateur invalide." }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
+    console.log("✅ Authenticated user:", user.id);
 
     const body = await req.json();
     let listing;
@@ -48,16 +59,32 @@ serve(async (req) => {
     
     // Handle different request formats
     if (body.listing) {
-      // Direct listing object in request
+      // Direct listing object in request (prefer reloading via RLS if id provided)
       listing = body.listing;
       templateContent = body.templateContent;
+
+      try {
+        if (body.listing.id) {
+          const { data: reloaded, error: reloadError } = await supabaseUser
+            .from('listings')
+            .select('*')
+            .eq('id', body.listing.id)
+            .maybeSingle();
+
+          if (!reloadError && reloaded) {
+            listing = reloaded;
+          }
+        }
+      } catch (e) {
+        console.warn("⚠️ Failed to reload listing via RLS, using provided object.");
+      }
     } else if (body.listingId) {
       // Just listing ID provided, fetch listing from database
-      const { data: listingData, error: listingError } = await supabase
+      const { data: listingData, error: listingError } = await supabaseUser
         .from('listings')
         .select('*')
         .eq('id', body.listingId)
-        .single();
+        .maybeSingle();
         
       if (listingError || !listingData) {
         throw new Error("Impossible de trouver l'annonce.");
@@ -67,11 +94,11 @@ serve(async (req) => {
       
       // If templateId is provided, fetch the template
       if (body.templateId && body.templateId !== "none") {
-        const { data: template } = await supabase
+        const { data: template } = await supabaseUser
           .from('facebook_templates')
           .select('content')
           .eq('id', body.templateId)
-          .single();
+          .maybeSingle();
           
         if (template) {
           templateContent = template.content;
@@ -88,6 +115,9 @@ serve(async (req) => {
     }
 
     const propertyTitle = `${listing.bedrooms ? `${listing.bedrooms} chambres` : ''} ${listing.property_type || ''} ${listing.city ? `à ${listing.city}` : ''}`.trim();
+    const formattedPrice = (listing.price !== null && listing.price !== undefined)
+      ? new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD' }).format(Number(listing.price))
+      : 'Prix sur demande';
 
     let prompt;
     if (templateContent) {
@@ -97,7 +127,7 @@ ${templateContent}
 
 Utilise EXACTEMENT le même format, la même structure et le même style que ce template, mais remplace les informations par celles de cette propriété:
 - Type: ${propertyTitle}
-- Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
+- Prix: ${formattedPrice}
 - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
 ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
 ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
@@ -115,7 +145,7 @@ INSTRUCTIONS IMPORTANTES:
       prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
       Utilise ces informations:
       - Type: ${propertyTitle}
-      - Prix: ${listing.price ? listing.price.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) : 'Prix sur demande'}
+      - Prix: ${formattedPrice}
       - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
       ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
       ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
@@ -161,7 +191,7 @@ INSTRUCTIONS IMPORTANTES:
 
     // Mise à jour des statistiques d'utilisation
     try {
-      const { error: statError } = await supabase.rpc(
+      const { error: statError } = await supabaseService.rpc(
         'increment_usage_statistic',
         {
           user_id_param: user.id,
