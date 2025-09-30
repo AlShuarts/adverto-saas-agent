@@ -144,9 +144,8 @@ export const useProfile = () => {
           resolve(response);
         }, {
           scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish',
-          auth_type: 'rerequest',
-          return_scopes: true
-        });
+          auth_type: 'rerequest'
+        } as any);
       });
 
       if (authResponse.status !== 'connected') {
