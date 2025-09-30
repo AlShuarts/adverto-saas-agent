@@ -109,7 +109,7 @@ export const TemplateManager = ({
   };
   return <div>
       <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as 'facebook' | 'instagram')}>
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6 px-px">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-6 px-px">
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="facebook" className="flex items-center gap-2 flex-1 sm:flex-initial">
               <Facebook className="w-4 h-4" />
@@ -126,11 +126,11 @@ export const TemplateManager = ({
             name: "",
             content: ""
           });
-        }} disabled={isAddingTemplate} variant="outline" className="h-10 w-full sm:w-auto px-3 text-sm">
-            <PlusCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+        }} disabled={isAddingTemplate} variant="outline" className="h-10 w-full sm:w-auto px-3 text-xs sm:text-sm">
+            <PlusCircle className="w-4 h-4 mr-1.5 flex-shrink-0" />
             <span className="hidden sm:inline whitespace-nowrap">Nouveau template </span>
-            <span className="sm:hidden whitespace-nowrap">Nouveau </span>
-            <span className="whitespace-nowrap">{activeTab === 'facebook' ? 'Facebook' : 'Instagram'}</span>
+            <span className="sm:hidden truncate">Nouveau {activeTab === 'facebook' ? 'FB' : 'IG'}</span>
+            <span className="hidden sm:inline whitespace-nowrap">{activeTab === 'facebook' ? 'Facebook' : 'Instagram'}</span>
           </Button>
         </div>
 
