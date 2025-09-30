@@ -3,6 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Tables } from "@/integrations/supabase/types";
+import { useFacebookPageDiagnostics, type FacebookPage } from "./useFacebookPageDiagnostics";
+import { FacebookPageSelector } from "@/components/FacebookPageSelector";
 
 export const useProfile = () => {
   const { toast } = useToast();
@@ -10,6 +12,9 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const [showPageSelector, setShowPageSelector] = useState(false);
+  const [availablePages, setAvailablePages] = useState<FacebookPage[]>([]);
+  const { diagnosePages, showDetailedDiagnostic, getErrorMessageForPage } = useFacebookPageDiagnostics();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -234,29 +239,69 @@ export const useProfile = () => {
         console.log("4. Les permissions de l'app ne sont pas approuvées en production");
         console.log("5. Votre compte nécessite l'authentification à deux facteurs (2FA)");
         
-        throw new Error(
-          "Nous n'avons pas pu accéder à vos pages Facebook.\n\n" +
-          "Réessayez et assurez-vous de bien cocher toutes les pages que vous souhaitez connecter lors de l'autorisation Facebook."
-        );
+        toast({
+          title: "Aucune page trouvée",
+          description: "Nous n'avons pas pu accéder à vos pages Facebook. Assurez-vous de bien cocher toutes les pages lors de l'autorisation.",
+          variant: "destructive",
+        });
+        
+        setLoading(false);
+        return;
       }
 
-      // Si plusieurs pages, on prend la première pour l'instant
-      // TODO: Implémenter un sélecteur de page
-      const page = pages.data[0];
-      console.log("📌 Page sélectionnée:", {
+      // Diagnostic des pages
+      const diagnostics = diagnosePages(pages.data);
+      showDetailedDiagnostic(diagnostics);
+
+      // Si plusieurs pages, afficher le sélecteur
+      if (pages.data.length > 1) {
+        console.log("📋 Plusieurs pages disponibles, affichage du sélecteur...");
+        setAvailablePages(pages.data);
+        setShowPageSelector(true);
+        setLoading(false);
+        return;
+      }
+
+      // Une seule page, la connecter directement
+      await connectSinglePage(pages.data[0], userAccessToken);
+    } catch (error) {
+      console.error('❌ Erreur de connexion Facebook:', error);
+      toast({
+        title: "Erreur de connexion Facebook",
+        description: error instanceof Error ? error.message : "Impossible de connecter votre page Facebook",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const connectSinglePage = async (page: FacebookPage, userAccessToken: string) => {
+    try {
+      console.log("📌 Connexion de la page:", {
         id: page.id,
         name: page.name,
         category: page.category,
         tasks: page.tasks
       });
 
-      // Vérifier que la page a les bonnes permissions
-      if (page.tasks && !page.tasks.includes('MANAGE') && !page.tasks.includes('CREATE_CONTENT')) {
-        console.warn("⚠️ La page n'a peut-être pas les permissions suffisantes");
+      // Vérifier les permissions
+      const diagnostic = diagnosePages([page])[0];
+      
+      if (diagnostic.status === 'incompatible') {
+        const errorMessage = getErrorMessageForPage(page);
         toast({
-          title: "Attention",
-          description: "Cette page pourrait ne pas avoir toutes les permissions nécessaires. Si la publication échoue, vérifiez vos droits d'accès.",
-          variant: "default",
+          title: "Permissions insuffisantes",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (diagnostic.status === 'limited') {
+        toast({
+          title: "Permissions limitées",
+          description: "Cette page a des permissions limitées. Certaines fonctionnalités pourraient ne pas fonctionner correctement.",
         });
       }
 
@@ -316,12 +361,40 @@ export const useProfile = () => {
         description: `Page "${page.name}" connectée avec succès`,
       });
 
-      getProfile();
+      await getProfile();
     } catch (error) {
-      console.error('❌ Erreur de connexion Facebook:', error);
+      console.error('❌ Erreur lors de la connexion de la page:', error);
       toast({
-        title: "Erreur de connexion Facebook",
-        description: error instanceof Error ? error.message : "Impossible de connecter votre page Facebook",
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de connecter cette page",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePageSelection = async (page: FacebookPage) => {
+    setShowPageSelector(false);
+    setLoading(true);
+    
+    try {
+      // Récupérer à nouveau le token utilisateur
+      const authResponse = await new Promise<fb.AuthResponse>((resolve) => {
+        window.FB.login(resolve, {
+          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish',
+          auth_type: 'rerequest'
+        } as any);
+      });
+
+      if (authResponse.status !== 'connected' || !authResponse.authResponse?.accessToken) {
+        throw new Error("Impossible d'obtenir le token utilisateur");
+      }
+
+      await connectSinglePage(page, authResponse.authResponse.accessToken);
+    } catch (error) {
+      console.error('Erreur lors de la sélection de la page:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de connecter la page sélectionnée",
         variant: "destructive",
       });
     } finally {
@@ -443,6 +516,17 @@ export const useProfile = () => {
     initialized,
     getProfile,
     connectFacebook,
-    connectInstagram
+    connectInstagram,
+    PageSelector: () => (
+      <FacebookPageSelector
+        open={showPageSelector}
+        pages={availablePages}
+        onSelect={handlePageSelection}
+        onCancel={() => {
+          setShowPageSelector(false);
+          setLoading(false);
+        }}
+      />
+    )
   };
 };
