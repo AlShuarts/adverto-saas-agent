@@ -126,11 +126,11 @@ export const TemplateManager = ({
             name: "",
             content: ""
           });
-        }} disabled={isAddingTemplate} variant="outline" size="sm" className="w-full sm:w-auto">
-            <PlusCircle className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Nouveau template </span>
-            <span className="sm:hidden">Nouveau </span>
-            {activeTab === 'facebook' ? 'Facebook' : 'Instagram'}
+        }} disabled={isAddingTemplate} variant="outline" className="h-10 w-full sm:w-auto px-3 text-sm">
+            <PlusCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="hidden sm:inline whitespace-nowrap">Nouveau template </span>
+            <span className="sm:hidden whitespace-nowrap">Nouveau </span>
+            <span className="whitespace-nowrap">{activeTab === 'facebook' ? 'Facebook' : 'Instagram'}</span>
           </Button>
         </div>
 
