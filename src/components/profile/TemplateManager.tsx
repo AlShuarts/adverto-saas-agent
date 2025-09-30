@@ -112,15 +112,15 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
   return (
     <div>
       <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as 'facebook' | 'instagram')}>
-        <div className="flex justify-between items-center mb-6">
-          <TabsList>
-            <TabsTrigger value="facebook" className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-6">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="facebook" className="flex items-center gap-2 flex-1 sm:flex-initial">
               <Facebook className="w-4 h-4" />
-              Templates Facebook
+              <span className="hidden sm:inline">Templates </span>Facebook
             </TabsTrigger>
-            <TabsTrigger value="instagram" className="flex items-center gap-2">
+            <TabsTrigger value="instagram" className="flex items-center gap-2 flex-1 sm:flex-initial">
               <Instagram className="w-4 h-4" />
-              Templates Instagram
+              <span className="hidden sm:inline">Templates </span>Instagram
             </TabsTrigger>
           </TabsList>
           <Button
@@ -131,9 +131,12 @@ export const TemplateManager = ({ facebookTemplates, instagramTemplates, onTempl
             disabled={isAddingTemplate}
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
           >
             <PlusCircle className="w-4 h-4 mr-2" />
-            Nouveau template {activeTab === 'facebook' ? 'Facebook' : 'Instagram'}
+            <span className="hidden sm:inline">Nouveau template </span>
+            <span className="sm:hidden">Nouveau </span>
+            {activeTab === 'facebook' ? 'Facebook' : 'Instagram'}
           </Button>
         </div>
 
