@@ -149,7 +149,8 @@ export const useProfile = () => {
           resolve(response);
         }, {
           scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish',
-          auth_type: 'rerequest'
+          auth_type: 'rerequest',
+          return_scopes: true
         } as any);
       });
 
@@ -205,7 +206,7 @@ export const useProfile = () => {
       console.log("Token utilisateur utilisé:", userAccessToken?.substring(0, 20) + "...");
       
       const pages = await new Promise<any>((resolve, reject) => {
-        window.FB.api(`/me/accounts?fields=id,name,category,tasks,access_token&access_token=${userAccessToken}`, (response) => {
+        window.FB.api(`/me/accounts?fields=id,name,category,tasks,access_token,perms,role&access_token=${userAccessToken}`, (response) => {
           console.log("🔍 Réponse complète de l'API Facebook pour les pages:", JSON.stringify(response, null, 2));
           
           if (response.error) {
@@ -220,6 +221,8 @@ export const useProfile = () => {
                   id: page.id,
                   name: page.name,
                   category: page.category,
+                  role: page.role,
+                  perms: page.perms,
                   tasks: page.tasks,
                   has_token: !!page.access_token
                 });
@@ -238,10 +241,16 @@ export const useProfile = () => {
         console.log("3. Vous n'avez pas 'Facebook access – Full control' sur vos pages");
         console.log("4. Les permissions de l'app ne sont pas approuvées en production");
         console.log("5. Votre compte nécessite l'authentification à deux facteurs (2FA)");
+        console.log("6. Vous n'avez pas le rôle Admin/Editor/Moderator sur vos pages (requis par l'API)");
+        console.log("");
+        console.log("🔍 DIAGNOSTIC - Rôles Facebook Pages:");
+        console.log("   ✅ Admin, Editor, Moderator → Page accessible via API");
+        console.log("   ❌ Analyst, Advertiser → Page NON accessible via API");
+        console.log("   📝 Pour changer votre rôle : Page Settings → Page Access");
         
         toast({
           title: "Aucune page trouvée",
-          description: "Nous n'avons pas pu accéder à vos pages Facebook. Assurez-vous de bien cocher toutes les pages lors de l'autorisation.",
+          description: "Aucune page accessible. Vérifiez que vous avez un rôle Admin/Editor/Moderator sur vos pages et que vous les avez cochées lors de l'autorisation.",
           variant: "destructive",
         });
         
@@ -252,6 +261,24 @@ export const useProfile = () => {
       // Diagnostic des pages
       const diagnostics = diagnosePages(pages.data);
       showDetailedDiagnostic(diagnostics);
+
+      // Vérifier les pages avec rôle insuffisant
+      const insufficientRolePages = pages.data.filter((page: any) => 
+        ['ANALYST', 'ADVERTISER'].includes(page.role)
+      );
+
+      if (insufficientRolePages.length > 0) {
+        console.warn("⚠️ Pages avec rôle insuffisant détectées:", insufficientRolePages.map((p: any) => ({
+          name: p.name,
+          role: p.role
+        })));
+
+        toast({
+          title: "⚠️ Certaines pages nécessitent un rôle plus élevé",
+          description: `${insufficientRolePages.length} page(s) avec rôle Analyst/Advertiser non retournées. Changez votre rôle en Admin/Editor pour les utiliser.`,
+          variant: "destructive",
+        });
+      }
 
       // Si plusieurs pages, afficher le sélecteur
       if (pages.data.length > 1) {
@@ -381,7 +408,8 @@ export const useProfile = () => {
       const authResponse = await new Promise<fb.AuthResponse>((resolve) => {
         window.FB.login(resolve, {
           scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish',
-          auth_type: 'rerequest'
+          auth_type: 'rerequest',
+          return_scopes: true
         } as any);
       });
 
