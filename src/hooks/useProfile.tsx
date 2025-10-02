@@ -291,11 +291,11 @@ export const useProfile = () => {
       if (diagnostic.status === 'incompatible') {
         const errorMessage = getErrorMessageForPage(page);
         toast({
-          title: "Permissions insuffisantes",
-          description: errorMessage,
+          title: "⚠️ Permissions insuffisantes - Test activé",
+          description: errorMessage + " La connexion est autorisée pour test. La publication pourrait échouer.",
           variant: "destructive",
         });
-        return;
+        // return; // Temporairement désactivé pour tester la publication avec permissions limitées
       }
 
       if (diagnostic.status === 'limited') {
