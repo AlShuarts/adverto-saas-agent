@@ -254,6 +254,14 @@ export const useProfile = () => {
           userAccessToken
         );
         console.log(`✅ ${accountsPages.length} page(s) depuis /me/accounts`);
+        console.log("📋 Détail des pages /me/accounts:", accountsPages.map(p => ({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          role: p.role,
+          tasks: p.tasks,
+          has_access_token: !!p.access_token
+        })));
         accountsPages.forEach(p => p.origin = 'accounts');
 
         // Fallback si /me/accounts retourne 0 résultat
@@ -276,6 +284,14 @@ export const useProfile = () => {
         }
       } catch (error: any) {
         console.error("❌ Erreur /me/accounts:", error?.message || error);
+      }
+
+      if (accountsPages.length === 0) {
+        console.warn("⚠️ ATTENTION: Aucune page trouvée depuis /me/accounts");
+        console.warn("Cela signifie probablement que :");
+        console.warn("  1. Vous n'avez pas coché de pages dans le popup Facebook");
+        console.warn("  2. Votre rôle sur les pages est insuffisant (Analyst/Advertiser)");
+        console.warn("  3. Les pages n'ont pas été correctement autorisées");
       }
 
       // Récupérer les pages depuis /me/assigned_pages (Business Manager)
@@ -370,6 +386,20 @@ export const useProfile = () => {
         }))
       });
 
+      console.log("");
+      console.log("🔎 DIAGNOSTIC COMPLET :");
+      console.log(`   📊 Total de pages agrégées: ${pages.data.length}`);
+      console.log(`   📄 Pages personnelles (/me/accounts): ${accountsPages.length}`);
+      console.log(`   🏢 Pages Business Manager: ${assignedPages.length}`);
+      console.log(`   🏪 Pages Business owned: ${businessOwnedPages.length}`);
+      console.log(`   🤝 Pages Business client: ${businessClientPages.length}`);
+      console.log("");
+      if (pages.data.length === 0) {
+        console.error("❌ PROBLÈME: Aucune page n'a été trouvée !");
+        console.error("   Avez-vous bien COCHÉ vos pages dans le popup Facebook ?");
+        console.error("   Vérifiez votre rôle sur les pages (Admin/Editor/Moderator requis)");
+      }
+
       if (!pages.data || pages.data.length === 0) {
         console.error("❌ Aucune page Facebook accessible trouvée");
         console.log("");
@@ -393,7 +423,7 @@ export const useProfile = () => {
         
         toast({
           title: "Aucune page trouvée",
-          description: "Aucune page accessible. Vérifiez que vous avez un rôle Admin/Editor/Moderator sur vos pages et que vous les avez cochées lors de l'autorisation.",
+          description: "Les pages cochées dans le popup ne sont pas accessibles. Vérifiez votre rôle (Admin/Editor/Moderator requis) et réessayez.",
           variant: "destructive",
         });
         
