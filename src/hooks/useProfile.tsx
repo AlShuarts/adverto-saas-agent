@@ -3,8 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Tables } from "@/integrations/supabase/types";
-import { useFacebookPageDiagnostics, type FacebookPage } from "./useFacebookPageDiagnostics";
-import { FacebookPageSelector } from "@/components/FacebookPageSelector";
+import { type FacebookPage } from "./useFacebookPageDiagnostics";
 
 export const useProfile = () => {
   const { toast } = useToast();
@@ -12,9 +11,6 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const [showPageSelector, setShowPageSelector] = useState(false);
-  const [availablePages, setAvailablePages] = useState<FacebookPage[]>([]);
-  const { diagnosePages, showDetailedDiagnostic, getErrorMessageForPage } = useFacebookPageDiagnostics();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -408,48 +404,25 @@ export const useProfile = () => {
       // Afficher un message si des pages Business ont été trouvées
       if (assignedPages.length > 0) {
         console.log(`✨ ${assignedPages.length} page(s) Business Manager ajoutée(s)`);
+      }
+
+      // Connecter automatiquement la première page autorisée
+      console.log(`✅ ${pages.data.length} page(s) autorisée(s), connexion automatique...`);
+      const primaryPage = pages.data[0];
+      await connectSinglePage(primaryPage, userAccessToken);
+
+      // Afficher un message informatif si plusieurs pages étaient disponibles
+      if (pages.data.length > 1) {
         toast({
-          title: "✨ Pages Business Manager détectées",
-          description: `${assignedPages.length} page(s) Business Manager ajoutée(s) à la sélection`,
+          title: "✅ Page connectée",
+          description: `${primaryPage.name} a été connectée comme page principale. ${pages.data.length - 1} autre(s) page(s) disponible(s).`,
+        });
+      } else {
+        toast({
+          title: "✅ Page connectée",
+          description: `${primaryPage.name} a été connectée avec succès.`,
         });
       }
-
-      // Diagnostic des pages
-      const diagnostics = diagnosePages(pages.data);
-      showDetailedDiagnostic(diagnostics);
-
-      // Logs de diagnostic uniquement (pas de blocage)
-      const insufficientRolePages = pages.data.filter((page: any) => 
-        ['ANALYST', 'ADVERTISER'].includes(page.role)
-      );
-
-      if (insufficientRolePages.length > 0) {
-        console.warn("⚠️ Pages avec rôle insuffisant détectées:", insufficientRolePages.map((p: any) => ({
-          name: p.name,
-          role: p.role
-        })));
-        console.log("ℹ️ Ces pages seront connectables, mais la publication pourrait échouer si les permissions sont insuffisantes.");
-      }
-
-      // Afficher les pages sans access_token (normal pour Business Manager)
-      const pagesWithoutToken = pages.data.filter((page: any) => !page.access_token);
-      if (pagesWithoutToken.length > 0) {
-        console.log(`ℹ️ ${pagesWithoutToken.length} page(s) sans access_token (sera récupéré à la connexion):`, 
-          pagesWithoutToken.map((p: any) => ({ name: p.name, origin: p.origin }))
-        );
-      }
-
-      // Si plusieurs pages, afficher le sélecteur
-      if (pages.data.length > 1) {
-        console.log("📋 Plusieurs pages disponibles, affichage du sélecteur...");
-        setAvailablePages(pages.data);
-        setShowPageSelector(true);
-        setLoading(false);
-        return;
-      }
-
-      // Une seule page, la connecter directement
-      await connectSinglePage(pages.data[0], userAccessToken);
     } catch (error) {
       console.error('❌ Erreur de connexion Facebook:', error);
       toast({
@@ -547,36 +520,6 @@ export const useProfile = () => {
     }
   };
 
-  const handlePageSelection = async (page: FacebookPage) => {
-    setShowPageSelector(false);
-    setLoading(true);
-    
-    try {
-      // Récupérer à nouveau le token utilisateur
-      const authResponse = await new Promise<fb.AuthResponse>((resolve) => {
-        window.FB.login(resolve, {
-          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
-          auth_type: 'rerequest',
-          return_scopes: true
-        } as any);
-      });
-
-      if (authResponse.status !== 'connected' || !authResponse.authResponse?.accessToken) {
-        throw new Error("Impossible d'obtenir le token utilisateur");
-      }
-
-      await connectSinglePage(page, authResponse.authResponse.accessToken);
-    } catch (error) {
-      console.error('Erreur lors de la sélection de la page:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de connecter la page sélectionnée",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const connectInstagram = async () => {
     console.log("🔄 Début de la connexion Instagram...");
@@ -692,17 +635,6 @@ export const useProfile = () => {
     initialized,
     getProfile,
     connectFacebook,
-    connectInstagram,
-    PageSelector: () => (
-      <FacebookPageSelector
-        open={showPageSelector}
-        pages={availablePages}
-        onSelect={handlePageSelection}
-        onCancel={() => {
-          setShowPageSelector(false);
-          setLoading(false);
-        }}
-      />
-    )
+    connectInstagram
   };
 };

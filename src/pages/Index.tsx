@@ -10,7 +10,7 @@ import { Toaster } from "sonner";
 
 const Index = () => {
   const { fbInitialized } = useFacebookSDK();
-  const { profile, loading, getProfile, connectFacebook, connectInstagram, PageSelector } = useProfile();
+  const { profile, loading, getProfile, connectFacebook, connectInstagram } = useProfile();
 
   // Assurer que le profil est chargé au démarrage
   useEffect(() => {
@@ -30,7 +30,6 @@ const Index = () => {
       />
       <ListingsSection />
       <FeaturesSection />
-      <PageSelector />
       <Toaster position="top-right" />
     </div>
   );
