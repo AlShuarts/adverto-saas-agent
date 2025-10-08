@@ -3,8 +3,11 @@ import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Tables } from "@/integrations/supabase/types";
 import { PublishedListingsList } from "@/components/PublishedListingsList";
+import { useFacebookTokenChecker } from "@/hooks/useFacebookTokenChecker";
 
 const PublishedListings = () => {
+  useFacebookTokenChecker();
+  
   return (
     <div className="min-h-screen bg-secondary">
       <Navbar />

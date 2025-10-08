@@ -1,7 +1,9 @@
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export const useFacebookTokenValidation = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const validateFacebookToken = async (token: string, pageId: string): Promise<boolean> => {
     try {
@@ -32,10 +34,15 @@ export const useFacebookTokenValidation = () => {
         
         if (errorData.error?.code === 190) {
           toast({
-            title: "Token expiré",
-            description: "Votre token Facebook a expiré. Veuillez vous reconnecter à votre page Facebook.",
+            title: "Connexion Facebook expirée",
+            description: "Redirection vers votre profil dans 3 secondes...",
             variant: "destructive",
+            duration: 5000,
           });
+          
+          setTimeout(() => {
+            navigate("/profile");
+          }, 3000);
         }
         
         return false;
@@ -69,10 +76,15 @@ export const useFacebookTokenValidation = () => {
         
         if (errorData.error?.code === 190) {
           toast({
-            title: "Token expiré",
-            description: "Votre token Instagram a expiré. Veuillez vous reconnecter à votre compte Instagram.",
+            title: "Connexion Instagram expirée",
+            description: "Redirection vers votre profil dans 3 secondes...",
             variant: "destructive",
+            duration: 5000,
           });
+          
+          setTimeout(() => {
+            navigate("/profile");
+          }, 3000);
         }
         
         return false;

@@ -303,10 +303,30 @@ export const useProfile = () => {
       );
 
       const pageTokenData = await longLivedPageTokenResponse.json();
-      const pageToken = pageTokenData.access_token;
+      let pageToken = pageTokenData.access_token;
 
       if (!pageToken) {
         throw new Error("Token de page non trouvé");
+      }
+
+      // Échanger contre un token longue durée (60 jours)
+      console.log("🔄 Échange du token pour un token longue durée...");
+      try {
+        const { data: exchangeData, error: exchangeError } = await supabase.functions.invoke(
+          'exchange-facebook-token',
+          { body: { shortLivedToken: pageToken } }
+        );
+
+        if (exchangeError) {
+          console.error("Erreur lors de l'échange du token:", exchangeError);
+          console.log("⚠️ Utilisation du token court (non recommandé)");
+        } else if (exchangeData?.access_token) {
+          pageToken = exchangeData.access_token;
+          console.log("✅ Token longue durée obtenu");
+        }
+      } catch (error) {
+        console.error("Erreur d'échange de token:", error);
+        console.log("⚠️ Utilisation du token court (non recommandé)");
       }
 
       // Sauvegarder le token

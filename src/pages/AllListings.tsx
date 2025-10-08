@@ -4,9 +4,11 @@ import { ListingsTable } from "@/components/ListingsTable";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useFacebookTokenChecker } from "@/hooks/useFacebookTokenChecker";
 
 const AllListings = () => {
   const navigate = useNavigate();
+  useFacebookTokenChecker();
 
   return (
     <div className="min-h-screen bg-secondary">
