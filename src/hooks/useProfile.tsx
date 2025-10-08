@@ -205,22 +205,24 @@ export const useProfile = () => {
       console.log("🔄 Début de la récupération des pages Facebook...");
       console.log("Token utilisateur utilisé:", userAccessToken?.substring(0, 20) + "...");
       
-      // Fonction utilitaire pour récupérer toutes les pages avec pagination
+      // Fonction utilitaire pour récupérer toutes les pages avec pagination (via cursors)
       const fetchAllPages = async (endpoint: string, userToken: string): Promise<any[]> => {
         let allData: any[] = [];
-        let currentPath = endpoint;
-        let attempts = 0;
-        const maxAttempts = 5; // Limite de sécurité
+        const [basePath, initialQuery = ""] = endpoint.split("?");
+        const base = basePath.startsWith("/") ? basePath : `/${basePath}`;
+        const hasTokenParam = initialQuery.includes("access_token=");
+        const baseQuery = hasTokenParam ? initialQuery : `${initialQuery}${initialQuery ? "&" : ""}access_token=${userToken}`;
         
-        while (currentPath && attempts < maxAttempts) {
-          attempts++;
-          console.log(`   Tentative ${attempts}: ${currentPath.substring(0, 100)}...`);
+        let after: string | null = null;
+        let pageCount = 0;
+        
+        while (true) {
+          const path = `${base}?${baseQuery}${after ? `&after=${after}` : ""}`;
+          pageCount++;
+          console.log(`   Appel ${pageCount}: ${path.substring(0, 120)}...`);
           
           const response: any = await new Promise((resolve, reject) => {
-            // Utiliser le chemin complet si c'est une URL de pagination, sinon juste l'endpoint
-            const apiPath = currentPath.startsWith('http') ? currentPath : `${currentPath}&access_token=${userToken}`;
-            
-            window.FB.api(currentPath, (res: any) => {
+            window.FB.api(path, (res: any) => {
               if (res && res.error) {
                 console.error(`   Erreur API: ${res.error.message}`);
                 reject(res.error);
@@ -230,13 +232,17 @@ export const useProfile = () => {
             });
           });
           
-          if (response && response.data && Array.isArray(response.data)) {
-            console.log(`   ✓ ${response.data.length} résultat(s) récupéré(s)`);
+          if (response && Array.isArray(response.data) && response.data.length > 0) {
+            console.log(`   ✓ ${response.data.length} résultat(s)`);
             allData = allData.concat(response.data);
           }
           
-          // Vérifier s'il y a une page suivante
-          currentPath = response?.paging?.next || null;
+          const nextAfter = response?.paging?.cursors?.after;
+          if (nextAfter && nextAfter !== after) {
+            after = nextAfter;
+          } else {
+            break;
+          }
         }
         
         return allData;
@@ -252,6 +258,25 @@ export const useProfile = () => {
         );
         console.log(`✅ ${accountsPages.length} page(s) depuis /me/accounts`);
         accountsPages.forEach(p => p.origin = 'accounts');
+
+        // Fallback si /me/accounts retourne 0 résultat
+        if (accountsPages.length === 0) {
+          console.log("ℹ️ Fallback: /me?fields=accounts{...}");
+          const meResponse: any = await new Promise((resolve, reject) => {
+            window.FB.api(`/me?fields=accounts.limit(100){id,name,category,tasks,access_token,perms,role}`, (res: any) => {
+              if (res && res.error) {
+                console.error("   Erreur fallback /me:", res.error);
+                resolve(null);
+              } else {
+                resolve(res);
+              }
+            });
+          });
+          if (meResponse?.accounts?.data) {
+            accountsPages = meResponse.accounts.data.map((p: any) => ({ ...p, origin: 'accounts' }));
+            console.log(`✅ Fallback /me → ${accountsPages.length} page(s)`);
+          }
+        }
       } catch (error: any) {
         console.error("❌ Erreur /me/accounts:", error?.message || error);
       }
