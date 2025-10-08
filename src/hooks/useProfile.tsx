@@ -245,126 +245,42 @@ export const useProfile = () => {
         return allData;
       };
 
-      // Récupérer uniquement les pages COCHÉES dans le popup OAuth
-      console.log("📥 Récupération des pages COCHÉES dans le popup Facebook...");
-      let accountsPages: any[] = [];
-      
-      try {
-        // Utiliser /me?fields=accounts{...} qui respecte la sélection OAuth
-        const selectedPagesResponse: any = await new Promise((resolve, reject) => {
-          window.FB.api(
-            `/me?fields=accounts{id,name,category,tasks,access_token,perms,role}`,
-            (res: any) => {
-              if (res && res.error) {
-                console.error("❌ Erreur /me?fields=accounts:", res.error);
-                reject(res.error);
-              } else {
-                resolve(res);
-              }
+      // Récupérer les pages cochées dans le popup OAuth
+      console.log("📥 Récupération des pages cochées...");
+      const accountsPages: any[] = await new Promise((resolve, reject) => {
+        window.FB.api(
+          '/me/accounts?fields=id,name,access_token',
+          (res: any) => {
+            if (res && res.error) {
+              console.error("❌ Erreur:", res.error);
+              reject(res.error);
+            } else {
+              resolve(res.data || []);
             }
-          );
-        });
+          }
+        );
+      });
 
-        accountsPages = selectedPagesResponse?.accounts?.data || [];
-        accountsPages.forEach(p => p.origin = 'accounts');
-        
-        console.log(`✅ ${accountsPages.length} page(s) COCHÉES dans le popup OAuth`);
-        console.log("📋 Pages autorisées:", accountsPages.map(p => ({
-          id: p.id,
-          name: p.name,
-          role: p.role,
-          has_access_token: !!p.access_token
-        })));
-      } catch (error: any) {
-        console.error("❌ Erreur lors de la récupération des pages cochées:", error?.message || error);
-      }
+      console.log(`✅ ${accountsPages.length} page(s) cochée(s)`);
 
-      if (accountsPages.length === 0) {
-        console.warn("⚠️ ATTENTION: Aucune page n'a été cochée dans le popup Facebook !");
-        console.warn("➡️ Veuillez relancer la connexion et COCHER les pages souhaitées");
-        console.warn("");
-        console.warn("Autres raisons possibles :");
-        console.warn("  • Votre rôle sur les pages est insuffisant (Admin/Editor/Moderator requis)");
-        console.warn("  • Les permissions n'ont pas été accordées");
-      }
-
-      // Pages = seulement celles cochées dans le popup
       const pages = {
         data: accountsPages
       };
 
-      console.log("🔍 Réponse finale:", {
-        total: pages.data.length,
-        pages: pages.data.map(p => ({
-          id: p.id,
-          name: p.name,
-          category: p.category,
-          role: p.role,
-          perms: p.perms,
-          tasks: p.tasks,
-          has_token: !!p.access_token
-        }))
-      });
-
-      console.log("");
-      console.log("🔎 DIAGNOSTIC :");
-      console.log(`   📊 Total de pages cochées: ${pages.data.length}`);
-      console.log("");
       if (pages.data.length === 0) {
-        console.error("❌ PROBLÈME: Aucune page n'a été trouvée !");
-        console.error("   Avez-vous bien COCHÉ vos pages dans le popup Facebook ?");
-        console.error("   Vérifiez votre rôle sur les pages (Admin/Editor/Moderator requis)");
-      }
-
-      if (!pages.data || pages.data.length === 0) {
-        console.error("❌ Aucune page Facebook accessible trouvée");
-        console.log("");
-        console.log("📋 Checklist de dépannage :");
-        console.log("1. Vous n'avez pas cliqué sur 'Continuer en tant que...' lors de la connexion");
-        console.log("2. Vous n'avez pas coché les pages dans la popup Facebook");
-        console.log("3. Vous n'avez pas 'Facebook access – Full control' sur vos pages");
-        console.log("4. Les permissions de l'app ne sont pas approuvées en production");
-        console.log("5. Votre compte nécessite l'authentification à deux facteurs (2FA)");
-        console.log("6. Vous n'avez pas le rôle Admin/Editor/Moderator sur vos pages (requis par l'API)");
-        console.log("");
-        console.log("🏢 Pour les pages Business Manager :");
-        console.log("   • Vérifiez que vous êtes bien ajouté au Business Manager");
-        console.log("   • Vérifiez vos permissions sur la page (Tâches : Créer du contenu ou Contrôle total)");
-        console.log("   • Allez dans Business Settings → Pages → Vérifier les attributions");
-        console.log("");
-        console.log("🔍 DIAGNOSTIC - Rôles Facebook Pages:");
-        console.log("   ✅ Admin, Editor, Moderator → Page accessible via API");
-        console.log("   ❌ Analyst, Advertiser → Page NON accessible via API");
-        console.log("   📝 Pour changer votre rôle : Page Settings → Page Access");
-        
         toast({
-          title: "Aucune page trouvée",
-          description: "Les pages cochées dans le popup ne sont pas accessibles. Vérifiez votre rôle (Admin/Editor/Moderator requis) et réessayez.",
+          title: "Aucune page cochée",
+          description: "Veuillez cocher au moins une page dans le popup Facebook",
           variant: "destructive",
         });
-        
         setLoading(false);
         return;
       }
 
 
-      // Connecter automatiquement la première page autorisée
-      console.log(`✅ ${pages.data.length} page(s) autorisée(s), connexion automatique...`);
-      const primaryPage = pages.data[0];
-      await connectSinglePage(primaryPage, userAccessToken);
-
-      // Afficher un message informatif si plusieurs pages étaient disponibles
-      if (pages.data.length > 1) {
-        toast({
-          title: "✅ Page connectée",
-          description: `${primaryPage.name} a été connectée comme page principale. ${pages.data.length - 1} autre(s) page(s) disponible(s).`,
-        });
-      } else {
-        toast({
-          title: "✅ Page connectée",
-          description: `${primaryPage.name} a été connectée avec succès.`,
-        });
-      }
+      // Connecter automatiquement la première page cochée
+      console.log(`🔄 Connexion de ${pages.data[0].name}...`);
+      await connectSinglePage(pages.data[0], userAccessToken);
     } catch (error) {
       console.error('❌ Erreur de connexion Facebook:', error);
       toast({
@@ -379,60 +295,21 @@ export const useProfile = () => {
 
   const connectSinglePage = async (page: FacebookPage, userAccessToken: string) => {
     try {
-      console.log("📌 Connexion de la page:", {
-        id: page.id,
-        name: page.name,
-        category: page.category,
-        origin: page.origin,
-        tasks: page.tasks,
-        role: page.role
-      });
+      console.log("📌 Connexion de la page:", page.name);
 
-      // Étape 4: Obtenir un token de page longue durée
-      console.log("Obtention du token de page longue durée...");
+      // Obtenir le token de page
       const longLivedPageTokenResponse = await fetch(
-        `https://graph.facebook.com/v23.0/${page.id}?` +
-        `fields=access_token&` +
-        `access_token=${userAccessToken}`
+        `https://graph.facebook.com/v23.0/${page.id}?fields=access_token&access_token=${userAccessToken}`
       );
-
-      if (!longLivedPageTokenResponse.ok) {
-        const errorData = await longLivedPageTokenResponse.json();
-        console.error("❌ Erreur obtention token de page:", errorData);
-        const fbMessage = errorData?.error?.message || "Erreur inconnue";
-        if (fbMessage.includes('Unsupported get request')) {
-          throw new Error("Facebook renvoie 'Unsupported get request'. Vérifiez que vous avez bien coché la page lors de l'autorisation et que vous avez les permissions requises.");
-        } else if (errorData?.error?.code === 10 || /permission/i.test(fbMessage)) {
-          throw new Error("Permissions insuffisantes pour obtenir le token de page. Assurez-vous d'avoir 'Facebook access – Full control' ou 'Create content' sur la page.");
-        } else {
-          throw new Error(`Impossible d'obtenir le token de page: ${fbMessage}`);
-        }
-      }
 
       const pageTokenData = await longLivedPageTokenResponse.json();
       const pageToken = pageTokenData.access_token;
 
       if (!pageToken) {
-        throw new Error("Token de page non trouvé dans la réponse");
+        throw new Error("Token de page non trouvé");
       }
 
-      // Étape 5: Valider le token de page
-      console.log("Validation du token de page...");
-      const tokenValidationResponse = await fetch(
-        `https://graph.facebook.com/v23.0/me?access_token=${pageToken}`
-      );
-
-      if (!tokenValidationResponse.ok) {
-        const errorData = await tokenValidationResponse.json();
-        console.error("❌ Token de page invalide:", errorData);
-        throw new Error("Le token de page n'est pas valide");
-      }
-
-      const tokenInfo = await tokenValidationResponse.json();
-      console.log("✅ Token validé pour:", tokenInfo);
-
-      // Étape 6: Sauvegarder le token
-      console.log("Sauvegarde du token de page...");
+      // Sauvegarder le token
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -441,10 +318,7 @@ export const useProfile = () => {
         })
         .eq('id', profile.id);
 
-      if (updateError) {
-        console.error("❌ Erreur sauvegarde:", updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       toast({
         title: "Succès",
@@ -453,7 +327,7 @@ export const useProfile = () => {
 
       await getProfile();
     } catch (error) {
-      console.error('❌ Erreur lors de la connexion de la page:', error);
+      console.error('❌ Erreur:', error);
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de connecter cette page",
