@@ -245,135 +245,56 @@ export const useProfile = () => {
         return allData;
       };
 
-      // Récupérer les pages depuis /me/accounts
-      console.log("📥 Récupération depuis /me/accounts...");
+      // Récupérer uniquement les pages COCHÉES dans le popup OAuth
+      console.log("📥 Récupération des pages COCHÉES dans le popup Facebook...");
       let accountsPages: any[] = [];
+      
       try {
-        accountsPages = await fetchAllPages(
-          `/me/accounts?fields=id,name,category,tasks,access_token,perms,role&limit=100`,
-          userAccessToken
-        );
-        console.log(`✅ ${accountsPages.length} page(s) depuis /me/accounts`);
-        console.log("📋 Détail des pages /me/accounts:", accountsPages.map(p => ({
-          id: p.id,
-          name: p.name,
-          category: p.category,
-          role: p.role,
-          tasks: p.tasks,
-          has_access_token: !!p.access_token
-        })));
-        accountsPages.forEach(p => p.origin = 'accounts');
-
-        // Fallback si /me/accounts retourne 0 résultat
-        if (accountsPages.length === 0) {
-          console.log("ℹ️ Fallback: /me?fields=accounts{...}");
-          const meResponse: any = await new Promise((resolve, reject) => {
-            window.FB.api(`/me?fields=accounts.limit(100){id,name,category,tasks,access_token,perms,role}`, (res: any) => {
+        // Utiliser /me?fields=accounts{...} qui respecte la sélection OAuth
+        const selectedPagesResponse: any = await new Promise((resolve, reject) => {
+          window.FB.api(
+            `/me?fields=accounts{id,name,category,tasks,access_token,perms,role}`,
+            (res: any) => {
               if (res && res.error) {
-                console.error("   Erreur fallback /me:", res.error);
-                resolve(null);
+                console.error("❌ Erreur /me?fields=accounts:", res.error);
+                reject(res.error);
               } else {
                 resolve(res);
               }
-            });
-          });
-          if (meResponse?.accounts?.data) {
-            accountsPages = meResponse.accounts.data.map((p: any) => ({ ...p, origin: 'accounts' }));
-            console.log(`✅ Fallback /me → ${accountsPages.length} page(s)`);
-          }
-        }
+            }
+          );
+        });
+
+        accountsPages = selectedPagesResponse?.accounts?.data || [];
+        accountsPages.forEach(p => p.origin = 'accounts');
+        
+        console.log(`✅ ${accountsPages.length} page(s) COCHÉES dans le popup OAuth`);
+        console.log("📋 Pages autorisées:", accountsPages.map(p => ({
+          id: p.id,
+          name: p.name,
+          role: p.role,
+          has_access_token: !!p.access_token
+        })));
       } catch (error: any) {
-        console.error("❌ Erreur /me/accounts:", error?.message || error);
+        console.error("❌ Erreur lors de la récupération des pages cochées:", error?.message || error);
       }
 
       if (accountsPages.length === 0) {
-        console.warn("⚠️ ATTENTION: Aucune page trouvée depuis /me/accounts");
-        console.warn("Cela signifie probablement que :");
-        console.warn("  1. Vous n'avez pas coché de pages dans le popup Facebook");
-        console.warn("  2. Votre rôle sur les pages est insuffisant (Analyst/Advertiser)");
-        console.warn("  3. Les pages n'ont pas été correctement autorisées");
+        console.warn("⚠️ ATTENTION: Aucune page n'a été cochée dans le popup Facebook !");
+        console.warn("➡️ Veuillez relancer la connexion et COCHER les pages souhaitées");
+        console.warn("");
+        console.warn("Autres raisons possibles :");
+        console.warn("  • Votre rôle sur les pages est insuffisant (Admin/Editor/Moderator requis)");
+        console.warn("  • Les permissions n'ont pas été accordées");
       }
 
-      // Récupérer les pages depuis /me/assigned_pages (Business Manager)
-      console.log("📥 Récupération depuis /me/assigned_pages (Business Manager)...");
-      let assignedPages: any[] = [];
-      try {
-        assignedPages = await fetchAllPages(
-          `/me/assigned_pages?fields=id,name,category,permitted_tasks,access_token,perms,role&limit=100`,
-          userAccessToken
-        );
-        console.log(`✅ ${assignedPages.length} page(s) depuis /me/assigned_pages (Business Manager)`);
-        assignedPages.forEach(p => {
-          p.origin = 'assigned';
-          // Normaliser permitted_tasks vers tasks
-          if (p.permitted_tasks && !p.tasks) {
-            p.tasks = p.permitted_tasks;
-          }
-        });
-      } catch (error: any) {
-        console.error("⚠️ Erreur /me/assigned_pages:", error?.message || error);
-        // Ne pas bloquer si cette API échoue (normal si pas de Business Manager)
-      }
-
-      // Récupérer les Business et leurs pages (owned et client)
-      console.log("📥 Récupération des Business et pages associées...");
-      let businessOwnedPages: any[] = [];
-      let businessClientPages: any[] = [];
-      try {
-        const businesses = await fetchAllPages(`/me/businesses?fields=id,name&limit=100`, userAccessToken);
-        console.log(`✅ ${businesses.length} business(es) trouvé(s)`);
-        for (const b of businesses) {
-          try {
-            const owned = await fetchAllPages(`/${b.id}/owned_pages?fields=id,name,category,permitted_tasks,tasks,access_token,perms,role&limit=100`, userAccessToken);
-            owned.forEach((p: any) => {
-              p.origin = 'business_owned';
-              if (p.permitted_tasks && !p.tasks) p.tasks = p.permitted_tasks;
-            });
-            businessOwnedPages = businessOwnedPages.concat(owned);
-            console.log(`   🏢 Business ${b.name}: ${owned.length} owned_pages`);
-          } catch (e) {
-            console.warn(`   ⚠️ Erreur owned_pages pour le business ${b.name}:`, (e as any)?.message || e);
-          }
-          try {
-            const client = await fetchAllPages(`/${b.id}/client_pages?fields=id,name,category,permitted_tasks,tasks,access_token,perms,role&limit=100`, userAccessToken);
-            client.forEach((p: any) => {
-              p.origin = 'business_client';
-              if (p.permitted_tasks && !p.tasks) p.tasks = p.permitted_tasks;
-            });
-            businessClientPages = businessClientPages.concat(client);
-            console.log(`   🤝 Business ${b.name}: ${client.length} client_pages`);
-          } catch (e) {
-            console.warn(`   ⚠️ Erreur client_pages pour le business ${b.name}:`, (e as any)?.message || e);
-          }
-        }
-      } catch (error: any) {
-        console.warn("ℹ️ Aucun business trouvé ou accès refusé:", error?.message || error);
-      }
-
-      // Fusionner et dédupliquer les pages
-      const allPagesMap = new Map();
-      [...accountsPages, ...assignedPages, ...businessOwnedPages, ...businessClientPages].forEach(page => {
-        if (!allPagesMap.has(page.id)) {
-          allPagesMap.set(page.id, page);
-        } else {
-          // Si la page existe déjà, privilégier celle avec access_token
-          const existing = allPagesMap.get(page.id);
-          if (page.access_token && !existing.access_token) {
-            allPagesMap.set(page.id, page);
-          }
-        }
-      });
-
+      // Pages = seulement celles cochées dans le popup
       const pages = {
-        data: Array.from(allPagesMap.values())
+        data: accountsPages
       };
 
-      console.log("🔍 Réponse agrégée finale:", {
+      console.log("🔍 Réponse finale:", {
         total: pages.data.length,
-        from_accounts: accountsPages.length,
-        from_assigned: assignedPages.length,
-        from_business_owned: businessOwnedPages.length,
-        from_business_client: businessClientPages.length,
         pages: pages.data.map(p => ({
           id: p.id,
           name: p.name,
@@ -381,18 +302,13 @@ export const useProfile = () => {
           role: p.role,
           perms: p.perms,
           tasks: p.tasks,
-          origin: p.origin,
           has_token: !!p.access_token
         }))
       });
 
       console.log("");
-      console.log("🔎 DIAGNOSTIC COMPLET :");
-      console.log(`   📊 Total de pages agrégées: ${pages.data.length}`);
-      console.log(`   📄 Pages personnelles (/me/accounts): ${accountsPages.length}`);
-      console.log(`   🏢 Pages Business Manager: ${assignedPages.length}`);
-      console.log(`   🏪 Pages Business owned: ${businessOwnedPages.length}`);
-      console.log(`   🤝 Pages Business client: ${businessClientPages.length}`);
+      console.log("🔎 DIAGNOSTIC :");
+      console.log(`   📊 Total de pages cochées: ${pages.data.length}`);
       console.log("");
       if (pages.data.length === 0) {
         console.error("❌ PROBLÈME: Aucune page n'a été trouvée !");
@@ -431,10 +347,6 @@ export const useProfile = () => {
         return;
       }
 
-      // Afficher un message si des pages Business ont été trouvées
-      if (assignedPages.length > 0) {
-        console.log(`✨ ${assignedPages.length} page(s) Business Manager ajoutée(s)`);
-      }
 
       // Connecter automatiquement la première page autorisée
       console.log(`✅ ${pages.data.length} page(s) autorisée(s), connexion automatique...`);
