@@ -418,7 +418,7 @@ export const useProfile = () => {
       const diagnostics = diagnosePages(pages.data);
       showDetailedDiagnostic(diagnostics);
 
-      // Vérifier les pages avec rôle insuffisant
+      // Logs de diagnostic uniquement (pas de blocage)
       const insufficientRolePages = pages.data.filter((page: any) => 
         ['ANALYST', 'ADVERTISER'].includes(page.role)
       );
@@ -428,12 +428,7 @@ export const useProfile = () => {
           name: p.name,
           role: p.role
         })));
-
-        toast({
-          title: "⚠️ Certaines pages nécessitent un rôle plus élevé",
-          description: `${insufficientRolePages.length} page(s) avec rôle Analyst/Advertiser non retournées. Changez votre rôle en Admin/Editor pour les utiliser.`,
-          variant: "destructive",
-        });
+        console.log("ℹ️ Ces pages seront connectables, mais la publication pourrait échouer si les permissions sont insuffisantes.");
       }
 
       // Afficher les pages sans access_token (normal pour Business Manager)
@@ -473,28 +468,10 @@ export const useProfile = () => {
         id: page.id,
         name: page.name,
         category: page.category,
-        tasks: page.tasks
+        origin: page.origin,
+        tasks: page.tasks,
+        role: page.role
       });
-
-      // Vérifier les permissions
-      const diagnostic = diagnosePages([page])[0];
-      
-      if (diagnostic.status === 'incompatible') {
-        const errorMessage = getErrorMessageForPage(page);
-        toast({
-          title: "⚠️ Permissions insuffisantes - Test activé",
-          description: errorMessage + " La connexion est autorisée pour test. La publication pourrait échouer.",
-          variant: "destructive",
-        });
-        // return; // Temporairement désactivé pour tester la publication avec permissions limitées
-      }
-
-      if (diagnostic.status === 'limited') {
-        toast({
-          title: "Permissions limitées",
-          description: "Cette page a des permissions limitées. Certaines fonctionnalités pourraient ne pas fonctionner correctement.",
-        });
-      }
 
       // Étape 4: Obtenir un token de page longue durée
       console.log("Obtention du token de page longue durée...");
