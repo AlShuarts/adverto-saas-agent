@@ -139,6 +139,7 @@ export const useProfile = () => {
           console.log("Réponse complète de connexion Facebook:", JSON.stringify(response, null, 2));
           console.log("Status:", response.status);
           console.log("AuthResponse:", response.authResponse);
+          console.log("Granted Scopes:", (response as any)?.grantedScopes);
           
           if (response.status === 'connected') {
             console.log("✅ Connexion Facebook réussie");
@@ -302,9 +303,44 @@ export const useProfile = () => {
         // Ne pas bloquer si cette API échoue (normal si pas de Business Manager)
       }
 
+      // Récupérer les Business et leurs pages (owned et client)
+      console.log("📥 Récupération des Business et pages associées...");
+      let businessOwnedPages: any[] = [];
+      let businessClientPages: any[] = [];
+      try {
+        const businesses = await fetchAllPages(`/me/businesses?fields=id,name&limit=100`, userAccessToken);
+        console.log(`✅ ${businesses.length} business(es) trouvé(s)`);
+        for (const b of businesses) {
+          try {
+            const owned = await fetchAllPages(`/${b.id}/owned_pages?fields=id,name,category,permitted_tasks,tasks,access_token,perms,role&limit=100`, userAccessToken);
+            owned.forEach((p: any) => {
+              p.origin = 'business_owned';
+              if (p.permitted_tasks && !p.tasks) p.tasks = p.permitted_tasks;
+            });
+            businessOwnedPages = businessOwnedPages.concat(owned);
+            console.log(`   🏢 Business ${b.name}: ${owned.length} owned_pages`);
+          } catch (e) {
+            console.warn(`   ⚠️ Erreur owned_pages pour le business ${b.name}:`, (e as any)?.message || e);
+          }
+          try {
+            const client = await fetchAllPages(`/${b.id}/client_pages?fields=id,name,category,permitted_tasks,tasks,access_token,perms,role&limit=100`, userAccessToken);
+            client.forEach((p: any) => {
+              p.origin = 'business_client';
+              if (p.permitted_tasks && !p.tasks) p.tasks = p.permitted_tasks;
+            });
+            businessClientPages = businessClientPages.concat(client);
+            console.log(`   🤝 Business ${b.name}: ${client.length} client_pages`);
+          } catch (e) {
+            console.warn(`   ⚠️ Erreur client_pages pour le business ${b.name}:`, (e as any)?.message || e);
+          }
+        }
+      } catch (error: any) {
+        console.warn("ℹ️ Aucun business trouvé ou accès refusé:", error?.message || error);
+      }
+
       // Fusionner et dédupliquer les pages
       const allPagesMap = new Map();
-      [...accountsPages, ...assignedPages].forEach(page => {
+      [...accountsPages, ...assignedPages, ...businessOwnedPages, ...businessClientPages].forEach(page => {
         if (!allPagesMap.has(page.id)) {
           allPagesMap.set(page.id, page);
         } else {
@@ -324,6 +360,8 @@ export const useProfile = () => {
         total: pages.data.length,
         from_accounts: accountsPages.length,
         from_assigned: assignedPages.length,
+        from_business_owned: businessOwnedPages.length,
+        from_business_client: businessClientPages.length,
         pages: pages.data.map(p => ({
           id: p.id,
           name: p.name,
@@ -461,7 +499,7 @@ export const useProfile = () => {
       // Étape 4: Obtenir un token de page longue durée
       console.log("Obtention du token de page longue durée...");
       const longLivedPageTokenResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${page.id}?` +
+        `https://graph.facebook.com/v23.0/${page.id}?` +
         `fields=access_token&` +
         `access_token=${userAccessToken}`
       );
@@ -469,7 +507,14 @@ export const useProfile = () => {
       if (!longLivedPageTokenResponse.ok) {
         const errorData = await longLivedPageTokenResponse.json();
         console.error("❌ Erreur obtention token de page:", errorData);
-        throw new Error("Impossible d'obtenir le token de page");
+        const fbMessage = errorData?.error?.message || "Erreur inconnue";
+        if (fbMessage.includes('Unsupported get request')) {
+          throw new Error("Facebook renvoie 'Unsupported get request'. Vérifiez que vous avez bien coché la page lors de l'autorisation et que vous avez les permissions requises.");
+        } else if (errorData?.error?.code === 10 || /permission/i.test(fbMessage)) {
+          throw new Error("Permissions insuffisantes pour obtenir le token de page. Assurez-vous d'avoir 'Facebook access – Full control' ou 'Create content' sur la page.");
+        } else {
+          throw new Error(`Impossible d'obtenir le token de page: ${fbMessage}`);
+        }
       }
 
       const pageTokenData = await longLivedPageTokenResponse.json();
@@ -482,7 +527,7 @@ export const useProfile = () => {
       // Étape 5: Valider le token de page
       console.log("Validation du token de page...");
       const tokenValidationResponse = await fetch(
-        `https://graph.facebook.com/v18.0/me?access_token=${pageToken}`
+        `https://graph.facebook.com/v23.0/me?access_token=${pageToken}`
       );
 
       if (!tokenValidationResponse.ok) {
@@ -579,7 +624,7 @@ export const useProfile = () => {
       // Vérifier d'abord que le token Facebook est toujours valide
       console.log("Vérification du token Facebook avant connexion Instagram...");
       const tokenCheckResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${profile.facebook_page_id}?fields=id,name&access_token=${profile.facebook_access_token}`
+        `https://graph.facebook.com/v23.0/${profile.facebook_page_id}?fields=id,name&access_token=${profile.facebook_access_token}`
       );
 
       if (!tokenCheckResponse.ok) {
@@ -595,7 +640,7 @@ export const useProfile = () => {
 
       console.log("Recherche du compte Instagram professionnel...");
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${profile.facebook_page_id}?fields=instagram_business_account&access_token=${profile.facebook_access_token}`
+        `https://graph.facebook.com/v23.0/${profile.facebook_page_id}?fields=instagram_business_account&access_token=${profile.facebook_access_token}`
       );
       
       if (!response.ok) {
@@ -619,7 +664,7 @@ export const useProfile = () => {
       // Vérifier que le compte Instagram est accessible avec ce token
       console.log("Validation du compte Instagram...");
       const instagramValidationResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${data.instagram_business_account.id}?fields=id,username&access_token=${profile.facebook_access_token}`
+        `https://graph.facebook.com/v23.0/${data.instagram_business_account.id}?fields=id,username&access_token=${profile.facebook_access_token}`
       );
 
       if (!instagramValidationResponse.ok) {

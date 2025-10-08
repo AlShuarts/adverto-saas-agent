@@ -23,7 +23,7 @@ export const useFacebookTokenValidation = () => {
       
       // Vérifier que le token fonctionne
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${pageId}?access_token=${encodeURIComponent(cleanToken)}`
+        `https://graph.facebook.com/v23.0/${pageId}?access_token=${encodeURIComponent(cleanToken)}`
       );
 
       if (!response.ok) {
@@ -60,7 +60,7 @@ export const useFacebookTokenValidation = () => {
       console.log("Validation du token Instagram...");
       
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${instagramUserId}?access_token=${token}`
+        `https://graph.facebook.com/v23.0/${instagramUserId}?access_token=${encodeURIComponent(token.trim())}`
       );
 
       if (!response.ok) {
