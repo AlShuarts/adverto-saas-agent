@@ -148,7 +148,7 @@ export const useProfile = () => {
           
           resolve(response);
         }, {
-          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish',
+          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
           auth_type: 'rerequest',
           return_scopes: true
         } as any);
@@ -206,14 +206,23 @@ export const useProfile = () => {
       console.log("Token utilisateur utilisé:", userAccessToken?.substring(0, 20) + "...");
       
       // Fonction utilitaire pour récupérer toutes les pages avec pagination
-      const fetchAllPages = async (path: string): Promise<any[]> => {
+      const fetchAllPages = async (endpoint: string, userToken: string): Promise<any[]> => {
         let allData: any[] = [];
-        let nextUrl = path;
+        let currentPath = endpoint;
+        let attempts = 0;
+        const maxAttempts = 5; // Limite de sécurité
         
-        while (nextUrl) {
+        while (currentPath && attempts < maxAttempts) {
+          attempts++;
+          console.log(`   Tentative ${attempts}: ${currentPath.substring(0, 100)}...`);
+          
           const response: any = await new Promise((resolve, reject) => {
-            window.FB.api(nextUrl, (res: any) => {
-              if (res.error) {
+            // Utiliser le chemin complet si c'est une URL de pagination, sinon juste l'endpoint
+            const apiPath = currentPath.startsWith('http') ? currentPath : `${currentPath}&access_token=${userToken}`;
+            
+            window.FB.api(currentPath, (res: any) => {
+              if (res && res.error) {
+                console.error(`   Erreur API: ${res.error.message}`);
                 reject(res.error);
               } else {
                 resolve(res);
@@ -221,11 +230,13 @@ export const useProfile = () => {
             });
           });
           
-          if (response.data) {
+          if (response && response.data && Array.isArray(response.data)) {
+            console.log(`   ✓ ${response.data.length} résultat(s) récupéré(s)`);
             allData = allData.concat(response.data);
           }
           
-          nextUrl = response.paging?.next ? response.paging.next : null;
+          // Vérifier s'il y a une page suivante
+          currentPath = response?.paging?.next || null;
         }
         
         return allData;
@@ -236,12 +247,13 @@ export const useProfile = () => {
       let accountsPages: any[] = [];
       try {
         accountsPages = await fetchAllPages(
-          `/me/accounts?fields=id,name,category,tasks,access_token,perms,role&limit=200&access_token=${userAccessToken}`
+          `/me/accounts?fields=id,name,category,tasks,access_token,perms,role&limit=100`,
+          userAccessToken
         );
         console.log(`✅ ${accountsPages.length} page(s) depuis /me/accounts`);
         accountsPages.forEach(p => p.origin = 'accounts');
-      } catch (error) {
-        console.error("❌ Erreur /me/accounts:", error);
+      } catch (error: any) {
+        console.error("❌ Erreur /me/accounts:", error?.message || error);
       }
 
       // Récupérer les pages depuis /me/assigned_pages (Business Manager)
@@ -249,7 +261,8 @@ export const useProfile = () => {
       let assignedPages: any[] = [];
       try {
         assignedPages = await fetchAllPages(
-          `/me/assigned_pages?fields=id,name,category,permitted_tasks,access_token,perms,role&limit=200&access_token=${userAccessToken}`
+          `/me/assigned_pages?fields=id,name,category,permitted_tasks,access_token,perms,role&limit=100`,
+          userAccessToken
         );
         console.log(`✅ ${assignedPages.length} page(s) depuis /me/assigned_pages (Business Manager)`);
         assignedPages.forEach(p => {
@@ -259,8 +272,9 @@ export const useProfile = () => {
             p.tasks = p.permitted_tasks;
           }
         });
-      } catch (error) {
-        console.error("⚠️ Erreur /me/assigned_pages (peut être normal si pas de Business Manager):", error);
+      } catch (error: any) {
+        console.error("⚠️ Erreur /me/assigned_pages:", error?.message || error);
+        // Ne pas bloquer si cette API échoue (normal si pas de Business Manager)
       }
 
       // Fusionner et dédupliquer les pages
