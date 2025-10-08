@@ -17,7 +17,7 @@ serve(async (req) => {
       throw new Error("Token court manquant");
     }
 
-    const appId = "1595698614674424";
+    const appId = "745419718185837";
     const appSecret = Deno.env.get('FACEBOOK_APP_SECRET');
 
     if (!appSecret) {
