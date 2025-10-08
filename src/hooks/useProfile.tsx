@@ -202,46 +202,116 @@ export const useProfile = () => {
       }
 
       // Étape 3: Obtenir les pages avec le token utilisateur
-      console.log("Récupération des pages Facebook...");
+      console.log("🔄 Début de la récupération des pages Facebook...");
       console.log("Token utilisateur utilisé:", userAccessToken?.substring(0, 20) + "...");
       
-      const pages = await new Promise<any>((resolve, reject) => {
-        window.FB.api(`/me/accounts?fields=id,name,category,tasks,access_token,perms,role&access_token=${userAccessToken}`, (response) => {
-          console.log("🔍 Réponse complète de l'API Facebook pour les pages:", JSON.stringify(response, null, 2));
+      // Fonction utilitaire pour récupérer toutes les pages avec pagination
+      const fetchAllPages = async (path: string): Promise<any[]> => {
+        let allData: any[] = [];
+        let nextUrl = path;
+        
+        while (nextUrl) {
+          const response: any = await new Promise((resolve, reject) => {
+            window.FB.api(nextUrl, (res: any) => {
+              if (res.error) {
+                reject(res.error);
+              } else {
+                resolve(res);
+              }
+            });
+          });
           
-          if (response.error) {
-            console.error("❌ Erreur API Facebook:", response.error);
-            reject(new Error(`Erreur Facebook: ${response.error.message} (Code: ${response.error.code})`));
-          } else {
-            console.log("✅ Pages récupérées avec succès");
-            console.log("📊 Nombre de pages trouvées:", response.data?.length || 0);
-            if (response.data && response.data.length > 0) {
-              response.data.forEach((page: any, index: number) => {
-                console.log(`📄 Page ${index + 1}:`, {
-                  id: page.id,
-                  name: page.name,
-                  category: page.category,
-                  role: page.role,
-                  perms: page.perms,
-                  tasks: page.tasks,
-                  has_token: !!page.access_token
-                });
-              });
-            }
-            resolve(response);
+          if (response.data) {
+            allData = allData.concat(response.data);
+          }
+          
+          nextUrl = response.paging?.next ? response.paging.next : null;
+        }
+        
+        return allData;
+      };
+
+      // Récupérer les pages depuis /me/accounts
+      console.log("📥 Récupération depuis /me/accounts...");
+      let accountsPages: any[] = [];
+      try {
+        accountsPages = await fetchAllPages(
+          `/me/accounts?fields=id,name,category,tasks,access_token,perms,role&limit=200&access_token=${userAccessToken}`
+        );
+        console.log(`✅ ${accountsPages.length} page(s) depuis /me/accounts`);
+        accountsPages.forEach(p => p.origin = 'accounts');
+      } catch (error) {
+        console.error("❌ Erreur /me/accounts:", error);
+      }
+
+      // Récupérer les pages depuis /me/assigned_pages (Business Manager)
+      console.log("📥 Récupération depuis /me/assigned_pages (Business Manager)...");
+      let assignedPages: any[] = [];
+      try {
+        assignedPages = await fetchAllPages(
+          `/me/assigned_pages?fields=id,name,category,permitted_tasks,access_token,perms,role&limit=200&access_token=${userAccessToken}`
+        );
+        console.log(`✅ ${assignedPages.length} page(s) depuis /me/assigned_pages (Business Manager)`);
+        assignedPages.forEach(p => {
+          p.origin = 'assigned';
+          // Normaliser permitted_tasks vers tasks
+          if (p.permitted_tasks && !p.tasks) {
+            p.tasks = p.permitted_tasks;
           }
         });
+      } catch (error) {
+        console.error("⚠️ Erreur /me/assigned_pages (peut être normal si pas de Business Manager):", error);
+      }
+
+      // Fusionner et dédupliquer les pages
+      const allPagesMap = new Map();
+      [...accountsPages, ...assignedPages].forEach(page => {
+        if (!allPagesMap.has(page.id)) {
+          allPagesMap.set(page.id, page);
+        } else {
+          // Si la page existe déjà, privilégier celle avec access_token
+          const existing = allPagesMap.get(page.id);
+          if (page.access_token && !existing.access_token) {
+            allPagesMap.set(page.id, page);
+          }
+        }
+      });
+
+      const pages = {
+        data: Array.from(allPagesMap.values())
+      };
+
+      console.log("🔍 Réponse agrégée finale:", {
+        total: pages.data.length,
+        from_accounts: accountsPages.length,
+        from_assigned: assignedPages.length,
+        pages: pages.data.map(p => ({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          role: p.role,
+          perms: p.perms,
+          tasks: p.tasks,
+          origin: p.origin,
+          has_token: !!p.access_token
+        }))
       });
 
       if (!pages.data || pages.data.length === 0) {
-        console.error("❌ Aucune page Facebook trouvée pour ce compte");
-        console.log("💡 Causes possibles:");
-        console.log("1. L'application est en mode Développement et vous n'êtes pas Testeur/Développeur");
-        console.log("2. Vous n'avez pas coché vos pages lors de l'autorisation");
+        console.error("❌ Aucune page Facebook accessible trouvée");
+        console.log("");
+        console.log("📋 Checklist de dépannage :");
+        console.log("1. Vous n'avez pas cliqué sur 'Continuer en tant que...' lors de la connexion");
+        console.log("2. Vous n'avez pas coché les pages dans la popup Facebook");
         console.log("3. Vous n'avez pas 'Facebook access – Full control' sur vos pages");
         console.log("4. Les permissions de l'app ne sont pas approuvées en production");
         console.log("5. Votre compte nécessite l'authentification à deux facteurs (2FA)");
         console.log("6. Vous n'avez pas le rôle Admin/Editor/Moderator sur vos pages (requis par l'API)");
+        console.log("");
+        console.log("🏢 Pour les pages Business Manager :");
+        console.log("   • Vérifiez que vous êtes bien ajouté au Business Manager");
+        console.log("   • Vérifiez vos permissions sur la page (Tâches : Créer du contenu ou Contrôle total)");
+        console.log("   • Allez dans Business Settings → Pages → Vérifier les attributions");
         console.log("");
         console.log("🔍 DIAGNOSTIC - Rôles Facebook Pages:");
         console.log("   ✅ Admin, Editor, Moderator → Page accessible via API");
@@ -256,6 +326,15 @@ export const useProfile = () => {
         
         setLoading(false);
         return;
+      }
+
+      // Afficher un message si des pages Business ont été trouvées
+      if (assignedPages.length > 0) {
+        console.log(`✨ ${assignedPages.length} page(s) Business Manager ajoutée(s)`);
+        toast({
+          title: "✨ Pages Business Manager détectées",
+          description: `${assignedPages.length} page(s) Business Manager ajoutée(s) à la sélection`,
+        });
       }
 
       // Diagnostic des pages
@@ -278,6 +357,14 @@ export const useProfile = () => {
           description: `${insufficientRolePages.length} page(s) avec rôle Analyst/Advertiser non retournées. Changez votre rôle en Admin/Editor pour les utiliser.`,
           variant: "destructive",
         });
+      }
+
+      // Afficher les pages sans access_token (normal pour Business Manager)
+      const pagesWithoutToken = pages.data.filter((page: any) => !page.access_token);
+      if (pagesWithoutToken.length > 0) {
+        console.log(`ℹ️ ${pagesWithoutToken.length} page(s) sans access_token (sera récupéré à la connexion):`, 
+          pagesWithoutToken.map((p: any) => ({ name: p.name, origin: p.origin }))
+        );
       }
 
       // Si plusieurs pages, afficher le sélecteur
@@ -407,7 +494,7 @@ export const useProfile = () => {
       // Récupérer à nouveau le token utilisateur
       const authResponse = await new Promise<fb.AuthResponse>((resolve) => {
         window.FB.login(resolve, {
-          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish',
+          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
           auth_type: 'rerequest',
           return_scopes: true
         } as any);

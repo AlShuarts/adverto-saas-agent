@@ -5,7 +5,11 @@ export interface FacebookPage {
   name: string;
   category?: string;
   tasks?: string[];
-  access_token: string;
+  permitted_tasks?: string[];
+  access_token?: string;
+  origin?: 'accounts' | 'assigned' | 'business';
+  role?: string;
+  perms?: string[];
 }
 
 export interface PageDiagnostic {
@@ -25,11 +29,14 @@ export const useFacebookPageDiagnostics = () => {
     const issues: string[] = [];
     const suggestions: string[] = [];
     
-    const hasManagePermission = page.tasks?.includes('MANAGE') || false;
-    const hasCreateContentPermission = page.tasks?.includes('CREATE_CONTENT') || false;
-    const hasAnalyzePermission = page.tasks?.includes('ANALYZE') || false;
-    const hasModeratePermission = page.tasks?.includes('MODERATE') || false;
-    const hasAdvertisePermission = page.tasks?.includes('ADVERTISE') || false;
+    // Normaliser tasks depuis permitted_tasks si nécessaire
+    const allTasks = page.tasks || page.permitted_tasks || [];
+    
+    const hasManagePermission = allTasks.includes('MANAGE') || false;
+    const hasCreateContentPermission = allTasks.includes('CREATE_CONTENT') || false;
+    const hasAnalyzePermission = allTasks.includes('ANALYZE') || false;
+    const hasModeratePermission = allTasks.includes('MODERATE') || false;
+    const hasAdvertisePermission = allTasks.includes('ADVERTISE') || false;
 
     // Vérifier si la page a des permissions suffisantes
     const isCompatible = hasManagePermission || hasCreateContentPermission;

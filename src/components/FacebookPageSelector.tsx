@@ -138,6 +138,12 @@ export const FacebookPageSelector = ({
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {getStatusBadge(diagnostic.status)}
                           
+                          {diagnostic.page.origin === 'assigned' && (
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                              Business
+                            </Badge>
+                          )}
+                          
                           {diagnostic.hasManagePermission && (
                             <Badge variant="outline" className="text-xs">
                               MANAGE
