@@ -33,13 +33,13 @@ export const useFacebookTokenChecker = () => {
           if (errorData.error?.code === 190) {
             toast({
               title: "Connexion Facebook expirée",
-              description: "Vous allez être redirigé vers votre profil pour reconnecter Facebook.",
+              description: "Vous allez être redirigé vers la page d'accueil pour reconnecter Facebook.",
               variant: "destructive",
               duration: 5000,
             });
             
             setTimeout(() => {
-              navigate("/profile");
+              navigate("/");
             }, 3000);
           }
         }

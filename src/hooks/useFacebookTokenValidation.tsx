@@ -35,13 +35,13 @@ export const useFacebookTokenValidation = () => {
         if (errorData.error?.code === 190) {
           toast({
             title: "Connexion Facebook expirée",
-            description: "Redirection vers votre profil dans 3 secondes...",
+            description: "Redirection vers la page d'accueil dans 3 secondes...",
             variant: "destructive",
             duration: 5000,
           });
           
           setTimeout(() => {
-            navigate("/profile");
+            navigate("/");
           }, 3000);
         }
         
@@ -77,13 +77,13 @@ export const useFacebookTokenValidation = () => {
         if (errorData.error?.code === 190) {
           toast({
             title: "Connexion Instagram expirée",
-            description: "Redirection vers votre profil dans 3 secondes...",
+            description: "Redirection vers la page d'accueil dans 3 secondes...",
             variant: "destructive",
             duration: 5000,
           });
           
           setTimeout(() => {
-            navigate("/profile");
+            navigate("/");
           }, 3000);
         }
         
