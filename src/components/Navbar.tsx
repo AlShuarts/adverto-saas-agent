@@ -13,13 +13,14 @@ export const Navbar = () => {
         data
       } = await supabase.auth.getUser();
       setUser(data.user);
-      if (data.user) {
-        // Vérifier si l'utilisateur est admin
-        const {
-          data: profile
-        } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
-        setIsAdmin(profile?.role === 'admin');
-      }
+        if (data.user) {
+          // Vérifier si l'utilisateur est admin via la fonction has_role
+          const { data: isAdminData } = await supabase.rpc('has_role', {
+            _user_id: data.user.id,
+            _role: 'admin'
+          });
+          setIsAdmin(!!isAdminData);
+        }
     };
     getUser();
   }, []);

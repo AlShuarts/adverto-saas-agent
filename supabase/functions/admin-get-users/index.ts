@@ -32,14 +32,13 @@ serve(async (req) => {
       throw new Error("Jeton utilisateur invalide.");
     }
 
-    // Vérifier si l'utilisateur est admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Vérifier si l'utilisateur est admin via la fonction has_role
+    const { data: isAdminData, error: roleError } = await supabase.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
 
-    if (profileError || profile?.role !== 'admin') {
+    if (roleError || !isAdminData) {
       return new Response(
         JSON.stringify({ error: "Vous n'avez pas les droits d'administrateur." }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

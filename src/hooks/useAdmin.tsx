@@ -33,14 +33,19 @@ export const useAdmin = () => {
       try {
         console.log("Vérification du statut d'admin pour l'utilisateur:", profile.id);
         
-        // Vérifier si l'utilisateur est admin
-        if (profile.role === 'admin') {
-          console.log("L'utilisateur est admin, récupération des statistiques");
-          setIsAdmin(true);
-          // Si admin, charger les statistiques
-          await fetchStatistics();
-        } else {
-          console.log("L'utilisateur n'est pas admin");
+        // Tenter de charger les statistiques via la fonction Edge (qui vérifie l'admin côté serveur)
+        try {
+          const { data, error } = await supabase.functions.invoke('admin-get-users');
+          if (error) {
+            console.log("L'utilisateur n'est pas admin ou erreur d'accès", error);
+            setIsAdmin(false);
+          } else if (Array.isArray(data)) {
+            console.log("L'utilisateur est admin, statistiques chargées");
+            setIsAdmin(true);
+            setStatistics(data);
+          }
+        } catch (e) {
+          console.log("Accès refusé aux statistiques", e);
           setIsAdmin(false);
         }
       } catch (err) {
