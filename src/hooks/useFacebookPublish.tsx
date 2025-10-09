@@ -7,13 +7,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
-import { useFacebookTokenValidation } from "./useFacebookTokenValidation";
 
 export const useFacebookPublish = (listing: Tables<"listings">) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { validateFacebookToken } = useFacebookTokenValidation();
 
   const publishToFacebook = async (videoUrl: string | null, message: string) => {
     if (!videoUrl) return false;
@@ -22,29 +20,10 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
       setIsPublishing(true);
       console.log("Début de la publication sur Facebook");
 
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("facebook_page_id, facebook_access_token")
-        .single();
-
-      if (profileError) {
-        console.error("Erreur lors de la récupération du profil:", profileError);
-        throw new Error("Impossible de récupérer les informations de votre profil");
-      }
-
-      if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
-        toast({
-          title: "Facebook non connecté",
-          description: "Veuillez d'abord connecter votre page Facebook dans votre profil",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Valider le token avant publication
-      const isTokenValid = await validateFacebookToken(profile.facebook_access_token, profile.facebook_page_id);
-      if (!isTokenValid) {
-        return false;
+      // Client should not access tokens - edge function fetches them server-side
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Vous devez être connecté pour publier");
       }
 
       console.log("Tentative de publication de la vidéo sur Facebook");
@@ -52,8 +31,6 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
         body: {
           message,
           video: videoUrl,
-          pageId: profile.facebook_page_id,
-          accessToken: profile.facebook_access_token,
         },
       });
 

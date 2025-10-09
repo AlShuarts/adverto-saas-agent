@@ -64,8 +64,6 @@ export const useSocialPublishing = (
             supabase.functions.invoke("facebook-publish", {
               body: {
                 message: generatedText,
-                pageId: profile?.facebook_page_id || 'test-page-id',
-                accessToken: profile?.facebook_access_token || 'test-access-token',
                 video: finalVideoUrl,
                 templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
               }
@@ -94,8 +92,6 @@ export const useSocialPublishing = (
               supabase.functions.invoke("facebook-publish", {
                 body: {
                   message: generatedText,
-                  pageId: profile?.facebook_page_id || 'test-page-id',
-                  accessToken: profile?.facebook_access_token || 'test-access-token',
                   images: [imageToUse],
                   templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
                 }

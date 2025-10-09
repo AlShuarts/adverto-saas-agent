@@ -25,26 +25,12 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
       setIsPublishing(true);
       console.log("Début de la publication sur Instagram");
 
-      // Vérifier si l'utilisateur a connecté Instagram
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("instagram_user_id, instagram_access_token")
-        .single();
-
-      if (profileError) {
-        console.error("Erreur lors de la récupération du profil:", profileError);
-        throw new Error("Impossible de récupérer les informations de votre profil");
-      }
-
-      console.log("Profil récupéré:", {
-        hasUserId: !!profile?.instagram_user_id,
-        hasToken: !!profile?.instagram_access_token
-      });
-
-      if (!profile?.instagram_user_id || !profile?.instagram_access_token) {
+      // Client should not access tokens - pass user ID to edge function
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         toast({
-          title: "Instagram non connecté",
-          description: "Veuillez d'abord connecter votre compte Instagram dans votre profil",
+          title: "Non connecté",
+          description: "Vous devez être connecté pour publier",
           variant: "destructive",
         });
         return;

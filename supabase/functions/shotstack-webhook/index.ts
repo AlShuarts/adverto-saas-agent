@@ -9,6 +9,27 @@ serve(async (req) => {
   }
 
   try {
+    // Validate webhook secret
+    const url = new URL(req.url);
+    const providedSecret = url.searchParams.get("secret");
+    const expectedSecret = Deno.env.get("SHOTSTACK_WEBHOOK_SECRET");
+
+    if (!expectedSecret) {
+      console.error("⚠️ SHOTSTACK_WEBHOOK_SECRET not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Webhook not properly configured" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+
+    if (providedSecret !== expectedSecret) {
+      console.error("❌ Invalid webhook secret provided");
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
     const body = await req.json();
     console.log("💡 Shotstack webhook appelé avec:", JSON.stringify(body, null, 2));
 

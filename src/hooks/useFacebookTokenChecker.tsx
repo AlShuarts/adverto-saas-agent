@@ -13,18 +13,22 @@ export const useFacebookTokenChecker = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("facebook_access_token, facebook_page_id")
-          .eq("id", user.id)
-          .single();
+        // Use SECURITY DEFINER function to get credentials securely
+        const { data: fbCreds, error: fbError } = await supabase
+          .rpc('get_facebook_credentials', { _user_id: user.id });
 
-        if (!profile?.facebook_access_token || !profile?.facebook_page_id) {
+        if (fbError || !fbCreds || fbCreds.length === 0) {
+          return;
+        }
+
+        const { page_id, access_token } = fbCreds[0];
+        
+        if (!access_token || !page_id) {
           return;
         }
 
         const response = await fetch(
-          `https://graph.facebook.com/v23.0/${profile.facebook_page_id}?access_token=${encodeURIComponent(profile.facebook_access_token.trim())}`
+          `https://graph.facebook.com/v23.0/${page_id}?access_token=${encodeURIComponent(access_token.trim())}`
         );
 
         if (!response.ok) {
