@@ -49,28 +49,26 @@ Deno.serve(async (req) => {
       throw new Error('User not authenticated')
     }
 
-    // Récupérer les informations du profil avec les tokens Instagram
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('instagram_user_id, instagram_access_token')
-      .eq('id', user.id)
-      .single()
+    // Récupérer les credentials Instagram via fonction SECURITY DEFINER
+    const { data: igCreds, error: igError } = await supabaseClient
+      .rpc('get_instagram_credentials', { _user_id: user.id })
 
-    console.log('Profile data:', { 
-      hasProfile: !!profile,
-      hasInstagramId: profile?.instagram_user_id,
-      hasInstagramToken: profile?.instagram_access_token,
-      error: profileError
+    console.log('Instagram credentials:', { 
+      hasCredentials: !!igCreds && igCreds.length > 0,
+      error: igError
     })
 
-    if (profileError) {
-      console.error('Profile error:', profileError)
-      throw new Error('Failed to fetch profile')
+    if (igError) {
+      console.error('Instagram credentials error:', igError)
+      throw new Error('Failed to fetch Instagram credentials')
     }
 
-    if (!profile?.instagram_user_id || !profile?.instagram_access_token) {
+    if (!igCreds || igCreds.length === 0 || !igCreds[0].instagram_user_id || !igCreds[0].access_token) {
       throw new Error('Instagram credentials not found. Please connect your Instagram account in your profile.')
     }
+
+    const instagramUserId = igCreds[0].instagram_user_id
+    const instagramAccessToken = igCreds[0].access_token
 
     // Récupérer le template s'il est spécifié
     let finalMessage = message;
@@ -124,10 +122,10 @@ Deno.serve(async (req) => {
         media_type: 'REELS',
         video_url: video,
         caption: caption,
-        access_token: profile.instagram_access_token,
+        access_token: instagramAccessToken,
       })
       const containerResponse = await fetch(
-        `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
+        `https://graph.facebook.com/v21.0/${instagramUserId}/media`,
         {
           method: 'POST',
           body: createParams,
@@ -153,7 +151,7 @@ Deno.serve(async (req) => {
       const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
       while (attempts < maxAttempts) {
         const statusRes = await fetch(
-          `https://graph.facebook.com/v21.0/${containerData.id}?fields=status_code,status&access_token=${encodeURIComponent(profile.instagram_access_token)}`
+          `https://graph.facebook.com/v21.0/${containerData.id}?fields=status_code,status&access_token=${encodeURIComponent(instagramAccessToken)}`
         )
         const statusData = await statusRes.json()
         console.log(`Video status check [attempt ${attempts + 1}/${maxAttempts}]:`, statusData)
@@ -173,13 +171,13 @@ Deno.serve(async (req) => {
     } else if (images && images.length === 1) {
       // Publication d'une seule image
       const containerResponse = await fetch(
-        `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
+        `https://graph.facebook.com/v21.0/${instagramUserId}/media`,
         {
           method: 'POST',
           body: new URLSearchParams({
             image_url: images[0],
             caption: caption,
-            access_token: profile.instagram_access_token,
+            access_token: instagramAccessToken,
           }),
         }
       )
@@ -191,13 +189,13 @@ Deno.serve(async (req) => {
       const mediaResponses = await Promise.all(
         images.map(async (imageUrl) => {
             const response = await fetch(
-              `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
+              `https://graph.facebook.com/v21.0/${instagramUserId}/media`,
               {
                 method: 'POST',
                 body: new URLSearchParams({
                   image_url: imageUrl,
                   is_carousel_item: 'true',
-                  access_token: profile.instagram_access_token,
+                  access_token: instagramAccessToken,
                 }),
               }
             )
@@ -216,14 +214,14 @@ Deno.serve(async (req) => {
 
       // 2. Créer le carousel avec tous les médias
       const carouselResponse = await fetch(
-        `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media`,
+        `https://graph.facebook.com/v21.0/${instagramUserId}/media`,
         {
           method: 'POST',
           body: new URLSearchParams({
             media_type: 'CAROUSEL',
             caption: caption,
             children: mediaIds.join(','),
-            access_token: profile.instagram_access_token,
+            access_token: instagramAccessToken,
           }),
         }
       )
@@ -240,12 +238,12 @@ Deno.serve(async (req) => {
 
     // 3. Publier le conteneur
     const publishResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${profile.instagram_user_id}/media_publish`,
+      `https://graph.facebook.com/v21.0/${instagramUserId}/media_publish`,
       {
         method: 'POST',
         body: new URLSearchParams({
           creation_id: containerData.id,
-          access_token: profile.instagram_access_token,
+          access_token: instagramAccessToken,
         }),
       }
     )
