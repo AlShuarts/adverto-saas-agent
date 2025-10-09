@@ -44,23 +44,17 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       setIsPublishing(true);
       console.log("Début de la publication sur Facebook");
 
-      // Vérifier si l'utilisateur a connecté Facebook
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("facebook_page_id, facebook_access_token")
-        .single();
-
-      if (profileError) {
-        console.error("Erreur lors de la récupération du profil:", profileError);
-        throw new Error("Impossible de récupérer les informations de votre profil");
+      // Check if user has connected Facebook (without exposing tokens to client)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Vous devez être connecté pour publier");
       }
 
-      console.log("Profil récupéré:", {
-        hasPageId: !!profile?.facebook_page_id,
-        hasToken: !!profile?.facebook_access_token
-      });
+      // Verify Facebook connection exists server-side
+      const { data: fbCreds, error: fbError } = await supabase
+        .rpc('get_facebook_credentials', { _user_id: user.id });
 
-      if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
+      if (fbError || !fbCreds || fbCreds.length === 0) {
         toast({
           title: "Facebook non connecté",
           description: "Veuillez d'abord connecter votre page Facebook dans votre profil",
@@ -68,6 +62,8 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         });
         return;
       }
+
+      console.log("Connexion Facebook vérifiée");
 
       // Vérifier s'il y a un diaporama disponible pour ce listing (priorité: rendu complété avec URL)
       let finalVideoUrl: string | null = listing.video_url || null; // 1) Priorité à la vidéo stockée sur la fiche
@@ -141,8 +137,6 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
           body: {
             message,
             video: finalVideoUrl,
-            pageId: profile.facebook_page_id,
-            accessToken: profile.facebook_access_token,
           },
         });
 
@@ -166,8 +160,6 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
           body: {
             message,
             images: listing.images?.slice(0, 2),
-            pageId: profile.facebook_page_id,
-            accessToken: profile.facebook_access_token,
           },
         });
 

@@ -109,15 +109,13 @@ export const useProfile = () => {
 
     setLoading(true);
     try {
-      // Nettoyer les anciens tokens
-      console.log("Nettoyage des anciens tokens Facebook...");
+      // Clear old connection status
+      console.log("Nettoyage des anciennes connexions...");
       const { error: resetError } = await supabase
         .from('profiles')
         .update({
           facebook_page_id: null,
-          facebook_access_token: null,
-          instagram_user_id: null,
-          instagram_access_token: null
+          instagram_user_id: null
         })
         .eq('id', profile.id);
 
@@ -329,7 +327,7 @@ export const useProfile = () => {
         console.log("⚠️ Utilisation du token court (non recommandé)");
       }
 
-      // Sauvegarder le token
+      // Save connection to secure social_tokens table via migration trigger
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -359,13 +357,8 @@ export const useProfile = () => {
 
   const connectInstagram = async () => {
     console.log("🔄 Début de la connexion Instagram...");
-    console.log("📋 Profile actuel:", { 
-      facebook_page_id: profile?.facebook_page_id, 
-      has_facebook_token: !!profile?.facebook_access_token,
-      instagram_user_id: profile?.instagram_user_id 
-    });
     
-    if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
+    if (!profile?.facebook_page_id) {
       console.error("❌ Prérequis manquants pour Instagram");
       toast({
         title: "Erreur",
@@ -377,10 +370,30 @@ export const useProfile = () => {
 
     setLoading(true);
     try {
-      // Vérifier d'abord que le token Facebook est toujours valide
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Vous devez être connecté");
+      }
+
+      // Get Facebook credentials securely server-side
+      const { data: fbCreds, error: fbError } = await supabase
+        .rpc('get_facebook_credentials', { _user_id: user.id });
+
+      if (fbError || !fbCreds || fbCreds.length === 0) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez d'abord connecter votre page Facebook",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { page_id, access_token } = fbCreds[0];
+
+      // Verify Facebook token is still valid
       console.log("Vérification du token Facebook avant connexion Instagram...");
       const tokenCheckResponse = await fetch(
-        `https://graph.facebook.com/v23.0/${profile.facebook_page_id}?fields=id,name&access_token=${profile.facebook_access_token}`
+        `https://graph.facebook.com/v23.0/${page_id}?fields=id,name&access_token=${encodeURIComponent(access_token)}`
       );
 
       if (!tokenCheckResponse.ok) {
@@ -396,7 +409,7 @@ export const useProfile = () => {
 
       console.log("Recherche du compte Instagram professionnel...");
       const response = await fetch(
-        `https://graph.facebook.com/v23.0/${profile.facebook_page_id}?fields=instagram_business_account&access_token=${profile.facebook_access_token}`
+        `https://graph.facebook.com/v23.0/${page_id}?fields=instagram_business_account&access_token=${encodeURIComponent(access_token)}`
       );
       
       if (!response.ok) {
@@ -417,10 +430,10 @@ export const useProfile = () => {
         return;
       }
 
-      // Vérifier que le compte Instagram est accessible avec ce token
+      // Verify Instagram account is accessible
       console.log("Validation du compte Instagram...");
       const instagramValidationResponse = await fetch(
-        `https://graph.facebook.com/v23.0/${data.instagram_business_account.id}?fields=id,username&access_token=${profile.facebook_access_token}`
+        `https://graph.facebook.com/v23.0/${data.instagram_business_account.id}?fields=id,username&access_token=${encodeURIComponent(access_token)}`
       );
 
       if (!instagramValidationResponse.ok) {
@@ -437,11 +450,12 @@ export const useProfile = () => {
       const instagramData = await instagramValidationResponse.json();
       console.log("Compte Instagram validé:", instagramData);
 
+      // Save connection (trigger will migrate token to social_tokens table)
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           instagram_user_id: data.instagram_business_account.id,
-          instagram_access_token: profile.facebook_access_token
+          instagram_access_token: access_token
         })
         .eq('id', profile.id);
 
