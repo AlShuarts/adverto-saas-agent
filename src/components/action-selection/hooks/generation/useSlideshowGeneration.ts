@@ -29,6 +29,14 @@ export const useSlideshowGeneration = (listingId: string) => {
       console.log("Images sélectionnées:", selectedImages);
       console.log("Musique sélectionnée:", selectedMusic || "aucune musique");
       
+      // Vérifier et rafraîchir la session avant l'appel
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error("Vous devez être connecté pour générer un diaporama");
+      }
+      
+      console.log("Session valide, token présent");
+      
       toast.info("Génération du diaporama", {
         description: "Nous préparons votre diaporama...",
         duration: 3000
@@ -50,7 +58,10 @@ export const useSlideshowGeneration = (listingId: string) => {
       console.log("Payload complet envoyé à la fonction:", JSON.stringify(payload, null, 2));
       
       const { data, error } = await supabase.functions.invoke("create-slideshow", {
-        body: payload
+        body: payload,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
       
       if (error) {

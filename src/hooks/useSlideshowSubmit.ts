@@ -16,9 +16,13 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
     setIsLoading(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      // Vérifier et rafraîchir la session avant l'appel
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error("Vous devez être connecté pour générer un diaporama");
+      }
       
+      console.log("Session valide, token présent");
       console.log("Configuration envoyée:", config);
       console.log("Musique sélectionnée:", config.selectedMusic || "aucune");
       
@@ -28,9 +32,6 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
       } else {
         console.log("Aucune musique n'est sélectionnée");
       }
-      
-      // Remove this line to avoid double increment
-      // await ensureAndIncrementStatistic('slideshow');
       
       const payload = {
         listingId: listing.id,
@@ -48,7 +49,10 @@ export const useSlideshowSubmit = (listing: Tables<"listings">, onClose: () => v
       console.log("Payload complet envoyé:", JSON.stringify(payload, null, 2));
       
       const response = await supabase.functions.invoke("create-slideshow", {
-        body: payload
+        body: payload,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
       
       if (response.error) throw response.error;

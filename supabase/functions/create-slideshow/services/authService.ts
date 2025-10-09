@@ -21,9 +21,17 @@ export const validateUser = async (authHeader: string | null) => {
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    throw new Error("❌ Jeton utilisateur invalide.");
+  if (userError) {
+    console.error("❌ Erreur d'authentification:", userError);
+    throw new Error(`❌ Jeton utilisateur invalide: ${userError.message}`);
   }
+
+  if (!user) {
+    console.error("❌ Aucun utilisateur trouvé dans le jeton");
+    throw new Error("❌ Jeton utilisateur invalide: aucun utilisateur trouvé");
+  }
+  
+  console.log("✅ Utilisateur authentifié:", user.id);
 
   // Create service role client for system operations (not user data access)
   const supabaseServiceRole = createClient(
