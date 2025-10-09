@@ -21,6 +21,12 @@ serve(async (req) => {
       throw new Error("❌ Pas d'en-tête d'autorisation.");
     }
 
+    // Extraire le token JWT de l'en-tête Authorization
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) {
+      throw new Error("❌ Jeton manquant dans l'en-tête Authorization");
+    }
+
     // Create Supabase client with ANON_KEY to enforce RLS policies when accessing user data
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -34,11 +40,15 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Passer explicitement le token à getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
+      console.error("❌ Erreur d'authentification:", userError);
       throw new Error("❌ Jeton utilisateur invalide.");
     }
+    
+    console.log("✅ Utilisateur authentifié:", user.id);
 
     // Parse and validate input
     const rawData = await req.json();

@@ -111,8 +111,15 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
         // 4) Si un rendu existe mais sans URL vidéo, forcer une vérification fraîche du statut
         if (!finalVideoUrl && slideshowData?.render_id && !slideshowData?.video_url) {
           console.log("Aucun video_url en base, vérification immédiate via check-render-status…", slideshowData);
+          
+          // Récupérer la session pour l'appel authentifié
+          const { data: { session: checkSession } } = await supabase.auth.getSession();
+          
           const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
             body: { renderId: slideshowData.render_id },
+            headers: checkSession ? {
+              Authorization: `Bearer ${checkSession.access_token}`
+            } : {}
           });
           if (statusError) {
             console.warn("Erreur check-render-status:", statusError);

@@ -80,6 +80,13 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
       
       setIsCreating(true);
       
+      // Vérifier et récupérer la session avant l'appel
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast.error("Vous devez être connecté pour créer une bannière");
+        return;
+      }
+      
       const config = {
         mainImage: selectedImage,
         brokerImage,
@@ -95,6 +102,9 @@ export const CreateSoldBannerDialog = ({ listing, isOpen, onClose }: CreateSoldB
           listingId: listing.id,
           config
         },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
       
       if (error) throw error;

@@ -37,8 +37,15 @@ export const SlideshowStatus = ({
         setIsForceChecking(true);
         try {
           console.log("Forcing a direct check with the API for render:", render.render_id);
+          
+          // Récupérer la session pour l'appel authentifié
+          const { data: { session: checkSession } } = await supabase.auth.getSession();
+          
           const response = await supabase.functions.invoke('check-render-status', {
-            body: { renderId: render.render_id }
+            body: { renderId: render.render_id },
+            headers: checkSession ? {
+              Authorization: `Bearer ${checkSession.access_token}`
+            } : {}
           });
           
           if (response.data) {

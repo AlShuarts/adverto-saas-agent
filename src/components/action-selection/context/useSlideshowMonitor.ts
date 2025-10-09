@@ -24,8 +24,19 @@ export const useSlideshowMonitor = (
     
     try {
       console.log("Vérification du statut du diaporama pour le renderId:", slideshowRenderId);
+      
+      // Récupérer la session pour l'appel authentifié
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("Session manquante pour vérifier le statut du diaporama");
+        return null;
+      }
+      
       const { data, error } = await supabase.functions.invoke('check-render-status', {
-        body: { renderId: slideshowRenderId }
+        body: { renderId: slideshowRenderId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
       
       if (error) {

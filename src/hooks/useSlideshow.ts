@@ -27,6 +27,13 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
     try {
       setIsLoading(true);
       
+      // Vérifier et récupérer la session avant l'appel
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast.error("Vous devez être connecté pour générer un diaporama");
+        return null;
+      }
+      
       // Appeler la fonction edge pour créer le diaporama
       const { data, error } = await supabase.functions.invoke("create-slideshow", {
         body: {
@@ -35,6 +42,9 @@ export const useSlideshow = ({ listing, images }: UseSlideshowProps = {}) => {
             selectedImages: listing.images || [],
             musicUrl: "/background-music.mp3"
           }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 

@@ -64,8 +64,14 @@ export const useSlideshowStatus = (listingId: string) => {
               return render;
             }
             
+            // Récupérer la session pour l'appel authentifié
+            const { data: { session } } = await supabase.auth.getSession();
+            
             const response = await supabase.functions.invoke('check-render-status', {
-              body: { renderId: render.render_id }
+              body: { renderId: render.render_id },
+              headers: session ? {
+                Authorization: `Bearer ${session.access_token}`
+              } : {}
             });
             
             console.log('Full check-render-status response:', response);

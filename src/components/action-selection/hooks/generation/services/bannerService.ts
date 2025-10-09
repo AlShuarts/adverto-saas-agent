@@ -19,6 +19,12 @@ export const createBanner = async (
   console.log("Début de l'appel à l'API create-sold-banner");
   
   try {
+    // Récupérer la session pour l'appel authentifié
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      throw new Error("Vous devez être connecté pour créer une bannière");
+    }
+    
     const { data, error } = await supabase.functions.invoke("create-sold-banner", {
       body: {
         listingId: listingId,
@@ -31,6 +37,9 @@ export const createBanner = async (
           brokerImage: brokerInfo.brokerImageUrl,
           agencyLogo: brokerInfo.agencyLogoUrl
         }
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`
       }
     });
   
@@ -83,8 +92,14 @@ export const checkBannerStatusViaFunction = async (renderId: string) => {
   console.log(`Vérification du statut via l'edge function pour le renderId: ${renderId}`);
   
   try {
+    // Récupérer la session pour l'appel authentifié
+    const { data: { session } } = await supabase.auth.getSession();
+    
     const { data, error } = await supabase.functions.invoke('check-render-status', {
-      body: { renderId }
+      body: { renderId },
+      headers: session ? {
+        Authorization: `Bearer ${session.access_token}`
+      } : {}
     });
     
     if (error) {

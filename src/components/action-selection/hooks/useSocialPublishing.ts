@@ -129,8 +129,14 @@ export const useSocialPublishing = (
               finalVideoUrl = rows[0].video_url as string;
             } else if (rows[0].render_id) {
               // Tentative immédiate de récupération via check-render-status
+              // Récupérer la session pour l'appel authentifié
+              const { data: { session: checkSession } } = await supabase.auth.getSession();
+              
               const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
                 body: { renderId: rows[0].render_id },
+                headers: checkSession ? {
+                  Authorization: `Bearer ${checkSession.access_token}`
+                } : {}
               });
               if (!statusError && statusData?.videoUrl) {
                 finalVideoUrl = statusData.videoUrl as string;
