@@ -2,6 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { descriptionGenerationSchema } from "../_shared/validation.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -77,22 +78,23 @@ serve(async (req) => {
 
     console.log("✅ Authenticated user:", user.id);
 
-    const body = await req.json();
+    // Parse and validate input
+    const rawData = await req.json();
+    const validatedData = descriptionGenerationSchema.parse(rawData);
+    
     let listing;
-    let templateContent;
+    let templateContent = validatedData.templateContent;
     
     // Handle different request formats
-    if (body.listing) {
-      // Direct listing object in request (prefer reloading via RLS if id provided)
-      listing = body.listing;
-      templateContent = body.templateContent;
+    if (validatedData.listing) {
+      listing = validatedData.listing;
 
       try {
-        if (body.listing.id) {
+        if (validatedData.listing.id) {
           const { data: reloaded, error: reloadError } = await supabaseUser
             .from('listings')
             .select('*')
-            .eq('id', body.listing.id)
+            .eq('id', validatedData.listing.id)
             .maybeSingle();
 
           if (!reloadError && reloaded) {
@@ -102,12 +104,11 @@ serve(async (req) => {
       } catch (e) {
         console.warn("⚠️ Failed to reload listing via RLS, using provided object.");
       }
-    } else if (body.listingId) {
-      // Just listing ID provided, fetch listing from database
+    } else if (validatedData.listingId) {
       const { data: listingData, error: listingError } = await supabaseUser
         .from('listings')
         .select('*')
-        .eq('id', body.listingId)
+        .eq('id', validatedData.listingId)
         .maybeSingle();
         
       if (listingError || !listingData) {
@@ -117,11 +118,11 @@ serve(async (req) => {
       listing = listingData;
       
       // If templateId is provided, fetch the template
-      if (body.templateId && body.templateId !== "none") {
+      if (validatedData.templateId && validatedData.templateId !== "none") {
         const { data: template } = await supabaseUser
           .from('facebook_templates')
           .select('content')
-          .eq('id', body.templateId)
+          .eq('id', validatedData.templateId)
           .maybeSingle();
           
         if (template) {

@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { renderWithShotstack } from "./services/shotstackService.ts";
 import { generateSoldBannerClip } from "./utils/bannerGenerator.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { bannerCreateSchema } from "../_shared/validation.ts";
 
 serve(async (req) => {
   console.log("🔔 DÉMARRAGE de la fonction create-sold-banner, méthode:", req.method);
@@ -39,33 +40,12 @@ serve(async (req) => {
       throw new Error("❌ Jeton utilisateur invalide.");
     }
 
-    const requestData = await req.json();
-    console.log("📝 DONNÉES REQUÊTE REÇUES:", JSON.stringify(requestData, null, 2));
+    // Parse and validate input
+    const rawData = await req.json();
+    const validatedData = bannerCreateSchema.parse(rawData);
+    const { listingId, config } = validatedData;
     
-    const { listingId, config } = requestData;
-    
-    if (!listingId || !config) {
-      return new Response(
-        JSON.stringify({ error: "❌ Paramètres requis manquants." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-
-    // Validation des données de configuration requises
-    const requiredFields = ["mainImage", "brokerName", "brokerEmail", "brokerPhone"];
-    const missingFields = requiredFields.filter(field => !config[field]);
-    
-    if (missingFields.length > 0) {
-      return new Response(
-        JSON.stringify({ 
-          error: `❌ Champs requis manquants: ${missingFields.join(", ")}.`,
-          missingFields 
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-
-    console.log("📜 CONFIGURATION REÇUE:", JSON.stringify(config, null, 2));
+    console.log("📝 DONNÉES VALIDÉES:", JSON.stringify({ listingId, config }, null, 2));
     console.log("🖼️ Image principale:", config.mainImage);
     
     // Create service role client only for listing and render operations (not user data)

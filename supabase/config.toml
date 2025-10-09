@@ -13,20 +13,20 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.scrape-broker-profile]
-verify_jwt = false
+verify_jwt = true
 
 [functions.scrape-centris]
-verify_jwt = false
+verify_jwt = true
 
 [functions.scrape-search-results]
-verify_jwt = false
+verify_jwt = true
 memory = 256
 
 [functions.admin-get-users]
 verify_jwt = true
 
 [functions.search-address]
-verify_jwt = false
+verify_jwt = true
 memory = 512
 timeout_ms = 15000
 

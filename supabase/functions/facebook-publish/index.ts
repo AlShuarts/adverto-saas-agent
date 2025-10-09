@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { facebookPublishSchema } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,19 +23,17 @@ serve(async (req) => {
 
   try {
     console.log("Début du traitement de la requête");
-    const { message, images, video, pageId, accessToken } = await req.json();
-    console.log("Données reçues:", { 
+    
+    // Parse and validate input
+    const rawData = await req.json();
+    const validatedData = facebookPublishSchema.parse(rawData);
+    const { message, images, video, pageId, accessToken } = validatedData;
+    
+    console.log("Données validées:", { 
       messageLength: message?.length,
       imagesCount: images?.length,
-      hasVideo: !!video,
-      pageId: pageId ? "présent" : "manquant",
-      accessToken: accessToken ? "présent" : "manquant"
+      hasVideo: !!video
     });
-
-    if (!pageId || !accessToken) {
-      console.error("Paramètres manquants:", { pageId: !!pageId, accessToken: !!accessToken });
-      throw new Error("Paramètres de page Facebook manquants");
-    }
 
     // Vérifier d'abord la validité du token de la page
     console.log("Vérification du token de la page Facebook...");

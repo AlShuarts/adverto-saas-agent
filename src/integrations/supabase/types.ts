@@ -319,6 +319,36 @@ export type Database = {
           },
         ]
       }
+      social_tokens: {
+        Row: {
+          created_at: string
+          facebook_access_token: string | null
+          facebook_page_id: string | null
+          instagram_access_token: string | null
+          instagram_user_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          facebook_access_token?: string | null
+          facebook_page_id?: string | null
+          instagram_access_token?: string | null
+          instagram_user_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          facebook_access_token?: string | null
+          facebook_page_id?: string | null
+          instagram_access_token?: string | null
+          instagram_user_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sold_banner_renders: {
         Row: {
           banner_type: string
@@ -475,6 +505,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_facebook_credentials: {
+        Args: { _user_id: string }
+        Returns: {
+          access_token: string
+          page_id: string
+        }[]
+      }
+      get_instagram_credentials: {
+        Args: { _user_id: string }
+        Returns: {
+          access_token: string
+          instagram_user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]

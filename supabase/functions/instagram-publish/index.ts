@@ -1,14 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import { corsHeaders } from '../_shared/cors.ts'
-
-interface RequestBody {
-  message: string;
-  images?: string[];
-  video?: string;
-  listingId: string;
-  templateId?: string;
-}
+import { instagramPublishSchema } from '../_shared/validation.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -35,8 +28,18 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { message, images, video, listingId, templateId } = await req.json() as RequestBody
-    console.log('Publishing to Instagram:', { message, images: images?.length || 0, hasVideo: !!video, listingId, hasTemplate: !!templateId })
+    // Parse and validate input
+    const rawData = await req.json();
+    const validatedData = instagramPublishSchema.parse(rawData);
+    const { message, images, video, listingId, templateId } = validatedData;
+    
+    console.log('Publishing to Instagram:', { 
+      messageLength: message?.length, 
+      images: images?.length || 0, 
+      hasVideo: !!video, 
+      listingId, 
+      hasTemplate: !!templateId 
+    })
 
     // Get authenticated user - this validates the JWT
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser()

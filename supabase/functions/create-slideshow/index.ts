@@ -7,6 +7,7 @@ import { getListingById, saveRenderRecord } from "./services/databaseService.ts"
 import { validateUser } from "./services/authService.ts";
 import { updateUsageStatistics } from "./services/statisticsService.ts";
 import { validateConfig } from "./services/configService.ts";
+import { slideshowCreateSchema } from "../_shared/validation.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,16 +26,11 @@ serve(async (req) => {
     const { user, supabase, supabaseServiceRole } = await validateUser(req.headers.get("authorization"));
 
     // Récupération et validation des données
-    const requestData = await req.json();
-    console.log("📝 Données de la requête:", JSON.stringify(requestData, null, 2));
+    const rawData = await req.json();
+    const validatedData = slideshowCreateSchema.parse(rawData);
+    console.log("📝 Données validées:", JSON.stringify(validatedData, null, 2));
     
-    const { listingId, config: rawConfig } = requestData;
-    if (!listingId) {
-      return new Response(
-        JSON.stringify({ error: "❌ ID de l'annonce manquant." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
+    const { listingId, config: rawConfig } = validatedData;
 
     // Validation et préparation de la configuration
     console.log("🎵 Vérification de la musique dans la requête:", rawConfig.selectedMusic || "aucune musique");
