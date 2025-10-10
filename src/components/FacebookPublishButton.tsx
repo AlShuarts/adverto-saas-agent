@@ -44,22 +44,23 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
       setIsPublishing(true);
       console.log("Début de la publication sur Facebook");
 
-      // Check if user has connected Facebook (without exposing tokens to client)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Get session for Authorization header
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         throw new Error("Vous devez être connecté pour publier");
       }
 
-      // Verify Facebook connection exists server-side
+      // Verify Facebook connection exists (basic check)
       const { data: fbCreds, error: fbError } = await supabase
-        .rpc('get_facebook_credentials', { _user_id: user.id });
+        .rpc('get_facebook_credentials', { _user_id: session.user.id });
 
-      if (fbError || !fbCreds || fbCreds.length === 0) {
+      if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
         toast({
           title: "Facebook non connecté",
           description: "Veuillez d'abord connecter votre page Facebook dans votre profil",
           variant: "destructive",
         });
+        window.location.href = "/profile";
         return;
       }
 
@@ -145,6 +146,9 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
             message,
             video: finalVideoUrl,
           },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
         });
 
         if (functionError) {
@@ -168,6 +172,9 @@ export const FacebookPublishButton = ({ listing }: FacebookPublishButtonProps) =
             message,
             images: listing.images?.slice(0, 2),
           },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
         });
 
         if (functionError) {

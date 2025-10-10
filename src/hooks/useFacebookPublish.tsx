@@ -20,19 +20,17 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
       setIsPublishing(true);
       console.log("Début de la publication sur Facebook");
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Get session for Authorization header
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         throw new Error("Vous devez être connecté pour publier");
       }
 
-      // Récupérer le profil pour obtenir pageId et accessToken
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("facebook_page_id, facebook_access_token")
-        .eq("id", user.id)
-        .single();
+      // Verify Facebook connection (basic check)
+      const { data: fbCreds, error: fbError } = await supabase
+        .rpc('get_facebook_credentials', { _user_id: session.user.id });
 
-      if (profileError || !profile?.facebook_page_id || !profile?.facebook_access_token) {
+      if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
         throw new Error("Veuillez configurer votre page Facebook dans votre profil");
       }
 
@@ -41,9 +39,10 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
         body: {
           message,
           video: videoUrl,
-          pageId: profile.facebook_page_id,
-          accessToken: profile.facebook_access_token,
         },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (functionError) {

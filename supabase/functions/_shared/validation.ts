@@ -13,8 +13,8 @@ export const facebookPublishSchema = z.object({
   message: z.string().max(63206).trim(), // Facebook's max character limit
   images: z.array(supabaseStorageUrlPattern).max(10).optional(),
   video: supabaseStorageUrlPattern.optional(),
-  pageId: z.string().min(1).max(100),
-  accessToken: z.string().min(1).max(1000),
+  pageId: z.string().min(1).max(100).optional(), // Optional - will be fetched server-side if missing
+  accessToken: z.string().min(1).max(1000).optional(), // Optional - will be fetched server-side if missing
 });
 
 // Instagram publish validation

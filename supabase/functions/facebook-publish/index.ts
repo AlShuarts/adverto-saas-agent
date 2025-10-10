@@ -27,13 +27,58 @@ serve(async (req) => {
     // Parse and validate input
     const rawData = await req.json();
     const validatedData = facebookPublishSchema.parse(rawData);
-    const { message, images, video, pageId, accessToken } = validatedData;
+    let { message, images, video, pageId, accessToken } = validatedData;
     
     console.log("Données validées:", { 
       messageLength: message?.length,
       imagesCount: images?.length,
-      hasVideo: !!video
+      hasVideo: !!video,
+      hasPageId: !!pageId,
+      hasAccessToken: !!accessToken
     });
+
+    // If credentials not provided by client, fetch them server-side
+    if (!pageId || !accessToken) {
+      console.log("Credentials manquants, récupération côté serveur...");
+      
+      // Get JWT from Authorization header
+      const authHeader = req.headers.get("authorization");
+      if (!authHeader) {
+        console.error("Aucun header Authorization fourni");
+        throw new Error("Authentication requise. Veuillez vous reconnecter.");
+      }
+
+      const jwt = authHeader.replace("Bearer ", "");
+      
+      // Get user from JWT
+      const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+      if (userError || !user) {
+        console.error("Erreur d'authentification:", userError);
+        throw new Error("Erreur d'authentification. Veuillez vous reconnecter.");
+      }
+
+      console.log(`Utilisateur authentifié: ${user.id}`);
+
+      // Fetch Facebook credentials from profile via RPC
+      const { data: fbCreds, error: fbError } = await supabase
+        .rpc('get_facebook_credentials', { _user_id: user.id });
+
+      if (fbError) {
+        console.error("Erreur lors de la récupération des credentials:", fbError);
+        throw new Error("Erreur lors de la récupération de vos credentials Facebook.");
+      }
+
+      if (!fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id || !fbCreds[0].access_token) {
+        console.error("Credentials Facebook non trouvés pour l'utilisateur");
+        throw new Error("Veuillez connecter votre page Facebook dans votre profil.");
+      }
+
+      pageId = fbCreds[0].page_id;
+      accessToken = fbCreds[0].access_token;
+      console.log("Credentials récupérés avec succès depuis le profil");
+    } else {
+      console.log("Credentials fournis par le client");
+    }
 
     // Vérifier d'abord la validité du token de la page
     console.log("Vérification du token de la page Facebook...");

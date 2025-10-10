@@ -60,31 +60,47 @@ export const useSocialPublishing = (
         
         // Si l'utilisateur a sélectionné "slideshow" et qu'une vidéo est dispo, publier en vidéo
         if (selectedPublicationTypes.includes("slideshow") && finalVideoUrl) {
-          if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
-            toast.error("Configuration Facebook manquante", {
-              description: "Veuillez configurer votre page Facebook dans votre profil.",
+          // Get session for Authorization header
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session) {
+            toast.error("Session expirée", {
+              description: "Veuillez vous reconnecter.",
             });
           } else {
-            tasks.push(
-              supabase.functions.invoke("facebook-publish", {
-                body: {
-                  message: generatedText,
-                  video: finalVideoUrl,
-                  pageId: profile.facebook_page_id,
-                  accessToken: profile.facebook_access_token,
-                  templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+            // Basic check - server will fetch credentials
+            const { data: fbCreds, error: fbError } = await supabase
+              .rpc('get_facebook_credentials', { _user_id: session.user.id });
+
+            if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
+              toast.error("Configuration Facebook manquante", {
+                description: "Veuillez configurer votre page Facebook dans votre profil.",
+              });
+            } else {
+              tasks.push(
+                supabase.functions.invoke("facebook-publish", {
+                  body: {
+                    message: generatedText,
+                    video: finalVideoUrl,
+                    templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+                  },
+                  headers: {
+                    Authorization: `Bearer ${session.access_token}`
+                  }
+                }).then(async () => {
+                const { error: updateError } = await supabase
+                  .from("listings")
+                  .update({ published_to_facebook: true })
+                  .eq("id", listing.id);
+                
+                if (updateError) {
+                  console.error("Error updating listing:", updateError);
                 }
-              }).then(async () => {
-              await supabase
-                .from("listings")
-                .update({ published_to_facebook: true })
-                .eq("id", listing.id);
-              await ensureAndIncrementStatistic('facebook');
-            }).catch(error => {
-              console.error("Test mode - Facebook publish error:", error);
-              toast.success("Facebook test publication completed (test mode)");
-            })
-          );
+                
+                toast.success("Facebook test publication completed (test mode)");
+              })
+            );
+            }
           }
         } else {
           // Sinon utiliser bannière ou images
@@ -96,31 +112,47 @@ export const useSocialPublishing = (
           }
           
           if (imageToUse) {
-            if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
-              toast.error("Configuration Facebook manquante", {
-                description: "Veuillez configurer votre page Facebook dans votre profil.",
+            // Get session for Authorization header
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+              toast.error("Session expirée", {
+                description: "Veuillez vous reconnecter.",
               });
             } else {
-              tasks.push(
-                supabase.functions.invoke("facebook-publish", {
-                  body: {
-                    message: generatedText,
-                    images: [imageToUse],
-                    pageId: profile.facebook_page_id,
-                    accessToken: profile.facebook_access_token,
-                    templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+              // Basic check - server will fetch credentials
+              const { data: fbCreds, error: fbError } = await supabase
+                .rpc('get_facebook_credentials', { _user_id: session.user.id });
+
+              if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
+                toast.error("Configuration Facebook manquante", {
+                  description: "Veuillez configurer votre page Facebook dans votre profil.",
+                });
+              } else {
+                tasks.push(
+                  supabase.functions.invoke("facebook-publish", {
+                    body: {
+                      message: generatedText,
+                      images: [imageToUse],
+                      templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+                    },
+                    headers: {
+                      Authorization: `Bearer ${session.access_token}`
+                    }
+                  }).then(async () => {
+                  const { error: updateError } = await supabase
+                    .from("listings")
+                    .update({ published_to_facebook: true })
+                    .eq("id", listing.id);
+                  
+                  if (updateError) {
+                    console.error("Error updating listing:", updateError);
                   }
-                }).then(async () => {
-                await supabase
-                  .from("listings")
-                  .update({ published_to_facebook: true })
-                  .eq("id", listing.id);
-                await ensureAndIncrementStatistic('facebook');
-              }).catch(error => {
-                console.error("Test mode - Facebook publish error:", error);
-                toast.success("Facebook test publication completed (test mode)");
-              })
-            );
+                  
+                  toast.success("Facebook test publication completed (test mode)");
+                })
+              );
+              }
             }
           }
         }
