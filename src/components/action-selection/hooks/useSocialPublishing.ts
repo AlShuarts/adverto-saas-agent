@@ -60,14 +60,21 @@ export const useSocialPublishing = (
         
         // Si l'utilisateur a sélectionné "slideshow" et qu'une vidéo est dispo, publier en vidéo
         if (selectedPublicationTypes.includes("slideshow") && finalVideoUrl) {
-          tasks.push(
-            supabase.functions.invoke("facebook-publish", {
-              body: {
-                message: generatedText,
-                video: finalVideoUrl,
-                templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
-              }
-            }).then(async () => {
+          if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
+            toast.error("Configuration Facebook manquante", {
+              description: "Veuillez configurer votre page Facebook dans votre profil.",
+            });
+          } else {
+            tasks.push(
+              supabase.functions.invoke("facebook-publish", {
+                body: {
+                  message: generatedText,
+                  video: finalVideoUrl,
+                  pageId: profile.facebook_page_id,
+                  accessToken: profile.facebook_access_token,
+                  templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+                }
+              }).then(async () => {
               await supabase
                 .from("listings")
                 .update({ published_to_facebook: true })
@@ -78,6 +85,7 @@ export const useSocialPublishing = (
               toast.success("Facebook test publication completed (test mode)");
             })
           );
+          }
         } else {
           // Sinon utiliser bannière ou images
           let imageToUse = null as string | null;
@@ -88,14 +96,21 @@ export const useSocialPublishing = (
           }
           
           if (imageToUse) {
-            tasks.push(
-              supabase.functions.invoke("facebook-publish", {
-                body: {
-                  message: generatedText,
-                  images: [imageToUse],
-                  templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
-                }
-              }).then(async () => {
+            if (!profile?.facebook_page_id || !profile?.facebook_access_token) {
+              toast.error("Configuration Facebook manquante", {
+                description: "Veuillez configurer votre page Facebook dans votre profil.",
+              });
+            } else {
+              tasks.push(
+                supabase.functions.invoke("facebook-publish", {
+                  body: {
+                    message: generatedText,
+                    images: [imageToUse],
+                    pageId: profile.facebook_page_id,
+                    accessToken: profile.facebook_access_token,
+                    templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+                  }
+                }).then(async () => {
                 await supabase
                   .from("listings")
                   .update({ published_to_facebook: true })
@@ -106,6 +121,7 @@ export const useSocialPublishing = (
                 toast.success("Facebook test publication completed (test mode)");
               })
             );
+            }
           }
         }
       }

@@ -20,10 +20,20 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
       setIsPublishing(true);
       console.log("Début de la publication sur Facebook");
 
-      // Client should not access tokens - edge function fetches them server-side
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Vous devez être connecté pour publier");
+      }
+
+      // Récupérer le profil pour obtenir pageId et accessToken
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("facebook_page_id, facebook_access_token")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.facebook_page_id || !profile?.facebook_access_token) {
+        throw new Error("Veuillez configurer votre page Facebook dans votre profil");
       }
 
       console.log("Tentative de publication de la vidéo sur Facebook");
@@ -31,6 +41,8 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
         body: {
           message,
           video: videoUrl,
+          pageId: profile.facebook_page_id,
+          accessToken: profile.facebook_access_token,
         },
       });
 
