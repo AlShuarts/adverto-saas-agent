@@ -15,6 +15,14 @@ Deno.serve(async (req) => {
       throw new Error('Missing authorization header')
     }
 
+    // Extract token from Bearer format
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    if (!token) {
+      throw new Error('Invalid authorization header format')
+    }
+
+    console.log('Auth token received:', { hasToken: !!token, tokenLength: token.length })
+
     // Create Supabase client with ANON_KEY to enforce RLS policies
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -41,8 +49,8 @@ Deno.serve(async (req) => {
       hasTemplate: !!templateId 
     })
 
-    // Get authenticated user - this validates the JWT
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
+    // Get authenticated user - pass the JWT token explicitly
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
 
     if (authError || !user) {
       console.error('Auth error:', authError)
