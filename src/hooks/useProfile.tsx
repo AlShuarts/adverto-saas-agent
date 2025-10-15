@@ -153,6 +153,15 @@ export const useProfile = () => {
         throw new Error("Connexion Facebook échouée ou annulée");
       }
 
+      // Vérifier si l'utilisateur a accordé l'accès aux pages
+      const grantedScopes = (authResponse.authResponse as any)?.grantedScopes || '';
+      console.log("🔐 Scopes accordés lors du login:", grantedScopes);
+
+      if (!grantedScopes.includes('pages_show_list')) {
+        console.error("❌ L'utilisateur n'a pas accordé l'accès à ses pages");
+        throw new Error("Vous devez autoriser l'accès à vos pages Facebook pour continuer");
+      }
+
       const userAccessToken = authResponse.authResponse?.accessToken;
       if (!userAccessToken) {
         throw new Error("Token utilisateur Facebook non trouvé");
@@ -182,6 +191,11 @@ export const useProfile = () => {
       console.log("✅ Permissions accordées:", grantedPermissions);
       console.log("❌ Permissions refusées:", declinedPermissions);
 
+      // Afficher les détails complets si des permissions sont refusées
+      if (declinedPermissions.length > 0) {
+        console.warn("⚠️ ATTENTION: L'utilisateur a refusé ces permissions:", declinedPermissions);
+      }
+
       // Vérifier les permissions critiques
       const requiredPermissions = ['pages_show_list', 'pages_manage_posts'];
       const missingPermissions = requiredPermissions.filter(
@@ -190,6 +204,7 @@ export const useProfile = () => {
 
       if (missingPermissions.length > 0) {
         console.error("❌ Permissions manquantes:", missingPermissions);
+        console.error("💡 L'utilisateur doit réautoriser et cocher TOUTES les permissions");
         throw new Error(
           `Permissions manquantes: ${missingPermissions.join(', ')}. ` +
           `Veuillez réessayer et autoriser toutes les permissions demandées.`
@@ -245,6 +260,9 @@ export const useProfile = () => {
 
       // Récupérer les pages cochées dans le popup OAuth
       console.log("📥 Récupération des pages cochées...");
+      console.log("🔑 Token utilisé:", userAccessToken.substring(0, 20) + "...");
+      console.log("🎯 Endpoint appelé: /me/accounts?fields=id,name,access_token");
+      
       const accountsPages: any[] = await new Promise((resolve, reject) => {
         window.FB.api(
           '/me/accounts?fields=id,name,access_token',
@@ -259,16 +277,27 @@ export const useProfile = () => {
         );
       });
 
-      console.log(`✅ ${accountsPages.length} page(s) cochée(s)`);
+      console.log("📦 Réponse complète de /me/accounts:", JSON.stringify(accountsPages, null, 2));
+      console.log(`✅ ${accountsPages.length} page(s) retournée(s) par l'API`);
+
+      if (accountsPages.length === 0) {
+        console.error("❌ PROBLÈME: L'API /me/accounts n'a retourné aucune page");
+        console.error("💡 Raisons possibles:");
+        console.error("   1. L'utilisateur n'est pas Admin/Éditeur/Modérateur de la page cochée");
+        console.error("   2. La page est gérée par un Business Manager");
+        console.error("   3. La permission pages_show_list a été refusée");
+        console.error("   4. Le token utilisateur est invalide");
+      }
 
       const pages = {
         data: accountsPages
       };
 
       if (pages.data.length === 0) {
+        console.error("❌ Aucune page trouvée");
         toast({
-          title: "Aucune page cochée",
-          description: "Veuillez cocher au moins une page dans le popup Facebook",
+          title: "Aucune page trouvée",
+          description: "Vous devez être Admin, Éditeur ou Modérateur de la page que vous souhaitez connecter. Si vous avez coché une page dans le popup mais qu'elle n'apparaît pas ici, vérifiez vos rôles sur cette page dans Facebook Business Suite.",
           variant: "destructive",
         });
         setLoading(false);
