@@ -7,6 +7,10 @@ const supabaseStorageUrlPattern = z.string().regex(
   /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\//,
   "Must be a valid Supabase storage URL"
 );
+const videoUrlPattern = z.string().regex(
+  /^https:\/\/([a-z0-9]+\.supabase\.co\/storage\/v1\/|shotstack-api-v1-output\.s3[^.]*\.amazonaws\.com\/)/,
+  "Must be a valid Supabase storage URL or Shotstack video URL"
+);
 
 // Facebook publish validation
 export const facebookPublishSchema = z.object({
@@ -21,7 +25,7 @@ export const facebookPublishSchema = z.object({
 export const instagramPublishSchema = z.object({
   message: z.string().max(2200).trim(), // Instagram caption limit
   images: z.array(supabaseStorageUrlPattern).max(10).optional(),
-  video: supabaseStorageUrlPattern.optional(),
+  video: videoUrlPattern.optional(),
   listingId: z.string().uuid(),
   templateId: z.string().uuid().optional(),
 });
