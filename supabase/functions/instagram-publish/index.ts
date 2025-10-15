@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
 
       // Attendre que le traitement de la vidéo soit terminé avant de publier
       let attempts = 0
-      const maxAttempts = 15
+      const maxAttempts = 30
       const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
       while (attempts < maxAttempts) {
         const statusRes = await fetch(
@@ -171,10 +171,11 @@ Deno.serve(async (req) => {
           throw new Error(statusData.error?.message || 'Video processing failed')
         }
         attempts++
-        await delay(2000)
+        await delay(3000)
       }
       if (attempts === maxAttempts) {
-        throw new Error('Video processing not finished, please try again later')
+        console.error(`Video still processing after ${maxAttempts * 3} seconds. Container ID: ${containerData.id}`)
+        throw new Error(`Instagram is still processing the video after ${maxAttempts * 3} seconds. This can happen with longer videos. Please try publishing again in 1-2 minutes, or contact support if the issue persists.`)
       }
     } else if (images && images.length === 1) {
       // Publication d'une seule image
