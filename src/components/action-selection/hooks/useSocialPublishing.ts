@@ -31,6 +31,16 @@ export const useSocialPublishing = (
   ) => {
     try {
       setIsPublishing(true);
+      
+      // Get session once at the beginning for all API calls
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Session expirée", {
+          description: "Veuillez vous reconnecter.",
+        });
+        return { success: false };
+      }
+      
       const tasks = [];
       
       if (!generatedText) {
@@ -203,6 +213,9 @@ export const useSocialPublishing = (
                   listingId: listing.id,
                   templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
                 },
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`
+                }
               }).then(async () => {
                 await ensureAndIncrementStatistic('instagram');
               }).catch(error => {
@@ -233,6 +246,9 @@ export const useSocialPublishing = (
                     listingId: listing.id,
                     templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
                   },
+                  headers: {
+                    Authorization: `Bearer ${session.access_token}`
+                  }
                 }).then(async () => {
                   await ensureAndIncrementStatistic('instagram');
                 }).catch(error => {
@@ -260,6 +276,9 @@ export const useSocialPublishing = (
                   listingId: listing.id,
                   templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
                 },
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`
+                }
               }).then(async () => {
                 await ensureAndIncrementStatistic('instagram');
               }).catch(error => {

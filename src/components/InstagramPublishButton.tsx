@@ -25,12 +25,12 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
       setIsPublishing(true);
       console.log("Début de la publication sur Instagram");
 
-      // Client should not access tokens - pass user ID to edge function
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Get session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         toast({
-          title: "Non connecté",
-          description: "Vous devez être connecté pour publier",
+          title: "Session expirée",
+          description: "Veuillez vous reconnecter.",
           variant: "destructive",
         });
         return;
@@ -95,6 +95,9 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
             listingId: listing.id,
             templateId,
           },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
         });
         if (error) throw error;
         publishResponse = data;
@@ -107,6 +110,9 @@ export const InstagramPublishButton = ({ listing }: InstagramPublishButtonProps)
             listingId: listing.id,
             templateId,
           },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
         });
         if (error) throw error;
         publishResponse = data;
