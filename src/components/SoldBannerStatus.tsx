@@ -68,11 +68,22 @@ export const SoldBannerStatus = ({ listing }: SoldBannerStatusProps) => {
           }).format(listing.price) : ''}`;
       
       await ensureAndIncrementStatistic('instagram');
+      
+      // Include Authorization header for Edge function auth
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        return;
+      }
+      
       const { error } = await supabase.functions.invoke('instagram-publish', {
         body: {
           message,
           images: [imageUrl],
           listingId: listing.id
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
       
