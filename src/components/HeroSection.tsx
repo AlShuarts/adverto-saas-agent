@@ -37,7 +37,7 @@ export const HeroSection = ({
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <div 
               className="fb-login-button" 
-              data-config-id="1116473866706568"
+              data-config-id="809471798372780"
               data-onlogin="checkFacebookLoginState"
               data-size="large"
               data-button-type="continue_with"
