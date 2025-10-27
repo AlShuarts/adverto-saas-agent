@@ -15,11 +15,15 @@ export const useMediaSelection = (initialImages: string[] = []) => {
   };
 
   const toggleFacebookImageSelection = (imageUrl: string) => {
-    setSelectedFacebookImages(prev => 
-      prev.includes(imageUrl)
+    setSelectedFacebookImages(prev => {
+      // Limite de 50 images pour Facebook
+      if (!prev.includes(imageUrl) && prev.length >= 50) {
+        return prev; // Ne pas ajouter si limite atteinte
+      }
+      return prev.includes(imageUrl)
         ? prev.filter(url => url !== imageUrl)
-        : [...prev, imageUrl]
-    );
+        : [...prev, imageUrl];
+    });
   };
 
   const toggleInstagramImageSelection = (imageUrl: string) => {
@@ -35,7 +39,8 @@ export const useMediaSelection = (initialImages: string[] = []) => {
   };
 
   const selectAllFacebookImages = (availableImages: string[]) => {
-    setSelectedFacebookImages(availableImages);
+    // Limiter à 50 pour Facebook
+    setSelectedFacebookImages(availableImages.slice(0, 50));
   };
 
   const selectAllInstagramImages = (availableImages: string[]) => {

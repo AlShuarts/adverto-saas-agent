@@ -15,7 +15,7 @@ const videoUrlPattern = z.string().regex(
 // Facebook publish validation
 export const facebookPublishSchema = z.object({
   message: z.string().max(63206).trim(), // Facebook's max character limit
-  images: z.array(z.string().url().max(2000)).max(10).optional(), // Accept any valid HTTPS URL
+  images: z.array(z.string().url().max(2000)).max(50).optional(), // Accept any valid HTTPS URL, max 50 images
   video: z.string().url().max(2000).optional(), // Accept any valid HTTPS URL
   pageId: z.string().min(1).max(100).optional(), // Optional - will be fetched server-side if missing
   accessToken: z.string().min(1).max(1000).optional(), // Optional - will be fetched server-side if missing

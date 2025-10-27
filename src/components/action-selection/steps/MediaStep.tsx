@@ -134,11 +134,23 @@ export const MediaStep = ({
         <div className="space-y-4">
           <Card className="bg-gray-800/50 border-gray-700">
             <CardHeader>
-              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center gap-2`}>
-                <span className="text-blue-500">📘</span> Sélection Facebook
+              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center justify-between`}>
+                <span className="flex items-center gap-2">
+                  <span className="text-blue-500">📘</span> Sélection Facebook
+                </span>
+                <span className={`text-sm font-normal ${selectedFacebookImages.length >= 50 ? 'text-yellow-500' : 'text-gray-400'}`}>
+                  {selectedFacebookImages.length}/50 photos
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {selectedFacebookImages.length >= 50 && (
+                <div className="bg-yellow-500/10 border border-yellow-500 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-yellow-500">
+                    ⚠️ Limite atteinte : Facebook accepte un maximum de 50 photos par publication
+                  </p>
+                </div>
+              )}
               <ImageSelection 
                 selectedImages={selectedFacebookImages} 
                 toggleImageSelection={toggleFacebookImageSelection} 
@@ -151,8 +163,13 @@ export const MediaStep = ({
           
           <Card className="bg-gray-800/50 border-gray-700">
             <CardHeader>
-              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center gap-2`}>
-                <span className="text-pink-500">📷</span> Sélection Instagram (max 10)
+              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center justify-between`}>
+                <span className="flex items-center gap-2">
+                  <span className="text-pink-500">📷</span> Sélection Instagram
+                </span>
+                <span className={`text-sm font-normal ${selectedInstagramImages.length >= 10 ? 'text-yellow-500' : 'text-gray-400'}`}>
+                  {selectedInstagramImages.length}/10 photos
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
