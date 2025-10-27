@@ -115,14 +115,14 @@ export const useSocialPublishing = (
           }
         } else {
           // Sinon utiliser bannière ou images Facebook
-          let imageToUse = null as string | null;
+          let imagesToUse: string[] = [];
           if (selectedPublicationTypes.includes("banner") && bannerUrl) {
-            imageToUse = bannerUrl;
+            imagesToUse = [bannerUrl];
           } else if (selectedFacebookImages.length > 0) {
-            imageToUse = selectedFacebookImages[0];
+            imagesToUse = selectedFacebookImages;
           }
           
-          if (imageToUse) {
+          if (imagesToUse.length > 0) {
             // Get session for Authorization header
             const { data: { session } } = await supabase.auth.getSession();
             
@@ -144,7 +144,7 @@ export const useSocialPublishing = (
                   supabase.functions.invoke("facebook-publish", {
                     body: {
                       message: generatedText,
-                      images: [imageToUse],
+                      images: imagesToUse,
                       templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
                     },
                     headers: {
