@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function FacebookDebug() {
-  const { profile, connectFacebook } = useProfile();
+  const { profile } = useProfile();
 
   const testConnection = async () => {
     console.clear();
-    console.log("🔧 MODE DEBUG - Test de connexion Facebook");
+    console.log("🔧 MODE DEBUG - Connexion Facebook via Login Button");
     console.log("==========================================");
-    await connectFacebook();
+    console.log("Utilisez le bouton Facebook Login officiel sur la page principale");
   };
 
   return (

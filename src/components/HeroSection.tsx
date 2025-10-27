@@ -8,14 +8,12 @@ import { BannerConfigDialog } from "./banner/BannerConfigDialog";
 type HeroSectionProps = {
   profile: Tables<"profiles"> | null;
   loading: boolean;
-  onConnectFacebook: () => void;
   onConnectInstagram?: () => void;
 };
 
 export const HeroSection = ({
   profile,
   loading,
-  onConnectFacebook,
   onConnectInstagram
 }: HeroSectionProps) => {
   const { toast } = useToast();
@@ -37,15 +35,16 @@ export const HeroSection = ({
       <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
         <div className="text-center">
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button 
-              size="lg" 
-              className="w-full sm:w-auto" 
-              onClick={onConnectFacebook} 
-              disabled={loading}
-            >
-              <Facebook className="w-5 h-5 mr-2" />
-              {profile?.facebook_page_id ? "Page Facebook connectée" : "Connecter votre page Facebook"}
-            </Button>
+            <div 
+              className="fb-login-button" 
+              data-config-id="1116473866706568"
+              data-onlogin="checkFacebookLoginState"
+              data-size="large"
+              data-button-type="continue_with"
+              data-layout="default"
+              data-auto-logout-link="false"
+              data-use-continue-as="true"
+            />
             
             <Button 
               size="lg" 

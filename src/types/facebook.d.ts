@@ -14,6 +14,9 @@ interface Window {
         return_scopes?: boolean;
       }
     ) => void;
+    getLoginStatus: (
+      callback: (response: any) => void
+    ) => void;
     api: (
       path: string,
       callback: (response: any) => void

@@ -97,221 +97,68 @@ export const useProfile = () => {
     }
   };
 
-  const connectFacebook = async () => {
-    if (!window.FB) {
-      toast({
-        title: "Erreur",
-        description: "Le SDK Facebook n'est pas disponible. Veuillez désactiver votre bloqueur de publicités et rafraîchir la page.",
-        variant: "destructive",
-      });
+  const handleFacebookLoginResponse = async (response: any) => {
+    console.log("📥 Réponse Facebook Login Button:", response);
+    
+    if (response.status !== 'connected') {
+      console.log("❌ Utilisateur non connecté");
       return;
     }
-
+    
     setLoading(true);
+    
     try {
-      // Clear old connection status
-      console.log("Nettoyage des anciennes connexions...");
-      const { error: resetError } = await supabase
+      const authResponse = response.authResponse;
+      
+      // Le config_id retourne directement le Page Access Token et Page ID
+      const pageAccessToken = authResponse.pageAccessToken;
+      const pageId = authResponse.pageID;
+      
+      if (!pageAccessToken || !pageId) {
+        throw new Error("Page Access Token ou Page ID manquant dans la réponse. Assurez-vous d'avoir coché une page dans le popup.");
+      }
+      
+      console.log("✅ Page ID:", pageId);
+      console.log("✅ Page Access Token reçu");
+      
+      // Échanger contre un token longue durée
+      const { data: exchangeData, error: exchangeError } = await supabase.functions.invoke(
+        'exchange-facebook-token',
+        { body: { shortLivedToken: pageAccessToken } }
+      );
+      
+      if (exchangeError) {
+        throw new Error(exchangeError.message);
+      }
+      
+      const longLivedToken = exchangeData.access_token;
+      
+      // Sauvegarder dans la base de données
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          facebook_page_id: null,
-          instagram_user_id: null
+          facebook_page_id: pageId,
+          facebook_access_token: longLivedToken,
         })
         .eq('id', profile.id);
-
-      if (resetError) {
-        console.error("Erreur lors du nettoyage:", resetError);
-        throw resetError;
-      }
-
-      // Étape 1: Connexion utilisateur Facebook avec permissions étendues
-      console.log("Connexion à Facebook avec permissions étendues...");
-      console.log("SDK Facebook disponible:", !!window.FB);
       
-      const authResponse = await new Promise<fb.AuthResponse>((resolve, reject) => {
-        window.FB.login((response) => {
-          console.log("Réponse complète de connexion Facebook:", JSON.stringify(response, null, 2));
-          console.log("Status:", response.status);
-          console.log("AuthResponse:", response.authResponse);
-          console.log("Granted Scopes:", (response as any)?.grantedScopes);
-          
-          if (response.status === 'connected') {
-            console.log("✅ Connexion Facebook réussie");
-          } else {
-            console.error("❌ Échec de la connexion Facebook:", response.status);
-          }
-          
-          resolve(response);
-        }, {
-          scope: 'pages_manage_posts,pages_show_list,pages_manage_metadata,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
-          auth_type: 'rerequest',
-          return_scopes: true
-        } as any);
-      });
-
-      if (authResponse.status !== 'connected') {
-        throw new Error("Connexion Facebook échouée ou annulée");
+      if (updateError) {
+        throw updateError;
       }
-
-      // Vérifier si l'utilisateur a accordé l'accès aux pages
-      const grantedScopes = (authResponse.authResponse as any)?.grantedScopes || '';
-      console.log("🔐 Scopes accordés lors du login:", grantedScopes);
-
-      if (!grantedScopes.includes('pages_show_list')) {
-        console.error("❌ L'utilisateur n'a pas accordé l'accès à ses pages");
-        throw new Error("Vous devez autoriser l'accès à vos pages Facebook pour continuer");
-      }
-
-      const userAccessToken = authResponse.authResponse?.accessToken;
-      if (!userAccessToken) {
-        throw new Error("Token utilisateur Facebook non trouvé");
-      }
-
-      // Étape 2: Vérifier les permissions accordées
-      console.log("Vérification des permissions accordées...");
-      const permissionsResponse = await new Promise<any>((resolve, reject) => {
-        window.FB.api('/me/permissions', (response) => {
-          console.log("📋 Permissions:", JSON.stringify(response, null, 2));
-          if (response.error) {
-            reject(new Error(`Erreur permissions: ${response.error.message}`));
-          } else {
-            resolve(response);
-          }
-        });
-      });
-
-      const grantedPermissions = permissionsResponse.data
-        ?.filter((p: any) => p.status === 'granted')
-        ?.map((p: any) => p.permission) || [];
       
-      const declinedPermissions = permissionsResponse.data
-        ?.filter((p: any) => p.status === 'declined')
-        ?.map((p: any) => p.permission) || [];
-
-      console.log("✅ Permissions accordées:", grantedPermissions);
-      console.log("❌ Permissions refusées:", declinedPermissions);
-
-      // Afficher les détails complets si des permissions sont refusées
-      if (declinedPermissions.length > 0) {
-        console.warn("⚠️ ATTENTION: L'utilisateur a refusé ces permissions:", declinedPermissions);
-      }
-
-      // Vérifier les permissions critiques
-      const requiredPermissions = ['pages_show_list', 'pages_manage_posts'];
-      const missingPermissions = requiredPermissions.filter(
-        perm => !grantedPermissions.includes(perm)
-      );
-
-      if (missingPermissions.length > 0) {
-        console.error("❌ Permissions manquantes:", missingPermissions);
-        console.error("💡 L'utilisateur doit réautoriser et cocher TOUTES les permissions");
-        throw new Error(
-          `Permissions manquantes: ${missingPermissions.join(', ')}. ` +
-          `Veuillez réessayer et autoriser toutes les permissions demandées.`
-        );
-      }
-
-      // Étape 3: Obtenir les pages avec le token utilisateur
-      console.log("🔄 Début de la récupération des pages Facebook...");
-      console.log("Token utilisateur utilisé:", userAccessToken?.substring(0, 20) + "...");
+      console.log("✅ Page Facebook connectée avec succès");
       
-      // Fonction utilitaire pour récupérer toutes les pages avec pagination (via cursors)
-      const fetchAllPages = async (endpoint: string, userToken: string): Promise<any[]> => {
-        let allData: any[] = [];
-        const [basePath, initialQuery = ""] = endpoint.split("?");
-        const base = basePath.startsWith("/") ? basePath : `/${basePath}`;
-        const hasTokenParam = initialQuery.includes("access_token=");
-        const baseQuery = hasTokenParam ? initialQuery : `${initialQuery}${initialQuery ? "&" : ""}access_token=${userToken}`;
-        
-        let after: string | null = null;
-        let pageCount = 0;
-        
-        while (true) {
-          const path = `${base}?${baseQuery}${after ? `&after=${after}` : ""}`;
-          pageCount++;
-          console.log(`   Appel ${pageCount}: ${path.substring(0, 120)}...`);
-          
-          const response: any = await new Promise((resolve, reject) => {
-            window.FB.api(path, (res: any) => {
-              if (res && res.error) {
-                console.error(`   Erreur API: ${res.error.message}`);
-                reject(res.error);
-              } else {
-                resolve(res);
-              }
-            });
-          });
-          
-          if (response && Array.isArray(response.data) && response.data.length > 0) {
-            console.log(`   ✓ ${response.data.length} résultat(s)`);
-            allData = allData.concat(response.data);
-          }
-          
-          const nextAfter = response?.paging?.cursors?.after;
-          if (nextAfter && nextAfter !== after) {
-            after = nextAfter;
-          } else {
-            break;
-          }
-        }
-        
-        return allData;
-      };
-
-      // Récupérer les pages cochées dans le popup OAuth
-      console.log("📥 Récupération des pages cochées...");
-      console.log("🔑 Token utilisé:", userAccessToken.substring(0, 20) + "...");
-      console.log("🎯 Endpoint appelé: /me/accounts?fields=id,name,access_token");
-      
-      const accountsPages: any[] = await new Promise((resolve, reject) => {
-        window.FB.api(
-          '/me/accounts?fields=id,name,access_token',
-          (res: any) => {
-            if (res && res.error) {
-              console.error("❌ Erreur:", res.error);
-              reject(res.error);
-            } else {
-              resolve(res.data || []);
-            }
-          }
-        );
-      });
-
-      console.log("📦 Réponse complète de /me/accounts:", JSON.stringify(accountsPages, null, 2));
-      console.log(`✅ ${accountsPages.length} page(s) retournée(s) par l'API`);
-
-      if (accountsPages.length === 0) {
-        console.error("❌ PROBLÈME: L'API /me/accounts n'a retourné aucune page");
-        console.error("💡 Raisons possibles:");
-        console.error("   1. L'utilisateur n'est pas Admin/Éditeur/Modérateur de la page cochée");
-        console.error("   2. La page est gérée par un Business Manager");
-        console.error("   3. La permission pages_show_list a été refusée");
-        console.error("   4. Le token utilisateur est invalide");
-      }
-
-      const pages = {
-        data: accountsPages
-      };
-
-      if (pages.data.length === 0) {
-        console.error("❌ Aucune page trouvée");
-        toast({
-          title: "Aucune page trouvée",
-          description: "Vous devez être Admin, Éditeur ou Modérateur de la page que vous souhaitez connecter. Si vous avez coché une page dans le popup mais qu'elle n'apparaît pas ici, vérifiez vos rôles sur cette page dans Facebook Business Suite.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-
-      // Connecter automatiquement la première page cochée
-      console.log(`🔄 Connexion de ${pages.data[0].name}...`);
-      await connectSinglePage(pages.data[0], userAccessToken);
-    } catch (error) {
-      console.error('❌ Erreur de connexion Facebook:', error);
       toast({
-        title: "Erreur de connexion Facebook",
+        title: "Connexion réussie",
+        description: "Votre page Facebook a été connectée avec succès",
+      });
+      
+      await getProfile();
+      
+    } catch (error) {
+      console.error("❌ Erreur:", error);
+      toast({
+        title: "Erreur de connexion",
         description: error instanceof Error ? error.message : "Impossible de connecter votre page Facebook",
         variant: "destructive",
       });
@@ -320,68 +167,17 @@ export const useProfile = () => {
     }
   };
 
-  const connectSinglePage = async (page: FacebookPage, userAccessToken: string) => {
-    try {
-      console.log("📌 Connexion de la page:", page.name);
-
-      // Obtenir le token de page
-      const longLivedPageTokenResponse = await fetch(
-        `https://graph.facebook.com/v23.0/${page.id}?fields=access_token&access_token=${userAccessToken}`
-      );
-
-      const pageTokenData = await longLivedPageTokenResponse.json();
-      let pageToken = pageTokenData.access_token;
-
-      if (!pageToken) {
-        throw new Error("Token de page non trouvé");
-      }
-
-      // Échanger contre un token longue durée (60 jours)
-      console.log("🔄 Échange du token pour un token longue durée...");
-      try {
-        const { data: exchangeData, error: exchangeError } = await supabase.functions.invoke(
-          'exchange-facebook-token',
-          { body: { shortLivedToken: pageToken } }
-        );
-
-        if (exchangeError) {
-          console.error("Erreur lors de l'échange du token:", exchangeError);
-          console.log("⚠️ Utilisation du token court (non recommandé)");
-        } else if (exchangeData?.access_token) {
-          pageToken = exchangeData.access_token;
-          console.log("✅ Token longue durée obtenu");
-        }
-      } catch (error) {
-        console.error("Erreur d'échange de token:", error);
-        console.log("⚠️ Utilisation du token court (non recommandé)");
-      }
-
-      // Save connection to secure social_tokens table via migration trigger
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          facebook_page_id: page.id,
-          facebook_access_token: pageToken
-        })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Succès",
-        description: `Page "${page.name}" connectée avec succès`,
-      });
-
-      await getProfile();
-    } catch (error) {
-      console.error('❌ Erreur:', error);
-      toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Impossible de connecter cette page",
-        variant: "destructive",
-      });
+  // Exposer la fonction globalement pour le Login Button
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).checkFacebookLoginState = () => {
+        window.FB.getLoginStatus((response: any) => {
+          handleFacebookLoginResponse(response);
+        });
+      };
     }
-  };
+  }, [profile]);
+
 
 
   const connectInstagram = async () => {
@@ -508,12 +304,12 @@ export const useProfile = () => {
     }
   };
 
-  return {
-    profile,
-    loading,
-    initialized,
-    getProfile,
-    connectFacebook,
-    connectInstagram
+  return { 
+    profile, 
+    loading, 
+    initialized, 
+    getProfile, 
+    handleFacebookLoginResponse,
+    connectInstagram 
   };
 };

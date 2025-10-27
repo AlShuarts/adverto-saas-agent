@@ -11,7 +11,7 @@ import { Toaster } from "sonner";
 
 const Index = () => {
   const { fbInitialized } = useFacebookSDK();
-  const { profile, loading, getProfile, connectFacebook, connectInstagram } = useProfile();
+  const { profile, loading, getProfile, handleFacebookLoginResponse, connectInstagram } = useProfile();
   useFacebookTokenChecker();
 
   // Assurer que le profil est chargé au démarrage
@@ -27,7 +27,6 @@ const Index = () => {
       <HeroSection 
         profile={profile} 
         loading={loading} 
-        onConnectFacebook={connectFacebook}
         onConnectInstagram={connectInstagram}
       />
       <ListingsSection />
