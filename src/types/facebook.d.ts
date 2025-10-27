@@ -14,9 +14,7 @@ interface Window {
         return_scopes?: boolean;
       }
     ) => void;
-    getLoginStatus: (
-      callback: (response: any) => void
-    ) => void;
+    getLoginStatus: (callback: (response: any) => void) => void;
     api: (
       path: string,
       callback: (response: any) => void
@@ -32,6 +30,8 @@ declare namespace fb {
       expiresIn: string;
       signedRequest: string;
       userID: string;
+      pageAccessToken?: string;
+      pageID?: string;
     };
   }
 }

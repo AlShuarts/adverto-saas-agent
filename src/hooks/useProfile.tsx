@@ -169,9 +169,9 @@ export const useProfile = () => {
 
   // Exposer la fonction globalement pour le Login Button
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.FB) {
       (window as any).checkFacebookLoginState = () => {
-        window.FB.getLoginStatus((response: any) => {
+        (window.FB as any).getLoginStatus((response: any) => {
           handleFacebookLoginResponse(response);
         });
       };
