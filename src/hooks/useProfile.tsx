@@ -108,14 +108,63 @@ export const useProfile = () => {
     setLoading(true);
     
     try {
-      const authResponse = response.authResponse;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Vous devez être connecté");
+      }
       
-      // Le config_id retourne directement le Page Access Token et Page ID
-      const pageAccessToken = authResponse.pageAccessToken;
-      const pageId = authResponse.pageID;
+      const authResponse = response.authResponse;
+      let pageAccessToken = authResponse.pageAccessToken;
+      let pageId = authResponse.pageID;
+      
+      // Repli: si le config_id ne retourne pas directement le pageAccessToken/pageID
+      if (!pageAccessToken || !pageId) {
+        console.log("⚠️ Page Access Token ou Page ID manquant, récupération via /me/accounts...");
+        
+        const userToken = authResponse.accessToken;
+        
+        await new Promise<void>((resolve, reject) => {
+          (window as any).FB.api('/me/accounts?fields=id,name,access_token', (res: any) => {
+            if (!res || res.error) {
+              reject(new Error(res?.error?.message || "Impossible de récupérer les pages Facebook"));
+              return;
+            }
+            
+            if (!res.data || res.data.length === 0) {
+              reject(new Error("Aucune page Facebook trouvée. Assurez-vous d'avoir une page Facebook et d'avoir accordé les permissions nécessaires."));
+              return;
+            }
+            
+            // Si une seule page, la prendre directement
+            if (res.data.length === 1) {
+              pageId = res.data[0].id;
+              pageAccessToken = res.data[0].access_token;
+              console.log("✅ Page unique trouvée:", res.data[0].name);
+              resolve();
+              return;
+            }
+            
+            // Si plusieurs pages, prendre celle déjà connectée dans le profil si possible
+            const existingPage = res.data.find((p: FacebookPage) => p.id === profile?.facebook_page_id);
+            if (existingPage) {
+              pageId = existingPage.id;
+              pageAccessToken = existingPage.access_token;
+              console.log("✅ Page existante reconnectée:", existingPage.name);
+              resolve();
+              return;
+            }
+            
+            // Sinon prendre la première
+            pageId = res.data[0].id;
+            pageAccessToken = res.data[0].access_token;
+            console.log("✅ Première page sélectionnée:", res.data[0].name);
+            resolve();
+          });
+        });
+      }
       
       if (!pageAccessToken || !pageId) {
-        throw new Error("Page Access Token ou Page ID manquant dans la réponse. Assurez-vous d'avoir coché une page dans le popup.");
+        throw new Error("Page Access Token ou Page ID manquant. Assurez-vous d'avoir coché une page dans le popup et d'avoir accordé les permissions nécessaires.");
       }
       
       console.log("✅ Page ID:", pageId);
@@ -140,7 +189,7 @@ export const useProfile = () => {
           facebook_page_id: pageId,
           facebook_access_token: longLivedToken,
         })
-        .eq('id', profile.id);
+        .eq('id', user.id);
       
       if (updateError) {
         throw updateError;
@@ -169,14 +218,26 @@ export const useProfile = () => {
 
   // Exposer la fonction globalement pour le Login Button
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.FB) {
-      (window as any).checkFacebookLoginState = () => {
-        (window.FB as any).getLoginStatus((response: any) => {
-          handleFacebookLoginResponse(response);
-        });
+    if (typeof window === 'undefined') return;
+    
+    (window as any).checkFacebookLoginState = () => {
+      console.log("✅ onlogin callback déclenché");
+      
+      const attempt = () => {
+        if ((window as any).FB) {
+          console.log("✅ Facebook SDK prêt, récupération du statut...");
+          (window as any).FB.getLoginStatus((response: any) => {
+            handleFacebookLoginResponse(response);
+          });
+        } else {
+          console.log("⏳ Facebook SDK pas encore prêt, nouvelle tentative...");
+          setTimeout(attempt, 300);
+        }
       };
-    }
-  }, [profile]);
+      
+      attempt();
+    };
+  }, [handleFacebookLoginResponse]);
 
 
 
