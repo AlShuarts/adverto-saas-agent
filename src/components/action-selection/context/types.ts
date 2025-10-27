@@ -37,7 +37,8 @@ export interface ActionSelectionState {
   generatedText: string;
   
   // Media selection
-  selectedImages: string[];
+  selectedFacebookImages: string[];
+  selectedInstagramImages: string[];
   
   // Banner
   bannerType: "VENDU" | "A_VENDRE";
@@ -88,10 +89,16 @@ export interface ActionSelectionContextType extends ActionSelectionState {
   handleGenerateText: () => Promise<void>;
   
   // Media selection
-  setSelectedImages: (images: string[]) => void;
-  toggleImageSelection: (imageUrl: string) => void;
-  selectAllImages: (images: string[]) => void;
-  deselectAllImages: () => void;
+  selectedFacebookImages: string[];
+  setSelectedFacebookImages: (images: string[]) => void;
+  selectedInstagramImages: string[];
+  setSelectedInstagramImages: (images: string[]) => void;
+  toggleFacebookImageSelection: (imageUrl: string) => void;
+  toggleInstagramImageSelection: (imageUrl: string) => void;
+  selectAllFacebookImages: (images: string[]) => void;
+  selectAllInstagramImages: (images: string[]) => void;
+  deselectAllFacebookImages: () => void;
+  deselectAllInstagramImages: () => void;
   onDragEnd: (result: any) => void;
   
   // Banner

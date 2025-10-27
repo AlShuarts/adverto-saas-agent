@@ -20,8 +20,10 @@ type SocialStepProps = {
   generatedText: string;
   setGeneratedText: (text: string) => void;
   images: string[];
-  selectedImages: string[];
-  setSelectedImages: (images: string[]) => void;
+  selectedFacebookImages: string[];
+  selectedInstagramImages: string[];
+  setSelectedFacebookImages: (images: string[]) => void;
+  setSelectedInstagramImages: (images: string[]) => void;
   slideshowUrl: string | null;
   bannerUrl: string | null;
   selectedMusic?: string;
@@ -39,8 +41,10 @@ export const SocialStep = ({
   generatedText,
   setGeneratedText,
   images,
-  selectedImages,
-  setSelectedImages,
+  selectedFacebookImages,
+  selectedInstagramImages,
+  setSelectedFacebookImages,
+  setSelectedInstagramImages,
   slideshowUrl,
   bannerUrl,
   selectedMusic,
@@ -81,8 +85,10 @@ export const SocialStep = ({
         generatedText={generatedText}
         setGeneratedText={setGeneratedText}
         images={images}
-        selectedImages={selectedImages}
-        setSelectedImages={setSelectedImages}
+        selectedFacebookImages={selectedFacebookImages}
+        selectedInstagramImages={selectedInstagramImages}
+        setSelectedFacebookImages={setSelectedFacebookImages}
+        setSelectedInstagramImages={setSelectedInstagramImages}
         slideshowUrl={slideshowUrl}
         bannerUrl={bannerUrl}
         selectedMusic={selectedMusic}

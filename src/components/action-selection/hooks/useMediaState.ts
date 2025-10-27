@@ -8,16 +8,21 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useMediaState = (listingId: string) => {
   const {
-    selectedImages,
-    setSelectedImages,
+    selectedFacebookImages,
+    setSelectedFacebookImages,
+    selectedInstagramImages,
+    setSelectedInstagramImages,
     bannerType,
     setBannerType,
     bannerImage,
     setBannerImage,
     resetMediaSelection,
-    toggleImageSelection,
-    selectAllImages,
-    deselectAllImages,
+    toggleFacebookImageSelection,
+    toggleInstagramImageSelection,
+    selectAllFacebookImages,
+    selectAllInstagramImages,
+    deselectAllFacebookImages,
+    deselectAllInstagramImages,
     selectBannerImage
   } = useMediaSelection();
 
@@ -49,16 +54,18 @@ export const useMediaState = (listingId: string) => {
 
   const handleGenerateSlideshow = async () => {
     console.log("Generating slideshow with selected images and music:", selectedMusic);
-    if (selectedImages.length === 0) {
+    // For slideshow, use Facebook images by default or combine both
+    const imagesToUse = selectedFacebookImages.length > 0 ? selectedFacebookImages : selectedInstagramImages;
+    if (imagesToUse.length === 0) {
       return null;
     }
 
-    return await generateSlideshow(selectedImages, selectedMusic);
+    return await generateSlideshow(imagesToUse, selectedMusic);
   };
 
   const { handleGenerateBanner } = useMediaGenerationHandlers(
     listingId,
-    selectedImages,
+    selectedFacebookImages, // Use Facebook images for banner generation
     selectedMusic, // Pass selectedMusic here
     slideshowRenderId,
     setSlideshowUrl,
@@ -68,16 +75,21 @@ export const useMediaState = (listingId: string) => {
   );
 
   return {
-    selectedImages,
-    setSelectedImages,
+    selectedFacebookImages,
+    setSelectedFacebookImages,
+    selectedInstagramImages,
+    setSelectedInstagramImages,
     bannerType,
     setBannerType,
     bannerImage,
     setBannerImage,
     resetMediaSelection,
-    toggleImageSelection,
-    selectAllImages,
-    deselectAllImages,
+    toggleFacebookImageSelection,
+    toggleInstagramImageSelection,
+    selectAllFacebookImages,
+    selectAllInstagramImages,
+    deselectAllFacebookImages,
+    deselectAllInstagramImages,
     selectBannerImage,
     isGeneratingSlideshow,
     isGeneratingBanner,

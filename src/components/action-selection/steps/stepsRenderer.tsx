@@ -47,15 +47,19 @@ export const renderStepContent = (props: DialogContentProps) => {
           selectedPublicationType={props.selectedPublicationType}
           selectedPhotoType={props.selectedPhotoType}
           images={props.listing?.images || []}
-          selectedImages={props.selectedImages}
+          selectedFacebookImages={props.selectedFacebookImages}
+          selectedInstagramImages={props.selectedInstagramImages}
           bannerImage={props.bannerImage}
           bannerType={props.bannerType}
           musicList={props.musicList}
           selectedMusic={props.selectedMusic}
           currentlyPlaying={props.currentlyPlaying}
-          toggleImageSelection={props.toggleImageSelection}
-          selectAllImages={props.selectAllImages}
-          deselectAllImages={props.deselectAllImages}
+          toggleFacebookImageSelection={props.toggleFacebookImageSelection}
+          toggleInstagramImageSelection={props.toggleInstagramImageSelection}
+          selectAllFacebookImages={props.selectAllFacebookImages}
+          selectAllInstagramImages={props.selectAllInstagramImages}
+          deselectAllFacebookImages={props.deselectAllFacebookImages}
+          deselectAllInstagramImages={props.deselectAllInstagramImages}
           onDragEnd={props.onDragEnd}
           selectBannerImage={props.selectBannerImage}
           handleMusicChange={props.handleMusicChange}
@@ -100,13 +104,15 @@ export const renderStepContent = (props: DialogContentProps) => {
           onSubmit={props.handlePublish}
           hasRequiredInfo={
             (props.selectedNetworks.facebook || props.selectedNetworks.instagram) &&
-            (!!props.slideshowUrl || !!props.bannerUrl || props.selectedImages.length > 0)
+            (!!props.slideshowUrl || !!props.bannerUrl || props.selectedFacebookImages.length > 0 || props.selectedInstagramImages.length > 0)
           }
           generatedText={props.generatedText}
           setGeneratedText={props.setGeneratedText}
           images={props.listing?.images || []}
-          selectedImages={props.selectedImages}
-          setSelectedImages={props.setSelectedImages}
+          selectedFacebookImages={props.selectedFacebookImages}
+          selectedInstagramImages={props.selectedInstagramImages}
+          setSelectedFacebookImages={props.setSelectedFacebookImages}
+          setSelectedInstagramImages={props.setSelectedInstagramImages}
           slideshowUrl={props.slideshowUrl}
           bannerUrl={props.bannerUrl}
           selectedMusic={props.selectedMusic}

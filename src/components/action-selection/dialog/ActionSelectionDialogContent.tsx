@@ -34,14 +34,17 @@ export const ActionSelectionDialogContent = () => {
     setGeneratedText,
     handleGenerateText,
     
-    selectedImages,
-    setSelectedImages,
+    selectedFacebookImages,
+    setSelectedFacebookImages,
+    selectedInstagramImages,
+    setSelectedInstagramImages,
     bannerImage,
     bannerType,
     musicList,
     selectedMusic,
     currentlyPlaying,
-    toggleImageSelection,
+    toggleFacebookImageSelection,
+    toggleInstagramImageSelection,
     onDragEnd,
     selectBannerImage,
     handleMusicChange,
@@ -59,8 +62,10 @@ export const ActionSelectionDialogContent = () => {
     setBrokerPhone,
     formErrors,
     setFormErrors,
-    selectAllImages,
-    deselectAllImages,
+    selectAllFacebookImages,
+    selectAllInstagramImages,
+    deselectAllFacebookImages,
+    deselectAllInstagramImages,
     
     isGeneratingSlideshow,
     isGeneratingBanner,
@@ -141,14 +146,17 @@ export const ActionSelectionDialogContent = () => {
         isGeneratingText={isGeneratingText}
         handleGenerateText={handleGenerateText}
         listing={listing}
-        selectedImages={selectedImages}
-        setSelectedImages={setSelectedImages}
+        selectedFacebookImages={selectedFacebookImages}
+        setSelectedFacebookImages={setSelectedFacebookImages}
+        selectedInstagramImages={selectedInstagramImages}
+        setSelectedInstagramImages={setSelectedInstagramImages}
         bannerImage={bannerImage}
         bannerType={bannerType}
         musicList={musicList}
         selectedMusic={selectedMusic}
         currentlyPlaying={currentlyPlaying}
-        toggleImageSelection={toggleImageSelection}
+        toggleFacebookImageSelection={toggleFacebookImageSelection}
+        toggleInstagramImageSelection={toggleInstagramImageSelection}
         onDragEnd={onDragEnd}
         selectBannerImage={selectBannerImage}
         handleMusicChange={handleMusicChange}
@@ -166,8 +174,10 @@ export const ActionSelectionDialogContent = () => {
         setBrokerPhone={setBrokerPhone}
         formErrors={formErrors}
         setFormErrors={setFormErrors}
-        selectAllImages={selectAllImages}
-        deselectAllImages={deselectAllImages}
+        selectAllFacebookImages={selectAllFacebookImages}
+        selectAllInstagramImages={selectAllInstagramImages}
+        deselectAllFacebookImages={deselectAllFacebookImages}
+        deselectAllInstagramImages={deselectAllInstagramImages}
         isGeneratingSlideshow={isGeneratingSlideshow}
         isGeneratingBanner={isGeneratingBanner}
         slideshowUrl={slideshowUrl}

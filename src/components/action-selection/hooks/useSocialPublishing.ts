@@ -23,7 +23,8 @@ export const useSocialPublishing = (
     selectedNetworks: { facebook: boolean; instagram: boolean },
     selectedPublicationTypes: PublicationType[],
     generatedText: string,
-    selectedImages: string[],
+    selectedFacebookImages: string[],
+    selectedInstagramImages: string[],
     bannerUrl: string | null,
     slideshowUrl: string | null,
     selectedFacebookTemplateId: string,
@@ -113,12 +114,12 @@ export const useSocialPublishing = (
             }
           }
         } else {
-          // Sinon utiliser bannière ou images
+          // Sinon utiliser bannière ou images Facebook
           let imageToUse = null as string | null;
           if (selectedPublicationTypes.includes("banner") && bannerUrl) {
             imageToUse = bannerUrl;
-          } else if (selectedImages.length > 0) {
-            imageToUse = selectedImages[0];
+          } else if (selectedFacebookImages.length > 0) {
+            imageToUse = selectedFacebookImages[0];
           }
           
           if (imageToUse) {
@@ -229,12 +230,12 @@ export const useSocialPublishing = (
               description: "Le diaporama est en cours de finalisation. Réessayez dans quelques secondes pour publier la vidéo sur Instagram.",
             });
           } else {
-            // Aucun rendu détecté -> fallback images/bannière si disponibles
+            // Aucun rendu détecté -> fallback images/bannière Instagram si disponibles
             let imagesToUse: string[] = [];
             if (selectedPublicationTypes.includes("banner") && bannerUrl) {
               imagesToUse = [bannerUrl];
-            } else if (selectedImages.length > 0) {
-              imagesToUse = selectedImages.slice(0, 10);
+            } else if (selectedInstagramImages.length > 0) {
+              imagesToUse = selectedInstagramImages.slice(0, 10);
             }
 
             if (imagesToUse.length > 0) {
@@ -259,12 +260,12 @@ export const useSocialPublishing = (
             }
           }
         } else {
-          // Pas un slideshow -> publier bannière ou images
+          // Pas un slideshow -> publier bannière ou images Instagram
           let imagesToUse: string[] = [];
           if (selectedPublicationTypes.includes("banner") && bannerUrl) {
             imagesToUse = [bannerUrl];
-          } else if (selectedImages.length > 0) {
-            imagesToUse = selectedImages.slice(0, 10);
+          } else if (selectedInstagramImages.length > 0) {
+            imagesToUse = selectedInstagramImages.slice(0, 10);
           }
 
           if (imagesToUse.length > 0) {

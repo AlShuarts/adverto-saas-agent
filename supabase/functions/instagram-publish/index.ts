@@ -39,7 +39,13 @@ Deno.serve(async (req) => {
     // Parse and validate input
     const rawData = await req.json();
     const validatedData = instagramPublishSchema.parse(rawData);
-    const { message, images, video, listingId, templateId } = validatedData;
+    let { message, images, video, listingId, templateId } = validatedData;
+    
+    // Validation : Instagram limite à 10 images
+    if (images && images.length > 10) {
+      console.warn(`Too many images for Instagram (${images.length}), truncating to 10`);
+      images = images.slice(0, 10);
+    }
     
     console.log('Publishing to Instagram:', { 
       messageLength: message?.length, 

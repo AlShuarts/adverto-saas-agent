@@ -16,8 +16,10 @@ type PublicationPreviewProps = {
   generatedText: string;
   setGeneratedText: (text: string) => void;
   images: string[];
-  selectedImages: string[];
-  setSelectedImages: (images: string[]) => void;
+  selectedFacebookImages: string[];
+  selectedInstagramImages: string[];
+  setSelectedFacebookImages: (images: string[]) => void;
+  setSelectedInstagramImages: (images: string[]) => void;
   slideshowUrl: string | null;
   bannerUrl: string | null;
   selectedMusic: string | undefined;
@@ -30,8 +32,10 @@ export const PublicationPreview = ({
   generatedText,
   setGeneratedText,
   images,
-  selectedImages,
-  setSelectedImages,
+  selectedFacebookImages,
+  selectedInstagramImages,
+  setSelectedFacebookImages,
+  setSelectedInstagramImages,
   slideshowUrl,
   bannerUrl,
   selectedMusic,
@@ -67,9 +71,9 @@ export const PublicationPreview = ({
               selectedImages={
                 selectedPublicationTypes.includes("banner") && bannerUrl 
                   ? [bannerUrl] 
-                  : selectedImages
+                  : selectedFacebookImages
               }
-              onSelectedImagesChange={setSelectedImages}
+              onSelectedImagesChange={setSelectedFacebookImages}
               slideshowUrl={slideshowUrl}
               musicUrl={musicUrl}
               showSlideshow={selectedPublicationTypes.includes("slideshow")}
@@ -97,9 +101,9 @@ export const PublicationPreview = ({
               selectedImages={
                 selectedPublicationTypes.includes("banner") && bannerUrl
                   ? [bannerUrl]
-                  : selectedImages
+                  : selectedInstagramImages
               }
-              onSelectedImagesChange={setSelectedImages}
+              onSelectedImagesChange={setSelectedInstagramImages}
               slideshowUrl={slideshowUrl}
               musicUrl={musicUrl}
               showSlideshow={selectedPublicationTypes.includes("slideshow")}

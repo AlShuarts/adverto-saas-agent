@@ -13,15 +13,19 @@ type MediaStepProps = {
   selectedPublicationType: PublicationType | null;
   selectedPhotoType?: PhotoType | null;
   images: string[];
-  selectedImages: string[];
+  selectedFacebookImages: string[];
+  selectedInstagramImages: string[];
   bannerImage: string | null;
   bannerType: "VENDU" | "A_VENDRE";
   musicList: string[];
   selectedMusic: string | undefined;
   currentlyPlaying: string | null;
-  toggleImageSelection: (imageUrl: string) => void;
-  selectAllImages: (images: string[]) => void;
-  deselectAllImages: () => void;
+  toggleFacebookImageSelection: (imageUrl: string) => void;
+  toggleInstagramImageSelection: (imageUrl: string) => void;
+  selectAllFacebookImages: (images: string[]) => void;
+  selectAllInstagramImages: (images: string[]) => void;
+  deselectAllFacebookImages: () => void;
+  deselectAllInstagramImages: () => void;
   onDragEnd: (result: any) => void;
   selectBannerImage: (imageUrl: string) => void;
   handleMusicChange: (value: string) => void;
@@ -63,15 +67,19 @@ export const MediaStep = ({
   selectedPublicationType,
   selectedPhotoType,
   images,
-  selectedImages,
+  selectedFacebookImages,
+  selectedInstagramImages,
   bannerImage,
   bannerType,
   musicList,
   selectedMusic,
   currentlyPlaying,
-  toggleImageSelection,
-  selectAllImages,
-  deselectAllImages,
+  toggleFacebookImageSelection,
+  toggleInstagramImageSelection,
+  selectAllFacebookImages,
+  selectAllInstagramImages,
+  deselectAllFacebookImages,
+  deselectAllInstagramImages,
   onDragEnd,
   selectBannerImage,
   handleMusicChange,
@@ -121,24 +129,50 @@ export const MediaStep = ({
         </p>
       </div>
 
-      {/* For listing photos only */}
+      {/* For listing photos only - now with separate Facebook/Instagram selections */}
       {showListingPhotos && (
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white`}>
-              Sélection des photos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ImageSelection 
-              selectedImages={selectedImages} 
-              toggleImageSelection={toggleImageSelection} 
-              availableImages={availableImages} 
-              onSelectAll={() => selectAllImages(availableImages)} 
-              onDeselectAll={deselectAllImages} 
-            />
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader>
+              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center gap-2`}>
+                <span className="text-blue-500">📘</span> Sélection Facebook
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ImageSelection 
+                selectedImages={selectedFacebookImages} 
+                toggleImageSelection={toggleFacebookImageSelection} 
+                availableImages={availableImages} 
+                onSelectAll={() => selectAllFacebookImages(availableImages)} 
+                onDeselectAll={deselectAllFacebookImages} 
+              />
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader>
+              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center gap-2`}>
+                <span className="text-pink-500">📷</span> Sélection Instagram (max 10)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedInstagramImages.length >= 10 && (
+                <div className="bg-yellow-500/10 border border-yellow-500 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-yellow-500">
+                    ⚠️ Limite atteinte : Instagram n'accepte que 10 photos maximum
+                  </p>
+                </div>
+              )}
+              <ImageSelection 
+                selectedImages={selectedInstagramImages} 
+                toggleImageSelection={toggleInstagramImageSelection} 
+                availableImages={availableImages} 
+                onSelectAll={() => selectAllInstagramImages(availableImages)} 
+                onDeselectAll={deselectAllInstagramImages} 
+              />
+            </CardContent>
+          </Card>
+        </div>
       )}
       
       {/* For slideshow publication type */}
@@ -153,11 +187,11 @@ export const MediaStep = ({
             <CardContent>
               <SlideshowConfig 
                 images={availableImages} 
-                selectedImages={selectedImages} 
+                selectedImages={selectedFacebookImages} 
                 musicList={musicList} 
                 selectedMusic={selectedMusic} 
                 currentlyPlaying={currentlyPlaying} 
-                toggleImageSelection={toggleImageSelection} 
+                toggleImageSelection={toggleFacebookImageSelection} 
                 onDragEnd={onDragEnd} 
                 handleMusicChange={handleMusicChange} 
                 previewMusic={previewMusic} 
@@ -173,9 +207,9 @@ export const MediaStep = ({
             generateSlideshow={generateSlideshow} 
             refetchSlideshowStatus={refetchSlideshowStatus} 
             onRegenerateSlideshow={handleRegenerateSlideshow} 
-            selectedImages={selectedImages} 
+            selectedImages={selectedFacebookImages} 
             selectedMusic={selectedMusic}
-            toggleImageSelection={toggleImageSelection}
+            toggleImageSelection={toggleFacebookImageSelection}
           />
         </div>
       )}
@@ -204,7 +238,7 @@ export const MediaStep = ({
           setAgencyLogoUrl={setAgencyLogoUrl} 
           formErrors={formErrors} 
           setFormErrors={setFormErrors} 
-          selectedImages={selectedImages} 
+          selectedImages={selectedFacebookImages} 
           onRegenerateBanner={handleRegenerateBanner} 
           listing={listing}
         />

@@ -37,7 +37,8 @@ export const ActionSelectionProvider = ({
     state.setCurrentStep,
     state.selectedPublicationType,
     state.selectedPhotoType,
-    state.selectedImages,
+    state.selectedFacebookImages,
+    state.selectedInstagramImages,
     state.bannerImage,
     state.selectedNetworks,
     state.generatedText,
@@ -72,7 +73,8 @@ export const ActionSelectionProvider = ({
       state.selectedNetworks,
       legacyPublicationTypes,
       state.generatedText,
-      state.selectedImages,
+      state.selectedFacebookImages,
+      state.selectedInstagramImages,
       state.bannerUrl,
       state.slideshowUrl,
       state.selectedFacebookTemplateId,
@@ -117,11 +119,16 @@ export const ActionSelectionProvider = ({
       handleGenerateText: state.handleGenerateText,
       
       // Media selection
-      selectedImages: state.selectedImages,
-      setSelectedImages: state.setSelectedImages,
-      toggleImageSelection: state.toggleImageSelection,
-      selectAllImages: state.selectAllImages,
-      deselectAllImages: state.deselectAllImages,
+      selectedFacebookImages: state.selectedFacebookImages,
+      setSelectedFacebookImages: state.setSelectedFacebookImages,
+      selectedInstagramImages: state.selectedInstagramImages,
+      setSelectedInstagramImages: state.setSelectedInstagramImages,
+      toggleFacebookImageSelection: state.toggleFacebookImageSelection,
+      toggleInstagramImageSelection: state.toggleInstagramImageSelection,
+      selectAllFacebookImages: state.selectAllFacebookImages,
+      selectAllInstagramImages: state.selectAllInstagramImages,
+      deselectAllFacebookImages: state.deselectAllFacebookImages,
+      deselectAllInstagramImages: state.deselectAllInstagramImages,
       onDragEnd: () => {}, // Empty function since drag and drop is removed
       
       // Banner

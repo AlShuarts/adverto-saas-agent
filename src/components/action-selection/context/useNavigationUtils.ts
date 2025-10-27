@@ -6,7 +6,8 @@ export const useNavigationUtils = (
   setCurrentStep: (step: number) => void,
   selectedPublicationType: PublicationType | null,
   selectedPhotoType: PhotoType | null,
-  selectedImages: string[],
+  selectedFacebookImages: string[],
+  selectedInstagramImages: string[],
   bannerImage: string | null,
   selectedNetworks: SocialNetworks,
   generatedText: string,
@@ -25,17 +26,18 @@ export const useNavigationUtils = (
       case 3: 
         return true; // Template step, always can proceed
       case 4: 
-        // Media step validation - require content to be generated
-        const hasImages = selectedImages.length > 0;
+        // Media step validation - require at least one network to have images
+        const hasFacebookImages = selectedFacebookImages.length > 0;
+        const hasInstagramImages = selectedInstagramImages.length > 0;
         const hasBannerImage = selectedPhotoType === "banner" && !!bannerImage;
         
         if (selectedPublicationType === "slideshow") {
-          return hasImages && !!slideshowUrl; // Require slideshow to be generated
+          return (hasFacebookImages || hasInstagramImages) && !!slideshowUrl; // Require slideshow to be generated
         } else if (selectedPhotoType === "banner") {
           return hasBannerImage && !!bannerUrl; // Require banner to be generated
         } else {
-          // listing_photos
-          return hasImages;
+          // listing_photos - at least one network should have images
+          return hasFacebookImages || hasInstagramImages;
         }
       default:
         return true;

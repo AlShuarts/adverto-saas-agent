@@ -2,30 +2,53 @@
 import { useState } from 'react';
 
 export const useMediaSelection = (initialImages: string[] = []) => {
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedFacebookImages, setSelectedFacebookImages] = useState<string[]>([]);
+  const [selectedInstagramImages, setSelectedInstagramImages] = useState<string[]>([]);
   const [bannerType, setBannerType] = useState<"VENDU" | "A_VENDRE">("VENDU");
   const [bannerImage, setBannerImage] = useState<string | null>(null);
 
   const resetMediaSelection = (defaultImage: string | null) => {
-    setSelectedImages([]);
+    setSelectedFacebookImages([]);
+    setSelectedInstagramImages([]);
     setBannerImage(defaultImage);
     setBannerType("VENDU");
   };
 
-  const toggleImageSelection = (imageUrl: string) => {
-    setSelectedImages(prev => 
+  const toggleFacebookImageSelection = (imageUrl: string) => {
+    setSelectedFacebookImages(prev => 
       prev.includes(imageUrl)
         ? prev.filter(url => url !== imageUrl)
         : [...prev, imageUrl]
     );
   };
 
-  const selectAllImages = (availableImages: string[]) => {
-    setSelectedImages(availableImages);
+  const toggleInstagramImageSelection = (imageUrl: string) => {
+    setSelectedInstagramImages(prev => {
+      // Limite de 10 images pour Instagram
+      if (!prev.includes(imageUrl) && prev.length >= 10) {
+        return prev; // Ne pas ajouter si limite atteinte
+      }
+      return prev.includes(imageUrl)
+        ? prev.filter(url => url !== imageUrl)
+        : [...prev, imageUrl];
+    });
   };
 
-  const deselectAllImages = () => {
-    setSelectedImages([]);
+  const selectAllFacebookImages = (availableImages: string[]) => {
+    setSelectedFacebookImages(availableImages);
+  };
+
+  const selectAllInstagramImages = (availableImages: string[]) => {
+    // Limiter à 10 pour Instagram
+    setSelectedInstagramImages(availableImages.slice(0, 10));
+  };
+
+  const deselectAllFacebookImages = () => {
+    setSelectedFacebookImages([]);
+  };
+
+  const deselectAllInstagramImages = () => {
+    setSelectedInstagramImages([]);
   };
   
   const selectBannerImage = (imageUrl: string) => {
@@ -33,16 +56,21 @@ export const useMediaSelection = (initialImages: string[] = []) => {
   };
 
   return {
-    selectedImages,
-    setSelectedImages,
+    selectedFacebookImages,
+    setSelectedFacebookImages,
+    selectedInstagramImages,
+    setSelectedInstagramImages,
     bannerType,
     setBannerType,
     bannerImage,
     setBannerImage,
     resetMediaSelection,
-    toggleImageSelection,
-    selectAllImages,
-    deselectAllImages,
+    toggleFacebookImageSelection,
+    toggleInstagramImageSelection,
+    selectAllFacebookImages,
+    selectAllInstagramImages,
+    deselectAllFacebookImages,
+    deselectAllInstagramImages,
     selectBannerImage
   };
 };
