@@ -150,43 +150,57 @@ serve(async (req) => {
 
 ${templateContent}
 
-Utilise EXACTEMENT le même format, la même structure et le même style que ce template, mais remplace les informations par celles de cette propriété:
+Utilise EXACTEMENT le même format, la même structure et le même style que ce template, mais remplace les informations par celles de cette propriété.
+
+INFORMATIONS PRINCIPALES (à utiliser en priorité):
+Description complète de la propriété:
+${listing.description || 'Aucune description fournie'}
+
+INFORMATIONS COMPLÉMENTAIRES:
 - Type: ${propertyTitle}
 - Prix: ${formattedPrice}
 - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
 ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
 ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
-${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
 - Courtier: ${listing.title}
 
-INSTRUCTIONS IMPORTANTES:
-1. Garde EXACTEMENT la même structure que le template
-2. Utilise les mêmes émojis aux mêmes endroits
-3. Garde le même style d'écriture et le même ton
-4. Remplace uniquement les informations spécifiques à la propriété
-5. Termine avec "Plus de détails sur ${listing.centris_url}"`;
+INSTRUCTIONS CRITIQUES:
+1. UTILISE EN PRIORITÉ les informations de la "Description complète de la propriété" ci-dessus
+2. Corrige TOUTES les fautes d'orthographe et de grammaire présentes dans la description originale
+3. Garde EXACTEMENT la même structure que le template
+4. Utilise les mêmes émojis aux mêmes endroits
+5. Garde le même style d'écriture et le même ton
+6. Assure-toi que le texte final est PARFAIT sur le plan linguistique (orthographe, grammaire, ponctuation)
+7. Termine avec "Plus de détails sur ${listing.centris_url}"`;
     } else {
       // Si pas de template, utiliser le format par défaut
-      prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière. 
-      Utilise ces informations:
-      - Type: ${propertyTitle}
-      - Prix: ${formattedPrice}
-      - Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
-      ${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
-      ${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
-      ${listing.description ? `- Description additionnelle: ${listing.description}` : ''}
-      - Courtier: ${listing.title}
+      prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière.
 
-      Le texte doit:
-      1. Être accrocheur et professionnel
-      2. Mettre en valeur les points forts de la propriété
-      3. Inclure le prix et l'adresse
-      4. Utiliser des sauts de ligne pour aérer le texte
-      5. Séparer clairement les différentes sections
-      6. Inclure des émojis pertinents au début de chaque section
-      7. Ne pas écrire en caractère gras et ne pas utiliser de * 
-      8. Mentionner le courtier à la fin
-      9. Terminer avec "Plus de détails sur ${listing.centris_url}"`;
+DESCRIPTION COMPLÈTE DE LA PROPRIÉTÉ (source principale - à utiliser en priorité):
+${listing.description || 'Aucune description fournie - utilise les informations ci-dessous'}
+
+INFORMATIONS COMPLÉMENTAIRES:
+- Type: ${propertyTitle}
+- Prix: ${formattedPrice}
+- Adresse: ${[listing.address, listing.city].filter(Boolean).join(', ')}
+${listing.bedrooms ? `- ${listing.bedrooms} chambres` : ''}
+${listing.bathrooms ? `- ${listing.bathrooms} salles de bain` : ''}
+- Courtier: ${listing.title}
+
+INSTRUCTIONS CRITIQUES:
+1. BASE-TOI PRINCIPALEMENT sur la "Description complète de la propriété" ci-dessus
+2. CORRIGE toutes les fautes d'orthographe et de grammaire de la description originale
+3. Enrichis le contenu avec les informations complémentaires si nécessaire
+4. Le texte doit être accrocheur et professionnel
+5. Mettre en valeur les points forts de la propriété
+6. Inclure le prix et l'adresse
+7. Utiliser des sauts de ligne pour aérer le texte
+8. Séparer clairement les différentes sections
+9. Inclure des émojis pertinents au début de chaque section
+10. Ne pas écrire en caractère gras et ne pas utiliser de *
+11. Assure-toi que le français est PARFAIT (grammaire, orthographe, ponctuation, conjugaison)
+12. Mentionner le courtier à la fin
+13. Terminer avec "Plus de détails sur ${listing.centris_url}"`;
     }
 
     console.log("Sending prompt to OpenAI:", prompt);
@@ -198,21 +212,26 @@ INSTRUCTIONS IMPORTANTES:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { 
             role: 'system', 
             content: templateContent 
-              ? 'Tu es un expert en immobilier qui doit adapter un template existant en remplaçant uniquement les informations spécifiques tout en gardant EXACTEMENT la même structure, le même style et le même format. Ne change pas la mise en forme, les émojis ou le style d\'écriture du template.' 
-              : 'Tu es un expert en marketing immobilier qui écrit des textes de vente accrocheurs.'
+              ? 'Tu es un expert en immobilier et un correcteur professionnel. Tu dois adapter un template existant en remplaçant les informations tout en gardant EXACTEMENT la même structure. IMPORTANT: Corrige systématiquement toutes les fautes d\'orthographe, de grammaire et de ponctuation. Le texte final doit être linguistiquement parfait.' 
+              : 'Tu es un expert en marketing immobilier et un correcteur professionnel. Tu écris des textes de vente accrocheurs en français impeccable. IMPORTANT: Corrige systématiquement toutes les fautes d\'orthographe, de grammaire et de ponctuation. Le français doit être parfait.'
           },
           { role: 'user', content: prompt }
         ],
-        temperature: templateContent ? 0.3 : 0.7, // Température plus basse pour mieux suivre le template
+        temperature: templateContent ? 0.3 : 0.7,
       }),
     });
 
     const data = await response.json();
+    const generatedText = data.choices[0].message.content;
+
+    // Log pour vérifier la qualité
+    console.log("✅ Texte généré (longueur:", generatedText.length, "caractères)");
+    console.log("📝 Utilisation de la description:", listing.description ? "OUI" : "NON");
 
     // Mise à jour des statistiques d'utilisation
     try {
@@ -232,7 +251,7 @@ INSTRUCTIONS IMPORTANTES:
     }
 
     return new Response(JSON.stringify({ 
-      text: data.choices[0].message.content 
+      text: generatedText 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
