@@ -171,7 +171,8 @@ INSTRUCTIONS CRITIQUES:
 4. Utilise les mêmes émojis aux mêmes endroits
 5. Garde le même style d'écriture et le même ton
 6. Assure-toi que le texte final est PARFAIT sur le plan linguistique (orthographe, grammaire, ponctuation)
-7. Termine avec "Plus de détails sur ${listing.centris_url}"`;
+7. N'UTILISE JAMAIS de caractères de formatage markdown (* ** _) - le texte doit être en texte brut avec uniquement des émojis et des sauts de ligne
+8. Termine avec "Plus de détails sur ${listing.centris_url}"`;
     } else {
       // Si pas de template, utiliser le format par défaut
       prompt = `Génère un texte de vente accrocheur en français pour cette propriété immobilière.
@@ -197,7 +198,7 @@ INSTRUCTIONS CRITIQUES:
 7. Utiliser des sauts de ligne pour aérer le texte
 8. Séparer clairement les différentes sections
 9. Inclure des émojis pertinents au début de chaque section
-10. Ne pas écrire en caractère gras et ne pas utiliser de *
+10. N'UTILISE JAMAIS de caractères de formatage markdown comme * (astérisque), ** (double astérisque) ou _ (underscore) - le texte doit être en texte brut uniquement
 11. Assure-toi que le français est PARFAIT (grammaire, orthographe, ponctuation, conjugaison)
 12. Mentionner le courtier à la fin
 13. Terminer avec "Plus de détails sur ${listing.centris_url}"`;
@@ -217,8 +218,8 @@ INSTRUCTIONS CRITIQUES:
           { 
             role: 'system', 
             content: templateContent 
-              ? 'Tu es un expert en immobilier et un correcteur professionnel. Tu dois adapter un template existant en remplaçant les informations tout en gardant EXACTEMENT la même structure. IMPORTANT: Corrige systématiquement toutes les fautes d\'orthographe, de grammaire et de ponctuation. Le texte final doit être linguistiquement parfait.' 
-              : 'Tu es un expert en marketing immobilier et un correcteur professionnel. Tu écris des textes de vente accrocheurs en français impeccable. IMPORTANT: Corrige systématiquement toutes les fautes d\'orthographe, de grammaire et de ponctuation. Le français doit être parfait.'
+              ? 'Tu es un expert en immobilier et un correcteur professionnel. Tu dois adapter un template existant en remplaçant les informations tout en gardant EXACTEMENT la même structure. IMPORTANT: Corrige systématiquement toutes les fautes d\'orthographe, de grammaire et de ponctuation. Le texte final doit être linguistiquement parfait. INTERDIT ABSOLU: N\'utilise JAMAIS de caractères markdown (* ** _) pour le formatage - texte brut uniquement.' 
+              : 'Tu es un expert en marketing immobilier et un correcteur professionnel. Tu écris des textes de vente accrocheurs en français impeccable. IMPORTANT: Corrige systématiquement toutes les fautes d\'orthographe, de grammaire et de ponctuation. Le français doit être parfait. INTERDIT ABSOLU: N\'utilise JAMAIS de caractères markdown (* ** _) pour le formatage - texte brut uniquement.'
           },
           { role: 'user', content: prompt }
         ],
