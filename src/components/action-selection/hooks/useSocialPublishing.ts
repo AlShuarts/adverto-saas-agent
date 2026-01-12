@@ -13,6 +13,13 @@ type Profile = {
 
 type PublicationType = "photo" | "slideshow" | "banner";
 
+type PublishResult = {
+  network: "facebook" | "instagram";
+  success: boolean;
+  error?: string;
+  retryAfterSeconds?: number;
+};
+
 export const useSocialPublishing = (
   listing: Tables<"listings">,
   profile?: Profile | null
@@ -42,7 +49,7 @@ export const useSocialPublishing = (
         return { success: false };
       }
       
-      const tasks = [];
+      const tasks: Promise<PublishResult>[] = [];
       
       if (!generatedText) {
         toast.error("Erreur", {
@@ -71,47 +78,49 @@ export const useSocialPublishing = (
         
         // Si l'utilisateur a sélectionné "slideshow" et qu'une vidéo est dispo, publier en vidéo
         if (selectedPublicationTypes.includes("slideshow") && finalVideoUrl) {
-          // Get session for Authorization header
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (!session) {
-            toast.error("Session expirée", {
-              description: "Veuillez vous reconnecter.",
+          // Basic check - server will fetch credentials
+          const { data: fbCreds, error: fbError } = await supabase
+            .rpc('get_facebook_credentials', { _user_id: session.user.id });
+
+          if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
+            toast.error("Configuration Facebook manquante", {
+              description: "Veuillez configurer votre page Facebook dans votre profil.",
             });
           } else {
-            // Basic check - server will fetch credentials
-            const { data: fbCreds, error: fbError } = await supabase
-              .rpc('get_facebook_credentials', { _user_id: session.user.id });
-
-            if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
-              toast.error("Configuration Facebook manquante", {
-                description: "Veuillez configurer votre page Facebook dans votre profil.",
-              });
-            } else {
-              tasks.push(
-                supabase.functions.invoke("facebook-publish", {
-                  body: {
-                    message: generatedText,
-                    video: finalVideoUrl,
-                    templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
-                  },
-                  headers: {
-                    Authorization: `Bearer ${session.access_token}`
+            tasks.push(
+              (async (): Promise<PublishResult> => {
+                try {
+                  const response = await supabase.functions.invoke("facebook-publish", {
+                    body: {
+                      message: generatedText,
+                      video: finalVideoUrl,
+                      templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+                    },
+                    headers: {
+                      Authorization: `Bearer ${session.access_token}`
+                    }
+                  });
+                  
+                  if (response.error) {
+                    return { network: "facebook", success: false, error: response.error.message };
                   }
-                }).then(async () => {
-                const { error: updateError } = await supabase
-                  .from("listings")
-                  .update({ published_to_facebook: true })
-                  .eq("id", listing.id);
-                
-                if (updateError) {
-                  console.error("Error updating listing:", updateError);
+                  
+                  // Check response data for errors
+                  if (response.data?.error) {
+                    return { network: "facebook", success: false, error: response.data.error };
+                  }
+                  
+                  await supabase
+                    .from("listings")
+                    .update({ published_to_facebook: true })
+                    .eq("id", listing.id);
+                  
+                  return { network: "facebook", success: true };
+                } catch (error: any) {
+                  return { network: "facebook", success: false, error: error?.message || "Erreur inconnue" };
                 }
-                
-                toast.success("Facebook test publication completed (test mode)");
-              })
+              })()
             );
-            }
           }
         } else {
           // Sinon utiliser bannière ou images Facebook
@@ -123,47 +132,48 @@ export const useSocialPublishing = (
           }
           
           if (imagesToUse.length > 0) {
-            // Get session for Authorization header
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session) {
-              toast.error("Session expirée", {
-                description: "Veuillez vous reconnecter.",
+            // Basic check - server will fetch credentials
+            const { data: fbCreds, error: fbError } = await supabase
+              .rpc('get_facebook_credentials', { _user_id: session.user.id });
+
+            if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
+              toast.error("Configuration Facebook manquante", {
+                description: "Veuillez configurer votre page Facebook dans votre profil.",
               });
             } else {
-              // Basic check - server will fetch credentials
-              const { data: fbCreds, error: fbError } = await supabase
-                .rpc('get_facebook_credentials', { _user_id: session.user.id });
-
-              if (fbError || !fbCreds || fbCreds.length === 0 || !fbCreds[0].page_id) {
-                toast.error("Configuration Facebook manquante", {
-                  description: "Veuillez configurer votre page Facebook dans votre profil.",
-                });
-              } else {
-                tasks.push(
-                  supabase.functions.invoke("facebook-publish", {
-                    body: {
-                      message: generatedText,
-                      images: imagesToUse,
-                      templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
-                    },
-                    headers: {
-                      Authorization: `Bearer ${session.access_token}`
+              tasks.push(
+                (async (): Promise<PublishResult> => {
+                  try {
+                    const response = await supabase.functions.invoke("facebook-publish", {
+                      body: {
+                        message: generatedText,
+                        images: imagesToUse,
+                        templateId: selectedFacebookTemplateId === "none" ? undefined : selectedFacebookTemplateId
+                      },
+                      headers: {
+                        Authorization: `Bearer ${session.access_token}`
+                      }
+                    });
+                    
+                    if (response.error) {
+                      return { network: "facebook", success: false, error: response.error.message };
                     }
-                  }).then(async () => {
-                  const { error: updateError } = await supabase
-                    .from("listings")
-                    .update({ published_to_facebook: true })
-                    .eq("id", listing.id);
-                  
-                  if (updateError) {
-                    console.error("Error updating listing:", updateError);
+                    
+                    if (response.data?.error) {
+                      return { network: "facebook", success: false, error: response.data.error };
+                    }
+                    
+                    await supabase
+                      .from("listings")
+                      .update({ published_to_facebook: true })
+                      .eq("id", listing.id);
+                    
+                    return { network: "facebook", success: true };
+                  } catch (error: any) {
+                    return { network: "facebook", success: false, error: error?.message || "Erreur inconnue" };
                   }
-                  
-                  toast.success("Facebook test publication completed (test mode)");
-                })
+                })()
               );
-              }
             }
           }
         }
@@ -188,14 +198,11 @@ export const useSocialPublishing = (
               finalVideoUrl = rows[0].video_url as string;
             } else if (rows[0].render_id) {
               // Tentative immédiate de récupération via check-render-status
-              // Récupérer la session pour l'appel authentifié
-              const { data: { session: checkSession } } = await supabase.auth.getSession();
-              
               const { data: statusData, error: statusError } = await supabase.functions.invoke("check-render-status", {
                 body: { renderId: rows[0].render_id },
-                headers: checkSession ? {
-                  Authorization: `Bearer ${checkSession.access_token}`
-                } : {}
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`
+                }
               });
               if (!statusError && statusData?.videoUrl) {
                 finalVideoUrl = statusData.videoUrl as string;
@@ -207,30 +214,44 @@ export const useSocialPublishing = (
         if (selectedPublicationTypes.includes("slideshow")) {
           if (finalVideoUrl) {
             tasks.push(
-              supabase.functions.invoke("instagram-publish", {
-                body: {
-                  message: generatedText,
-                  video: finalVideoUrl,
-                  listingId: listing.id,
-                  templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
-                },
-                headers: {
-                  Authorization: `Bearer ${session.access_token}`
+              (async (): Promise<PublishResult> => {
+                try {
+                  const response = await supabase.functions.invoke("instagram-publish", {
+                    body: {
+                      message: generatedText,
+                      video: finalVideoUrl,
+                      listingId: listing.id,
+                      templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
+                    },
+                    headers: {
+                      Authorization: `Bearer ${session.access_token}`
+                    }
+                  });
+                  
+                  if (response.error) {
+                    return { network: "instagram", success: false, error: response.error.message };
+                  }
+                  
+                  // Check for structured error response
+                  if (response.data?.error === 'MEDIA_NOT_READY') {
+                    return { 
+                      network: "instagram", 
+                      success: false, 
+                      error: response.data.message || "Le média est en cours de traitement",
+                      retryAfterSeconds: response.data.retryAfterSeconds || 30
+                    };
+                  }
+                  
+                  if (response.data?.success === false) {
+                    return { network: "instagram", success: false, error: response.data.message || response.data.error };
+                  }
+                  
+                  await ensureAndIncrementStatistic('instagram');
+                  return { network: "instagram", success: true };
+                } catch (error: any) {
+                  return { network: "instagram", success: false, error: error?.message || "Erreur inconnue" };
                 }
-              }).then(async (response) => {
-                if (response.error) {
-                  throw new Error(response.error.message || "Échec de la publication Instagram");
-                }
-                await ensureAndIncrementStatistic('instagram');
-                toast.success("Publié sur Instagram", {
-                  description: "Votre diaporama a été publié avec succès.",
-                });
-              }).catch(error => {
-                console.error("Instagram publish error:", error);
-                toast.error("Erreur Instagram", {
-                  description: error?.message || "Échec de la publication sur Instagram",
-                });
-              })
+              })()
             );
           } else if (slideshowData) {
             // Un rendu existe mais pas encore prêt -> ne pas fallback en images
@@ -248,38 +269,51 @@ export const useSocialPublishing = (
 
             if (imagesToUse.length > 0) {
               tasks.push(
-                supabase.functions.invoke("instagram-publish", {
-                  body: {
-                    message: generatedText,
-                    images: imagesToUse,
-                    listingId: listing.id,
-                    templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
-                  },
-                  headers: {
-                    Authorization: `Bearer ${session.access_token}`
+                (async (): Promise<PublishResult> => {
+                  try {
+                    const response = await supabase.functions.invoke("instagram-publish", {
+                      body: {
+                        message: generatedText,
+                        images: imagesToUse,
+                        listingId: listing.id,
+                        templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
+                      },
+                      headers: {
+                        Authorization: `Bearer ${session.access_token}`
+                      }
+                    });
+                    
+                    if (response.error) {
+                      return { network: "instagram", success: false, error: response.error.message };
+                    }
+                    
+                    if (response.data?.error === 'MEDIA_NOT_READY') {
+                      return { 
+                        network: "instagram", 
+                        success: false, 
+                        error: response.data.message || "Le média est en cours de traitement",
+                        retryAfterSeconds: response.data.retryAfterSeconds || 30
+                      };
+                    }
+                    
+                    if (response.data?.success === false) {
+                      return { network: "instagram", success: false, error: response.data.message || response.data.error };
+                    }
+                    
+                    await ensureAndIncrementStatistic('instagram');
+                    return { network: "instagram", success: true };
+                  } catch (error: any) {
+                    return { network: "instagram", success: false, error: error?.message || "Erreur inconnue" };
                   }
-              }).then(async (response) => {
-                if (response.error) {
-                  throw new Error(response.error.message || "Échec de la publication Instagram");
-                }
-                await ensureAndIncrementStatistic('instagram');
-                toast.success("Publié sur Instagram", {
-                  description: "Votre publication a été créée avec succès.",
-                });
-              }).catch(error => {
-                console.error("Instagram publish error:", error);
-                toast.error("Erreur Instagram", {
-                  description: error?.message || "Échec de la publication sur Instagram",
-                });
-              })
-            );
-          } else {
-            toast.warning("Instagram", {
-              description: "Aucune image sélectionnée pour Instagram. Veuillez sélectionner au moins une image.",
-            });
+                })()
+              );
+            } else {
+              toast.warning("Instagram", {
+                description: "Aucune image sélectionnée pour Instagram. Veuillez sélectionner au moins une image.",
+              });
+            }
           }
-        }
-      } else {
+        } else {
           // Pas un slideshow -> publier bannière ou images Instagram
           let imagesToUse: string[] = [];
           if (selectedPublicationTypes.includes("banner") && bannerUrl) {
@@ -290,30 +324,43 @@ export const useSocialPublishing = (
 
           if (imagesToUse.length > 0) {
             tasks.push(
-              supabase.functions.invoke("instagram-publish", {
-                body: {
-                  message: generatedText,
-                  images: imagesToUse,
-                  listingId: listing.id,
-                  templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
-                },
-                headers: {
-                  Authorization: `Bearer ${session.access_token}`
+              (async (): Promise<PublishResult> => {
+                try {
+                  const response = await supabase.functions.invoke("instagram-publish", {
+                    body: {
+                      message: generatedText,
+                      images: imagesToUse,
+                      listingId: listing.id,
+                      templateId: selectedInstagramTemplateId === "none" ? undefined : selectedInstagramTemplateId,
+                    },
+                    headers: {
+                      Authorization: `Bearer ${session.access_token}`
+                    }
+                  });
+                  
+                  if (response.error) {
+                    return { network: "instagram", success: false, error: response.error.message };
+                  }
+                  
+                  if (response.data?.error === 'MEDIA_NOT_READY') {
+                    return { 
+                      network: "instagram", 
+                      success: false, 
+                      error: response.data.message || "Le média est en cours de traitement",
+                      retryAfterSeconds: response.data.retryAfterSeconds || 30
+                    };
+                  }
+                  
+                  if (response.data?.success === false) {
+                    return { network: "instagram", success: false, error: response.data.message || response.data.error };
+                  }
+                  
+                  await ensureAndIncrementStatistic('instagram');
+                  return { network: "instagram", success: true };
+                } catch (error: any) {
+                  return { network: "instagram", success: false, error: error?.message || "Erreur inconnue" };
                 }
-              }).then(async (response) => {
-                if (response.error) {
-                  throw new Error(response.error.message || "Échec de la publication Instagram");
-                }
-                await ensureAndIncrementStatistic('instagram');
-                toast.success("Publié sur Instagram", {
-                  description: "Votre publication a été créée avec succès.",
-                });
-              }).catch(error => {
-                console.error("Instagram publish error:", error);
-                toast.error("Erreur Instagram", {
-                  description: error?.message || "Échec de la publication sur Instagram",
-                });
-              })
+              })()
             );
           } else {
             toast.warning("Instagram", {
@@ -323,13 +370,59 @@ export const useSocialPublishing = (
         }
       }
       
-      await Promise.allSettled(tasks);
+      // Wait for all tasks and collect results
+      const results = await Promise.all(tasks);
       
-      toast.success("Publications complétées", {
-        description: "Vos publications ont été créées avec succès sur les réseaux sociaux sélectionnés.",
-      });
+      // Analyze results
+      const facebookResult = results.find(r => r.network === "facebook");
+      const instagramResult = results.find(r => r.network === "instagram");
       
-      return { success: true };
+      let hasSuccess = false;
+      let hasError = false;
+      
+      // Handle Facebook result
+      if (facebookResult) {
+        if (facebookResult.success) {
+          hasSuccess = true;
+          toast.success("Publié sur Facebook", {
+            description: "Votre publication a été créée avec succès.",
+          });
+        } else {
+          hasError = true;
+          toast.error("Erreur Facebook", {
+            description: facebookResult.error || "Échec de la publication sur Facebook",
+          });
+        }
+      }
+      
+      // Handle Instagram result
+      if (instagramResult) {
+        if (instagramResult.success) {
+          hasSuccess = true;
+          toast.success("Publié sur Instagram", {
+            description: "Votre publication a été créée avec succès.",
+          });
+        } else {
+          hasError = true;
+          // Check for retryable error
+          if (instagramResult.retryAfterSeconds) {
+            toast.error("Instagram en traitement", {
+              description: `${instagramResult.error} Réessayez dans ${instagramResult.retryAfterSeconds} secondes.`,
+            });
+          } else {
+            toast.error("Erreur Instagram", {
+              description: instagramResult.error || "Échec de la publication sur Instagram",
+            });
+          }
+        }
+      }
+      
+      // If no tasks were created but networks were selected, something went wrong silently
+      if (tasks.length === 0 && (selectedNetworks.facebook || selectedNetworks.instagram)) {
+        // Toast was already shown for missing credentials or images
+      }
+      
+      return { success: hasSuccess && !hasError };
     } catch (error) {
       console.error("Erreur lors de la publication:", error);
       toast.error("Erreur", {
