@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -20,28 +20,24 @@ import {
 import { formatPrice } from "@/utils/priceFormatter";
 import { ActionSelectionDialog } from "@/components/action-selection/ActionSelectionDialog";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
 
 type ViewMode = "grid" | "list";
 type FilterTab = "all" | "published" | "unpublished" | "sold";
 
 const Listings = () => {
   useFacebookTokenChecker();
-  const [listings, setListings] = useState<Tables<"listings">[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [selectedListing, setSelectedListing] = useState<Tables<"listings"> | null>(null);
   const [showActionsDialog, setShowActionsDialog] = useState(false);
 
-  useEffect(() => {
-    fetchListings();
-  }, []);
-
-  const fetchListings = async () => {
-    try {
+  const { data: listings = [], isLoading: loading } = useQuery({
+    queryKey: ["listings"],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) return [];
 
       const { data, error } = await supabase
         .from("listings")
@@ -50,13 +46,9 @@ const Listings = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setListings(data || []);
-    } catch (error) {
-      console.error("Error fetching listings:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+  });
 
   const filteredListings = listings.filter((listing) => {
     // Search filter
