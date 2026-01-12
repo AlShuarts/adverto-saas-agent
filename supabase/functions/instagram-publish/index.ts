@@ -38,6 +38,14 @@ Deno.serve(async (req) => {
 
     // Parse and validate input
     const rawData = await req.json();
+    console.log('instagram-publish called with raw body:', { 
+      hasMessage: !!rawData.message, 
+      imagesCount: rawData.images?.length || 0, 
+      hasVideo: !!rawData.video,
+      listingId: rawData.listingId,
+      templateId: rawData.templateId
+    });
+    
     const validatedData = instagramPublishSchema.parse(rawData);
     let { message, images, video, listingId, templateId } = validatedData;
     
@@ -47,7 +55,7 @@ Deno.serve(async (req) => {
       images = images.slice(0, 10);
     }
     
-    console.log('Publishing to Instagram:', { 
+    console.log('Publishing to Instagram (validated):', { 
       messageLength: message?.length, 
       images: images?.length || 0, 
       hasVideo: !!video, 

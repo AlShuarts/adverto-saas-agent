@@ -32,3 +32,12 @@ timeout_ms = 15000
 
 [functions.generate-listing-description]
 verify_jwt = true
+
+[functions.instagram-publish]
+verify_jwt = false
+
+[functions.facebook-publish]
+verify_jwt = false
+
+[functions.exchange-facebook-token]
+verify_jwt = false
