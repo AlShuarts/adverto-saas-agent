@@ -380,18 +380,18 @@ export const useSocialPublishing = (
       let hasSuccess = false;
       let hasError = false;
       
+      // Build recap parts
+      const successParts: string[] = [];
+      const errorParts: string[] = [];
+      
       // Handle Facebook result
       if (facebookResult) {
         if (facebookResult.success) {
           hasSuccess = true;
-          toast.success("Publié sur Facebook", {
-            description: "Votre publication a été créée avec succès.",
-          });
+          successParts.push("Facebook");
         } else {
           hasError = true;
-          toast.error("Erreur Facebook", {
-            description: facebookResult.error || "Échec de la publication sur Facebook",
-          });
+          errorParts.push(`Facebook: ${facebookResult.error || "Échec"}`);
         }
       }
       
@@ -399,22 +399,36 @@ export const useSocialPublishing = (
       if (instagramResult) {
         if (instagramResult.success) {
           hasSuccess = true;
-          toast.success("Publié sur Instagram", {
-            description: "Votre publication a été créée avec succès.",
-          });
+          successParts.push("Instagram");
         } else {
           hasError = true;
-          // Check for retryable error
           if (instagramResult.retryAfterSeconds) {
-            toast.error("Instagram en traitement", {
-              description: `${instagramResult.error} Réessayez dans ${instagramResult.retryAfterSeconds} secondes.`,
-            });
+            errorParts.push(`Instagram: En traitement, réessayez dans ${instagramResult.retryAfterSeconds}s`);
           } else {
-            toast.error("Erreur Instagram", {
-              description: instagramResult.error || "Échec de la publication sur Instagram",
-            });
+            errorParts.push(`Instagram: ${instagramResult.error || "Échec"}`);
           }
         }
+      }
+      
+      // Show a single consolidated toast
+      if (hasSuccess && !hasError) {
+        // All succeeded
+        toast.success("✓ Publications réussies", {
+          description: `Publié sur ${successParts.join(" et ")} avec succès !`,
+          duration: 10000,
+        });
+      } else if (hasSuccess && hasError) {
+        // Partial success
+        toast.warning("Publication partielle", {
+          description: `✓ ${successParts.join(", ")} publié | ✗ ${errorParts.join(" | ")}`,
+          duration: 12000,
+        });
+      } else if (hasError) {
+        // All failed
+        toast.error("Échec de publication", {
+          description: errorParts.join(" | "),
+          duration: 15000,
+        });
       }
       
       // If no tasks were created but networks were selected, something went wrong silently
