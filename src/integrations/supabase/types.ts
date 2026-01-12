@@ -175,6 +175,7 @@ export type Database = {
           created_at: string
           facebook_access_token: string | null
           facebook_page_id: string | null
+          facebook_page_name: string | null
           facebook_post_example: string | null
           facebook_post_template: string | null
           first_name: string | null
@@ -192,6 +193,7 @@ export type Database = {
           created_at?: string
           facebook_access_token?: string | null
           facebook_page_id?: string | null
+          facebook_page_name?: string | null
           facebook_post_example?: string | null
           facebook_post_template?: string | null
           first_name?: string | null
@@ -209,6 +211,7 @@ export type Database = {
           created_at?: string
           facebook_access_token?: string | null
           facebook_page_id?: string | null
+          facebook_page_name?: string | null
           facebook_post_example?: string | null
           facebook_post_template?: string | null
           first_name?: string | null

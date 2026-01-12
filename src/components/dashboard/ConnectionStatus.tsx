@@ -56,7 +56,14 @@ export const ConnectionStatus = ({
               </div>
             </div>
             {facebookConnected ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                {(profile as any)?.facebook_page_name && (
+                  <span className="text-sm text-green-600 font-medium truncate max-w-[120px]" title={(profile as any).facebook_page_name}>
+                    {(profile as any).facebook_page_name}
+                  </span>
+                )}
+              </div>
             ) : (
               <div ref={fbButtonRef}>
                 {!fbInitialized ? (

@@ -135,29 +135,33 @@ export const useProfile = () => {
               return;
             }
             
+            let pageName = '';
+            
             // Si une seule page, la prendre directement
             if (res.data.length === 1) {
               pageId = res.data[0].id;
               pageAccessToken = res.data[0].access_token;
-              console.log("✅ Page unique trouvée:", res.data[0].name);
-              resolve();
-              return;
+              pageName = res.data[0].name;
+              console.log("✅ Page unique trouvée:", pageName);
+            } else {
+              // Si plusieurs pages, prendre celle déjà connectée dans le profil si possible
+              const existingPage = res.data.find((p: FacebookPage) => p.id === profile?.facebook_page_id);
+              if (existingPage) {
+                pageId = existingPage.id;
+                pageAccessToken = existingPage.access_token;
+                pageName = existingPage.name;
+                console.log("✅ Page existante reconnectée:", pageName);
+              } else {
+                // Sinon prendre la première
+                pageId = res.data[0].id;
+                pageAccessToken = res.data[0].access_token;
+                pageName = res.data[0].name;
+                console.log("✅ Première page sélectionnée:", pageName);
+              }
             }
             
-            // Si plusieurs pages, prendre celle déjà connectée dans le profil si possible
-            const existingPage = res.data.find((p: FacebookPage) => p.id === profile?.facebook_page_id);
-            if (existingPage) {
-              pageId = existingPage.id;
-              pageAccessToken = existingPage.access_token;
-              console.log("✅ Page existante reconnectée:", existingPage.name);
-              resolve();
-              return;
-            }
-            
-            // Sinon prendre la première
-            pageId = res.data[0].id;
-            pageAccessToken = res.data[0].access_token;
-            console.log("✅ Première page sélectionnée:", res.data[0].name);
+            // Stocker le nom de la page pour la mise à jour
+            (window as any).__fbPageName = pageName;
             resolve();
           });
         });
@@ -183,12 +187,14 @@ export const useProfile = () => {
       const longLivedToken = exchangeData.access_token;
       
       // Sauvegarder dans la base de données
+      const pageName = (window as any).__fbPageName || '';
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           facebook_page_id: pageId,
           facebook_access_token: longLivedToken,
-        })
+          facebook_page_name: pageName,
+        } as any)
         .eq('id', user.id);
       
       if (updateError) {
