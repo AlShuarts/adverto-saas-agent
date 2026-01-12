@@ -7,8 +7,8 @@ const allowedOrigins = [
   'http://localhost:3000',
 ];
 
-// Pattern for Lovable preview URLs (e.g., https://id-preview--uuid.lovable.app)
-const lovablePreviewPattern = /^https:\/\/[a-z0-9-]+--[a-f0-9-]+\.lovable\.app$/;
+// Pattern for Lovable preview URLs (e.g., https://preview--projectname.lovable.app)
+const lovablePreviewPattern = /^https:\/\/[a-z0-9-]+--[a-z0-9-]+\.lovable\.app$/;
 
 // Pattern for Lovable project URLs (e.g., https://uuid.lovableproject.com)
 const lovableProjectPattern = /^https:\/\/[a-f0-9-]+\.lovableproject\.com$/;
