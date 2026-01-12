@@ -3,9 +3,11 @@ import { extractListingUrls, alternativeExtractListingUrls, extractAllProperties
 import { extractTotalPages, hasNextPage, extractPropertyCount } from "./extractors/pagination-extractor.ts";
 import { cleanBrokerUrl, validateBrokerUrl, isDirectPropertyListingUrl } from "./utils/url-utils.ts";
 import { fetchWithRetry } from "./utils/request-utils.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

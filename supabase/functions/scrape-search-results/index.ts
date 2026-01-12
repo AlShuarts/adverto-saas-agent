@@ -1,12 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { extractListingUrls, alternativeExtractListingUrls } from "./extractors/listing-extractor.ts";
 
 // Import headers from the local copy
 import { scrapingHeaders } from "./scraping-headers.ts";
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
