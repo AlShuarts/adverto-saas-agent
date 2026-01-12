@@ -3,10 +3,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { renderWithShotstack } from "./services/shotstackService.ts";
 import { generateSoldBannerClip } from "./utils/bannerGenerator.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { bannerCreateSchema } from "../_shared/validation.ts";
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   console.log("🔔 DÉMARRAGE de la fonction create-sold-banner, méthode:", req.method);
   
   if (req.method === "OPTIONS") {

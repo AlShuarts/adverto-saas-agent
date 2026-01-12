@@ -4,13 +4,11 @@ import { HtmlParser } from "./html-parser.ts";
 import { ImageProcessor } from "./image-processor.ts";
 import { ListingData } from "./types.ts";
 import { scrapingHeaders } from "./scraping-headers.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

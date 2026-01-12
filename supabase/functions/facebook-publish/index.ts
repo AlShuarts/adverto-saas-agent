@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { facebookPublishSchema } from "../_shared/validation.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -14,6 +10,7 @@ const supabase = createClient(
 );
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   console.log("Fonction Facebook-publish appelée");
   
   if (req.method === "OPTIONS") {
