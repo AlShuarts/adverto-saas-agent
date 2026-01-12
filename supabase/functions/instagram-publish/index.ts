@@ -1,7 +1,98 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import { corsHeaders } from '../_shared/cors.ts'
 import { instagramPublishSchema } from '../_shared/validation.ts'
+
+// Utility to wait for a media container to be ready
+async function waitForContainerReady(
+  containerId: string, 
+  accessToken: string, 
+  maxWaitMs = 90000, // 90 seconds max
+  pollIntervalMs = 3000 // check every 3 seconds
+): Promise<{ ready: boolean; error?: string }> {
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < maxWaitMs) {
+    try {
+      const statusRes = await fetch(
+        `https://graph.facebook.com/v21.0/${containerId}?fields=status_code,status&access_token=${encodeURIComponent(accessToken)}`
+      );
+      const statusData = await statusRes.json();
+      
+      const statusCode = (statusData.status_code || statusData.status || '').toUpperCase();
+      console.log(`Container ${containerId} status check:`, statusData);
+      
+      if (statusCode === 'FINISHED' || statusCode === 'READY') {
+        return { ready: true };
+      }
+      
+      if (statusCode === 'ERROR' || statusData.error) {
+        const errorMsg = statusData.error?.message || 'Media processing failed';
+        console.error(`Container ${containerId} processing failed:`, statusData);
+        return { ready: false, error: errorMsg };
+      }
+      
+      // IN_PROGRESS or other status - wait and retry
+      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    } catch (err) {
+      console.error(`Error checking container ${containerId} status:`, err);
+      // Continue polling on network errors
+      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    }
+  }
+  
+  // Timeout reached
+  return { 
+    ready: false, 
+    error: `Instagram is still processing the media after ${maxWaitMs / 1000} seconds. Please try again in a moment.` 
+  };
+}
+
+// Retry publishing with exponential backoff for transient errors
+async function publishWithRetry(
+  instagramUserId: string,
+  containerId: string,
+  accessToken: string,
+  maxRetries = 3
+): Promise<{ success: boolean; postId?: string; error?: string }> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const publishResponse = await fetch(
+      `https://graph.facebook.com/v21.0/${instagramUserId}/media_publish`,
+      {
+        method: 'POST',
+        body: new URLSearchParams({
+          creation_id: containerId,
+          access_token: accessToken,
+        }),
+      }
+    );
+
+    const publishData = await publishResponse.json();
+    console.log(`Publish attempt ${attempt + 1}/${maxRetries}:`, publishData);
+
+    if (publishData.id) {
+      return { success: true, postId: publishData.id };
+    }
+
+    // Check for "Media not ready" error (code 9007, subcode 2207027)
+    if (publishData.error?.code === 9007 || publishData.error?.error_subcode === 2207027) {
+      console.log(`Media not ready yet, waiting before retry...`);
+      // Wait progressively longer: 5s, 10s, 15s
+      await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 5000));
+      continue;
+    }
+
+    // Other error - don't retry
+    return { 
+      success: false, 
+      error: publishData.error?.message || 'Failed to publish media' 
+    };
+  }
+
+  return { 
+    success: false, 
+    error: 'Media is still being processed by Instagram. Please try again in 30-60 seconds.' 
+  };
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -135,7 +226,7 @@ Deno.serve(async (req) => {
       throw new Error('No video or images provided')
     }
 
-    let containerData;
+    let containerData: { id?: string; error?: { message?: string } } | undefined;
     
     if (video) {
       // Publication d'une vidéo (diaporama) - Utiliser REELS au lieu de VIDEO
@@ -162,37 +253,23 @@ Deno.serve(async (req) => {
 
       containerData = await containerResponse.json()
 
-      if (!containerData.id) {
+      if (!containerData?.id) {
         console.error('Invalid container response:', containerData)
-        throw new Error(containerData.error?.message || 'Failed to create video container')
+        throw new Error(containerData?.error?.message || 'Failed to create video container')
       }
 
-      // Attendre que le traitement de la vidéo soit terminé avant de publier
-      let attempts = 0
-      const maxAttempts = 30
-      const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
-      while (attempts < maxAttempts) {
-        const statusRes = await fetch(
-          `https://graph.facebook.com/v21.0/${containerData.id}?fields=status_code,status&access_token=${encodeURIComponent(instagramAccessToken)}`
-        )
-        const statusData = await statusRes.json()
-        console.log(`Video status check [attempt ${attempts + 1}/${maxAttempts}]:`, statusData)
-        const statusCode = statusData.status_code || statusData.status
-        if (statusCode === 'FINISHED' || statusCode === 'finished' || statusCode === 'READY' || statusCode === 'ready') {
-          break
-        }
-        if (statusCode === 'ERROR' || statusCode === 'error' || statusData.error) {
-          throw new Error(statusData.error?.message || 'Video processing failed')
-        }
-        attempts++
-        await delay(3000)
+      // Wait for video processing to complete
+      console.log('Waiting for video container to be ready...');
+      const videoReadyResult = await waitForContainerReady(containerData.id, instagramAccessToken);
+      
+      if (!videoReadyResult.ready) {
+        throw new Error(videoReadyResult.error || 'Video processing timed out');
       }
-      if (attempts === maxAttempts) {
-        console.error(`Video still processing after ${maxAttempts * 3} seconds. Container ID: ${containerData.id}`)
-        throw new Error(`Instagram is still processing the video after ${maxAttempts * 3} seconds. This can happen with longer videos. Please try publishing again in 1-2 minutes, or contact support if the issue persists.`)
-      }
+      console.log('Video container is ready for publishing');
+      
     } else if (images && images.length === 1) {
       // Publication d'une seule image
+      console.log('Publishing single image to Instagram');
       const containerResponse = await fetch(
         `https://graph.facebook.com/v21.0/${instagramUserId}/media`,
         {
@@ -206,8 +283,25 @@ Deno.serve(async (req) => {
       )
 
       containerData = await containerResponse.json()
+      
+      if (!containerData?.id) {
+        console.error('Single image container creation failed:', containerData)
+        throw new Error(containerData?.error?.message || 'Failed to create image container')
+      }
+
+      // Wait for single image to be ready
+      console.log('Waiting for image container to be ready...');
+      const imageReadyResult = await waitForContainerReady(containerData.id, instagramAccessToken, 60000);
+      
+      if (!imageReadyResult.ready) {
+        throw new Error(imageReadyResult.error || 'Image processing timed out');
+      }
+      console.log('Image container is ready for publishing');
+      
     } else if (images && images.length > 1) {
       // Publication de plusieurs images (carousel)
+      console.log(`Publishing carousel with ${images.length} images to Instagram`);
+      
       // 1. Créer les conteneurs média pour chaque image
       const mediaResponses = await Promise.all(
         images.map(async (imageUrl) => {
@@ -232,10 +326,22 @@ Deno.serve(async (req) => {
       const mediaIds = mediaResponses.map(response => response.id)
       if (mediaIds.some(id => !id)) {
         console.error('Failed to create some media containers:', mediaResponses)
-        throw new Error('Failed to process some images')
+        const failedResponse = mediaResponses.find(r => !r.id);
+        throw new Error(failedResponse?.error?.message || 'Failed to process some images')
       }
 
-      // 2. Créer le carousel avec tous les médias
+      // 2. WAIT for ALL carousel item containers to be ready
+      console.log('Waiting for all carousel item containers to be ready...');
+      for (let i = 0; i < mediaIds.length; i++) {
+        const readyResult = await waitForContainerReady(mediaIds[i], instagramAccessToken, 60000);
+        if (!readyResult.ready) {
+          throw new Error(`Carousel image ${i + 1} processing failed: ${readyResult.error}`);
+        }
+        console.log(`Carousel item ${i + 1}/${mediaIds.length} is ready`);
+      }
+
+      // 3. Créer le carousel avec tous les médias
+      console.log('Creating carousel container...');
       const carouselResponse = await fetch(
         `https://graph.facebook.com/v21.0/${instagramUserId}/media`,
         {
@@ -250,41 +356,57 @@ Deno.serve(async (req) => {
       )
 
       containerData = await carouselResponse.json()
-    }
-
-    console.log('Container creation response:', containerData)
-
-    if (!containerData.id) {
-      console.error('Container creation failed:', containerData)
-      throw new Error(containerData.error?.message || 'Failed to create media container')
-    }
-
-    // 3. Publier le conteneur
-    const publishResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${instagramUserId}/media_publish`,
-      {
-        method: 'POST',
-        body: new URLSearchParams({
-          creation_id: containerData.id,
-          access_token: instagramAccessToken,
-        }),
+      
+      if (!containerData?.id) {
+        console.error('Carousel container creation failed:', containerData)
+        throw new Error(containerData?.error?.message || 'Failed to create carousel container')
       }
-    )
 
-    const publishData = await publishResponse.json()
-    console.log('Publish response:', publishData)
-
-    if (!publishData.id) {
-      console.error('Publishing failed:', publishData)
-      throw new Error(publishData.error?.message || 'Failed to publish media')
+      // 4. Wait for carousel container to be ready
+      console.log('Waiting for carousel container to be ready...');
+      const carouselReadyResult = await waitForContainerReady(containerData.id, instagramAccessToken, 60000);
+      
+      if (!carouselReadyResult.ready) {
+        throw new Error(carouselReadyResult.error || 'Carousel processing timed out');
+      }
+      console.log('Carousel container is ready for publishing');
     }
+
+    console.log('Container ready for publishing:', containerData?.id)
+
+    if (!containerData?.id) {
+      throw new Error('No media container created')
+    }
+
+    // 3. Publier le conteneur avec retry logic
+    console.log('Publishing media...');
+    const publishResult = await publishWithRetry(instagramUserId, containerData.id, instagramAccessToken);
+
+    if (!publishResult.success) {
+      console.error('Publishing failed after retries:', publishResult.error);
+      // Return a structured error for the frontend
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'MEDIA_NOT_READY',
+          message: publishResult.error,
+          retryAfterSeconds: 30
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 422, // Unprocessable Entity - indicates a retryable condition
+        }
+      )
+    }
+
+    console.log('Published successfully with post ID:', publishResult.postId);
 
     // Mettre à jour le statut de publication dans la base de données
     const { error: updateError } = await supabaseClient
       .from('listings')
       .update({
         published_to_instagram: true,
-        instagram_post_id: publishData.id
+        instagram_post_id: publishResult.postId
       })
       .eq('id', listingId)
 
@@ -303,7 +425,7 @@ Deno.serve(async (req) => {
     );
 
     return new Response(
-      JSON.stringify({ success: true, postId: publishData.id }),
+      JSON.stringify({ success: true, postId: publishResult.postId }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -312,7 +434,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
