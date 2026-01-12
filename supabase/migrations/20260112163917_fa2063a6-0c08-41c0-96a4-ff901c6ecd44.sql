@@ -1,0 +1,1 @@
+ALTER TABLE profiles ADD COLUMN facebook_page_name TEXT;
