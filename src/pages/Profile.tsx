@@ -7,7 +7,11 @@ import { ProfileForm } from "@/components/profile/ProfileForm";
 import { TemplateManager } from "@/components/profile/TemplateManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, FileText, Loader2 } from "lucide-react";
+import { User, FileText, Loader2, Tag } from "lucide-react";
+import { useBannerConfig, BannerConfig } from "@/hooks/useBannerConfig";
+import { BrokerInfoForm } from "@/components/banner/BrokerInfoForm";
+import { ImageUploader } from "@/components/banner/ImageUploader";
+import { Button } from "@/components/ui/button";
 
 type FacebookTemplate = Tables<"facebook_templates">;
 type InstagramTemplate = {
@@ -25,11 +29,32 @@ const Profile = () => {
   const [facebookTemplates, setFacebookTemplates] = useState<FacebookTemplate[]>([]);
   const [instagramTemplates, setInstagramTemplates] = useState<InstagramTemplate[]>([]);
   const { toast } = useToast();
+  
+  // Banner config state
+  const { config, saveConfig } = useBannerConfig();
+  const [brokerName, setBrokerName] = useState("");
+  const [brokerEmail, setBrokerEmail] = useState("");
+  const [brokerPhone, setBrokerPhone] = useState("");
+  const [brokerImageUrl, setBrokerImageUrl] = useState<string | null>(null);
+  const [agencyLogoUrl, setAgencyLogoUrl] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [savingBanner, setSavingBanner] = useState(false);
 
   useEffect(() => {
     getProfile();
     getTemplates();
   }, []);
+  
+  // Load saved banner config
+  useEffect(() => {
+    if (config) {
+      setBrokerName(config.brokerName || "");
+      setBrokerEmail(config.brokerEmail || "");
+      setBrokerPhone(config.brokerPhone || "");
+      setBrokerImageUrl(config.brokerImageUrl);
+      setAgencyLogoUrl(config.agencyLogoUrl);
+    }
+  }, [config]);
 
   const getTemplates = async () => {
     try {
@@ -85,6 +110,37 @@ const Profile = () => {
     }
   };
 
+  const handleSaveBannerConfig = () => {
+    const errors: {[key: string]: string} = {};
+    
+    if (!brokerName.trim()) errors.brokerName = "Le nom est requis";
+    if (!brokerEmail.trim()) errors.brokerEmail = "L'email est requis";
+    else if (!/\S+@\S+\.\S+/.test(brokerEmail)) errors.brokerEmail = "Email invalide";
+    if (!brokerPhone.trim()) errors.brokerPhone = "Le téléphone est requis";
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    setSavingBanner(true);
+    const newConfig: BannerConfig = {
+      brokerName,
+      brokerEmail,
+      brokerPhone,
+      brokerImageUrl,
+      agencyLogoUrl
+    };
+    
+    saveConfig(newConfig);
+    setSavingBanner(false);
+    
+    toast({
+      title: "Configuration sauvegardée",
+      description: "Vos informations de bannière ont été enregistrées",
+    });
+  };
+
   return (
     <MainLayout>
       <div className="p-6 lg:p-8 space-y-6">
@@ -109,6 +165,10 @@ const Profile = () => {
             <TabsTrigger value="templates" className="gap-2">
               <FileText className="h-4 w-4" />
               Templates
+            </TabsTrigger>
+            <TabsTrigger value="banner" className="gap-2">
+              <Tag className="h-4 w-4" />
+              Bannière
             </TabsTrigger>
           </TabsList>
 
@@ -151,6 +211,73 @@ const Profile = () => {
                 />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="banner">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informations du courtier</CardTitle>
+                  <CardDescription>
+                    Ces informations seront utilisées pour personnaliser vos bannières
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <BrokerInfoForm
+                    brokerName={brokerName}
+                    setBrokerName={setBrokerName}
+                    brokerEmail={brokerEmail}
+                    setBrokerEmail={setBrokerEmail}
+                    brokerPhone={brokerPhone}
+                    setBrokerPhone={setBrokerPhone}
+                    formErrors={formErrors}
+                    setFormErrors={setFormErrors}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Images</CardTitle>
+                  <CardDescription>
+                    Ajoutez votre photo et le logo de votre agence
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Photo du courtier</h4>
+                      <ImageUploader
+                        type="broker"
+                        imageUrl={brokerImageUrl}
+                        setImageUrl={setBrokerImageUrl}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-3">Logo de l'agence</h4>
+                      <ImageUploader
+                        type="agency"
+                        imageUrl={agencyLogoUrl}
+                        setImageUrl={setAgencyLogoUrl}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSaveBannerConfig} disabled={savingBanner}>
+                  {savingBanner ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sauvegarde...
+                    </>
+                  ) : (
+                    "Sauvegarder la configuration"
+                  )}
+                </Button>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
