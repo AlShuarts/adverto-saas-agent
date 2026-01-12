@@ -7,6 +7,9 @@ const allowedOrigins = [
   'http://localhost:3000',
 ];
 
+// Pattern for Lovable preview URLs (e.g., https://id-preview--uuid.lovable.app)
+const lovablePreviewPattern = /^https:\/\/[a-z0-9-]+--[a-f0-9-]+\.lovable\.app$/;
+
 /**
  * Get CORS headers with origin validation
  * @param request - The incoming request to extract origin from
@@ -14,7 +17,8 @@ const allowedOrigins = [
  */
 export function getCorsHeaders(request?: Request): Record<string, string> {
   const origin = request?.headers?.get('origin') || '';
-  const allowedOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  const isAllowed = allowedOrigins.includes(origin) || lovablePreviewPattern.test(origin);
+  const allowedOrigin = isAllowed ? origin : allowedOrigins[0];
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
