@@ -45,9 +45,13 @@ serve(async (req) => {
     const textElements = prepareTextElements(listing, config);
     console.log("📝 Éléments de texte préparés:", textElements);
 
-    // Configuration du webhook
-    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook`;
-    console.log("🔗 URL du webhook configurée:", webhookUrl);
+    // Configuration du webhook with secret authentication
+    const webhookSecret = Deno.env.get("SHOTSTACK_WEBHOOK_SECRET");
+    if (!webhookSecret) {
+      throw new Error("SHOTSTACK_WEBHOOK_SECRET not configured");
+    }
+    const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/shotstack-webhook?secret=${encodeURIComponent(webhookSecret)}`;
+    console.log("🔗 URL du webhook configurée (secret masked)");
     
     // Génération de la timeline pour le diaporama
     const timeline = generateSlideshowTimeline(config.selectedImages, textElements, config);
