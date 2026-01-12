@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Link2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { importCentrisListing } from "@/services/centrisImportService";
 
 type QuickImportProps = {
   onImportSuccess: () => void;
@@ -43,19 +44,14 @@ export const QuickImport = ({ onImportSuccess }: QuickImportProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non connecté");
 
-      const { data, error } = await supabase.functions.invoke('scrape-centris', {
-        body: { url: url.trim() }
-      });
-
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Erreur d'importation");
+      const listing = await importCentrisListing(url.trim(), user.id);
 
       setImportSuccess(true);
       setUrl("");
       
       toast({
         title: "Annonce importée !",
-        description: data.listing?.title || "L'annonce a été ajoutée à votre liste",
+        description: listing?.title || "L'annonce a été ajoutée à votre liste",
       });
 
       onImportSuccess();
