@@ -1,14 +1,15 @@
-
 import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { TemplateManager } from "@/components/profile/TemplateManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { User, FileText, Loader2 } from "lucide-react";
 
 type FacebookTemplate = Tables<"facebook_templates">;
-// Since instagram_templates is not in the types yet, we'll define our own type
 type InstagramTemplate = {
   id: string;
   name: string;
@@ -32,7 +33,6 @@ const Profile = () => {
 
   const getTemplates = async () => {
     try {
-      // Récupérer les templates Facebook
       const { data: fbData, error: fbError } = await supabase
         .from("facebook_templates")
         .select("*")
@@ -41,14 +41,12 @@ const Profile = () => {
       if (fbError) throw fbError;
       setFacebookTemplates(fbData || []);
       
-      // Récupérer les templates Instagram
       const { data: igData, error: igError } = await supabase
         .from("instagram_templates" as any)
         .select("*")
         .order("created_at", { ascending: false });
 
       if (igError) throw igError;
-      // First convert to unknown, then to InstagramTemplate[] to avoid TypeScript errors
       setInstagramTemplates(((igData || []) as unknown) as InstagramTemplate[]);
     } catch (error) {
       console.error("Error fetching templates:", error);
@@ -88,35 +86,75 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-secondary">
-      <Navbar />
-      <div className="container mx-auto px-4 pt-24">
-        <div className="max-w-2xl mx-auto space-y-8">
-          <h1 className="text-3xl font-bold">Mon Profil</h1>
-          
-          <div className="glass p-6 rounded-lg">
-            {loading ? (
-              <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              <ProfileForm 
-                profile={profile} 
-                onProfileUpdate={setProfile}
-              />
-            )}
-          </div>
-
-          <div className="glass p-6 rounded-lg">
-            <TemplateManager 
-              facebookTemplates={facebookTemplates}
-              instagramTemplates={instagramTemplates}
-              onTemplatesUpdate={getTemplates}
-            />
-          </div>
+    <MainLayout>
+      <div className="p-6 lg:p-8 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <User className="h-6 w-6 text-primary" />
+            Mon Profil
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gérez vos informations personnelles et vos templates
+          </p>
         </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="profile" className="gap-2">
+              <User className="h-4 w-4" />
+              Informations
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Templates
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informations personnelles</CardTitle>
+                <CardDescription>
+                  Vos informations de profil et de contact
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <ProfileForm 
+                    profile={profile} 
+                    onProfileUpdate={setProfile}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <Card>
+              <CardHeader>
+                <CardTitle>Templates de publication</CardTitle>
+                <CardDescription>
+                  Gérez vos modèles de texte pour Facebook et Instagram
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TemplateManager 
+                  facebookTemplates={facebookTemplates}
+                  instagramTemplates={instagramTemplates}
+                  onTemplatesUpdate={getTemplates}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

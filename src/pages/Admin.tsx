@@ -1,8 +1,8 @@
-
 import { useEffect } from "react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { 
   Table, 
   TableBody, 
@@ -12,11 +12,10 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Navbar } from "@/components/Navbar";
 
 export default function AdminPage() {
   const { isAdmin, isLoading, statistics, error, refreshStatistics } = useAdmin();
@@ -24,14 +23,12 @@ export default function AdminPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Si le profil est chargé et que l'utilisateur n'est pas admin, rediriger
     if (profile && !isLoading && !isAdmin) {
       navigate("/");
     }
   }, [profile, isAdmin, isLoading, navigate]);
 
   useEffect(() => {
-    // Rafraîchir les statistiques lorsque la page est chargée
     if (isAdmin && !isLoading) {
       refreshStatistics();
     }
@@ -39,17 +36,16 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!isAdmin) {
-    return null; // La redirection se fait dans useEffect
+    return null;
   }
 
-  // Calculer les totaux
   const totalDescriptions = statistics.reduce(
     (sum, stat) => sum + (stat.description_generations || 0), 
     0
@@ -76,59 +72,59 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="min-h-screen bg-secondary">
-      <Navbar />
-      <div className="container mx-auto py-8 space-y-8">
-        <h1 className="text-3xl font-bold">Tableau de bord administrateur</h1>
+    <MainLayout>
+      <div className="p-6 lg:p-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" />
+              Administration
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Statistiques d'utilisation de la plateforme
+            </p>
+          </div>
+          <Button 
+            onClick={refreshStatistics} 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" /> 
+            Rafraîchir
+          </Button>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Générations de descriptions</CardTitle>
-              <CardDescription>Nombre total de descriptions générées</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">{totalDescriptions}</p>
+            <CardContent className="p-4">
+              <p className="text-3xl font-bold text-foreground">{totalDescriptions}</p>
+              <p className="text-xs text-muted-foreground">Descriptions</p>
             </CardContent>
           </Card>
-          
           <Card>
-            <CardHeader>
-              <CardTitle>Générations de diaporamas</CardTitle>
-              <CardDescription>Nombre total de diaporamas générés</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">{totalSlideshows}</p>
+            <CardContent className="p-4">
+              <p className="text-3xl font-bold text-foreground">{totalSlideshows}</p>
+              <p className="text-xs text-muted-foreground">Diaporamas</p>
             </CardContent>
           </Card>
-
           <Card>
-            <CardHeader>
-              <CardTitle>Publications Facebook</CardTitle>
-              <CardDescription>Nombre total de publications Facebook</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">{totalFacebook}</p>
+            <CardContent className="p-4">
+              <p className="text-3xl font-bold text-foreground">{totalFacebook}</p>
+              <p className="text-xs text-muted-foreground">Publications FB</p>
             </CardContent>
           </Card>
-
           <Card>
-            <CardHeader>
-              <CardTitle>Publications Instagram</CardTitle>
-              <CardDescription>Nombre total de publications Instagram</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">{totalInstagram}</p>
+            <CardContent className="p-4">
+              <p className="text-3xl font-bold text-foreground">{totalInstagram}</p>
+              <p className="text-xs text-muted-foreground">Publications IG</p>
             </CardContent>
           </Card>
-
           <Card>
-            <CardHeader>
-              <CardTitle>Bannières VENDU</CardTitle>
-              <CardDescription>Nombre total de bannières générées</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold">{totalBanners}</p>
+            <CardContent className="p-4">
+              <p className="text-3xl font-bold text-foreground">{totalBanners}</p>
+              <p className="text-xs text-muted-foreground">Bannières</p>
             </CardContent>
           </Card>
         </div>
@@ -139,34 +135,26 @@ export default function AdminPage() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
-        <div className="flex justify-end mb-4">
-          <Button 
-            onClick={refreshStatistics} 
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" /> 
-            Rafraîchir
-          </Button>
-        </div>
 
+        {/* Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Statistiques d'utilisation par utilisateur</CardTitle>
+            <CardTitle>Statistiques par utilisateur</CardTitle>
+            <CardDescription>
+              {statistics.length} utilisateur{statistics.length !== 1 ? "s" : ""} au total
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
-              <TableCaption>Nombre total d'utilisateurs: {statistics.length}</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead className="text-right">Descriptions</TableHead>
-                  <TableHead className="text-right">Diaporamas</TableHead>
-                  <TableHead className="text-right">Facebook</TableHead>
-                  <TableHead className="text-right">Instagram</TableHead>
-                  <TableHead className="text-right">Bannières</TableHead>
+                  <TableHead className="text-right">Desc.</TableHead>
+                  <TableHead className="text-right">Diapo.</TableHead>
+                  <TableHead className="text-right">FB</TableHead>
+                  <TableHead className="text-right">IG</TableHead>
+                  <TableHead className="text-right">Bann.</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
@@ -185,14 +173,14 @@ export default function AdminPage() {
                     
                   return (
                     <TableRow key={stat.id}>
-                      <TableCell>{userName}</TableCell>
-                      <TableCell>{stat.email || 'Inconnu'}</TableCell>
+                      <TableCell className="font-medium">{userName}</TableCell>
+                      <TableCell className="text-muted-foreground">{stat.email || 'Inconnu'}</TableCell>
                       <TableCell className="text-right">{stat.description_generations || 0}</TableCell>
                       <TableCell className="text-right">{stat.slideshow_generations || 0}</TableCell>
                       <TableCell className="text-right">{stat.facebook_generations || 0}</TableCell>
                       <TableCell className="text-right">{stat.instagram_generations || 0}</TableCell>
                       <TableCell className="text-right">{stat.banner_generations || 0}</TableCell>
-                      <TableCell className="text-right font-medium">{total}</TableCell>
+                      <TableCell className="text-right font-bold text-primary">{total}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -201,6 +189,6 @@ export default function AdminPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </MainLayout>
   );
 }
