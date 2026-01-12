@@ -110,9 +110,13 @@ serve(async (req) => {
     const { tracks, totalDuration } = generateSoldBannerClip(bannerParams);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
-    const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook`;
+    const webhookSecret = Deno.env.get("SHOTSTACK_WEBHOOK_SECRET");
+    if (!webhookSecret) {
+      throw new Error("SHOTSTACK_WEBHOOK_SECRET not configured");
+    }
+    const webhookUrl = `${supabaseUrl}/functions/v1/shotstack-webhook?secret=${encodeURIComponent(webhookSecret)}`;
     
-    console.log("🔗 URL du webhook configurée:", webhookUrl);
+    console.log("🔗 URL du webhook configurée (secret masked)");
 
     // Vérifier la disponibilité de la clé API Shotstack
     const apiKey = Deno.env.get("SHOTSTACK_API_KEY");
