@@ -1,4 +1,5 @@
-import { Facebook, Instagram, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Facebook, Instagram, CheckCircle2, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tables } from "@/integrations/supabase/types";
@@ -19,6 +20,14 @@ export const ConnectionStatus = ({
 }: ConnectionStatusProps) => {
   const facebookConnected = !!profile?.facebook_page_id;
   const instagramConnected = !!profile?.instagram_user_id;
+  const fbButtonRef = useRef<HTMLDivElement>(null);
+
+  // Force Facebook SDK to parse the button when component mounts
+  useEffect(() => {
+    if (fbInitialized && !facebookConnected && (window as any).FB?.XFBML) {
+      (window as any).FB.XFBML.parse(fbButtonRef.current?.parentElement);
+    }
+  }, [fbInitialized, facebookConnected]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -49,20 +58,19 @@ export const ConnectionStatus = ({
             {facebookConnected ? (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             ) : (
-              <div>
+              <div ref={fbButtonRef}>
                 {!fbInitialized ? (
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 ) : (
                   <div 
                     className="fb-login-button" 
-                    data-width="200" 
-                    data-size="medium"
-                    data-button-type="login_with"
+                    data-config-id="809471798372780"
+                    data-size="large"
+                    data-button-type="continue_with"
                     data-layout="default"
                     data-auto-logout-link="false"
-                    data-use-continue-as="false"
-                    data-config_id="1217941942626983"
-                    data-onlogin="checkFacebookLoginState();"
+                    data-use-continue-as="true"
+                    data-onlogin="checkFacebookLoginState"
                   />
                 )}
               </div>
