@@ -371,12 +371,57 @@ export const useProfile = () => {
     }
   };
 
+  const disconnectFacebook = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Vous devez être connecté");
+
+      // Réinitialiser les données Facebook et Instagram (Instagram dépend de FB)
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          facebook_page_id: null,
+          facebook_access_token: null,
+          facebook_page_name: null,
+          instagram_user_id: null,
+          instagram_access_token: null,
+        } as any)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Déconnecter du SDK Facebook
+      if ((window as any).FB) {
+        (window as any).FB.logout(() => {
+          console.log("✅ Déconnecté du SDK Facebook");
+        });
+      }
+
+      toast({
+        title: "Déconnexion réussie",
+        description: "Votre compte Facebook a été déconnecté",
+      });
+
+      await getProfile();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de déconnecter",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return { 
     profile, 
     loading, 
     initialized, 
     getProfile, 
     handleFacebookLoginResponse,
-    connectInstagram 
+    connectInstagram,
+    disconnectFacebook
   };
 };
