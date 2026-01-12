@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   BrowserRouter,
@@ -10,8 +9,7 @@ import {
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
-import AllListings from "./pages/AllListings";
-import PublishedListings from "./pages/PublishedListings";
+import Listings from "./pages/Listings";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { useProfile } from "@/hooks/useProfile";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -28,7 +26,7 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
   // Afficher un indicateur de chargement pendant la vérification
   if (loading || !initialized) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-background">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
@@ -66,14 +64,11 @@ function App() {
           } />
           <Route path="/listings" element={
             <PrivateRoute>
-              <AllListings />
+              <Listings />
             </PrivateRoute>
           } />
-          <Route path="/published-listings" element={
-            <PrivateRoute>
-              <PublishedListings />
-            </PrivateRoute>
-          } />
+          {/* Redirect old routes */}
+          <Route path="/published-listings" element={<Navigate to="/listings" replace />} />
         </Routes>
         <Toaster />
       </QueryClientProvider>
