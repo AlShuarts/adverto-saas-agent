@@ -217,11 +217,19 @@ export const useSocialPublishing = (
                 headers: {
                   Authorization: `Bearer ${session.access_token}`
                 }
-              }).then(async () => {
+              }).then(async (response) => {
+                if (response.error) {
+                  throw new Error(response.error.message || "Échec de la publication Instagram");
+                }
                 await ensureAndIncrementStatistic('instagram');
+                toast.success("Publié sur Instagram", {
+                  description: "Votre diaporama a été publié avec succès.",
+                });
               }).catch(error => {
-                console.error("Test mode - Instagram publish error:", error);
-                toast.success("Instagram test publication completed (test mode)");
+                console.error("Instagram publish error:", error);
+                toast.error("Erreur Instagram", {
+                  description: error?.message || "Échec de la publication sur Instagram",
+                });
               })
             );
           } else if (slideshowData) {
@@ -250,16 +258,28 @@ export const useSocialPublishing = (
                   headers: {
                     Authorization: `Bearer ${session.access_token}`
                   }
-                }).then(async () => {
-                  await ensureAndIncrementStatistic('instagram');
-                }).catch(error => {
-                  console.error("Test mode - Instagram publish error:", error);
-                  toast.success("Instagram test publication completed (test mode)");
-                })
-              );
-            }
+              }).then(async (response) => {
+                if (response.error) {
+                  throw new Error(response.error.message || "Échec de la publication Instagram");
+                }
+                await ensureAndIncrementStatistic('instagram');
+                toast.success("Publié sur Instagram", {
+                  description: "Votre publication a été créée avec succès.",
+                });
+              }).catch(error => {
+                console.error("Instagram publish error:", error);
+                toast.error("Erreur Instagram", {
+                  description: error?.message || "Échec de la publication sur Instagram",
+                });
+              })
+            );
+          } else {
+            toast.warning("Instagram", {
+              description: "Aucune image sélectionnée pour Instagram. Veuillez sélectionner au moins une image.",
+            });
           }
-        } else {
+        }
+      } else {
           // Pas un slideshow -> publier bannière ou images Instagram
           let imagesToUse: string[] = [];
           if (selectedPublicationTypes.includes("banner") && bannerUrl) {
@@ -280,13 +300,25 @@ export const useSocialPublishing = (
                 headers: {
                   Authorization: `Bearer ${session.access_token}`
                 }
-              }).then(async () => {
+              }).then(async (response) => {
+                if (response.error) {
+                  throw new Error(response.error.message || "Échec de la publication Instagram");
+                }
                 await ensureAndIncrementStatistic('instagram');
+                toast.success("Publié sur Instagram", {
+                  description: "Votre publication a été créée avec succès.",
+                });
               }).catch(error => {
-                console.error("Test mode - Instagram publish error:", error);
-                toast.success("Instagram test publication completed (test mode)");
+                console.error("Instagram publish error:", error);
+                toast.error("Erreur Instagram", {
+                  description: error?.message || "Échec de la publication sur Instagram",
+                });
               })
             );
+          } else {
+            toast.warning("Instagram", {
+              description: "Aucune image sélectionnée pour Instagram. Veuillez sélectionner au moins une image.",
+            });
           }
         }
       }
