@@ -12,7 +12,7 @@ import { Toaster } from "sonner";
 
 const Index = () => {
   const { fbInitialized } = useFacebookSDK();
-  const { profile, loading, getProfile, connectInstagram, disconnectFacebook } = useProfile();
+  const { profile, loading, getProfile, connectInstagram, disconnectFacebook, disconnectInstagram } = useProfile();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [firstName, setFirstName] = useState<string | null>(null);
   useFacebookTokenChecker();
@@ -66,6 +66,7 @@ const Index = () => {
             fbInitialized={fbInitialized}
             onConnectInstagram={connectInstagram}
             onDisconnectFacebook={disconnectFacebook}
+            onDisconnectInstagram={disconnectInstagram}
           />
         </div>
 

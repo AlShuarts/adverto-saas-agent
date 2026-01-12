@@ -182,6 +182,7 @@ export type Database = {
           id: string
           instagram_access_token: string | null
           instagram_user_id: string | null
+          instagram_username: string | null
           last_name: string | null
           last_sync_timestamp: string | null
           phone: string | null
@@ -200,6 +201,7 @@ export type Database = {
           id: string
           instagram_access_token?: string | null
           instagram_user_id?: string | null
+          instagram_username?: string | null
           last_name?: string | null
           last_sync_timestamp?: string | null
           phone?: string | null
@@ -218,6 +220,7 @@ export type Database = {
           id?: string
           instagram_access_token?: string | null
           instagram_user_id?: string | null
+          instagram_username?: string | null
           last_name?: string | null
           last_sync_timestamp?: string | null
           phone?: string | null

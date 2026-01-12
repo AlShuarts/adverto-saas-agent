@@ -11,6 +11,7 @@ type ConnectionStatusProps = {
   fbInitialized: boolean;
   onConnectInstagram: () => void;
   onDisconnectFacebook: () => void;
+  onDisconnectInstagram: () => void;
 };
 
 export const ConnectionStatus = ({ 
@@ -18,7 +19,8 @@ export const ConnectionStatus = ({
   loading, 
   fbInitialized,
   onConnectInstagram,
-  onDisconnectFacebook
+  onDisconnectFacebook,
+  onDisconnectInstagram
 }: ConnectionStatusProps) => {
   const facebookConnected = !!profile?.facebook_page_id;
   const instagramConnected = !!profile?.instagram_user_id;
@@ -119,7 +121,21 @@ export const ConnectionStatus = ({
               </div>
             </div>
             {instagramConnected ? (
-              <CheckCircle2 className="h-5 w-5 text-pink-500" />
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-pink-600 font-medium truncate max-w-[100px]" 
+                      title={`@${(profile as any)?.instagram_username}`}>
+                  @{(profile as any)?.instagram_username || "Connecté"}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={onDisconnectInstagram}
+                  disabled={loading}
+                >
+                  Changer
+                </Button>
+              </div>
             ) : (
               <Button
                 variant="outline"

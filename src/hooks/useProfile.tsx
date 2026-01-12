@@ -347,8 +347,9 @@ export const useProfile = () => {
         .from('profiles')
         .update({
           instagram_user_id: data.instagram_business_account.id,
-          instagram_access_token: access_token
-        })
+          instagram_access_token: access_token,
+          instagram_username: instagramData.username,
+        } as any)
         .eq('id', profile.id);
 
       if (updateError) throw updateError;
@@ -386,6 +387,7 @@ export const useProfile = () => {
           facebook_page_name: null,
           instagram_user_id: null,
           instagram_access_token: null,
+          instagram_username: null,
         } as any)
         .eq('id', user.id);
 
@@ -415,6 +417,41 @@ export const useProfile = () => {
     }
   };
 
+  const disconnectInstagram = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Vous devez être connecté");
+
+      // Réinitialiser uniquement les données Instagram
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          instagram_user_id: null,
+          instagram_access_token: null,
+          instagram_username: null,
+        } as any)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Déconnexion réussie",
+        description: "Votre compte Instagram a été déconnecté",
+      });
+
+      await getProfile();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Impossible de déconnecter",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return { 
     profile, 
     loading, 
@@ -422,6 +459,7 @@ export const useProfile = () => {
     getProfile, 
     handleFacebookLoginResponse,
     connectInstagram,
-    disconnectFacebook
+    disconnectFacebook,
+    disconnectInstagram
   };
 };
