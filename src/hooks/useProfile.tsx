@@ -98,7 +98,7 @@ export const useProfile = () => {
   };
 
   const handleFacebookLoginResponse = async (response: any) => {
-    console.log("📥 Réponse Facebook Login Button:", response);
+    console.log("📥 Réponse Facebook Login Button:", JSON.stringify(response, null, 2));
     
     if (response.status !== 'connected') {
       console.log("❌ Utilisateur non connecté");
@@ -114,6 +114,14 @@ export const useProfile = () => {
       }
       
       const authResponse = response.authResponse;
+      
+      // === DIAGNOSTIC: Log détaillé de authResponse ===
+      console.log("🔍 AuthResponse complète:", JSON.stringify(authResponse, null, 2));
+      console.log("📄 pageAccessToken présent:", !!authResponse.pageAccessToken);
+      console.log("📄 pageID présent:", !!authResponse.pageID);
+      console.log("📄 accessToken présent:", !!authResponse.accessToken);
+      console.log("📄 userID présent:", !!authResponse.userID);
+      
       let pageAccessToken = authResponse.pageAccessToken;
       let pageId = authResponse.pageID;
       
@@ -121,17 +129,86 @@ export const useProfile = () => {
       if (!pageAccessToken || !pageId) {
         console.log("⚠️ Page Access Token ou Page ID manquant, récupération via /me/accounts...");
         
-        const userToken = authResponse.accessToken;
+        // D'abord vérifier les permissions accordées
+        await new Promise<void>((resolve) => {
+          (window as any).FB.api('/me/permissions', (permRes: any) => {
+            console.log("📋 Permissions brutes:", JSON.stringify(permRes, null, 2));
+            
+            if (permRes?.data) {
+              const granted = permRes.data.filter((p: any) => p.status === 'granted').map((p: any) => p.permission);
+              const declined = permRes.data.filter((p: any) => p.status === 'declined').map((p: any) => p.permission);
+              
+              console.log("✅ Permissions accordées:", granted);
+              console.log("❌ Permissions refusées:", declined);
+              
+              const criticalPerms = ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'];
+              const missingCritical = criticalPerms.filter(p => !granted.includes(p));
+              
+              if (missingCritical.length > 0) {
+                console.warn("⚠️ Permissions critiques manquantes:", missingCritical);
+              }
+            }
+            resolve();
+          });
+        });
         
         await new Promise<void>((resolve, reject) => {
-          (window as any).FB.api('/me/accounts?fields=id,name,access_token', (res: any) => {
-            if (!res || res.error) {
-              reject(new Error(res?.error?.message || "Impossible de récupérer les pages Facebook"));
+          (window as any).FB.api('/me/accounts?fields=id,name,access_token,category,tasks', (res: any) => {
+            console.log("📄 /me/accounts brut:", JSON.stringify(res, null, 2));
+            
+            if (res?.error) {
+              console.error("❌ Erreur API /me/accounts:", res.error);
+              reject(new Error(`Erreur Facebook: ${res.error.message}`));
               return;
             }
             
+            console.log("📊 Nombre de pages retournées:", res?.data?.length || 0);
+            
             if (!res.data || res.data.length === 0) {
-              reject(new Error("Aucune page Facebook trouvée. Assurez-vous d'avoir une page Facebook et d'avoir accordé les permissions nécessaires."));
+              console.warn("⚠️ /me/accounts vide - tentative via Business Manager...");
+              
+              // Fallback: Essayer via Business Manager
+              (window as any).FB.api('/me/businesses?fields=id,name', (bizRes: any) => {
+                console.log("🏢 Businesses:", JSON.stringify(bizRes, null, 2));
+                
+                if (bizRes?.data && bizRes.data.length > 0) {
+                  const businessId = bizRes.data[0].id;
+                  console.log("🔄 Récupération des pages du Business Manager:", businessId);
+                  
+                  (window as any).FB.api(
+                    `/${businessId}/owned_pages?fields=id,name,access_token`,
+                    (pagesRes: any) => {
+                      console.log("📄 Pages Business Manager:", JSON.stringify(pagesRes, null, 2));
+                      
+                      if (pagesRes?.data && pagesRes.data.length > 0) {
+                        pageId = pagesRes.data[0].id;
+                        pageAccessToken = pagesRes.data[0].access_token;
+                        (window as any).__fbPageName = pagesRes.data[0].name;
+                        console.log("✅ Page trouvée via Business Manager:", pagesRes.data[0].name);
+                        resolve();
+                      } else {
+                        reject(new Error(
+                          "Aucune page accessible.\n\n" +
+                          "📋 Consultez la console (F12) pour les détails.\n\n" +
+                          "Causes possibles:\n" +
+                          "• Permission 'pages_show_list' non accordée\n" +
+                          "• La page n'est pas accessible à cette app\n" +
+                          "• Rôle insuffisant sur la page"
+                        ));
+                      }
+                    }
+                  );
+                } else {
+                  reject(new Error(
+                    "Aucune page Facebook accessible.\n\n" +
+                    "📋 Consultez la console (F12) pour les détails.\n\n" +
+                    "💡 Solutions:\n" +
+                    "1. Vérifiez les permissions dans le popup Facebook\n" +
+                    "2. Assurez-vous d'être Admin de la page\n" +
+                    "3. Reconnectez en cochant toutes les pages"
+                  ));
+                }
+              });
               return;
             }
             
@@ -211,10 +288,11 @@ export const useProfile = () => {
       await getProfile();
       
     } catch (error) {
-      console.error("❌ Erreur:", error);
+      console.error("❌ Erreur complète:", error);
       toast({
-        title: "Erreur de connexion",
-        description: error instanceof Error ? error.message : "Impossible de connecter votre page Facebook",
+        title: "Erreur de connexion Facebook",
+        description: (error instanceof Error ? error.message : "Impossible de connecter votre page Facebook") + 
+          "\n\n📋 Ouvrez la console (F12) pour plus de détails.",
         variant: "destructive",
       });
     } finally {
