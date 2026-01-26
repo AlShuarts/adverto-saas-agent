@@ -96,21 +96,21 @@ export const RecentListings = ({ refreshTrigger }: RecentListingsProps) => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-primary" />
-          Vos annonces récentes
-          <span className="text-sm font-normal text-muted-foreground">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2 flex-wrap">
+          <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+          <span className="truncate">Vos annonces récentes</span>
+          <span className="text-xs sm:text-sm font-normal text-muted-foreground whitespace-nowrap">
             ({totalCount} au total)
           </span>
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/listings")} className="gap-1">
-          Voir tout
-          <ArrowRight className="h-4 w-4" />
+        <Button variant="ghost" size="sm" onClick={() => navigate("/listings")} className="gap-1 self-end sm:self-auto shrink-0">
+          <span className="text-xs sm:text-sm">Voir tout</span>
+          <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {listings.map((listing) => (
             <button
               key={listing.id}

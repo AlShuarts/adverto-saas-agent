@@ -133,12 +133,13 @@ export const MediaStep = ({
       {showListingPhotos && (
         <div className="space-y-4">
           <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader>
-              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center justify-between`}>
-                <span className="flex items-center gap-2">
-                  <span className="text-blue-500">📘</span> Sélection Facebook
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className={`${isMobile ? "text-base" : "text-xl"} text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2`}>
+                <span className="flex items-center gap-2 truncate">
+                  <span className="text-blue-500 shrink-0">📘</span> 
+                  <span className="truncate">Sélection Facebook</span>
                 </span>
-                <span className={`text-sm font-normal ${selectedFacebookImages.length >= 50 ? 'text-yellow-500' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-normal whitespace-nowrap ${selectedFacebookImages.length >= 50 ? 'text-yellow-500' : 'text-gray-400'}`}>
                   {selectedFacebookImages.length}/50 photos
                 </span>
               </CardTitle>
@@ -162,17 +163,18 @@ export const MediaStep = ({
           </Card>
           
           <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader>
-              <CardTitle className={`${isMobile ? "text-lg" : "text-xl"} text-white flex items-center justify-between`}>
-                <span className="flex items-center gap-2">
-                  <span className="text-pink-500">📷</span> Sélection Instagram
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className={`${isMobile ? "text-base" : "text-xl"} text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2`}>
+                <span className="flex items-center gap-2 truncate">
+                  <span className="text-pink-500 shrink-0">📷</span> 
+                  <span className="truncate">Sélection Instagram</span>
                 </span>
-                <span className={`text-sm font-normal ${selectedInstagramImages.length >= 10 ? 'text-yellow-500' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm font-normal whitespace-nowrap ${selectedInstagramImages.length >= 10 ? 'text-yellow-500' : 'text-gray-400'}`}>
                   {selectedInstagramImages.length}/10 photos
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
               {selectedInstagramImages.length >= 10 && (
                 <div className="bg-yellow-500/10 border border-yellow-500 rounded-lg p-3 mb-4">
                   <p className="text-sm text-yellow-500">

@@ -74,21 +74,21 @@ export const QuickImport = ({ onImportSuccess }: QuickImportProps) => {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Plus className="h-5 w-5 text-primary" />
-          Importer une annonce
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+          <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+          <span className="truncate">Importer une annonce</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Collez l'URL Centris ici..."
+              placeholder="URL Centris..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleImport()}
-              className="pl-10"
+              className="pl-10 text-sm"
               disabled={isImporting}
             />
           </div>
@@ -96,18 +96,22 @@ export const QuickImport = ({ onImportSuccess }: QuickImportProps) => {
             onClick={handleImport} 
             disabled={isImporting || !url.trim()}
             className="shrink-0"
+            size="sm"
           >
             {isImporting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : importSuccess ? (
               <CheckCircle2 className="h-4 w-4" />
             ) : (
-              "Importer"
+              <span className="hidden sm:inline">Importer</span>
+            )}
+            {!isImporting && !importSuccess && (
+              <Plus className="h-4 w-4 sm:hidden" />
             )}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          💡 Copiez le lien depuis Centris.ca et collez-le ici
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-2">
+          💡 Collez le lien Centris.ca ici
         </p>
       </CardContent>
     </Card>

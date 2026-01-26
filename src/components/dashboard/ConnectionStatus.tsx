@@ -34,40 +34,40 @@ export const ConnectionStatus = ({
   }, [fbInitialized, facebookConnected]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
       {/* Facebook Card */}
       <Card className={cn(
         "border-2 transition-colors",
         facebookConnected ? "border-green-500/30 bg-green-500/5" : "border-border"
       )}>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <CardContent className="p-3 sm:p-5">
+          <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className={cn(
-                "p-2.5 rounded-lg",
+                "p-2 sm:p-2.5 rounded-lg shrink-0",
                 facebookConnected ? "bg-green-500/20" : "bg-muted"
               )}>
                 <Facebook className={cn(
-                  "h-5 w-5",
+                  "h-4 w-4 sm:h-5 sm:w-5",
                   facebookConnected ? "text-green-500" : "text-muted-foreground"
                 )} />
               </div>
-              <div>
-                <p className="font-medium text-foreground">Facebook</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <p className="text-sm sm:text-base font-medium text-foreground">Facebook</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {facebookConnected ? "Connecté" : "Non connecté"}
                 </p>
               </div>
             </div>
             {facebookConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-green-600 font-medium truncate max-w-[100px]" title={(profile as any)?.facebook_page_name}>
+              <div className="flex items-center gap-2 w-full xs:w-auto justify-between xs:justify-end">
+                <span className="text-xs sm:text-sm text-green-600 font-medium truncate max-w-[100px] sm:max-w-[120px]" title={(profile as any)?.facebook_page_name}>
                   {(profile as any)?.facebook_page_name || "Connecté"}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive shrink-0"
                   onClick={onDisconnectFacebook}
                   disabled={loading}
                 >
@@ -75,7 +75,7 @@ export const ConnectionStatus = ({
                 </Button>
               </div>
             ) : (
-              <div ref={fbButtonRef}>
+              <div ref={fbButtonRef} className="w-full xs:w-auto">
                 {!fbInitialized ? (
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 ) : (
@@ -101,35 +101,35 @@ export const ConnectionStatus = ({
         "border-2 transition-colors",
         instagramConnected ? "border-pink-500/30 bg-pink-500/5" : "border-border"
       )}>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <CardContent className="p-3 sm:p-5">
+          <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className={cn(
-                "p-2.5 rounded-lg",
+                "p-2 sm:p-2.5 rounded-lg shrink-0",
                 instagramConnected ? "bg-pink-500/20" : "bg-muted"
               )}>
                 <Instagram className={cn(
-                  "h-5 w-5",
+                  "h-4 w-4 sm:h-5 sm:w-5",
                   instagramConnected ? "text-pink-500" : "text-muted-foreground"
                 )} />
               </div>
-              <div>
-                <p className="font-medium text-foreground">Instagram</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <p className="text-sm sm:text-base font-medium text-foreground">Instagram</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {instagramConnected ? "Connecté" : "Non connecté"}
                 </p>
               </div>
             </div>
             {instagramConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-pink-600 font-medium truncate max-w-[100px]" 
+              <div className="flex items-center gap-2 w-full xs:w-auto justify-between xs:justify-end">
+                <span className="text-xs sm:text-sm text-pink-600 font-medium truncate max-w-[100px] sm:max-w-[120px]" 
                       title={`@${(profile as any)?.instagram_username}`}>
                   @{(profile as any)?.instagram_username || "Connecté"}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive shrink-0"
                   onClick={onDisconnectInstagram}
                   disabled={loading}
                 >
@@ -142,6 +142,7 @@ export const ConnectionStatus = ({
                 size="sm"
                 onClick={onConnectInstagram}
                 disabled={!facebookConnected || loading}
+                className="w-full xs:w-auto"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
