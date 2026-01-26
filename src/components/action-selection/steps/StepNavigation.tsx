@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type StepNavigationProps = {
   currentStep: number;
@@ -23,6 +24,8 @@ export const StepNavigation = ({
   onCancel,
   isLastStep
 }: StepNavigationProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 w-full">
       <div className="flex-1 flex">
@@ -32,20 +35,23 @@ export const StepNavigation = ({
             variant="outline"
             onClick={onPrevious}
             className="flex items-center"
+            size={isMobile ? "sm" : "default"}
           >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Précédent
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1">Précédent</span>
           </Button>
         )}
       </div>
       
-      <div className="flex justify-end space-x-2">
+      <div className="flex justify-end gap-2">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
+          size={isMobile ? "sm" : "default"}
         >
-          Annuler
+          <span className="hidden sm:inline">Annuler</span>
+          <X className="h-4 w-4 sm:hidden" />
         </Button>
         
         {isLastStep ? (
@@ -53,11 +59,12 @@ export const StepNavigation = ({
             type="button"
             onClick={onPublish}
             disabled={isPublishing || !canGoToNextStep}
+            size={isMobile ? "sm" : "default"}
           >
             {isPublishing ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Publication...
+                <Loader2 className="mr-1 sm:mr-2 h-4 w-4 animate-spin" />
+                <span className="hidden sm:inline">Publication...</span>
               </>
             ) : "Publier"}
           </Button>
@@ -67,8 +74,10 @@ export const StepNavigation = ({
             onClick={onNext}
             disabled={!canGoToNextStep}
             className="flex items-center"
+            size={isMobile ? "sm" : "default"}
           >
-            Suivant
+            <span className="hidden sm:inline">Suivant</span>
+            <span className="sm:hidden">OK</span>
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         )}

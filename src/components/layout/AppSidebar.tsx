@@ -8,12 +8,16 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Shield
+  Shield,
+  Menu,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type NavItem = {
   title: string;
@@ -29,34 +33,22 @@ const navItems: NavItem[] = [
   { title: "Administration", icon: Shield, path: "/admin", adminOnly: true },
 ];
 
-export const AppSidebar = () => {
-  const navigate = useNavigate();
+// Composant de navigation interne
+const SidebarContent = ({ 
+  collapsed, 
+  setCollapsed, 
+  isAdmin, 
+  onNavigate,
+  showCollapse = true
+}: { 
+  collapsed: boolean;
+  setCollapsed?: (v: boolean) => void;
+  isAdmin: boolean;
+  onNavigate: (path: string) => void;
+  showCollapse?: boolean;
+}) => {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      if (user) {
-        const { data } = await supabase.rpc('has_role', { 
-          _role: 'admin', 
-          _user_id: user.id 
-        });
-        setIsAdmin(!!data);
-      }
-    };
-    getUser();
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
+  
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
@@ -64,14 +56,14 @@ export const AppSidebar = () => {
 
   const filteredNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    onNavigate("/auth");
+  };
+
   return (
     <TooltipProvider delayDuration={0}>
-      <aside 
-        className={cn(
-          "h-screen bg-card border-r border-border flex flex-col transition-all duration-300 sticky top-0",
-          collapsed ? "w-16" : "w-64"
-        )}
-      >
+      <div className="flex flex-col h-full">
         {/* Logo */}
         <div className={cn(
           "h-16 flex items-center border-b border-border px-4",
@@ -100,14 +92,14 @@ export const AppSidebar = () => {
                   active && "bg-primary/10 text-primary hover:bg-primary/20",
                   collapsed && "justify-center px-0"
                 )}
-                onClick={() => navigate(item.path)}
+                onClick={() => onNavigate(item.path)}
               >
                 <Icon className="h-5 w-5 shrink-0" />
                 {!collapsed && <span>{item.title}</span>}
               </Button>
             );
 
-            if (collapsed) {
+            if (collapsed && showCollapse) {
               return (
                 <Tooltip key={item.path}>
                   <TooltipTrigger asChild>
@@ -124,28 +116,30 @@ export const AppSidebar = () => {
           })}
         </nav>
 
-        {/* Collapse button */}
-        <div className="px-2 pb-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn("w-full", collapsed && "justify-center px-0")}
-            onClick={() => setCollapsed(!collapsed)}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <>
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                <span>Réduire</span>
-              </>
-            )}
-          </Button>
-        </div>
+        {/* Collapse button - only on desktop */}
+        {showCollapse && setCollapsed && (
+          <div className="px-2 pb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn("w-full", collapsed && "justify-center px-0")}
+              onClick={() => setCollapsed(!collapsed)}
+            >
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <>
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  <span>Réduire</span>
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
         {/* Sign out */}
         <div className="border-t border-border p-2">
-          {collapsed ? (
+          {collapsed && showCollapse ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -171,7 +165,78 @@ export const AppSidebar = () => {
             </Button>
           )}
         </div>
-      </aside>
+      </div>
     </TooltipProvider>
+  );
+};
+
+export const AppSidebar = () => {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [collapsed, setCollapsed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data } = await supabase.rpc('has_role', { 
+          _role: 'admin', 
+          _user_id: user.id 
+        });
+        setIsAdmin(!!data);
+      }
+    };
+    getUser();
+  }, []);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    setMobileOpen(false);
+  };
+
+  // Mobile: Sheet/Drawer
+  if (isMobile) {
+    return (
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="fixed top-3 left-3 z-50 bg-card border border-border shadow-lg"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-64">
+          <SidebarContent
+            collapsed={false}
+            isAdmin={isAdmin}
+            onNavigate={handleNavigate}
+            showCollapse={false}
+          />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Sidebar classique
+  return (
+    <aside 
+      className={cn(
+        "h-screen bg-card border-r border-border flex flex-col transition-all duration-300 sticky top-0",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      <SidebarContent
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        isAdmin={isAdmin}
+        onNavigate={handleNavigate}
+        showCollapse={true}
+      />
+    </aside>
   );
 };

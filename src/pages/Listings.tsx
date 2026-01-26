@@ -91,28 +91,30 @@ const Listings = () => {
 
   return (
     <MainLayout>
-      <div className="p-6 lg:p-8 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+            <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Mes annonces
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
             {listings.length} annonce{listings.length !== 1 ? "s" : ""} au total
           </p>
         </div>
 
         {/* Filters & Search */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
-            <TabsList>
-              <TabsTrigger value="all">Toutes</TabsTrigger>
-              <TabsTrigger value="published">Publiées</TabsTrigger>
-              <TabsTrigger value="unpublished">Non publiées</TabsTrigger>
-              <TabsTrigger value="sold">Vendues</TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
+              <TabsList className="min-w-max">
+                <TabsTrigger value="all" className="text-xs sm:text-sm">Toutes</TabsTrigger>
+                <TabsTrigger value="published" className="text-xs sm:text-sm">Publiées</TabsTrigger>
+                <TabsTrigger value="unpublished" className="text-xs sm:text-sm whitespace-nowrap">Non publiées</TabsTrigger>
+                <TabsTrigger value="sold" className="text-xs sm:text-sm">Vendues</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
           <div className="flex gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
