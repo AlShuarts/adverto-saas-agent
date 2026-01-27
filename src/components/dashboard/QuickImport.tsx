@@ -6,7 +6,6 @@ import { Plus, Loader2, Link2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { importCentrisListing } from "@/services/centrisImportService";
-import { reportErrorDirect } from "@/hooks/useErrorReport";
 
 type QuickImportProps = {
   onImportSuccess: () => void;
@@ -62,14 +61,6 @@ export const QuickImport = ({ onImportSuccess }: QuickImportProps) => {
 
     } catch (error) {
       console.error("Import error:", error);
-      
-      // Envoyer le rapport d'erreur aux admins
-      reportErrorDirect(error instanceof Error ? error : new Error(String(error)), {
-        errorType: 'import',
-        actionContext: 'quick_import_centris',
-        additionalData: { url: url.trim() },
-      });
-      
       toast({
         title: "Erreur d'importation",
         description: error instanceof Error ? error.message : "Impossible d'importer l'annonce",

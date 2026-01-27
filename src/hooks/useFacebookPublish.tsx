@@ -7,7 +7,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 import { ensureAndIncrementStatistic } from "@/utils/statisticsHelper";
-import { reportErrorDirect } from "./useErrorReport";
 
 export const useFacebookPublish = (listing: Tables<"listings">) => {
   const [isPublishing, setIsPublishing] = useState(false);
@@ -94,18 +93,6 @@ export const useFacebookPublish = (listing: Tables<"listings">) => {
       return true;
     } catch (error) {
       console.error("Erreur détaillée de publication:", error);
-      
-      // Envoyer le rapport d'erreur aux admins
-      reportErrorDirect(error instanceof Error ? error : new Error(String(error)), {
-        errorType: 'facebook_publish',
-        actionContext: 'publishing_video_to_facebook',
-        additionalData: {
-          listingId: listing.id,
-          listingTitle: listing.title,
-          videoUrl,
-        },
-      });
-      
       toast({
         title: "Erreur de publication",
         description: error.message || "Impossible de publier le diaporama sur Facebook",

@@ -41,6 +41,3 @@ verify_jwt = false
 
 [functions.exchange-facebook-token]
 verify_jwt = false
-
-[functions.report-error]
-verify_jwt = false

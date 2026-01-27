@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { importCentrisListing } from "@/services/centrisImportService";
 import { useQueryClient } from "@tanstack/react-query";
-import { reportErrorDirect } from "@/hooks/useErrorReport";
 
 export const CentrisImport = () => {
   const { toast } = useToast();
@@ -43,14 +42,6 @@ export const CentrisImport = () => {
       setUrl("");
     } catch (error) {
       console.error("Erreur complète:", error);
-      
-      // Envoyer le rapport d'erreur aux admins
-      reportErrorDirect(error instanceof Error ? error : new Error(String(error)), {
-        errorType: 'import',
-        actionContext: 'centris_import_page',
-        additionalData: { url },
-      });
-      
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible d'importer l'annonce",
