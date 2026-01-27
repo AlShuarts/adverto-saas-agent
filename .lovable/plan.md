@@ -1,278 +1,423 @@
 
-# Plan: Optimisation mobile complète de l'application
+
+# Plan: Système de Rapports d'Erreurs pour Administrateurs
 
 ## Objectif
-S'assurer que tous les éléments de l'application sont correctement formatés sur mobile, notamment que les textes ne débordent pas de leurs conteneurs.
+Créer un système complet qui capture automatiquement les erreurs des utilisateurs et les rend accessibles aux administrateurs, avec tous les détails techniques nécessaires pour le diagnostic.
 
-## Problèmes identifiés
+## Architecture du système
 
-### 1. Sidebar non responsive sur mobile
-**Fichier**: `src/components/layout/AppSidebar.tsx`
-- La sidebar reste visible avec une largeur fixe sur mobile, réduisant l'espace disponible pour le contenu
-- **Solution**: Transformer la sidebar en menu hamburger sur mobile
-
-### 2. Onglets qui débordent sur la page Listings
-**Fichier**: `src/pages/Listings.tsx` (lignes 108-115)
-- Les onglets "Toutes", "Publiées", "Non publiées", "Vendues" débordent horizontalement
-- **Solution**: Utiliser `overflow-x-auto` et réduire la taille du texte sur mobile
-
-### 3. Onglets du profil qui débordent
-**Fichier**: `src/pages/Profile.tsx` (lignes 160-173)
-- Les onglets "Informations", "Templates", "Bannière" peuvent déborder
-- **Solution**: Ajouter scroll horizontal et texte plus petit sur mobile
-
-### 4. Détails des annonces sans troncature
-**Fichier**: `src/components/ListingDetails.tsx`
-- Les titres et adresses longues peuvent déborder
-- **Solution**: Ajouter `truncate` ou `line-clamp` aux textes
-
-### 5. En-tête des annonces récentes
-**Fichier**: `src/components/dashboard/RecentListings.tsx` (lignes 99-110)
-- Le titre avec le compteur peut déborder
-- **Solution**: Rendre le header responsive avec flex-wrap
-
-### 6. Cartes de stats avec texte long
-**Fichier**: `src/components/dashboard/DashboardStats.tsx` (lignes 77-92)
-- Les labels comme "Diaporamas créés" peuvent déborder sur petit écran
-- **Solution**: Réduire la taille du texte et ajouter troncature
-
-### 7. Boutons de navigation de step
-**Fichier**: `src/components/action-selection/steps/StepNavigation.tsx`
-- Les boutons "Précédent", "Annuler", "Suivant" peuvent se chevaucher
-- **Solution**: Icônes seules sur mobile, texte + icône sur desktop
-
-### 8. Sélecteur d'images - titres de cartes
-**Fichier**: `src/components/action-selection/steps/MediaStep.tsx` (lignes 137-144, 166-171)
-- Les titres "Sélection Facebook" et "Sélection Instagram" avec compteurs peuvent déborder
-- **Solution**: Stack vertical sur mobile pour le titre et le compteur
-
-### 9. Input d'import avec placeholder long
-**Fichier**: `src/components/dashboard/QuickImport.tsx`
-- Le placeholder "Collez l'URL Centris ici..." peut être coupé
-- **Solution**: Placeholder plus court sur mobile
-
-### 10. Cartes de connexion Facebook/Instagram
-**Fichier**: `src/components/dashboard/ConnectionStatus.tsx` (lignes 43-97)
-- Les noms de pages et boutons peuvent se chevaucher
-- **Solution**: Layout vertical sur très petits écrans
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND                                  │
+│  ┌──────────────────┐    ┌──────────────────────────────────┐   │
+│  │  useErrorReport  │───>│  Capture automatique:            │   │
+│  │      Hook        │    │  - Erreurs catch/toast           │   │
+│  └──────────────────┘    │  - Contexte utilisateur          │   │
+│           │              │  - Logs console récents           │   │
+│           ▼              │  - Infos navigateur/appareil     │   │
+│  ┌──────────────────┐    └──────────────────────────────────┘   │
+│  │ Edge Function    │                                           │
+│  │ report-error     │                                           │
+└──┼──────────────────┼───────────────────────────────────────────┘
+   │                  │
+   ▼                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        BACKEND                                   │
+│  ┌──────────────────┐    ┌──────────────────────────────────┐   │
+│  │  error_reports   │    │  Notification optionnelle:       │   │
+│  │     Table        │───>│  - Webhook Slack/Discord         │   │
+│  └──────────────────┘    │  - Email via Resend (si config)  │   │
+│           │              └──────────────────────────────────┘   │
+│           ▼                                                      │
+│  ┌──────────────────┐                                           │
+│  │  Dashboard Admin │                                           │
+│  │  /admin/errors   │                                           │
+│  └──────────────────┘                                           │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Modifications détaillées
+## Partie 1: Base de données
 
-### Fichier 1: `src/components/layout/AppSidebar.tsx`
+### Nouvelle table `error_reports`
 
-Ajouter un menu hamburger sur mobile:
-- Utiliser `useIsMobile()` pour détecter mobile
-- Sur mobile: afficher un bouton hamburger en haut
-- La sidebar devient un drawer/sheet qui s'ouvre au clic
-- Sur desktop: garder le comportement actuel
+```sql
+CREATE TABLE public.error_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  
+  -- Informations utilisateur
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_email TEXT,
+  user_name TEXT,
+  
+  -- Contexte de l'erreur
+  error_type TEXT NOT NULL,           -- 'facebook_connection', 'instagram_connection', 'slideshow', 'import', etc.
+  error_message TEXT NOT NULL,
+  error_stack TEXT,
+  
+  -- Détails techniques
+  page_url TEXT,
+  action_context TEXT,                -- 'connecting_facebook', 'publishing_post', etc.
+  browser_info JSONB,                 -- { userAgent, language, platform }
+  
+  -- Données spécifiques Facebook/Instagram
+  facebook_response JSONB,            -- Réponse brute de l'API Facebook
+  permissions_granted TEXT[],
+  permissions_denied TEXT[],
+  
+  -- Console logs (derniers 20 logs)
+  console_logs JSONB,
+  
+  -- Statut de résolution
+  status TEXT DEFAULT 'new',          -- 'new', 'investigating', 'resolved', 'wont_fix'
+  admin_notes TEXT,
+  resolved_by UUID REFERENCES auth.users(id),
+  resolved_at TIMESTAMPTZ,
+  
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-### Fichier 2: `src/components/layout/MainLayout.tsx`
+-- Index pour performance
+CREATE INDEX idx_error_reports_user_id ON error_reports(user_id);
+CREATE INDEX idx_error_reports_status ON error_reports(status);
+CREATE INDEX idx_error_reports_error_type ON error_reports(error_type);
+CREATE INDEX idx_error_reports_created_at ON error_reports(created_at DESC);
 
-Adapter le layout pour le menu mobile:
-- Ajouter un header mobile avec le bouton hamburger
-- Le contenu prend toute la largeur sur mobile
+-- RLS: Seuls les admins peuvent lire
+ALTER TABLE error_reports ENABLE ROW LEVEL SECURITY;
 
-### Fichier 3: `src/pages/Listings.tsx`
+CREATE POLICY "Admins can read all error reports"
+ON error_reports FOR SELECT
+TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
 
-```tsx
-// Ligne 108-115: Wrapper scrollable pour les tabs
-<div className="overflow-x-auto -mx-2 px-2">
-  <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
-    <TabsList className="min-w-max">
-      <TabsTrigger value="all" className="text-xs sm:text-sm">Toutes</TabsTrigger>
-      <TabsTrigger value="published" className="text-xs sm:text-sm">Publiées</TabsTrigger>
-      <TabsTrigger value="unpublished" className="text-xs sm:text-sm whitespace-nowrap">Non publiées</TabsTrigger>
-      <TabsTrigger value="sold" className="text-xs sm:text-sm">Vendues</TabsTrigger>
-    </TabsList>
-  </Tabs>
-</div>
+CREATE POLICY "Users can insert their own error reports"
+ON error_reports FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+CREATE POLICY "Admins can update error reports"
+ON error_reports FOR UPDATE
+TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
 ```
 
-### Fichier 4: `src/pages/Profile.tsx`
+---
 
-```tsx
-// Ligne 160-173: Tabs scrollables
-<div className="overflow-x-auto -mx-2 px-2">
-  <TabsList className="min-w-max">
-    <TabsTrigger value="profile" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-      <User className="h-3 w-3 sm:h-4 sm:w-4" />
-      <span className="hidden xs:inline">Informations</span>
-      <span className="xs:hidden">Infos</span>
-    </TabsTrigger>
-    ...
-  </TabsList>
-</div>
-```
+## Partie 2: Hook Frontend `useErrorReport`
 
-### Fichier 5: `src/components/ListingDetails.tsx`
+### Nouveau fichier: `src/hooks/useErrorReport.ts`
 
-```tsx
-export const ListingDetails = ({ listing }: ListingDetailsProps) => {
-  return (
-    <div className="p-4 space-y-2">
-      <h3 className="text-base sm:text-lg font-semibold truncate">{listing.title}</h3>
-      <p className="text-xl sm:text-2xl font-bold text-white">
-        {formatPrice(listing.price)}
-      </p>
-      <p className="text-xs sm:text-sm text-muted-foreground truncate">{listing.address}</p>
-      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-        <span>{listing.bedrooms} ch.</span>
-        <span>{listing.bathrooms} sdb.</span>
-      </div>
-    </div>
-  );
+Ce hook capture et envoie automatiquement les erreurs:
+
+```typescript
+import { useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "./useProfile";
+
+type ErrorContext = {
+  errorType: string;
+  actionContext?: string;
+  facebookResponse?: any;
+  permissionsGranted?: string[];
+  permissionsDenied?: string[];
+  additionalData?: Record<string, any>;
+};
+
+export const useErrorReport = () => {
+  const { profile } = useProfile();
+  const consoleLogsRef = useRef<any[]>([]);
+  
+  // Intercepter les logs console (garder les 20 derniers)
+  const captureConsoleLogs = useCallback(() => {
+    // Retourner les derniers logs capturés
+    return consoleLogsRef.current.slice(-20);
+  }, []);
+  
+  const reportError = useCallback(async (
+    error: Error | string,
+    context: ErrorContext
+  ) => {
+    try {
+      const errorMessage = error instanceof Error ? error.message : error;
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      // Collecter les informations du navigateur
+      const browserInfo = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        screenSize: `${window.screen.width}x${window.screen.height}`,
+        viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      
+      // Obtenir l'utilisateur actuel
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Envoyer le rapport via Edge Function
+      await supabase.functions.invoke('report-error', {
+        body: {
+          userId: user?.id,
+          userEmail: user?.email,
+          userName: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null,
+          
+          errorType: context.errorType,
+          errorMessage,
+          errorStack,
+          
+          pageUrl: window.location.href,
+          actionContext: context.actionContext,
+          browserInfo,
+          
+          facebookResponse: context.facebookResponse,
+          permissionsGranted: context.permissionsGranted,
+          permissionsDenied: context.permissionsDenied,
+          
+          consoleLogs: captureConsoleLogs(),
+          additionalData: context.additionalData,
+        }
+      });
+      
+      console.log("📧 Rapport d'erreur envoyé aux administrateurs");
+    } catch (reportError) {
+      // Ne pas bloquer l'utilisateur si le rapport échoue
+      console.error("Échec de l'envoi du rapport d'erreur:", reportError);
+    }
+  }, [profile, captureConsoleLogs]);
+  
+  return { reportError };
 };
 ```
 
-### Fichier 6: `src/components/dashboard/RecentListings.tsx`
+---
 
-```tsx
-// Ligne 99-110: Header flexible
-<CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
-  <CardTitle className="text-base sm:text-lg flex items-center gap-2 flex-wrap">
-    <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-    <span>Vos annonces récentes</span>
-    <span className="text-xs sm:text-sm font-normal text-muted-foreground">
-      ({totalCount} au total)
-    </span>
-  </CardTitle>
-  <Button variant="ghost" size="sm" onClick={() => navigate("/listings")} className="gap-1 self-end sm:self-auto">
-    <span className="text-xs sm:text-sm">Voir tout</span>
-    <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
-  </Button>
-</CardHeader>
-```
+## Partie 3: Edge Function `report-error`
 
-### Fichier 7: `src/components/dashboard/DashboardStats.tsx`
+### Nouveau fichier: `supabase/functions/report-error/index.ts`
 
-```tsx
-// Ligne 77-92: Cartes plus compactes sur mobile
-<Card key={stat.label}>
-  <CardContent className="p-3 sm:p-4">
-    <div className="flex items-center gap-2 sm:gap-3">
-      <div className="p-1.5 sm:p-2 rounded-lg bg-muted shrink-0">
-        <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xl sm:text-2xl font-bold text-foreground">
-          {loading ? "..." : stat.value}
-        </p>
-        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{stat.label}</p>
-      </div>
-    </div>
-  </CardContent>
-</Card>
-```
+```typescript
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { getCorsHeaders } from "../_shared/cors.ts";
 
-### Fichier 8: `src/components/action-selection/steps/StepNavigation.tsx`
+serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
 
-```tsx
-// Boutons plus compacts sur mobile
-<Button
-  type="button"
-  variant="outline"
-  onClick={onPrevious}
-  className="flex items-center"
-  size={isMobile ? "sm" : "default"}
->
-  <ChevronLeft className="h-4 w-4" />
-  <span className="hidden sm:inline ml-1">Précédent</span>
-</Button>
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-// ...
+    const body = await req.json();
+    
+    // Insérer le rapport d'erreur
+    const { data, error } = await supabase
+      .from('error_reports')
+      .insert({
+        user_id: body.userId,
+        user_email: body.userEmail,
+        user_name: body.userName,
+        error_type: body.errorType,
+        error_message: body.errorMessage,
+        error_stack: body.errorStack,
+        page_url: body.pageUrl,
+        action_context: body.actionContext,
+        browser_info: body.browserInfo,
+        facebook_response: body.facebookResponse,
+        permissions_granted: body.permissionsGranted,
+        permissions_denied: body.permissionsDenied,
+        console_logs: body.consoleLogs,
+      })
+      .select()
+      .single();
 
-<Button
-  type="button"
-  variant="outline"
-  onClick={onCancel}
-  size={isMobile ? "sm" : "default"}
->
-  <span className="hidden sm:inline">Annuler</span>
-  <X className="h-4 w-4 sm:hidden" />
-</Button>
-```
+    if (error) throw error;
 
-### Fichier 9: `src/components/action-selection/steps/MediaStep.tsx`
+    // Optionnel: Envoyer une notification Slack/Discord
+    const webhookUrl = Deno.env.get("ERROR_NOTIFICATION_WEBHOOK");
+    if (webhookUrl) {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: `🚨 Nouvelle erreur signalée`,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Type:* ${body.errorType}\n*Utilisateur:* ${body.userName || 'Anonyme'} (${body.userEmail || 'N/A'})\n*Message:* ${body.errorMessage?.substring(0, 200)}`
+              }
+            }
+          ]
+        })
+      });
+    }
 
-```tsx
-// Ligne 137-144: Titre et compteur en stack vertical sur mobile
-<CardTitle className="text-base sm:text-lg lg:text-xl text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-  <span className="flex items-center gap-2">
-    <span className="text-blue-500">📘</span> 
-    <span className="truncate">Sélection Facebook</span>
-  </span>
-  <span className={`text-xs sm:text-sm font-normal ${selectedFacebookImages.length >= 50 ? 'text-yellow-500' : 'text-gray-400'}`}>
-    {selectedFacebookImages.length}/50 photos
-  </span>
-</CardTitle>
-```
-
-### Fichier 10: `src/components/dashboard/ConnectionStatus.tsx`
-
-```tsx
-// Layout plus flexible pour les cartes de connexion
-<div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
-  <div className="flex items-center gap-2 sm:gap-3">
-    <div className={cn(
-      "p-2 sm:p-2.5 rounded-lg shrink-0",
-      facebookConnected ? "bg-green-500/20" : "bg-muted"
-    )}>
-      <Facebook className={cn(
-        "h-4 w-4 sm:h-5 sm:w-5",
-        facebookConnected ? "text-green-500" : "text-muted-foreground"
-      )} />
-    </div>
-    <div className="min-w-0">
-      <p className="text-sm sm:font-medium text-foreground">Facebook</p>
-      <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-[150px]">
-        {facebookConnected ? "Connecté" : "Non connecté"}
-      </p>
-    </div>
-  </div>
-  ...
-</div>
+    return new Response(
+      JSON.stringify({ success: true, reportId: data.id }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
 ```
 
 ---
 
-## Fichiers à modifier
+## Partie 4: Intégration dans le code existant
 
-| Fichier | Type de modification |
-|---------|---------------------|
-| `src/components/layout/AppSidebar.tsx` | Menu hamburger mobile |
-| `src/components/layout/MainLayout.tsx` | Header mobile |
-| `src/pages/Listings.tsx` | Tabs scrollables |
-| `src/pages/Profile.tsx` | Tabs scrollables |
-| `src/components/ListingDetails.tsx` | Troncature texte |
-| `src/components/dashboard/RecentListings.tsx` | Header flexible |
-| `src/components/dashboard/DashboardStats.tsx` | Cartes compactes |
-| `src/components/action-selection/steps/StepNavigation.tsx` | Boutons compacts |
-| `src/components/action-selection/steps/MediaStep.tsx` | Titres flexibles |
-| `src/components/dashboard/ConnectionStatus.tsx` | Layout flexible |
-| `src/components/dashboard/QuickImport.tsx` | Placeholder court |
+### Modifications dans `src/hooks/useProfile.tsx`
+
+Ajouter le rapport d'erreur automatique lors des erreurs Facebook:
+
+```typescript
+// Importer le hook
+import { useErrorReport } from "./useErrorReport";
+
+// Dans le composant
+const { reportError } = useErrorReport();
+
+// Dans handleFacebookLoginResponse, après le catch (ligne 290)
+} catch (error) {
+  console.error("❌ Erreur complète:", error);
+  
+  // Envoyer le rapport d'erreur aux admins
+  await reportError(error instanceof Error ? error : new Error(String(error)), {
+    errorType: 'facebook_connection',
+    actionContext: 'connecting_facebook_page',
+    facebookResponse: (window as any).__lastFacebookResponse,
+    permissionsGranted: (window as any).__fbPermissionsGranted,
+    permissionsDenied: (window as any).__fbPermissionsDenied,
+  });
+  
+  toast({
+    title: "Erreur de connexion Facebook",
+    description: (error instanceof Error ? error.message : "..."),
+    variant: "destructive",
+  });
+}
+```
+
+### Modifications similaires dans:
+- `connectInstagram()` - pour les erreurs Instagram
+- `src/services/centrisImportService.ts` - pour les erreurs d'import
+- `src/hooks/useFacebookPublish.tsx` - pour les erreurs de publication
+- Edge functions - pour capturer les erreurs côté serveur
 
 ---
 
-## Points techniques
+## Partie 5: Dashboard Admin des Erreurs
 
-1. **Utilisation cohérente de `useIsMobile()`** - Le hook existe déjà et est utilisé dans plusieurs composants
+### Nouveau fichier: `src/pages/AdminErrors.tsx`
 
-2. **Classes Tailwind responsive** - Utiliser les préfixes `sm:`, `md:`, `lg:` pour adapter les styles
+Page dédiée pour visualiser et gérer les rapports d'erreurs:
 
-3. **Propriétés de troncature**:
-   - `truncate` pour couper le texte avec "..."
-   - `line-clamp-2` pour limiter à 2 lignes
-   - `whitespace-nowrap` pour empêcher les retours à la ligne
-   - `min-w-0` sur les conteneurs flex pour permettre la troncature
+```typescript
+// Fonctionnalités:
+// - Liste des erreurs avec filtres (type, statut, date)
+// - Détail d'une erreur avec toutes les infos
+// - Marquage comme "en cours", "résolu", "ignoré"
+// - Notes admin pour documenter la résolution
+// - Recherche par utilisateur/email
+// - Export CSV des erreurs
+```
 
-4. **Scroll horizontal pour les tabs** - `overflow-x-auto` avec `min-w-max` sur le contenu
+### Modifications dans `src/pages/Admin.tsx`
 
-## Résultat attendu
+Ajouter un onglet/lien vers la page des erreurs:
 
-Après ces modifications:
-- L'application sera entièrement navigable sur mobile
-- Aucun texte ne débordera de son conteneur
-- Les boutons et interactions resteront accessibles
-- La sidebar se transformera en menu hamburger sur mobile
+```typescript
+// Ajouter un nouveau Tab "Erreurs" dans la page admin
+<Tabs>
+  <TabsTrigger value="stats">Statistiques</TabsTrigger>
+  <TabsTrigger value="errors">Erreurs ({unreadErrorsCount})</TabsTrigger>
+</Tabs>
+```
+
+---
+
+## Partie 6: Configuration optionnelle
+
+### Notifications Slack (recommandé)
+1. Créer un Webhook Slack: https://api.slack.com/messaging/webhooks
+2. Ajouter le secret `ERROR_NOTIFICATION_WEBHOOK` dans Supabase
+
+### Notifications Discord (alternative)
+1. Créer un Webhook Discord dans les paramètres du canal
+2. Utiliser le même format de webhook
+
+---
+
+## Fichiers à créer/modifier
+
+| Fichier | Action | Description |
+|---------|--------|-------------|
+| `src/hooks/useErrorReport.ts` | Créer | Hook pour capturer et envoyer les erreurs |
+| `supabase/functions/report-error/index.ts` | Créer | Edge function pour stocker les rapports |
+| `src/pages/AdminErrors.tsx` | Créer | Dashboard de visualisation des erreurs |
+| `src/hooks/useProfile.tsx` | Modifier | Intégrer le rapport d'erreurs automatique |
+| `src/pages/Admin.tsx` | Modifier | Ajouter navigation vers les erreurs |
+| Migration SQL | Créer | Table `error_reports` avec RLS |
+
+---
+
+## Informations capturées pour chaque erreur
+
+| Catégorie | Données |
+|-----------|---------|
+| **Utilisateur** | ID, email, nom complet |
+| **Erreur** | Type, message, stack trace |
+| **Contexte** | Page URL, action en cours |
+| **Navigateur** | User agent, langue, taille d'écran |
+| **Facebook** | Réponse API brute, permissions accordées/refusées |
+| **Console** | 20 derniers logs console |
+| **Timestamps** | Date de création, mise à jour |
+
+---
+
+## Exemple de rapport d'erreur capturé
+
+```json
+{
+  "user_name": "Jean Dupont",
+  "user_email": "jean@example.com",
+  "error_type": "facebook_connection",
+  "error_message": "Aucune page Facebook trouvée",
+  "action_context": "connecting_facebook_page",
+  "browser_info": {
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0...",
+    "platform": "iPhone",
+    "screenSize": "390x844"
+  },
+  "facebook_response": {
+    "data": [],
+    "paging": {}
+  },
+  "permissions_granted": ["email", "public_profile"],
+  "permissions_denied": ["pages_show_list"],
+  "console_logs": [
+    "📥 Réponse Facebook Login Button: {...}",
+    "⚠️ /me/accounts vide",
+    "❌ Aucune page accessible"
+  ]
+}
+```
+
+Ceci vous permettra de voir exactement pourquoi votre client n'arrive pas à connecter sa page Facebook!
+
