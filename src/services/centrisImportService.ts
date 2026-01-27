@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/utils/priceFormatter";
+import { reportErrorDirect } from "@/hooks/useErrorReport";
 
 interface CentrisData {
   centris_id: string;

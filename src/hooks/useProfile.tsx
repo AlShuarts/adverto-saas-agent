@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Tables } from "@/integrations/supabase/types";
 import { type FacebookPage } from "./useFacebookPageDiagnostics";
+import { reportErrorDirect } from "./useErrorReport";
 
 export const useProfile = () => {
   const { toast } = useToast();
@@ -289,6 +290,18 @@ export const useProfile = () => {
       
     } catch (error) {
       console.error("❌ Erreur complète:", error);
+      
+      // Envoyer le rapport d'erreur aux admins
+      reportErrorDirect(error instanceof Error ? error : new Error(String(error)), {
+        errorType: 'facebook_connection',
+        actionContext: 'connecting_facebook_page',
+        facebookResponse: (window as any).__lastFacebookResponse,
+        additionalData: {
+          pageId: (window as any).__fbPageId,
+          pageName: (window as any).__fbPageName,
+        },
+      });
+      
       toast({
         title: "Erreur de connexion Facebook",
         description: (error instanceof Error ? error.message : "Impossible de connecter votre page Facebook") + 
@@ -440,6 +453,16 @@ export const useProfile = () => {
       getProfile();
     } catch (error) {
       console.error('Erreur de connexion Instagram:', error);
+      
+      // Envoyer le rapport d'erreur aux admins
+      reportErrorDirect(error instanceof Error ? error : new Error(String(error)), {
+        errorType: 'instagram_connection',
+        actionContext: 'connecting_instagram_account',
+        additionalData: {
+          facebookPageId: profile?.facebook_page_id,
+        },
+      });
+      
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de connecter votre compte Instagram",
