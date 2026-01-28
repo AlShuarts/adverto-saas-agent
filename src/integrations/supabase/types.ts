@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      error_reports: {
+        Row: {
+          action_context: string | null
+          additional_data: Json | null
+          admin_notes: string | null
+          browser_info: Json | null
+          console_logs: Json | null
+          created_at: string | null
+          error_message: string
+          error_stack: string | null
+          error_type: string
+          facebook_response: Json | null
+          id: string
+          page_url: string | null
+          permissions_denied: string[] | null
+          permissions_granted: string[] | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          updated_at: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          action_context?: string | null
+          additional_data?: Json | null
+          admin_notes?: string | null
+          browser_info?: Json | null
+          console_logs?: Json | null
+          created_at?: string | null
+          error_message: string
+          error_stack?: string | null
+          error_type: string
+          facebook_response?: Json | null
+          id?: string
+          page_url?: string | null
+          permissions_denied?: string[] | null
+          permissions_granted?: string[] | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          action_context?: string | null
+          additional_data?: Json | null
+          admin_notes?: string | null
+          browser_info?: Json | null
+          console_logs?: Json | null
+          created_at?: string | null
+          error_message?: string
+          error_stack?: string | null
+          error_type?: string
+          facebook_response?: Json | null
+          id?: string
+          page_url?: string | null
+          permissions_denied?: string[] | null
+          permissions_granted?: string[] | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       facebook_templates: {
         Row: {
           content: string
