@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Tables } from "@/integrations/supabase/types";
 import { type FacebookPage } from "./useFacebookPageDiagnostics";
+import { reportErrorStandalone } from "./useErrorReport";
 
 export const useProfile = () => {
   const { toast } = useToast();
@@ -130,19 +131,26 @@ export const useProfile = () => {
         console.log("⚠️ Page Access Token ou Page ID manquant, récupération via /me/accounts...");
         
         // D'abord vérifier les permissions accordées
+        let permissionsGranted: string[] = [];
+        let permissionsDenied: string[] = [];
+        
         await new Promise<void>((resolve) => {
           (window as any).FB.api('/me/permissions', (permRes: any) => {
             console.log("📋 Permissions brutes:", JSON.stringify(permRes, null, 2));
             
             if (permRes?.data) {
-              const granted = permRes.data.filter((p: any) => p.status === 'granted').map((p: any) => p.permission);
-              const declined = permRes.data.filter((p: any) => p.status === 'declined').map((p: any) => p.permission);
+              permissionsGranted = permRes.data.filter((p: any) => p.status === 'granted').map((p: any) => p.permission);
+              permissionsDenied = permRes.data.filter((p: any) => p.status === 'declined').map((p: any) => p.permission);
               
-              console.log("✅ Permissions accordées:", granted);
-              console.log("❌ Permissions refusées:", declined);
+              // Store for error reporting
+              (window as any).__fbPermissionsGranted = permissionsGranted;
+              (window as any).__fbPermissionsDenied = permissionsDenied;
+              
+              console.log("✅ Permissions accordées:", permissionsGranted);
+              console.log("❌ Permissions refusées:", permissionsDenied);
               
               const criticalPerms = ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'];
-              const missingCritical = criticalPerms.filter(p => !granted.includes(p));
+              const missingCritical = criticalPerms.filter(p => !permissionsGranted.includes(p));
               
               if (missingCritical.length > 0) {
                 console.warn("⚠️ Permissions critiques manquantes:", missingCritical);
@@ -289,6 +297,16 @@ export const useProfile = () => {
       
     } catch (error) {
       console.error("❌ Erreur complète:", error);
+      
+      // Send error report with context
+      await reportErrorStandalone(error, {
+        errorType: 'facebook_connection',
+        actionContext: 'connecting_facebook_page',
+        facebookResponse: (window as any).__lastFBResponse,
+        permissionsGranted: (window as any).__fbPermissionsGranted,
+        permissionsDenied: (window as any).__fbPermissionsDenied,
+      });
+      
       toast({
         title: "Erreur de connexion Facebook",
         description: (error instanceof Error ? error.message : "Impossible de connecter votre page Facebook") + 
@@ -440,6 +458,13 @@ export const useProfile = () => {
       getProfile();
     } catch (error) {
       console.error('Erreur de connexion Instagram:', error);
+      
+      // Send error report with context
+      await reportErrorStandalone(error, {
+        errorType: 'instagram_connection',
+        actionContext: 'connecting_instagram_account',
+      });
+      
       toast({
         title: "Erreur",
         description: error instanceof Error ? error.message : "Impossible de connecter votre compte Instagram",
