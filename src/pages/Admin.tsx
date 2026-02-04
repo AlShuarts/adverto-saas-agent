@@ -12,10 +12,11 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Loader2, RefreshCw, Shield } from "lucide-react";
+import { Loader2, RefreshCw, Shield, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
 export default function AdminPage() {
   const { isAdmin, isLoading, statistics, error, refreshStatistics } = useAdmin();
@@ -85,14 +86,22 @@ export default function AdminPage() {
               Statistiques d'utilisation de la plateforme
             </p>
           </div>
-          <Button 
-            onClick={refreshStatistics} 
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" /> 
-            Rafraîchir
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="destructive" className="flex items-center gap-2">
+              <Link to="/admin/errors">
+                <AlertTriangle className="w-4 h-4" />
+                Erreurs
+              </Link>
+            </Button>
+            <Button 
+              onClick={refreshStatistics} 
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" /> 
+              Rafraîchir
+            </Button>
+          </div>
         </div>
         
         {/* Stats Cards */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -15,8 +15,13 @@ import { useProfile } from "@/hooks/useProfile";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from "@/components/ui/toaster"
 import AdminPage from "./pages/Admin";
+import AdminErrors from "./pages/AdminErrors";
+import { setupConsoleCapture } from "@/hooks/useErrorReport";
 
 const queryClient = new QueryClient()
+
+// Setup console capture for error reporting
+setupConsoleCapture();
 
 // Composant pour protéger les routes
 function PrivateRoute({ children }: { children: JSX.Element }) {
@@ -55,6 +60,11 @@ function App() {
           <Route path="/admin" element={
             <PrivateRoute>
               <AdminPage />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/errors" element={
+            <PrivateRoute>
+              <AdminErrors />
             </PrivateRoute>
           } />
           <Route path="/profile" element={
